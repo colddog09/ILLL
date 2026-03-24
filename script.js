@@ -1,0 +1,686 @@
+/* ============================================================
+   일정 관리 – script.js  (v3 – bi-directional drag)
+   ============================================================ */
+
+'use strict';
+
+// ──────────────────────────────────────────────
+// 상수 및 상태
+// ──────────────────────────────────────────────
+const DAYS_KO   = ['일','월','화','수','목','금','토'];
+const DAYS_FULL = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
+const STORAGE_KEY_POOL  = 'taskPool_v2';
+const STORAGE_KEY_SCHED = 'taskSchedule_v2';
+
+let state = {
+  pool: [],      // [{ id, text }]
+  schedule: {},  // { 'YYYY-MM-DD': [{ id, taskId, text, status }] }
+  dayMemo: {},   // { 'YYYY-MM-DD': 'memo text' }
+  dayOffset: 0,
+};
+
+/*
+ * dragInfo: 현재 드래그 중인 아이템 정보
+ * {
+ *   type: 'pool' | 'day',
+ *   taskId: string,   // pool의 task id
+ *   text: string,
+ *   itemId?: string,  // day 안의 sched-item id (type==='day' 일 때)
+ *   dateKey?: string, // 어느 날에서 드래그 중인지 (type==='day' 일 때)
+ * }
+ */
+let dragInfo = null; // { type: 'pool'|'day', taskId, itemId, dateKey, text }
+
+// ──────────────────────────────────────────────
+// 시간표 데이터 (GBS 2-2)
+// ──────────────────────────────────────────────
+const SCHOOL_TIMETABLE = {
+  1: [ // 월
+    { p: '1교시', s: '역사 (홍준호)' }, { p: '2교시', s: '체육 (이종현)' },
+    { p: '3교시', s: '지구 (오상림)' }, { p: '4교시', s: '생물 (백민준)' },
+    { p: '5교시', s: '수학 (박은미)' }, { p: '6교시', s: '수학 (박은미)' },
+    { p: '7교시', s: '공강' }, { p: '방과후', s: '청소' }
+  ],
+  2: [ // 화
+    { p: '1교시', s: '수학 (오승은)' }, { p: '2교시', s: 'A (국/영/중)' },
+    { p: '3교시', s: 'A (국/영/중)' }, { p: '4교시', s: '체육 (이종현)' },
+    { p: '5교시', s: '수학 (백승범)' }, { p: '6교시', s: '물리 (이용호)' },
+    { p: '7교시', s: '연구' }, { p: '방과후', s: '' }
+  ],
+  3: [ // 수
+    { p: '1교시', s: '정보 (김유정)' }, { p: '2교시', s: '정보 (김유정)' },
+    { p: '3교시', s: 'B (국/영/중)' }, { p: '4교시', s: 'B (국/영/중)' },
+    { p: '5교시', s: '지구 (유병윤)' }, { p: '6교시', s: '지구 (유병윤)' },
+    { p: '7교시', s: '동아리' }, { p: '방과후', s: '' }
+  ],
+  4: [ // 목
+    { p: '1교시', s: '화학 (이화수)' }, { p: '2교시', s: '화학 (이화수)' },
+    { p: '3교시', s: '수학 (백승범)' }, { p: '4교시', s: 'A (국/영/중)' },
+    { p: '5교시', s: '역사 (홍준호)' }, { p: '6교시', s: 'B (국/영/중)' },
+    { p: '7교시', s: '창체' }, { p: '방과후', s: '청소' }
+  ],
+  5: [ // 금
+    { p: '1교시', s: '수학 (오승은)' }, { p: '2교시', s: '역사 (홍준호)' },
+    { p: '3교시', s: '생명 (이다현)' }, { p: '4교시', s: '생명 (이다현)' },
+    { p: '5교시', s: '물리 (이용호)' }, { p: '6교시', s: '물리 (재규선)' },
+    { p: '7교시', s: '' }, { p: '방과후', s: '' }
+  ]
+};
+
+// ──────────────────────────────────────────────
+// 유틸
+// ──────────────────────────────────────────────
+// ──────────────────────────────────────────────
+// Firebase 연동 (설정 키 입력 준비)
+// ──────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyAyTMaUoBSruJmtRdBpr3ZfU5TsVomG-Y4",
+  authDomain: "gbshs-351f8.firebaseapp.com",
+  projectId: "gbshs-351f8",
+  storageBucket: "gbshs-351f8.firebasestorage.app",
+  messagingSenderId: "423897285124",
+  appId: "1:423897285124:web:8db3306d579d4769cfeb51",
+  measurementId: "G-XGKD6QB591"
+};
+
+let currentUser = null;
+let db = null;
+
+if (typeof firebase !== 'undefined' && firebaseConfig.apiKey !== "YOUR_API_KEY") {
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+
+  firebase.auth().onAuthStateChanged(user => {
+    const loginBtn  = document.getElementById('loginBtn');
+    const userInfo  = document.getElementById('userInfo');
+    const userPhoto = document.getElementById('userPhoto');
+    const userName  = document.getElementById('userName');
+
+    if (user) {
+      currentUser = user;
+      if (loginBtn) loginBtn.hidden = true;
+      if (userInfo) userInfo.hidden = false;
+      if (userPhoto) userPhoto.src = user.photoURL || '';
+      if (userName) userName.textContent = user.displayName || '사용자';
+      loadState(); // 로그인 시 Firestore 데이터 로드
+    } else {
+      currentUser = null;
+      if (loginBtn) loginBtn.hidden = false;
+      if (userInfo) userInfo.hidden = true;
+      loadState(); // 비로그인 시 로컬 로드
+    }
+  });
+}
+
+function uid() { return '_' + Math.random().toString(36).slice(2, 9); }
+
+function currentDay() {
+  const d = new Date();
+  d.setDate(d.getDate() + state.dayOffset);
+  return d;
+}
+function dateKey(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+function todayKey() { return dateKey(new Date()); }
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ──────────────────────────────────────────────
+// 영속성
+// ──────────────────────────────────────────────
+function loadState() {
+  if (currentUser && db) {
+    db.collection('users').doc(currentUser.uid).get().then(doc => {
+      if (doc.exists) {
+        const data = doc.data();
+        state.pool     = data.pool || [];
+        state.schedule = data.schedule || {};
+        state.dayMemo  = data.dayMemo || {};
+      }
+      renderPool();
+      renderWeek();
+    }).catch(err => {
+      console.error("Firestore 로드 에러:", err);
+      loadLocalState();
+    });
+  } else {
+    loadLocalState();
+  }
+}
+
+function loadLocalState() {
+  try { state.pool     = JSON.parse(localStorage.getItem(STORAGE_KEY_POOL))  || []; } catch { state.pool = []; }
+  try { state.schedule = JSON.parse(localStorage.getItem(STORAGE_KEY_SCHED)) || {}; } catch { state.schedule = {}; }
+  try { state.dayMemo  = JSON.parse(localStorage.getItem('dayMemo_v1'))      || {}; } catch { state.dayMemo = {}; }
+  renderPool();
+  renderWeek();
+}
+
+function saveState() {
+  if (currentUser && db) {
+    db.collection('users').doc(currentUser.uid).set({
+      pool: state.pool,
+      schedule: state.schedule,
+      dayMemo: state.dayMemo
+    }).catch(err => console.error("Firestore 저장 에러:", err));
+  } else {
+    localStorage.setItem(STORAGE_KEY_POOL,  JSON.stringify(state.pool));
+    localStorage.setItem(STORAGE_KEY_SCHED, JSON.stringify(state.schedule));
+    localStorage.setItem('dayMemo_v1',      JSON.stringify(state.dayMemo));
+  }
+}
+
+// ──────────────────────────────────────────────
+// DOM 레퍼런스
+// ──────────────────────────────────────────────
+const poolEl      = document.getElementById('taskPool');
+const dayGrid     = document.getElementById('dayGrid');
+const weekLabel   = document.getElementById('weekLabel');
+const ghost       = document.getElementById('dragGhost');
+const trashZone   = document.getElementById('trashZone');
+const addTaskBtn  = document.getElementById('addTaskBtn');
+const historyModal    = document.getElementById('historyModal');
+const historyList     = document.getElementById('historyList');
+const historyBtn      = document.getElementById('historyBtn');
+const historyCloseBtn = document.getElementById('historyCloseBtn');
+
+const fbLoginBtn  = document.getElementById('loginBtn');
+const fbLogoutBtn = document.getElementById('logoutBtn');
+
+if (fbLoginBtn) {
+  fbLoginBtn.addEventListener('click', () => {
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+      if (firebaseConfig.apiKey === "YOUR_API_KEY") {
+        alert("Firebase 설정 키가 아직 입력되지 않았습니다!\nscript.js 상단의 firebaseConfig를 수정해주세요.");
+        return;
+      }
+      const provider = new firebase.auth.GoogleAuthProvider();
+      firebase.auth().signInWithPopup(provider).catch(err => {
+        console.error(err);
+        alert("로그인 중 오류가 발생했습니다: " + err.message);
+      });
+    }
+  });
+}
+if (fbLogoutBtn) {
+  fbLogoutBtn.addEventListener('click', () => {
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+      firebase.auth().signOut().then(() => {
+        // 로그아웃 시 로컬 데이터 무시하고 화면 초기화
+        state.pool = []; state.schedule = {}; state.dayMemo = {};
+        renderPool(); renderWeek();
+      }).catch(err => {
+        console.error(err);
+        alert("로그아웃 중 오류가 발생했습니다: " + err.message);
+      });
+    }
+  });
+}
+
+// ──────────────────────────────────────────────
+// 풀(Pool) 렌더링 — X 버튼 없음, 드래그 가능
+// ──────────────────────────────────────────────
+function renderPool() {
+  poolEl.innerHTML = '';
+  if (state.pool.length === 0) {
+    poolEl.innerHTML = '<span style="color:var(--text-sub);font-size:0.82rem;padding:4px 2px;">할일을 추가해보세요!</span>';
+    return;
+  }
+  state.pool.forEach(task => {
+    const card = document.createElement('div');
+    card.className = 'pool-card';
+    card.dataset.taskId = task.id;
+    card.draggable = true;
+    card.textContent = task.text;
+    poolEl.appendChild(card);
+  });
+}
+
+// ──────────────────────────────────────────────
+// 날짜 카드 렌더링
+// ──────────────────────────────────────────────
+function renderWeek() {
+  dayGrid.innerHTML = '';
+  const d     = currentDay();
+  const key   = dateKey(d);
+  const today = todayKey();
+  const isToday = key === today;
+  const items = state.schedule[key] || [];
+
+  const dow = d.getDay();
+  let wdColor = '';
+  if (dow === 0) wdColor = 'style="color:#dc2626"';
+  if (dow === 6) wdColor = 'style="color:#2563eb"';
+
+  weekLabel.textContent =
+    `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 (${DAYS_KO[dow]})`;
+
+  const done = items.filter(it => it.status === 'O').length;
+  const pct  = items.length ? Math.round((done / items.length) * 100) : 0;
+
+  // 23시 이후인지 확인
+  const isLate = new Date().getHours() >= 23;
+  const deferBtnHtml = (isToday && isLate) 
+    ? `<button class="defer-btn" data-date="${key}" title="미완료 할일을 내일로 미룹니다">⏳ 뒤로 미루기</button>` 
+    : '';
+
+  const memoText = state.dayMemo[key] || '';
+
+  const card = document.createElement('div');
+  card.className = 'day-card day-card--single' + (isToday ? ' today' : '');
+  card.dataset.date = key;
+  card.innerHTML = `
+    <div class="day-card__header">
+      <span class="day-card__date">${d.getDate()}</span>
+      <span class="day-card__weekday" ${wdColor}>${DAYS_KO[dow]}</span>
+      ${isToday ? '<span class="today-badge">오늘</span>' : ''}
+      ${deferBtnHtml}
+    </div>
+    <div class="day-card__memo-wrap">
+      <textarea class="day-card__memo" data-date="${key}" placeholder="오늘의 메모나 자유로운 글을 남겨보세요...">${escHtml(memoText)}</textarea>
+    </div>
+    <div class="day-card__tasks" id="tasks_${key}"></div>
+    <div class="day-card__progress">
+      <div class="day-card__progress-bar" style="width:${pct}%"></div>
+    </div>`;
+
+  dayGrid.appendChild(card);
+  renderTimetable(d);
+  renderDayTasks(key);
+  setupDayDropZone(card, key);
+}
+
+function renderTimetable(currentD) {
+  const widget = document.getElementById('timetableWidget');
+  if (!widget) return;
+  
+  // 오늘 표시할 날짜의 요일
+  const tzTodayDow = currentD.getDay();
+  // 내일 날짜와 요일 계산
+  const nextD = new Date(currentD);
+  nextD.setDate(nextD.getDate() + 1);
+  const tzNextDow = nextD.getDay();
+
+  // 토(6), 일(0) 은 빈 배열 처리
+  const todayTb = SCHOOL_TIMETABLE[tzTodayDow] || [];
+  const nextTb = SCHOOL_TIMETABLE[tzNextDow] || [];
+
+  if (todayTb.length === 0 && nextTb.length === 0) {
+    widget.hidden = true;
+    return;
+  }
+  
+  widget.hidden = false;
+
+  const buildHtml = (tb, title) => {
+    if (tb.length === 0) return `<div class="timetable-col"><div class="timetable-title">${title} <span style="font-size:0.8rem;color:var(--text-sub)">(수업 없음)</span></div></div>`;
+    let rows = tb.map(item => `
+      <div class="timetable-row">
+        <span class="tt-period">${item.p}</span>
+        <span class="tt-subject">${item.s}</span>
+      </div>
+    `).join('');
+    return `<div class="timetable-col"><div class="timetable-title">${title}</div>${rows}</div>`;
+  };
+
+  widget.innerHTML = buildHtml(todayTb, '오늘 시간표') + buildHtml(nextTb, '내일 시간표');
+}
+
+function renderDayTasks(key) {
+  const container = document.getElementById(`tasks_${key}`);
+  if (!container) return;
+  container.innerHTML = '';
+  const items = state.schedule[key] || [];
+
+  if (items.length === 0) {
+    container.innerHTML = '<div class="drop-hint">📌 여기에 할일을<br>드래그해서 추가</div>';
+    updateProgress(key);
+    return;
+  }
+
+  items.forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'sched-item' + (item.status === 'O' ? ' done' : '');
+    el.dataset.itemId = item.id;
+    el.dataset.dateKey = key;
+    el.dataset.taskId  = item.taskId;
+    el.draggable = true;
+    el.innerHTML = `
+      <span class="sched-item__text" title="${escHtml(item.text)}">${escHtml(item.text)}</span>
+      <div class="sched-item__ox">
+        <button class="btn-o${item.status==='O'?' active':''}" data-date="${key}" data-id="${item.id}" title="완료(O)">O</button>
+      </div>`;
+    container.appendChild(el);
+  });
+
+  updateProgress(key);
+}
+
+function updateProgress(key) {
+  const items = state.schedule[key] || [];
+  const done  = items.filter(it => it.status === 'O').length;
+  const pct   = items.length ? Math.round((done / items.length) * 100) : 0;
+  const bar   = document.querySelector(`[data-date="${key}"] .day-card__progress-bar`);
+  if (bar) bar.style.width = pct + '%';
+}
+
+// ──────────────────────────────────────────────
+// 드래그 시스템 초기화
+// ──────────────────────────────────────────────
+function initDrag() {
+
+  // ── 풀 카드 dragstart (from pool) ──
+  poolEl.addEventListener('dragstart', e => {
+    const card = e.target.closest('.pool-card');
+    if (!card) return;
+    dragInfo = { type: 'pool', taskId: card.dataset.taskId, text: card.textContent.trim() };
+    e.dataTransfer.setData('text/plain', dragInfo.taskId); // drop 허용에 필요
+    e.dataTransfer.effectAllowed = 'move';
+    setTimeout(() => card.classList.add('dragging'), 0);
+    showGhost(dragInfo.text);
+    hideDefaultImage(e);
+    trashZone.hidden = false;   // + 버튼 자리에 휴지통 표시
+    addTaskBtn.hidden = true;
+  });
+
+  poolEl.addEventListener('dragend', e => {
+    const card = e.target.closest('.pool-card');
+    if (card) card.classList.remove('dragging');
+    endDrag();
+  });
+
+  // ── 스케줄 아이템 dragstart (from day card) ──
+  dayGrid.addEventListener('dragstart', e => {
+    const item = e.target.closest('.sched-item');
+    if (!item) return;
+    dragInfo = {
+      type: 'day',
+      taskId:  item.dataset.taskId,
+      itemId:  item.dataset.itemId,
+      dateKey: item.dataset.dateKey,
+      text:    item.querySelector('.sched-item__text').textContent.trim(),
+    };
+    e.dataTransfer.setData('text/plain', dragInfo.itemId);
+    e.dataTransfer.effectAllowed = 'move';
+    setTimeout(() => item.classList.add('dragging'), 0);
+    showGhost(dragInfo.text);
+    hideDefaultImage(e);
+    trashZone.hidden = false; // day 드래그 시에도 휴지통 표시
+    addTaskBtn.hidden = true;
+  });
+
+  dayGrid.addEventListener('dragend', e => {
+    const item = e.target.closest('.sched-item');
+    if (item) item.classList.remove('dragging');
+    endDrag();
+  });
+
+  // ── 마우스 이동 → 고스트 따라다니기 ──
+  document.addEventListener('dragover', e => {
+    ghost.style.top  = (e.clientY + 14) + 'px';
+    ghost.style.left = (e.clientX + 14) + 'px';
+  });
+
+  // ── 풀 영역을 드롭존으로 ── (day → pool: 일정 반환)
+  poolEl.addEventListener('dragover', e => {
+    if (dragInfo?.type !== 'day') return;
+    e.preventDefault();
+    poolEl.classList.add('drag-over-pool');
+  });
+  poolEl.addEventListener('dragleave', e => {
+    if (!poolEl.contains(e.relatedTarget)) poolEl.classList.remove('drag-over-pool');
+  });
+  poolEl.addEventListener('drop', e => {
+    poolEl.classList.remove('drag-over-pool');
+    if (dragInfo?.type !== 'day') return;
+    e.preventDefault();
+
+    const { taskId, itemId, dateKey: key, text } = dragInfo;
+    state.schedule[key] = (state.schedule[key] || []).filter(it => it.id !== itemId);
+    if (!state.pool.find(t => t.id === taskId)) {
+      state.pool.push({ id: taskId, text });
+    }
+    saveState();
+    endDrag();          // 스케줄 아이템 DOM 제거 전 정리
+    renderPool();
+    renderDayTasks(key);
+  });
+
+  // ── 휴지통 드롭존 (pool 또는 day → trash: 완전 삭제) ──
+  trashZone.addEventListener('dragover', e => {
+    if (!dragInfo) return;       // 드래그 중일 때만
+    e.preventDefault();          // 항상 preventDefault → drop 이벤트 허용
+    e.dataTransfer.dropEffect = 'move';
+    trashZone.classList.add('danger');
+  });
+  trashZone.addEventListener('dragleave', e => {
+    // 휴지통 내부 자식으로 이동 시 flicker 방지
+    if (!trashZone.contains(e.relatedTarget)) trashZone.classList.remove('danger');
+  });
+  trashZone.addEventListener('drop', e => {
+    e.preventDefault();
+    trashZone.classList.remove('danger');
+    if (!dragInfo) return;
+
+    if (dragInfo.type === 'pool') {
+      state.pool = state.pool.filter(t => t.id !== dragInfo.taskId);
+      saveState();
+      endDrag();        // DOM에서 제거 전 정리 (dragend 발화 안 됨)
+      renderPool();
+    } else if (dragInfo.type === 'day') {
+      const key = dragInfo.dateKey;
+      state.schedule[key] = (state.schedule[key] || []).filter(it => it.id !== dragInfo.itemId);
+      saveState();
+      endDrag();
+      renderDayTasks(key);
+    }
+  });
+}
+
+// ── 날짜 카드를 드롭존으로 ── (pool → day: 일정 추가)
+function setupDayDropZone(card, key) {
+  card.addEventListener('dragover', e => {
+    if (dragInfo?.type !== 'pool') return;
+    e.preventDefault();
+    card.classList.add('drag-over');
+  });
+  card.addEventListener('dragleave', e => {
+    if (!card.contains(e.relatedTarget)) card.classList.remove('drag-over');
+  });
+  card.addEventListener('drop', e => {
+    card.classList.remove('drag-over');
+    if (dragInfo?.type !== 'pool') return;
+    e.preventDefault();
+
+    const { taskId, text } = dragInfo;
+    // 같은 날에 이미 있으면 skip
+    if ((state.schedule[key] || []).some(it => it.taskId === taskId)) return;
+
+    // pool에서 제거 + day에 추가
+    state.pool = state.pool.filter(t => t.id !== taskId);
+    if (!state.schedule[key]) state.schedule[key] = [];
+    state.schedule[key].push({ id: uid(), taskId, text, status: null });
+    saveState();
+    endDrag();    // DOM에서 제거되기 전 정리 (dragend 대체)
+    renderPool();
+    renderDayTasks(key);
+  });
+}
+
+// ── 공통 헬퍼 ──
+function showGhost(text) {
+  ghost.textContent = text;
+  ghost.classList.add('visible');
+}
+function hideDefaultImage(e) {
+  const blank = document.createElement('div');
+  blank.style.cssText = 'width:1px;height:1px;position:fixed;top:-9999px';
+  document.body.appendChild(blank);
+  e.dataTransfer.setDragImage(blank, 0, 0);
+  setTimeout(() => document.body.removeChild(blank), 0);
+}
+function endDrag() {
+  dragInfo = null;
+  ghost.classList.remove('visible');
+  ghost.style.top = '-999px'; ghost.style.left = '-999px';
+  trashZone.hidden = true;
+  trashZone.classList.remove('danger');
+  addTaskBtn.hidden = false;   // + 버튼 복원
+}
+
+// ──────────────────────────────────────────────
+// 이벤트 위임 – O/X 토글, 미루기, 메모
+// ──────────────────────────────────────────────
+dayGrid.addEventListener('click', e => {
+  const btnO = e.target.closest('.btn-o');
+  if (btnO) { toggleStatus(btnO.dataset.date, btnO.dataset.id, 'O'); return; }
+
+  const deferBtn = e.target.closest('.defer-btn');
+  if (deferBtn) { deferTasks(deferBtn.dataset.date); }
+});
+
+dayGrid.addEventListener('input', e => {
+  if (e.target.classList.contains('day-card__memo')) {
+    const key = e.target.dataset.date;
+    state.dayMemo[key] = e.target.value;
+    saveState();
+  }
+});
+
+function toggleStatus(date, id, status) {
+  const items = state.schedule[date] || [];
+  const item  = items.find(it => it.id === id);
+  if (!item) return;
+  // O를 누르면 O, 다시 누르면 null(미완료/X 처리)
+  item.status = item.status === 'O' ? null : 'O';
+  saveState();
+  renderDayTasks(date);
+}
+
+function deferTasks(targetDateKey) {
+  const items = state.schedule[targetDateKey] || [];
+  // 완료되지 않은 항목들 (null 이나 X)
+  const unfinished = items.filter(it => it.status !== 'O');
+  if (unfinished.length === 0) return;
+
+  // targetDateKey 파싱 (로컬 시간 기준)
+  const [y, m, d] = targetDateKey.split('-');
+  const currentD = new Date(y, m - 1, d);
+  currentD.setDate(currentD.getDate() + 1);
+  const nextDateKey = dateKey(currentD); // 전역 dateKey() 함수 호출 안전
+
+  // 현재 날짜에서는 제거
+  state.schedule[targetDateKey] = items.filter(it => it.status === 'O');
+
+  // 다음날로 추가
+  if (!state.schedule[nextDateKey]) state.schedule[nextDateKey] = [];
+  unfinished.forEach(it => {
+    // id 재발급하여 다음날에 추가 (status 리셋)
+    state.schedule[nextDateKey].push({ id: uid(), taskId: it.taskId, text: it.text, status: null });
+  });
+
+  saveState();
+  renderWeek(); // 현재 화면 갱신 (보통 오늘이므로 제거된 것만 보임)
+}
+
+// ──────────────────────────────────────────────
+// 할일 추가 (인풋)
+// ──────────────────────────────────────────────
+const taskInput  = document.getElementById('taskInput');
+
+function addTask() {
+  const text = taskInput.value.trim();
+  if (!text) { taskInput.focus(); return; }
+  state.pool.push({ id: uid(), text });
+  saveState();
+  renderPool();
+  taskInput.value = '';
+  taskInput.focus();
+}
+
+addTaskBtn.addEventListener('click', addTask);
+taskInput.addEventListener('keydown', e => { 
+  if (e.isComposing || e.keyCode === 229) return;
+  if (e.key === 'Enter') addTask(); 
+});
+
+// ──────────────────────────────────────────────
+// 날짜 네비게이션
+// ──────────────────────────────────────────────
+document.getElementById('prevWeekBtn').addEventListener('click', () => { state.dayOffset--; renderWeek(); });
+document.getElementById('nextWeekBtn').addEventListener('click', () => { state.dayOffset++; renderWeek(); });
+
+// ──────────────────────────────────────────────
+// 과거 내역 모달
+// ──────────────────────────────────────────────
+function openHistory() {
+  historyList.innerHTML = '';
+
+  const allKeys = Object.keys(state.schedule)
+    .filter(k => state.schedule[k]?.length > 0)
+    .sort((a, b) => b.localeCompare(a));
+
+  if (allKeys.length === 0) {
+    historyList.innerHTML = '<p class="history-empty">아직 기록된 일정이 없어요.</p>';
+    historyModal.hidden = false;
+    return;
+  }
+
+  allKeys.forEach((key, idx) => {
+    const items = state.schedule[key];
+    const d     = new Date(key);
+    const dow   = d.getDay();
+    const done  = items.filter(it => it.status === 'O').length;
+
+    const dayEl = document.createElement('div');
+    dayEl.className = 'history-day' + (idx === 0 ? ' open' : '');
+
+    let titleColor = '';
+    if (dow === 0) titleColor = 'style="color:#dc2626"';
+    if (dow === 6) titleColor = 'style="color:#2563eb"';
+
+    dayEl.innerHTML = `
+      <div class="history-day__header">
+        <span class="history-day__title" ${titleColor}>
+          ${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 ${DAYS_FULL[dow]}
+        </span>
+        <span class="history-day__summary">${done}/${items.length} 완료</span>
+        <span class="history-day__chevron">▼</span>
+      </div>
+      <div class="history-day__tasks">
+        ${items.map(it => `
+          <div class="history-task status-${it.status||'none'}">
+            <span class="history-task__text">${escHtml(it.text)}</span>
+            <span class="history-badge ${it.status||'none'}">${
+              it.status === 'O' ? '✓ 완료'
+              : it.status === 'X' ? '✕ 미완료'
+              : '— 미기록'
+            }</span>
+          </div>`).join('')}
+      </div>`;
+
+    dayEl.querySelector('.history-day__header').addEventListener('click', () => {
+      dayEl.classList.toggle('open');
+    });
+    historyList.appendChild(dayEl);
+  });
+
+  historyModal.hidden = false;
+}
+
+historyBtn.addEventListener('click', openHistory);
+historyCloseBtn.addEventListener('click', () => { historyModal.hidden = true; });
+historyModal.addEventListener('click', e => { if (e.target === historyModal) historyModal.hidden = true; });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') historyModal.hidden = true; });
+
+// ──────────────────────────────────────────────
+// 초기화
+// ──────────────────────────────────────────────
+loadLocalState();
+initDrag();

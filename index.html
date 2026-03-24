@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>일정 관리</title>
+  <meta name="description" content="드래그앤드롭 방식의 일정 및 할일 관리 사이트" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ─── 상단 영역 ─── -->
+  <header class="top-bar">
+    <div class="top-bar__inner">
+      <div class="top-header-row">
+        <h1 class="logo">📋 일정 관리</h1>
+        <div class="header-right">
+          <!-- ─── Firebase 인증 UI ─── -->
+          <div id="authSection" class="auth-section">
+            <button id="loginBtn" class="auth-btn">Google 로그인</button>
+            <div id="userInfo" class="user-info" hidden>
+              <img id="userPhoto" class="user-photo" src="" alt="프로필" />
+              <span id="userName" class="user-name"></span>
+              <button id="logoutBtn" class="auth-btn auth-btn--outline" aria-label="로그아웃">로그아웃</button>
+            </div>
+          </div>
+          <div class="survey-links">
+            <a href="https://forms.gle/rUwhENomLZjW7b2r6" target="_blank" rel="noopener noreferrer">♥️ 이다현 선생님 설문 링크</a>
+            <a href="https://forms.gle/La8gfRFc9KaGGN7z5" target="_blank" rel="noopener noreferrer">♥️ 백민준 선생님 설문 링크</a>
+          </div>
+        </div>
+      </div>
+      <div class="task-input-wrap">
+        <input id="taskInput" type="text" placeholder="새 할일을 입력하세요…" autocomplete="off" />
+        <button id="addTaskBtn" aria-label="할일 추가">＋ 추가</button>
+        <div id="trashZone" class="trash-zone" hidden aria-label="여기에 놓으면 삭제">
+          <span class="trash-zone__icon">🗑️</span>
+          <span class="trash-zone__label">여기에 놓으면 삭제</span>
+        </div>
+      </div>
+
+      <!-- 할일 풀(Pool) — 드롭존 겸용 -->
+      <div id="taskPool" class="task-pool" aria-label="할일 목록">
+        <!-- JS 동적 생성 -->
+      </div>
+    </div>
+  </header>
+
+  <!-- ─── 날짜별 일정 및 시간표 영역 ─── -->
+  <main class="schedule-area">
+    <div class="schedule-area__header">
+      <button id="prevWeekBtn" class="week-nav-btn" aria-label="이전 날">◀</button>
+      <span id="weekLabel" class="week-label"></span>
+      <button id="nextWeekBtn" class="week-nav-btn" aria-label="다음 날">▶</button>
+      <button id="historyBtn" class="history-btn">📂 과거 내역 보기</button>
+    </div>
+
+    <div class="schedule-layout">
+      <!-- ─── 실제 드롭되는 날짜 카드 영역 ─── -->
+      <div id="dayGrid" class="day-grid"></div>
+
+      <!-- ─── 학교 시간표 위젯 (사이드) ─── -->
+      <div id="timetableWidget" class="timetable-widget" hidden></div>
+    </div>
+  </main>
+
+  <!-- ─── 드래그 고스트 ─── -->
+  <div id="dragGhost" class="drag-ghost" aria-hidden="true"></div>
+
+  <!-- ─── 과거 내역 모달 ─── -->
+  <div id="historyModal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="과거 내역" hidden>
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2>📂 과거 내역</h2>
+        <button id="historyCloseBtn" class="modal-close" aria-label="닫기">✕</button>
+      </div>
+      <div id="historyList" class="history-list"></div>
+    </div>
+  </div>
+
+  <!-- ─── Firebase SDK (Compat Version) ─── -->
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+
+  <script src="script.js"></script>
+</body>
+</html>
