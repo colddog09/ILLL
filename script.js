@@ -144,6 +144,18 @@ if (typeof firebase !== 'undefined' && firebaseConfig.apiKey !== "YOUR_API_KEY")
       alert("로그인 중 오류가 발생했습니다: " + err.message);
     }
   });
+
+  console.log("Firebase initialized successfully");
+} else {
+  console.warn("Firebase script not loaded or API key not set");
+  if (typeof firebase === 'undefined') {
+    // 1초 뒤에 다시 확인 (CDN 로딩 지연 대비)
+    setTimeout(() => {
+      if (typeof firebase === 'undefined') {
+        alert("Firebase 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인해주세요.");
+      }
+    }, 1000);
+  }
 }
 
 function uid() { return '_' + Math.random().toString(36).slice(2, 9); }
@@ -295,18 +307,35 @@ if (settingsSaveBtn) {
 }
 
 if (fbLoginBtn) {
+  console.log("Login button found in DOM");
   fbLoginBtn.addEventListener('click', () => {
+    console.log("Login button clicked");
     if (typeof firebase !== 'undefined' && firebase.auth) {
       if (firebaseConfig.apiKey === "YOUR_API_KEY") {
         alert("Firebase 설정 키가 아직 입력되지 않았습니다!\nscript.js 상단의 firebaseConfig를 수정해주세요.");
         return;
       }
       const provider = new firebase.auth.GoogleAuthProvider();
-      // PWA(웹앱) 환경에서는 팝업이 차단되는 경우가 많아 리다이렉트 방식을 권장합니다.
-      firebase.auth().signInWithRedirect(provider).catch(err => {
-        console.error(err);
-        alert("로그인 중 오류가 발생했습니다: " + err.message);
-      });
+      
+      // 모바일/PWA 환경인 경우 리다이렉트, PC인 경우 팝업 (가장 호환성 높음)
+      const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+      if (isStandalone || isMobile) {
+        console.log("Using signInWithRedirect (Mobile/PWA mode)");
+        firebase.auth().signInWithRedirect(provider).catch(err => {
+          console.error(err);
+          alert("로그인 중 오류가 발생했습니다: " + err.message);
+        });
+      } else {
+        console.log("Using signInWithPopup (Desktop mode)");
+        firebase.auth().signInWithPopup(provider).catch(err => {
+          console.error(err);
+          alert("로그인 중 오류가 발생했습니다: " + err.message);
+        });
+      }
+    } else {
+      alert("Firebase 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.");
     }
   });
 }
