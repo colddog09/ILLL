@@ -286,6 +286,22 @@ body {
   text-align: center;
 }
 
+.week-labe.logo {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--accent);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+.sync-status {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-sub);
+  margin-left: 10px;
+  opacity: 0.8;
+  vertical-align: middle;
+}
+
 .week-nav-btn {
   background: var(--surface);
   border: 1.5px solid var(--border);

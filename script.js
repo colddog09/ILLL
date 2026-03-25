@@ -189,7 +189,7 @@ function escHtml(str) {
 // ──────────────────────────────────────────────
 function loadState() {
   if (currentUser && db) {
-    // onSnapshot을 사용하여 실시간으로 데이터 변화를 감지합니다 (기기 간 연동 해결)
+    // onSnapshot을 사용하여 실시간으로 데이터 변화를 감지합니다
     db.collection('users').doc(currentUser.uid).onSnapshot(doc => {
       if (doc.exists) {
         const data = doc.data();
@@ -197,10 +197,7 @@ function loadState() {
         state.schedule = data.schedule || {};
         state.dayMemo  = data.dayMemo || {};
         state.classNum = data.classNum || '2';
-        
-        console.log("Firestore data updated in real-time");
       } else {
-        // [마이그레이션] Firestore에 데이터가 없는 경우 로컬 데이터 확인
         const localPool = JSON.parse(localStorage.getItem(STORAGE_KEY_POOL));
         const localSched = JSON.parse(localStorage.getItem(STORAGE_KEY_SCHED));
         const localMemo = JSON.parse(localStorage.getItem('dayMemo_v1'));
@@ -211,14 +208,19 @@ function loadState() {
           state.schedule = localSched || {};
           state.dayMemo = localMemo || {};
           state.classNum = localClass || '2';
-          saveState(); // 최초 1회 클라우드 업로드
+          saveState();
         } else {
-          // 아예 빈 상태로 시작
           state.pool = []; state.schedule = {}; state.dayMemo = {}; state.classNum = '2';
         }
       }
-      renderPool();
-      renderWeek();
+      
+      // 메모장 포커스가 없을 때만 리렌더링 (타이핑 끊김 방지)
+      const activeElement = document.activeElement;
+      if (!activeElement || !activeElement.classList.contains('day-card__memo')) {
+        renderPool();
+        renderWeek();
+      }
+      
       const cSel = document.getElementById('classSelect');
       if (cSel) cSel.value = state.classNum;
     }, err => {
@@ -245,18 +247,28 @@ function loadLocalState() {
 }
 
 function saveState() {
+  const statusEl = document.getElementById('syncStatus');
+  if (statusEl) statusEl.textContent = '☁️ 저장 중...';
+
   if (currentUser && db) {
     db.collection('users').doc(currentUser.uid).set({
       pool: state.pool,
       schedule: state.schedule,
       dayMemo: state.dayMemo,
-      classNum: state.classNum
-    }).catch(err => console.error("Firestore 저장 에러:", err));
+      classNum: state.classNum,
+      lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+      if (statusEl) statusEl.textContent = '✅ 저장 완료';
+    }).catch(err => {
+      console.error("Firestore 저장 에러:", err);
+      if (statusEl) statusEl.textContent = '❌ 저장 실패';
+    });
   } else {
     localStorage.setItem(STORAGE_KEY_POOL,  JSON.stringify(state.pool));
     localStorage.setItem(STORAGE_KEY_SCHED, JSON.stringify(state.schedule));
     localStorage.setItem('dayMemo_v1',      JSON.stringify(state.dayMemo));
     localStorage.setItem('classNum_v1',     state.classNum);
+    if (statusEl) statusEl.textContent = '💾 로컬 저장됨';
   }
 }
 
