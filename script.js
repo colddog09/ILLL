@@ -138,10 +138,17 @@ if (typeof firebase !== 'undefined' && firebaseConfig.apiKey !== "YOUR_API_KEY")
   });
 
   // PWA/상태바 환경에서의 리다이렉트 처리 데이터 로드
-  firebase.auth().getRedirectResult().catch(err => {
+  console.log("Checking for redirect result...");
+  firebase.auth().getRedirectResult().then(result => {
+    if (result.user) {
+      console.log("Redirect login successful:", result.user.displayName);
+    } else {
+      console.log("No redirect result found (normal page load)");
+    }
+  }).catch(err => {
     if (err.code !== 'auth/configuration-not-found') {
-      console.error("리다이렉트 로그인 에러:", err);
-      alert("로그인 중 오류가 발생했습니다: " + err.message);
+      console.error("리다이렉트 로그인 에러 상세:", err);
+      alert("로그인 중 오류가 발생했습니다 [" + err.code + "]: " + err.message);
     }
   });
 
