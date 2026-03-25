@@ -136,6 +136,14 @@ if (typeof firebase !== 'undefined' && firebaseConfig.apiKey !== "YOUR_API_KEY")
       loadState(); // 비로그인 시 로컬 로드
     }
   });
+
+  // PWA/상태바 환경에서의 리다이렉트 처리 데이터 로드
+  firebase.auth().getRedirectResult().catch(err => {
+    if (err.code !== 'auth/configuration-not-found') {
+      console.error("리다이렉트 로그인 에러:", err);
+      alert("로그인 중 오류가 발생했습니다: " + err.message);
+    }
+  });
 }
 
 function uid() { return '_' + Math.random().toString(36).slice(2, 9); }
@@ -170,8 +178,22 @@ function loadState() {
         state.dayMemo  = data.dayMemo || {};
         state.classNum = data.classNum || '2';
       } else {
-        // 데이터가 없으면 초기화
-        state.pool = []; state.schedule = {}; state.dayMemo = {}; state.classNum = '2';
+        // [마이그레이션] 신규 사용자인 경우 로컬에 데이터가 있는지 확인
+        const localPool = JSON.parse(localStorage.getItem(STORAGE_KEY_POOL));
+        const localSched = JSON.parse(localStorage.getItem(STORAGE_KEY_SCHED));
+        const localMemo = JSON.parse(localStorage.getItem('dayMemo_v1'));
+        const localClass = localStorage.getItem('classNum_v1');
+
+        if (localPool || localSched || localMemo) {
+          state.pool = localPool || [];
+          state.schedule = localSched || {};
+          state.dayMemo = localMemo || {};
+          state.classNum = localClass || '2';
+          // 로컬 데이터를 Firestore에 즉시 저장
+          saveState();
+        } else {
+          state.pool = []; state.schedule = {}; state.dayMemo = {}; state.classNum = '2';
+        }
       }
       renderPool();
       renderWeek();
@@ -280,7 +302,8 @@ if (fbLoginBtn) {
         return;
       }
       const provider = new firebase.auth.GoogleAuthProvider();
-      firebase.auth().signInWithPopup(provider).catch(err => {
+      // PWA(웹앱) 환경에서는 팝업이 차단되는 경우가 많아 리다이렉트 방식을 권장합니다.
+      firebase.auth().signInWithRedirect(provider).catch(err => {
         console.error(err);
         alert("로그인 중 오류가 발생했습니다: " + err.message);
       });
