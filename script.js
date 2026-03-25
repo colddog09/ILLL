@@ -17,6 +17,7 @@ let state = {
   schedule: {},  // { 'YYYY-MM-DD': [{ id, taskId, text, status }] }
   dayMemo: {},   // { 'YYYY-MM-DD': 'memo text' }
   dayOffset: 0,
+  classNum: '2'
 };
 
 /*
@@ -32,39 +33,44 @@ let state = {
 let dragInfo = null; // { type: 'pool'|'day', taskId, itemId, dateKey, text }
 
 // ──────────────────────────────────────────────
-// 시간표 데이터 (GBS 2-2)
+// 시간표 데이터 (GBS 2학년 전체 교실)
 // ──────────────────────────────────────────────
-const SCHOOL_TIMETABLE = {
-  1: [ // 월
-    { p: '1교시', s: '역사 (홍준호)' }, { p: '2교시', s: '체육 (이종현)' },
-    { p: '3교시', s: '지구 (오상림)' }, { p: '4교시', s: '생물 (백민준)' },
-    { p: '5교시', s: '수학 (박은미)' }, { p: '6교시', s: '수학 (박은미)' },
-    { p: '7교시', s: '공강' }, { p: '방과후', s: '청소' }
-  ],
-  2: [ // 화
-    { p: '1교시', s: '수학 (오승은)' }, { p: '2교시', s: 'A (국/영/중)' },
-    { p: '3교시', s: 'A (국/영/중)' }, { p: '4교시', s: '체육 (이종현)' },
-    { p: '5교시', s: '수학 (백승범)' }, { p: '6교시', s: '물리 (이용호)' },
-    { p: '7교시', s: '연구' }, { p: '방과후', s: '' }
-  ],
-  3: [ // 수
-    { p: '1교시', s: '정보 (김유정)' }, { p: '2교시', s: '정보 (김유정)' },
-    { p: '3교시', s: 'B (국/영/중)' }, { p: '4교시', s: 'B (국/영/중)' },
-    { p: '5교시', s: '지구 (유병윤)' }, { p: '6교시', s: '지구 (유병윤)' },
-    { p: '7교시', s: '동아리' }, { p: '방과후', s: '' }
-  ],
-  4: [ // 목
-    { p: '1교시', s: '화학 (이화수)' }, { p: '2교시', s: '화학 (이화수)' },
-    { p: '3교시', s: '수학 (백승범)' }, { p: '4교시', s: 'A (국/영/중)' },
-    { p: '5교시', s: '역사 (홍준호)' }, { p: '6교시', s: 'B (국/영/중)' },
-    { p: '7교시', s: '창체' }, { p: '방과후', s: '청소' }
-  ],
-  5: [ // 금
-    { p: '1교시', s: '수학 (오승은)' }, { p: '2교시', s: '역사 (홍준호)' },
-    { p: '3교시', s: '생명 (이다현)' }, { p: '4교시', s: '생명 (이다현)' },
-    { p: '5교시', s: '물리 (이용호)' }, { p: '6교시', s: '물리 (재규선)' },
-    { p: '7교시', s: '' }, { p: '방과후', s: '' }
-  ]
+const SCHOOL_TIMETABLE_ALL = {
+  1: { // 1반
+    1: [{p:'1교시',s:'지구 (유병)'}, {p:'2교시',s:'지구 (유병)'}, {p:'3교시',s:'한국사 (홍준)'}, {p:'4교시',s:'물리 (이용)'}, {p:'5교시',s:'수학 (백승)'}, {p:'6교시',s:'수학 (오승)'}],
+    2: [{p:'1교시',s:'지구 (오상)'}, {p:'2교시',s:'A문학 (김수)'}, {p:'3교시',s:'A문학 (김수)'}, {p:'4교시',s:'생명 (백민)'}, {p:'5교시',s:'생명 (이다)'}, {p:'6교시',s:'생명 (이다)'}, {p:'7교시',s:'연구 (오승)'}],
+    3: [{p:'1교시',s:'한국사 (홍준)'}, {p:'2교시',s:'체육 (이종)'}, {p:'3교시',s:'B문학 (김수)'}, {p:'4교시',s:'B문학 (김수)'}, {p:'5교시',s:'정보 (김유)'}, {p:'6교시',s:'정보 (김유)'}, {p:'7교시',s:'동아리 (오승)'}],
+    4: [{p:'1교시',s:'수학 (백승)'}, {p:'2교시',s:'물리 (채규)'}, {p:'3교시',s:'물리 (이용)'}, {p:'4교시',s:'A문학 (김수)'}, {p:'5교시',s:'수학 (오승)'}, {p:'6교시',s:'B문학 (김수)'}, {p:'7교시',s:'자율 (오승)'}],
+    5: [{p:'1교시',s:'수학 (박연)'}, {p:'2교시',s:'수학 (박연)'}, {p:'3교시',s:'화학 (이화)'}, {p:'4교시',s:'화학 (이화)'}, {p:'5교시',s:'체육 (이종)'}, {p:'6교시',s:'한국사 (홍준)'}]
+  },
+  2: { // 2반 (기존 2-2)
+    1: [{p:'1교시',s:'역사 (홍준호)'}, {p:'2교시',s:'체육 (이종현)'}, {p:'3교시',s:'지구 (오상림)'}, {p:'4교시',s:'생물 (백민준)'}, {p:'5교시',s:'수학 (박은미)'}, {p:'6교시',s:'수학 (박은미)'}, {p:'7교시',s:'공강'}, {p:'방과후',s:'청소'}],
+    2: [{p:'1교시',s:'수학 (오승은)'}, {p:'2교시',s:'A (국/영/중)'}, {p:'3교시',s:'A (국/영/중)'}, {p:'4교시',s:'체육 (이종현)'}, {p:'5교시',s:'수학 (백승범)'}, {p:'6교시',s:'물리 (이용호)'}, {p:'7교시',s:'연구'}, {p:'방과후',s:''}],
+    3: [{p:'1교시',s:'정보 (김유정)'}, {p:'2교시',s:'정보 (김유정)'}, {p:'3교시',s:'B (국/영/중)'}, {p:'4교시',s:'B (국/영/중)'}, {p:'5교시',s:'지구 (유병윤)'}, {p:'6교시',s:'지구 (유병윤)'}, {p:'7교시',s:'동아리'}, {p:'방과후',s:''}],
+    4: [{p:'1교시',s:'화학 (이화수)'}, {p:'2교시',s:'화학 (이화수)'}, {p:'3교시',s:'수학 (백승범)'}, {p:'4교시',s:'A (국/영/중)'}, {p:'5교시',s:'역사 (홍준호)'}, {p:'6교시',s:'B (국/영/중)'}, {p:'7교시',s:'창체'}, {p:'방과후',s:'청소'}],
+    5: [{p:'1교시',s:'수학 (오승은)'}, {p:'2교시',s:'역사 (홍준호)'}, {p:'3교시',s:'생명 (이다현)'}, {p:'4교시',s:'생명 (이다현)'}, {p:'5교시',s:'물리 (이용호)'}, {p:'6교시',s:'물리 (재규선)'}, {p:'7교시',s:''}, {p:'방과후',s:''}]
+  },
+  3: { // 3반
+    1: [{p:'1교시',s:'수학 (박연)'}, {p:'2교시',s:'수학 (박연)'}, {p:'3교시',s:'수학 (백승)'}, {p:'4교시',s:'지구 (오상)'}, {p:'5교시',s:'지구 (유병)'}, {p:'6교시',s:'지구 (유병)'}],
+    2: [{p:'1교시',s:'생명 (백민)'}, {p:'2교시',s:'A중국어 (오정)'}, {p:'3교시',s:'A중국어 (오정)'}, {p:'4교시',s:'물리 (이용)'}, {p:'5교시',s:'물리 (채규)'}, {p:'6교시',s:'한국사 (홍준)'}, {p:'7교시',s:'연구 (유병)'}],
+    3: [{p:'1교시',s:'화학 (이화)'}, {p:'2교시',s:'화학 (이화)'}, {p:'3교시',s:'B중국어 (오정)'}, {p:'4교시',s:'B중국어 (오정)'}, {p:'5교시',s:'수학 (오승)'}, {p:'6교시',s:'한국사 (홍준)'}, {p:'7교시',s:'동아리 (유병)'}],
+    4: [{p:'1교시',s:'생명 (이다)'}, {p:'2교시',s:'생명 (이다)'}, {p:'3교시',s:'한국사 (홍준)'}, {p:'4교시',s:'A중국어 (오정)'}, {p:'5교시',s:'체육 (이종)'}, {p:'6교시',s:'B중국어 (오정)'}, {p:'7교시',s:'자율 (유병)'}],
+    5: [{p:'1교시',s:'수학 (백승)'}, {p:'2교시',s:'체육 (이종)'}, {p:'3교시',s:'수학 (오승)'}, {p:'4교시',s:'물리 (이용)'}, {p:'5교시',s:'정보 (김유)'}, {p:'6교시',s:'정보 (김유)'}]
+  },
+  4: { // 4반
+    1: [{p:'1교시',s:'수학 (백승)'}, {p:'2교시',s:'중국어 (오정)'}, {p:'3교시',s:'물리 (이용)'}, {p:'4교시',s:'한국사 (홍준)'}, {p:'5교시',s:'수학 (오승)'}, {p:'6교시',s:'체육 (이종)'}],
+    2: [{p:'1교시',s:'화학 (이화)'}, {p:'2교시',s:'화학 (이화)'}, {p:'3교시',s:'수학 (박연)'}, {p:'4교시',s:'수학 (박연)'}, {p:'5교시',s:'영어 (유환)'}, {p:'6교시',s:'지구 (오상)'}, {p:'7교시',s:'연구 (유환)'}],
+    3: [{p:'1교시',s:'생명 (이다)'}, {p:'2교시',s:'생명 (이다)'}, {p:'3교시',s:'체육 (이종)'}, {p:'4교시',s:'한국사 (홍준)'}, {p:'5교시',s:'생명 (백민)'}, {p:'6교시',s:'중국어 (오정)'}, {p:'7교시',s:'동아리 (유환)'}],
+    4: [{p:'1교시',s:'영어 (김세)'}, {p:'2교시',s:'한국사 (홍준)'}, {p:'3교시',s:'수학 (오승)'}, {p:'4교시',s:'수학 (백승)'}, {p:'5교시',s:'물리 (이용)'}, {p:'6교시',s:'물리 (채규)'}, {p:'7교시',s:'봉사 (김수)'}],
+    5: [{p:'1교시',s:'정보 (김유)'}, {p:'2교시',s:'정보 (김유)'}, {p:'3교시',s:'지구 (유병)'}, {p:'4교시',s:'지구 (유병)'}, {p:'5교시',s:'중국어 (오정)'}, {p:'6교시',s:'영어 (유환)'}]
+  },
+  5: { // 5반
+    1: [{p:'1교시',s:'화학 (이화)'}, {p:'2교시',s:'화학 (이화)'}, {p:'3교시',s:'중국어 (오정)'}, {p:'4교시',s:'체육 (이종)'}, {p:'5교시',s:'생명 (이다)'}, {p:'6교시',s:'생명 (이다)'}],
+    2: [{p:'1교시',s:'수학 (백승)'}, {p:'2교시',s:'한국사 (홍준)'}, {p:'3교시',s:'생명 (백민)'}, {p:'4교시',s:'수학 (오승)'}, {p:'5교시',s:'지구 (오상)'}, {p:'6교시',s:'영어 (유환)'}, {p:'7교시',s:'연구 (이화)'}],
+    3: [{p:'1교시',s:'중국어 (오정)'}, {p:'2교시',s:'한국사 (홍준)'}, {p:'3교시',s:'물리 (이용)'}, {p:'4교시',s:'물리 (채규)'}, {p:'5교시',s:'수학 (백승)'}, {p:'6교시',s:'물리 (이용)'}, {p:'7교시',s:'동아리 (이화)'}],
+    4: [{p:'1교시',s:'중국어 (오정)'}, {p:'2교시',s:'영어 (김세)'}, {p:'3교시',s:'정보 (김유)'}, {p:'4교시',s:'정보 (김유)'}, {p:'5교시',s:'지구 (유병)'}, {p:'6교시',s:'지구 (유병)'}, {p:'7교시',s:'자율 (이화)'}],
+    5: [{p:'1교시',s:'한국사 (홍준)'}, {p:'2교시',s:'영어 (유환)'}, {p:'3교시',s:'체육 (이종)'}, {p:'4교시',s:'수학 (오승)'}, {p:'5교시',s:'수학 (박연)'}, {p:'6교시',s:'수학 (박연)'}]
+  }
 };
 
 // ──────────────────────────────────────────────
@@ -102,11 +108,31 @@ if (typeof firebase !== 'undefined' && firebaseConfig.apiKey !== "YOUR_API_KEY")
       if (userInfo) userInfo.hidden = false;
       if (userPhoto) userPhoto.src = user.photoURL || '';
       if (userName) userName.textContent = user.displayName || '사용자';
+
+      // 로그인 시 입력창 활성화
+      const tInput = document.getElementById('taskInput');
+      const tBtn   = document.getElementById('addTaskBtn');
+      if (tInput) {
+        tInput.disabled = false;
+        tInput.placeholder = "할일을 추가하세요 (엔터)";
+      }
+      if (tBtn) tBtn.disabled = false;
+
       loadState(); // 로그인 시 Firestore 데이터 로드
     } else {
       currentUser = null;
       if (loginBtn) loginBtn.hidden = false;
       if (userInfo) userInfo.hidden = true;
+
+      // 비로그인 시 입력창 비활성화
+      const tInput = document.getElementById('taskInput');
+      const tBtn   = document.getElementById('addTaskBtn');
+      if (tInput) {
+        tInput.disabled = true;
+        tInput.placeholder = "👉 로그인 후 일정을 추가할 수 있습니다.";
+      }
+      if (tBtn) tBtn.disabled = true;
+
       loadState(); // 비로그인 시 로컬 로드
     }
   });
@@ -142,22 +168,37 @@ function loadState() {
         state.pool     = data.pool || [];
         state.schedule = data.schedule || {};
         state.dayMemo  = data.dayMemo || {};
+        state.classNum = data.classNum || '2';
+      } else {
+        // 데이터가 없으면 초기화
+        state.pool = []; state.schedule = {}; state.dayMemo = {}; state.classNum = '2';
       }
       renderPool();
       renderWeek();
+      const cSel = document.getElementById('classSelect');
+      if (cSel) cSel.value = state.classNum;
     }).catch(err => {
       console.error("Firestore 로드 에러:", err);
-      loadLocalState();
+      // 로그인 에러 시에도 비어 있게 하거나 로컬 로드 (필요시)
+      state.pool = []; state.schedule = {}; state.dayMemo = {};
+      renderPool(); renderWeek();
     });
   } else {
-    loadLocalState();
+    // 로그인하지 않은 상태 (게스트) - 아무런 할일 없이 빈 상태로
+    state.pool = [];
+    state.schedule = {};
+    state.dayMemo = {};
+    state.classNum = '2';
+    renderPool();
+    renderWeek();
   }
 }
 
 function loadLocalState() {
-  try { state.pool     = JSON.parse(localStorage.getItem(STORAGE_KEY_POOL))  || []; } catch { state.pool = []; }
-  try { state.schedule = JSON.parse(localStorage.getItem(STORAGE_KEY_SCHED)) || {}; } catch { state.schedule = {}; }
-  try { state.dayMemo  = JSON.parse(localStorage.getItem('dayMemo_v1'))      || {}; } catch { state.dayMemo = {}; }
+  // 사용하지 않음 (게스트는 무조건 빈 상태)
+  state.pool = [];
+  state.schedule = {};
+  state.dayMemo = {};
   renderPool();
   renderWeek();
 }
@@ -167,12 +208,14 @@ function saveState() {
     db.collection('users').doc(currentUser.uid).set({
       pool: state.pool,
       schedule: state.schedule,
-      dayMemo: state.dayMemo
+      dayMemo: state.dayMemo,
+      classNum: state.classNum
     }).catch(err => console.error("Firestore 저장 에러:", err));
   } else {
     localStorage.setItem(STORAGE_KEY_POOL,  JSON.stringify(state.pool));
     localStorage.setItem(STORAGE_KEY_SCHED, JSON.stringify(state.schedule));
     localStorage.setItem('dayMemo_v1',      JSON.stringify(state.dayMemo));
+    localStorage.setItem('classNum_v1',     state.classNum);
   }
 }
 
@@ -185,6 +228,10 @@ const weekLabel   = document.getElementById('weekLabel');
 const ghost       = document.getElementById('dragGhost');
 const trashZone   = document.getElementById('trashZone');
 const addTaskBtn  = document.getElementById('addTaskBtn');
+const helpBtn      = document.getElementById('helpBtn');
+const helpModal    = document.getElementById('helpModal');
+const helpCloseBtn = document.getElementById('helpCloseBtn');
+
 const historyModal    = document.getElementById('historyModal');
 const historyList     = document.getElementById('historyList');
 const historyBtn      = document.getElementById('historyBtn');
@@ -192,6 +239,38 @@ const historyCloseBtn = document.getElementById('historyCloseBtn');
 
 const fbLoginBtn  = document.getElementById('loginBtn');
 const fbLogoutBtn = document.getElementById('logoutBtn');
+const settingsBtn = document.getElementById('settingsBtn');
+const settingsModal = document.getElementById('settingsModal');
+const settingsCloseBtn = document.getElementById('settingsCloseBtn');
+const settingsSaveBtn = document.getElementById('settingsSaveBtn');
+const classSelect = document.getElementById('classSelect');
+
+if (helpBtn) {
+  helpBtn.addEventListener('click', () => { helpModal.hidden = false; });
+}
+if (helpCloseBtn) {
+  helpCloseBtn.addEventListener('click', () => { helpModal.hidden = true; });
+  helpModal.addEventListener('click', e => { if (e.target === helpModal) helpModal.hidden = true; });
+}
+
+if (settingsBtn) {
+  settingsBtn.addEventListener('click', () => {
+    classSelect.value = state.classNum;
+    settingsModal.hidden = false;
+  });
+}
+if (settingsCloseBtn) {
+  settingsCloseBtn.addEventListener('click', () => settingsModal.hidden = true);
+  settingsModal.addEventListener('click', e => { if (e.target === settingsModal) settingsModal.hidden = true; });
+}
+if (settingsSaveBtn) {
+  settingsSaveBtn.addEventListener('click', () => {
+    state.classNum = classSelect.value;
+    saveState();
+    renderWeek();
+    settingsModal.hidden = true;
+  });
+}
 
 if (fbLoginBtn) {
   fbLoginBtn.addEventListener('click', () => {
@@ -236,7 +315,7 @@ function renderPool() {
     const card = document.createElement('div');
     card.className = 'pool-card';
     card.dataset.taskId = task.id;
-    card.draggable = true;
+    card.draggable = !!currentUser; // 비로그인 시 드래그 불가
     card.textContent = task.text;
     poolEl.appendChild(card);
   });
@@ -283,7 +362,7 @@ function renderWeek() {
       ${deferBtnHtml}
     </div>
     <div class="day-card__memo-wrap">
-      <textarea class="day-card__memo" data-date="${key}" placeholder="오늘의 메모나 자유로운 글을 남겨보세요...">${escHtml(memoText)}</textarea>
+      <textarea class="day-card__memo" data-date="${key}" ${!currentUser ? 'disabled' : ''} placeholder="오늘의 메모나 자유로운 글을 남겨보세요...">${escHtml(memoText)}</textarea>
     </div>
     <div class="day-card__tasks" id="tasks_${key}"></div>
     <div class="day-card__progress">
@@ -300,6 +379,15 @@ function renderTimetable(currentD) {
   const widget = document.getElementById('timetableWidget');
   if (!widget) return;
   
+  // 로그인하지 않은 상태에서는 시간표 숨김
+  if (!currentUser) {
+    widget.hidden = true;
+    return;
+  }
+  
+  const cNum = state.classNum || '2';
+  const myTimetable = SCHOOL_TIMETABLE_ALL[cNum] || {};
+
   // 오늘 표시할 날짜의 요일
   const tzTodayDow = currentD.getDay();
   // 내일 날짜와 요일 계산
@@ -308,8 +396,8 @@ function renderTimetable(currentD) {
   const tzNextDow = nextD.getDay();
 
   // 토(6), 일(0) 은 빈 배열 처리
-  const todayTb = SCHOOL_TIMETABLE[tzTodayDow] || [];
-  const nextTb = SCHOOL_TIMETABLE[tzNextDow] || [];
+  const todayTb = myTimetable[tzTodayDow] || [];
+  const nextTb = myTimetable[tzNextDow] || [];
 
   if (todayTb.length === 0 && nextTb.length === 0) {
     widget.hidden = true;
@@ -350,7 +438,7 @@ function renderDayTasks(key) {
     el.dataset.itemId = item.id;
     el.dataset.dateKey = key;
     el.dataset.taskId  = item.taskId;
-    el.draggable = true;
+    el.draggable = !!currentUser; // 비로그인 시 드래그 불가
     el.innerHTML = `
       <span class="sched-item__text" title="${escHtml(item.text)}">${escHtml(item.text)}</span>
       <div class="sched-item__ox">
@@ -546,6 +634,7 @@ dayGrid.addEventListener('click', e => {
 });
 
 dayGrid.addEventListener('input', e => {
+  if (!currentUser) return;
   if (e.target.classList.contains('day-card__memo')) {
     const key = e.target.dataset.date;
     state.dayMemo[key] = e.target.value;
@@ -554,6 +643,7 @@ dayGrid.addEventListener('input', e => {
 });
 
 function toggleStatus(date, id, status) {
+  if (!currentUser) { alert('로그인 후 이용 가능합니다.'); return; }
   const items = state.schedule[date] || [];
   const item  = items.find(it => it.id === id);
   if (!item) return;
@@ -564,6 +654,7 @@ function toggleStatus(date, id, status) {
 }
 
 function deferTasks(targetDateKey) {
+  if (!currentUser) { alert('로그인 후 이용 가능합니다.'); return; }
   const items = state.schedule[targetDateKey] || [];
   // 완료되지 않은 항목들 (null 이나 X)
   const unfinished = items.filter(it => it.status !== 'O');
@@ -595,6 +686,7 @@ function deferTasks(targetDateKey) {
 const taskInput  = document.getElementById('taskInput');
 
 function addTask() {
+  if (!currentUser) { alert("로그인이 필요합니다."); return; }
   const text = taskInput.value.trim();
   if (!text) { taskInput.focus(); return; }
   state.pool.push({ id: uid(), text });
