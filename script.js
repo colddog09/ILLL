@@ -184,7 +184,7 @@ function loadState() {
         const localMemo = JSON.parse(localStorage.getItem('dayMemo_v1'));
         const localClass = localStorage.getItem('classNum_v1');
 
-        if (localPool || localSched || localMemo) {
+        if (localPool || localSched || localMemo || localClass) {
           state.pool = localPool || [];
           state.schedule = localSched || {};
           state.dayMemo = localMemo || {};
