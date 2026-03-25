@@ -189,15 +189,18 @@ function escHtml(str) {
 // ──────────────────────────────────────────────
 function loadState() {
   if (currentUser && db) {
-    db.collection('users').doc(currentUser.uid).get().then(doc => {
+    // onSnapshot을 사용하여 실시간으로 데이터 변화를 감지합니다 (기기 간 연동 해결)
+    db.collection('users').doc(currentUser.uid).onSnapshot(doc => {
       if (doc.exists) {
         const data = doc.data();
         state.pool     = data.pool || [];
         state.schedule = data.schedule || {};
         state.dayMemo  = data.dayMemo || {};
         state.classNum = data.classNum || '2';
+        
+        console.log("Firestore data updated in real-time");
       } else {
-        // [마이그레이션] 신규 사용자인 경우 로컬에 데이터가 있는지 확인
+        // [마이그레이션] Firestore에 데이터가 없는 경우 로컬 데이터 확인
         const localPool = JSON.parse(localStorage.getItem(STORAGE_KEY_POOL));
         const localSched = JSON.parse(localStorage.getItem(STORAGE_KEY_SCHED));
         const localMemo = JSON.parse(localStorage.getItem('dayMemo_v1'));
@@ -208,9 +211,9 @@ function loadState() {
           state.schedule = localSched || {};
           state.dayMemo = localMemo || {};
           state.classNum = localClass || '2';
-          // 로컬 데이터를 Firestore에 즉시 저장
-          saveState();
+          saveState(); // 최초 1회 클라우드 업로드
         } else {
+          // 아예 빈 상태로 시작
           state.pool = []; state.schedule = {}; state.dayMemo = {}; state.classNum = '2';
         }
       }
@@ -218,14 +221,11 @@ function loadState() {
       renderWeek();
       const cSel = document.getElementById('classSelect');
       if (cSel) cSel.value = state.classNum;
-    }).catch(err => {
-      console.error("Firestore 로드 에러:", err);
-      // 로그인 에러 시에도 비어 있게 하거나 로컬 로드 (필요시)
-      state.pool = []; state.schedule = {}; state.dayMemo = {};
-      renderPool(); renderWeek();
+    }, err => {
+      console.error("Firestore 실시간 수신 에러:", err);
     });
   } else {
-    // 로그인하지 않은 상태 (게스트) - 아무런 할일 없이 빈 상태로
+    // 로그인하지 않은 상태 (게스트) - 빈 상태
     state.pool = [];
     state.schedule = {};
     state.dayMemo = {};
