@@ -344,21 +344,32 @@ if (fbLoginBtn) {
       }
       const provider = new firebase.auth.GoogleAuthProvider();
       
-      // 모바일/PWA 환경인 경우 리다이렉트, PC인 경우 팝업 (가장 호환성 높음)
+      // iOS Safari는 ITP(지능형 추적 방지)로 signInWithRedirect 차단
+      // → 설치된 PWA(standalone) 모드에서만 redirect 사용, 나머지는 모두 popup 사용
       const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-      if (isStandalone || isMobile) {
-        console.log("Using signInWithRedirect (Mobile/PWA mode)");
+      if (isStandalone) {
+        // PWA 설치 모드: 팝업 창이 지원되지 않아 리다이렉트 사용
+        console.log("Using signInWithRedirect (Standalone PWA mode)");
         firebase.auth().signInWithRedirect(provider).catch(err => {
           console.error(err);
           alert("로그인 중 오류가 발생했습니다: " + err.message);
         });
       } else {
-        console.log("Using signInWithPopup (Desktop mode)");
+        // 일반 브라우저 (PC, 모바일, 아이패드): 팝업 사용 (iOS Safari 포함 모두 지원)
+        console.log("Using signInWithPopup (Browser mode)");
         firebase.auth().signInWithPopup(provider).catch(err => {
           console.error(err);
-          alert("로그인 중 오류가 발생했습니다: " + err.message);
+          // 팝업 차단 시 redirect로 폴백
+          if (err.code === 'auth/popup-blocked') {
+            console.log("Popup blocked, falling back to redirect");
+            firebase.auth().signInWithRedirect(provider).catch(redirectErr => {
+              console.error(redirectErr);
+              alert("로그인 중 오류가 발생했습니다: " + redirectErr.message);
+            });
+          } else if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
+            alert("로그인 중 오류가 발생했습니다: " + err.message);
+          }
         });
       }
     } else {
