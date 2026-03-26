@@ -33,7 +33,8 @@ body {
     radial-gradient(ellipse at 85% 90%, rgba(167,139,250,0.07) 0%, transparent 50%);
   background-attachment: fixed;
   color: var(--text);
-  overflow-x: hidden;
+  overflow: hidden;                 /* 상단 바 위로 스크롤 방지 */
+  overscroll-behavior: none;        /* iOS 고무줄 스크롤 방지 */
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -267,6 +268,9 @@ body {
   width: 100%;
   margin: 0 auto;
   padding: 28px 20px 60px;
+  overflow-y: auto;                    /* 스케줄 영역만 스크롤 */
+  -webkit-overflow-scrolling: touch;   /* iOS 부드러운 스크롤 */
+  overscroll-behavior-y: contain;      /* 맨 위/아래 바운스 방지 */
 }
 
 .schedule-area__header {
@@ -593,6 +597,39 @@ body {
   color: var(--text-sub);
 }
 
+/* 드래그 핸들 */
+.sched-item__handle {
+  cursor: grab;
+  font-size: 1rem;
+  color: var(--text-sub);
+  opacity: 0.4;
+  flex-shrink: 0;
+  padding: 0 4px 0 0;
+  transition: opacity 0.15s;
+  user-select: none;
+  touch-action: none;  /* 터치 드래그 활성화 */
+  line-height: 1;
+}
+.sched-item:hover .sched-item__handle { opacity: 0.75; }
+.sched-item__handle:active { cursor: grabbing; opacity: 1; }
+
+/* 순서 바꾸기 드롭 대상 표시 */
+.sched-item.reorder-over {
+  background: rgba(108,99,255,0.08);
+  border-color: var(--accent);
+  border-style: dashed;
+  transform: scale(0.98);
+}
+
+/* 터치 드래그 클론 */
+.touch-drag-clone {
+  transition: none !important;
+  transform: scale(1.04) rotate(-1.5deg) !important;
+  box-shadow: 0 10px 32px rgba(108,99,255,0.45) !important;
+  border-color: var(--accent) !important;
+  background: var(--surface) !important;
+}
+
 /* O 버튼 (X버튼 제거됨) */
 .sched-item__ox { display: flex; gap: 4px; flex-shrink: 0; }
 
@@ -672,6 +709,40 @@ body {
 }
 .trash-zone__icon { font-size: 1.1rem; }
 .trash-zone__label { font-size: 0.82rem; }
+
+/* ============================
+   TOGGLE SWITCH (설정)
+   ============================ */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 28px;
+  flex-shrink: 0;
+}
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: #d1d5db;
+  border-radius: 999px;
+  transition: background 0.2s;
+}
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  left: 3px;
+  top: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.2);
+}
+.toggle-switch input:checked + .toggle-slider { background: var(--accent); }
+.toggle-switch input:checked + .toggle-slider::before { transform: translateX(22px); }
 
 /* ============================
    MODAL
@@ -842,8 +913,6 @@ body {
     flex-direction: column;
     align-items: center;
     gap: 15px;
-    overflow-y: auto;
-    flex: 1;
   }
   .timetable-widget {
     position: static;
@@ -897,6 +966,7 @@ body {
     padding: 10px;
     gap: 8px;
     max-height: 120px;
+    overflow-y: auto;
   }
   
   .day-card {

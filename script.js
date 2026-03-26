@@ -13,11 +13,12 @@ const STORAGE_KEY_POOL  = 'taskPool_v2';
 const STORAGE_KEY_SCHED = 'taskSchedule_v2';
 
 let state = {
-  pool: [],      // [{ id, text }]
-  schedule: {},  // { 'YYYY-MM-DD': [{ id, taskId, text, status }] }
-  dayMemo: {},   // { 'YYYY-MM-DD': 'memo text' }
+  pool: [],           // [{ id, text }]
+  schedule: {},       // { 'YYYY-MM-DD': [{ id, taskId, text, status }] }
+  dayMemo: {},        // { 'YYYY-MM-DD': 'memo text' }
   dayOffset: 0,
-  classNum: '2'
+  classNum: '2',
+  showTimetable: true // 시간표 표시 여부
 };
 
 /*
@@ -200,10 +201,11 @@ function loadState() {
     unsubscribeSnapshot = db.collection('users').doc(currentUser.uid).onSnapshot(doc => {
       if (doc.exists) {
         const data = doc.data();
-        state.pool     = data.pool || [];
-        state.schedule = data.schedule || {};
-        state.dayMemo  = data.dayMemo || {};
-        state.classNum = data.classNum || '2';
+        state.pool          = data.pool || [];
+        state.schedule      = data.schedule || {};
+        state.dayMemo       = data.dayMemo || {};
+        state.classNum      = data.classNum || '2';
+        state.showTimetable = data.showTimetable !== false; // undefined이면 true(기본값)
       } else {
         const localPool = JSON.parse(localStorage.getItem(STORAGE_KEY_POOL));
         const localSched = JSON.parse(localStorage.getItem(STORAGE_KEY_SCHED));
@@ -264,6 +266,7 @@ function saveState() {
       schedule: state.schedule,
       dayMemo: state.dayMemo,
       classNum: state.classNum,
+      showTimetable: state.showTimetable,
       lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
     }).then(() => {
       if (statusEl) statusEl.textContent = '✅ 저장 완료';
@@ -317,6 +320,8 @@ if (helpCloseBtn) {
 if (settingsBtn) {
   settingsBtn.addEventListener('click', () => {
     classSelect.value = state.classNum;
+    const timetableToggle = document.getElementById('timetableToggle');
+    if (timetableToggle) timetableToggle.checked = state.showTimetable !== false;
     settingsModal.hidden = false;
   });
 }
@@ -327,6 +332,8 @@ if (settingsCloseBtn) {
 if (settingsSaveBtn) {
   settingsSaveBtn.addEventListener('click', () => {
     state.classNum = classSelect.value;
+    const timetableToggle = document.getElementById('timetableToggle');
+    state.showTimetable = timetableToggle ? timetableToggle.checked : true;
     saveState();
     renderWeek();
     settingsModal.hidden = true;
@@ -469,12 +476,12 @@ function renderTimetable(currentD) {
   const widget = document.getElementById('timetableWidget');
   if (!widget) return;
   
-  // 로그인하지 않은 상태에서는 시간표 숨김
-  if (!currentUser) {
+  // 로그인하지 않은 상태 또는 시간표 끈 경우 숨김
+  if (!currentUser || !state.showTimetable) {
     widget.hidden = true;
     return;
   }
-  
+
   const cNum = state.classNum || '2';
   const myTimetable = SCHOOL_TIMETABLE_ALL[cNum] || {};
 
@@ -528,13 +535,46 @@ function renderDayTasks(key) {
     el.dataset.itemId = item.id;
     el.dataset.dateKey = key;
     el.dataset.taskId  = item.taskId;
-    el.draggable = !!currentUser; // 비로그인 시 드래그 불가
+    el.draggable = !!currentUser;
     el.innerHTML = `
+      <span class="sched-item__handle" title="드래그로 순서 변경">⠿</span>
       <span class="sched-item__text" title="${escHtml(item.text)}">${escHtml(item.text)}</span>
       <div class="sched-item__ox">
         <button class="btn-o${item.status==='O'?' active':''}" data-date="${key}" data-id="${item.id}" title="완료(O)">O</button>
       </div>`;
     container.appendChild(el);
+
+    // ── 데스크톱 드래그로 같은 날 순서 바꾸기 ──
+    el.addEventListener('dragover', e => {
+      if (dragInfo?.type !== 'day' || dragInfo.dateKey !== key || dragInfo.itemId === item.id) return;
+      e.preventDefault();
+      e.stopPropagation();
+      el.classList.add('reorder-over');
+    });
+    el.addEventListener('dragleave', () => el.classList.remove('reorder-over'));
+    el.addEventListener('drop', e => {
+      el.classList.remove('reorder-over');
+      if (dragInfo?.type !== 'day' || dragInfo.dateKey !== key || dragInfo.itemId === item.id) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const arr = state.schedule[key] || [];
+      const fromIdx = arr.findIndex(it => it.id === dragInfo.itemId);
+      const toIdx   = arr.findIndex(it => it.id === item.id);
+      if (fromIdx !== -1 && toIdx !== -1 && fromIdx !== toIdx) {
+        const [moved] = arr.splice(fromIdx, 1);
+        arr.splice(toIdx, 0, moved);
+        state.schedule[key] = arr;
+        saveState();
+        endDrag();
+        renderDayTasks(key);
+      }
+    });
+
+    // ── 터치 드래그로 순서 바꾸기 (모바일) ──
+    const handle = el.querySelector('.sched-item__handle');
+    if (handle && currentUser) {
+      handle.addEventListener('touchstart', e => startTouchReorder(e, el, key, item.id), { passive: false });
+    }
   });
 
   updateProgress(key);
@@ -546,6 +586,90 @@ function updateProgress(key) {
   const pct   = items.length ? Math.round((done / items.length) * 100) : 0;
   const bar   = document.querySelector(`[data-date="${key}"] .day-card__progress-bar`);
   if (bar) bar.style.width = pct + '%';
+}
+
+// ──────────────────────────────────────────────
+// 터치 드래그 순서 바꾸기 (모바일)
+// ──────────────────────────────────────────────
+let touchReorder = null;
+
+function startTouchReorder(e, el, key, itemId) {
+  if (!currentUser) return;
+  e.preventDefault();
+
+  const touch = e.touches[0];
+  const rect  = el.getBoundingClientRect();
+  const touchOffsetY = touch.clientY - rect.top;
+
+  const clone = el.cloneNode(true);
+  clone.className = 'sched-item touch-drag-clone';
+  clone.style.cssText = `
+    position:fixed;
+    width:${rect.width}px;
+    top:${touch.clientY - touchOffsetY}px;
+    left:${rect.left}px;
+    margin:0; z-index:9999;
+    opacity:0.93;
+    pointer-events:none;
+  `;
+  document.body.appendChild(clone);
+  el.style.opacity = '0.3';
+
+  touchReorder = { el, key, itemId, clone, touchOffsetY, targetId: null };
+
+  document.addEventListener('touchmove',   onTouchReorderMove,   { passive: false });
+  document.addEventListener('touchend',    onTouchReorderEnd);
+  document.addEventListener('touchcancel', onTouchReorderEnd);
+}
+
+function onTouchReorderMove(e) {
+  if (!touchReorder) return;
+  e.preventDefault();
+
+  const touch = e.touches[0];
+  const { clone, touchOffsetY } = touchReorder;
+  clone.style.top = (touch.clientY - touchOffsetY) + 'px';
+
+  // 클론 일시 숨기고 아래 요소 탐색
+  clone.style.visibility = 'hidden';
+  const below = document.elementFromPoint(touch.clientX, touch.clientY);
+  clone.style.visibility = '';
+
+  document.querySelectorAll('.sched-item.reorder-over').forEach(el => el.classList.remove('reorder-over'));
+
+  const targetItem = below?.closest('.sched-item');
+  if (targetItem && targetItem !== touchReorder.el && targetItem.dataset.dateKey === touchReorder.key) {
+    targetItem.classList.add('reorder-over');
+    touchReorder.targetId = targetItem.dataset.itemId;
+  } else {
+    touchReorder.targetId = null;
+  }
+}
+
+function onTouchReorderEnd() {
+  if (!touchReorder) return;
+  document.removeEventListener('touchmove',   onTouchReorderMove);
+  document.removeEventListener('touchend',    onTouchReorderEnd);
+  document.removeEventListener('touchcancel', onTouchReorderEnd);
+
+  const { el, key, itemId, clone, targetId } = touchReorder;
+  clone.remove();
+  el.style.opacity = '';
+  document.querySelectorAll('.sched-item.reorder-over').forEach(el => el.classList.remove('reorder-over'));
+
+  if (targetId && targetId !== itemId) {
+    const arr      = state.schedule[key] || [];
+    const fromIdx  = arr.findIndex(it => it.id === itemId);
+    const toIdx    = arr.findIndex(it => it.id === targetId);
+    if (fromIdx !== -1 && toIdx !== -1 && fromIdx !== toIdx) {
+      const [moved] = arr.splice(fromIdx, 1);
+      arr.splice(toIdx, 0, moved);
+      state.schedule[key] = arr;
+      saveState();
+      renderDayTasks(key);
+    }
+  }
+  touchReorder = null;
 }
 
 // ──────────────────────────────────────────────
