@@ -91,6 +91,7 @@ const firebaseConfig = {
 
 let currentUser = null;
 let db = null;
+let unsubscribeSnapshot = null;
 
 if (typeof firebase !== 'undefined' && firebaseConfig.apiKey !== "YOUR_API_KEY") {
   firebase.initializeApp(firebaseConfig);
@@ -188,9 +189,15 @@ function escHtml(str) {
 // 영속성
 // ──────────────────────────────────────────────
 function loadState() {
+  // 기존 리스너 해제 (중복 리스너 누수 방지)
+  if (unsubscribeSnapshot) {
+    unsubscribeSnapshot();
+    unsubscribeSnapshot = null;
+  }
+
   if (currentUser && db) {
     // onSnapshot을 사용하여 실시간으로 데이터 변화를 감지합니다
-    db.collection('users').doc(currentUser.uid).onSnapshot(doc => {
+    unsubscribeSnapshot = db.collection('users').doc(currentUser.uid).onSnapshot(doc => {
       if (doc.exists) {
         const data = doc.data();
         state.pool     = data.pool || [];
@@ -225,6 +232,7 @@ function loadState() {
       if (cSel) cSel.value = state.classNum;
     }, err => {
       console.error("Firestore 실시간 수신 에러:", err);
+      alert("데이터를 불러오지 못했습니다 [" + err.code + "]\n" + err.message + "\n\nFirebase Console에서 Firestore 보안 규칙을 확인해주세요.");
     });
   } else {
     // 로그인하지 않은 상태 (게스트) - 빈 상태
