@@ -228,6 +228,8 @@ body {
   border-radius: var(--radius-sm);
   padding: 6px 4px;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;  /* iOS 부드러운 스크롤 */
+  overscroll-behavior-x: contain;
   transition: background 0.2s, border-color 0.2s;
 }
 .task-pool::-webkit-scrollbar { height: 4px; }
@@ -248,6 +250,8 @@ body {
   font-weight: 600;
   cursor: grab;
   user-select: none;
+  white-space: nowrap;   /* 텍스트 줄바꿈 방지 */
+  flex-shrink: 0;        /* 가로 스크롤 시 찌그러짐 방지 */
   transition: background 0.2s, border-color 0.2s, transform 0.15s, box-shadow 0.2s, opacity 0.15s;
   box-shadow: var(--shadow);
   color: var(--text);
