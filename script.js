@@ -18,7 +18,7 @@ let state = {
   dayMemo: {},        // { 'YYYY-MM-DD': 'memo text' }
   dayOffset: 0,
   classNum: '2',
-  showTimetable: true // 시간표 표시 여부
+  showTimetable: false // 시간표 표시 여부 (기본값: 꺼져있음)
 };
 
 /*
@@ -205,7 +205,7 @@ function loadState() {
         state.schedule      = data.schedule || {};
         state.dayMemo       = data.dayMemo || {};
         state.classNum      = data.classNum || '2';
-        state.showTimetable = data.showTimetable !== false; // undefined이면 true(기본값)
+        state.showTimetable = data.showTimetable === true; // 명시적으로 true일 때만 표시
       } else {
         const localPool = JSON.parse(localStorage.getItem(STORAGE_KEY_POOL));
         const localSched = JSON.parse(localStorage.getItem(STORAGE_KEY_SCHED));
@@ -574,6 +574,25 @@ function renderDayTasks(key) {
     const handle = el.querySelector('.sched-item__handle');
     if (handle && currentUser) {
       handle.addEventListener('touchstart', e => startTouchReorder(e, el, key, item.id), { passive: false });
+    }
+
+    // ── 아이템 long-press로 드래그 시작 (모바일 전체 터치) ──
+    if (currentUser) {
+      let longPressTimer = null;
+      el.addEventListener('touchstart', e => {
+        if (e.target.closest('.sched-item__ox')) return; // O 버튼 제외
+        longPressTimer = setTimeout(() => {
+          startTouchReorder(e, el, key, item.id);
+        }, 300); // 300ms 이상 누르면 드래그 시작
+      }, { passive: true });
+
+      el.addEventListener('touchmove', () => {
+        if (longPressTimer) clearTimeout(longPressTimer); // 스크롤 감지 시 취소
+      }, { passive: true });
+
+      el.addEventListener('touchend', () => {
+        if (longPressTimer) clearTimeout(longPressTimer);
+      });
     }
   });
 
