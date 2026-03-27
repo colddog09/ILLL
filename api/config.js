@@ -1,16 +1,4 @@
 export default function handler(req, res) {
-  // 허용된 도메인에서만 응답
-  const origin = req.headers.origin || req.headers.referer || '';
-  const allowed = [
-    'planmanager-six.vercel.app',
-    'gbshs-351f8.firebaseapp.com',
-    'gbshs-351f8.web.app'
-  ];
-  const isAllowed = allowed.some(d => origin.includes(d));
-
-  if (!isAllowed && process.env.NODE_ENV !== 'development') {
-    return res.status(403).json({ error: 'Forbidden' });
-  }
 
   // 캐시 금지 (키 노출 방지)
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
