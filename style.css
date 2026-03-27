@@ -391,64 +391,6 @@ body {
   width: 100%;
 }
 
-.timetable-widget {
-  position: absolute;
-  top: 0;
-  left: calc(100% + 24px);
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  padding: 18px 22px;
-  box-shadow: var(--shadow);
-  width: 260px;
-  flex-shrink: 0;
-}
-.timetable-widget[hidden] {
-  display: none !important;
-}
-
-.timetable-col {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  background: var(--bg);
-  padding: 14px 18px;
-  border-radius: var(--radius-sm);
-  border: 1px solid rgba(108,99,255,0.08);
-}
-
-.timetable-title {
-  font-size: 0.95rem;
-  font-weight: 800;
-  color: var(--text);
-  margin-bottom: 8px;
-  text-align: center;
-  padding-bottom: 8px;
-  border-bottom: 1px solid rgba(108,99,255,0.1);
-}
-
-.timetable-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 4px 0;
-  font-size: 0.82rem;
-}
-.tt-period {
-  font-weight: 700;
-  color: var(--accent);
-  min-width: 50px;
-}
-.tt-subject {
-  font-weight: 600;
-  color: var(--text);
-  text-align: right;
-}
-
 /* ============================
    DAY CARD
    ============================ */
@@ -962,13 +904,6 @@ body {
     flex-direction: column;
     align-items: center;
     gap: 15px;
-  }
-  .timetable-widget {
-    position: static;
-    left: auto;
-    width: 90%;
-    max-width: 400px;
-    margin-bottom: 20px;
   }
 }
 

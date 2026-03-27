@@ -9,16 +9,24 @@
 // ──────────────────────────────────────────────
 const DAYS_KO   = ['일','월','화','수','목','금','토'];
 const DAYS_FULL = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
-const STORAGE_KEY_POOL  = 'taskPool_v2';
-const STORAGE_KEY_SCHED = 'taskSchedule_v2';
+const STORAGE_KEYS = {
+  pool: 'taskPool_v2',
+  schedule: 'taskSchedule_v2',
+  dayMemo: 'dayMemo_v1',
+  grade: 'grade_v1',
+  classNum: 'classNum_v1'
+};
+const DEFAULT_STATE = {
+  pool: [],
+  schedule: {},
+  dayMemo: {},
+  dayOffset: 0,
+  grade: '2',
+  classNum: '2'
+};
 
 let state = {
-  pool: [],           // [{ id, text }]
-  schedule: {},       // { 'YYYY-MM-DD': [{ id, taskId, text, status }] }
-  dayMemo: {},        // { 'YYYY-MM-DD': 'memo text' }
-  dayOffset: 0,
-  grade: '2',         // 학년 (기본: 2학년)
-  classNum: '2'       // 반
+  ...DEFAULT_STATE
 };
 
 /*
@@ -34,114 +42,161 @@ let state = {
 let dragInfo = null; // { type: 'pool'|'day', taskId, itemId, dateKey, text }
 
 // ──────────────────────────────────────────────
-// 시간표 데이터 (GBS 2학년 전체 교실)
-// ──────────────────────────────────────────────
-const SCHOOL_TIMETABLE_ALL = {
-  1: { // 1반
-    1: [{p:'1교시',s:'지구 (유병)'}, {p:'2교시',s:'지구 (유병)'}, {p:'3교시',s:'한국사 (홍준)'}, {p:'4교시',s:'물리 (이용)'}, {p:'5교시',s:'수학 (백승)'}, {p:'6교시',s:'수학 (오승)'}],
-    2: [{p:'1교시',s:'지구 (오상)'}, {p:'2교시',s:'A문학 (김수)'}, {p:'3교시',s:'A문학 (김수)'}, {p:'4교시',s:'생명 (백민)'}, {p:'5교시',s:'생명 (이다)'}, {p:'6교시',s:'생명 (이다)'}, {p:'7교시',s:'연구 (오승)'}],
-    3: [{p:'1교시',s:'한국사 (홍준)'}, {p:'2교시',s:'체육 (이종)'}, {p:'3교시',s:'B문학 (김수)'}, {p:'4교시',s:'B문학 (김수)'}, {p:'5교시',s:'정보 (김유)'}, {p:'6교시',s:'정보 (김유)'}, {p:'7교시',s:'동아리 (오승)'}],
-    4: [{p:'1교시',s:'수학 (백승)'}, {p:'2교시',s:'물리 (채규)'}, {p:'3교시',s:'물리 (이용)'}, {p:'4교시',s:'A문학 (김수)'}, {p:'5교시',s:'수학 (오승)'}, {p:'6교시',s:'B문학 (김수)'}, {p:'7교시',s:'자율 (오승)'}],
-    5: [{p:'1교시',s:'수학 (박연)'}, {p:'2교시',s:'수학 (박연)'}, {p:'3교시',s:'화학 (이화)'}, {p:'4교시',s:'화학 (이화)'}, {p:'5교시',s:'체육 (이종)'}, {p:'6교시',s:'한국사 (홍준)'}]
-  },
-  2: { // 2반 (기존 2-2)
-    1: [{p:'1교시',s:'역사 (홍준호)'}, {p:'2교시',s:'체육 (이종현)'}, {p:'3교시',s:'지구 (오상림)'}, {p:'4교시',s:'생물 (백민준)'}, {p:'5교시',s:'수학 (박은미)'}, {p:'6교시',s:'수학 (박은미)'}, {p:'7교시',s:'공강'}, {p:'방과후',s:'청소'}],
-    2: [{p:'1교시',s:'수학 (오승은)'}, {p:'2교시',s:'A (국/영/중)'}, {p:'3교시',s:'A (국/영/중)'}, {p:'4교시',s:'체육 (이종현)'}, {p:'5교시',s:'수학 (백승범)'}, {p:'6교시',s:'물리 (이용호)'}, {p:'7교시',s:'연구'}, {p:'방과후',s:''}],
-    3: [{p:'1교시',s:'정보 (김유정)'}, {p:'2교시',s:'정보 (김유정)'}, {p:'3교시',s:'B (국/영/중)'}, {p:'4교시',s:'B (국/영/중)'}, {p:'5교시',s:'지구 (유병윤)'}, {p:'6교시',s:'지구 (유병윤)'}, {p:'7교시',s:'동아리'}, {p:'방과후',s:''}],
-    4: [{p:'1교시',s:'화학 (이화수)'}, {p:'2교시',s:'화학 (이화수)'}, {p:'3교시',s:'수학 (백승범)'}, {p:'4교시',s:'A (국/영/중)'}, {p:'5교시',s:'역사 (홍준호)'}, {p:'6교시',s:'B (국/영/중)'}, {p:'7교시',s:'창체'}, {p:'방과후',s:'청소'}],
-    5: [{p:'1교시',s:'수학 (오승은)'}, {p:'2교시',s:'역사 (홍준호)'}, {p:'3교시',s:'생명 (이다현)'}, {p:'4교시',s:'생명 (이다현)'}, {p:'5교시',s:'물리 (이용호)'}, {p:'6교시',s:'물리 (재규선)'}, {p:'7교시',s:''}, {p:'방과후',s:''}]
-  },
-  3: { // 3반
-    1: [{p:'1교시',s:'수학 (박연)'}, {p:'2교시',s:'수학 (박연)'}, {p:'3교시',s:'수학 (백승)'}, {p:'4교시',s:'지구 (오상)'}, {p:'5교시',s:'지구 (유병)'}, {p:'6교시',s:'지구 (유병)'}],
-    2: [{p:'1교시',s:'생명 (백민)'}, {p:'2교시',s:'A중국어 (오정)'}, {p:'3교시',s:'A중국어 (오정)'}, {p:'4교시',s:'물리 (이용)'}, {p:'5교시',s:'물리 (채규)'}, {p:'6교시',s:'한국사 (홍준)'}, {p:'7교시',s:'연구 (유병)'}],
-    3: [{p:'1교시',s:'화학 (이화)'}, {p:'2교시',s:'화학 (이화)'}, {p:'3교시',s:'B중국어 (오정)'}, {p:'4교시',s:'B중국어 (오정)'}, {p:'5교시',s:'수학 (오승)'}, {p:'6교시',s:'한국사 (홍준)'}, {p:'7교시',s:'동아리 (유병)'}],
-    4: [{p:'1교시',s:'생명 (이다)'}, {p:'2교시',s:'생명 (이다)'}, {p:'3교시',s:'한국사 (홍준)'}, {p:'4교시',s:'A중국어 (오정)'}, {p:'5교시',s:'체육 (이종)'}, {p:'6교시',s:'B중국어 (오정)'}, {p:'7교시',s:'자율 (유병)'}],
-    5: [{p:'1교시',s:'수학 (백승)'}, {p:'2교시',s:'체육 (이종)'}, {p:'3교시',s:'수학 (오승)'}, {p:'4교시',s:'물리 (이용)'}, {p:'5교시',s:'정보 (김유)'}, {p:'6교시',s:'정보 (김유)'}]
-  },
-  4: { // 4반
-    1: [{p:'1교시',s:'수학 (백승)'}, {p:'2교시',s:'중국어 (오정)'}, {p:'3교시',s:'물리 (이용)'}, {p:'4교시',s:'한국사 (홍준)'}, {p:'5교시',s:'수학 (오승)'}, {p:'6교시',s:'체육 (이종)'}],
-    2: [{p:'1교시',s:'화학 (이화)'}, {p:'2교시',s:'화학 (이화)'}, {p:'3교시',s:'수학 (박연)'}, {p:'4교시',s:'수학 (박연)'}, {p:'5교시',s:'영어 (유환)'}, {p:'6교시',s:'지구 (오상)'}, {p:'7교시',s:'연구 (유환)'}],
-    3: [{p:'1교시',s:'생명 (이다)'}, {p:'2교시',s:'생명 (이다)'}, {p:'3교시',s:'체육 (이종)'}, {p:'4교시',s:'한국사 (홍준)'}, {p:'5교시',s:'생명 (백민)'}, {p:'6교시',s:'중국어 (오정)'}, {p:'7교시',s:'동아리 (유환)'}],
-    4: [{p:'1교시',s:'영어 (김세)'}, {p:'2교시',s:'한국사 (홍준)'}, {p:'3교시',s:'수학 (오승)'}, {p:'4교시',s:'수학 (백승)'}, {p:'5교시',s:'물리 (이용)'}, {p:'6교시',s:'물리 (채규)'}, {p:'7교시',s:'봉사 (김수)'}],
-    5: [{p:'1교시',s:'정보 (김유)'}, {p:'2교시',s:'정보 (김유)'}, {p:'3교시',s:'지구 (유병)'}, {p:'4교시',s:'지구 (유병)'}, {p:'5교시',s:'중국어 (오정)'}, {p:'6교시',s:'영어 (유환)'}]
-  },
-  5: { // 5반
-    1: [{p:'1교시',s:'화학 (이화)'}, {p:'2교시',s:'화학 (이화)'}, {p:'3교시',s:'중국어 (오정)'}, {p:'4교시',s:'체육 (이종)'}, {p:'5교시',s:'생명 (이다)'}, {p:'6교시',s:'생명 (이다)'}],
-    2: [{p:'1교시',s:'수학 (백승)'}, {p:'2교시',s:'한국사 (홍준)'}, {p:'3교시',s:'생명 (백민)'}, {p:'4교시',s:'수학 (오승)'}, {p:'5교시',s:'지구 (오상)'}, {p:'6교시',s:'영어 (유환)'}, {p:'7교시',s:'연구 (이화)'}],
-    3: [{p:'1교시',s:'중국어 (오정)'}, {p:'2교시',s:'한국사 (홍준)'}, {p:'3교시',s:'물리 (이용)'}, {p:'4교시',s:'물리 (채규)'}, {p:'5교시',s:'수학 (백승)'}, {p:'6교시',s:'물리 (이용)'}, {p:'7교시',s:'동아리 (이화)'}],
-    4: [{p:'1교시',s:'중국어 (오정)'}, {p:'2교시',s:'영어 (김세)'}, {p:'3교시',s:'정보 (김유)'}, {p:'4교시',s:'정보 (김유)'}, {p:'5교시',s:'지구 (유병)'}, {p:'6교시',s:'지구 (유병)'}, {p:'7교시',s:'자율 (이화)'}],
-    5: [{p:'1교시',s:'한국사 (홍준)'}, {p:'2교시',s:'영어 (유환)'}, {p:'3교시',s:'체육 (이종)'}, {p:'4교시',s:'수학 (오승)'}, {p:'5교시',s:'수학 (박연)'}, {p:'6교시',s:'수학 (박연)'}]
-  }
-};
-
-// ──────────────────────────────────────────────
 // Firebase 초기화 (환경변수에서 설정 fetch)
 // ──────────────────────────────────────────────
 let currentUser = null;
 let db = null;
 let unsubscribeSnapshot = null;
+let firebaseReady = false;
+let memoSaveTimer = null;
+const REDIRECT_AUTH_CODES = new Set([
+  'auth/popup-blocked',
+  'auth/operation-not-supported-in-this-environment'
+]);
+const IGNORED_AUTH_CODES = new Set([
+  'auth/popup-closed-by-user',
+  'auth/cancelled-popup-request'
+]);
+const AUTH_ERROR_MESSAGES = {
+  'auth/popup-blocked': "팝업이 차단되었습니다.\n앱 또는 모바일 환경에서는 브라우저 이동 방식으로 다시 시도해주세요.",
+  'auth/operation-not-supported-in-this-environment': "현재 앱 환경에서는 팝업 로그인이 지원되지 않아 브라우저 이동 방식으로 로그인해야 합니다.",
+  'auth/unauthorized-domain': "이 도메인은 Firebase 로그인 허용 목록에 없습니다.\nFirebase Console > Authentication > Settings > Authorized domains에 현재 앱 주소를 추가해주세요.",
+  'auth/web-storage-unsupported': "브라우저 저장소를 사용할 수 없어 로그인을 진행할 수 없습니다.\n시크릿 모드 또는 저장소 차단 설정을 확인해주세요."
+};
 
-function onFirebaseReady() {
-  firebase.auth().onAuthStateChanged(user => {
-    const loginBtn  = document.getElementById('loginBtn');
-    const userInfo  = document.getElementById('userInfo');
-    const userPhoto = document.getElementById('userPhoto');
-    const userName  = document.getElementById('userName');
+function isStandaloneApp() {
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
 
-    if (user) {
-      currentUser = user;
-      if (loginBtn) loginBtn.hidden = true;
-      if (userInfo) userInfo.hidden = false;
-      if (userPhoto) userPhoto.src = user.photoURL || '';
-      if (userName) userName.textContent = user.displayName || '사용자';
+function getAuth() {
+  if (typeof firebase === 'undefined' || !firebase.auth) return null;
+  return firebase.auth();
+}
 
-      const tInput = document.getElementById('taskInput');
-      const tBtn   = document.getElementById('addTaskBtn');
-      if (tInput) { tInput.disabled = false; tInput.placeholder = "할일을 추가하세요 (엔터)"; }
-      if (tBtn)   tBtn.disabled = false;
+function setSyncStatus(message) {
+  if (dom.syncStatus) dom.syncStatus.textContent = message;
+}
 
-      loadState();
-    } else {
-      currentUser = null;
-      if (loginBtn) loginBtn.hidden = false;
-      if (userInfo) userInfo.hidden = true;
+function setTaskInputEnabled(enabled) {
+  if (taskInput) {
+    taskInput.disabled = !enabled;
+    taskInput.placeholder = enabled
+      ? "할일을 추가하세요 (엔터)"
+      : "👉 로그인 후 일정을 추가할 수 있습니다.";
+  }
+  if (addTaskBtn) addTaskBtn.disabled = !enabled;
+}
 
-      const tInput = document.getElementById('taskInput');
-      const tBtn   = document.getElementById('addTaskBtn');
-      if (tInput) { tInput.disabled = true; tInput.placeholder = "👉 로그인 후 일정을 추가할 수 있습니다."; }
-      if (tBtn)   tBtn.disabled = true;
+function updateAuthUi(user) {
+  const loginBtn = dom.fbLoginBtn;
+  const userInfo = dom.userInfo;
+  const userPhoto = dom.userPhoto;
+  const userName = dom.userName;
 
-      loadState();
+  currentUser = user || null;
+  if (loginBtn) loginBtn.hidden = !!user;
+  if (userInfo) userInfo.hidden = !user;
+  if (userPhoto) userPhoto.src = user?.photoURL || '';
+  if (userName) userName.textContent = user?.displayName || '사용자';
+
+  setTaskInputEnabled(!!user);
+  loadState();
+}
+
+function handleGoogleAuthError(err) {
+  if (!err) return;
+
+  console.error('Google 로그인 오류:', err);
+  if (IGNORED_AUTH_CODES.has(err.code)) return;
+
+  alert(AUTH_ERROR_MESSAGES[err.code] || ("로그인 중 오류가 발생했습니다: " + (err.message || err.code || '알 수 없는 오류')));
+}
+
+function startRedirectLogin(auth, provider, statusMessage) {
+  setSyncStatus(statusMessage);
+  return auth.signInWithRedirect(provider);
+}
+
+function handleRedirectLoginResult(auth) {
+  return auth.getRedirectResult()
+    .then(result => {
+      if (result?.user) setSyncStatus('✅ 로그인 완료');
+    })
+    .catch(handleGoogleAuthError);
+}
+
+function startGoogleLogin() {
+  const auth = getAuth();
+  if (!auth || !firebaseReady) {
+    alert("Firebase 서비스에 연결하는 중입니다. 잠시 후 다시 시도해주세요.");
+    return Promise.resolve();
+  }
+
+  const provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+
+  if (isStandaloneApp()) {
+    return startRedirectLogin(auth, provider, '🔐 로그인 페이지로 이동 중...');
+  }
+
+  return auth.signInWithPopup(provider).catch(err => {
+    if (REDIRECT_AUTH_CODES.has(err.code)) {
+      return startRedirectLogin(auth, provider, '🔐 브라우저 로그인으로 전환 중...');
     }
+    throw err;
   });
 }
 
-// /api/config 에서 키를 받아 Firebase 초기화
-fetch('/api/config')
-  .then(r => {
-    if (!r.ok) throw new Error('config fetch failed: ' + r.status);
-    return r.json();
-  })
-  .then(cfg => {
-    if (typeof firebase === 'undefined') throw new Error('Firebase SDK not loaded');
-    firebase.initializeApp(cfg);
-    db = firebase.firestore();
-    onFirebaseReady();
-  })
-  .catch(err => {
+function finishFirebaseSetup() {
+  const auth = getAuth();
+  db = firebase.firestore();
+
+  return auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+    .catch(err => {
+      console.warn('Auth persistence 설정 실패:', err);
+    })
+    .then(() => {
+      firebaseReady = true;
+      auth.onAuthStateChanged(updateAuthUi);
+      return handleRedirectLoginResult(auth);
+    });
+}
+
+function initializeFirebase(cfg) {
+  if (typeof firebase === 'undefined') throw new Error('Firebase SDK not loaded');
+  firebase.initializeApp(cfg);
+  return finishFirebaseSetup();
+}
+
+async function bootstrapFirebase() {
+  try {
+    const response = await fetch('/api/config');
+    if (!response.ok) throw new Error('config fetch failed: ' + response.status);
+    const cfg = await response.json();
+    await initializeFirebase(cfg);
+  } catch (err) {
     console.error('Firebase 초기화 실패:', err);
-    // 로컬 개발 환경 폴백 (Vercel 함수 없을 때)
+
     const localCfg = window.__FIREBASE_CONFIG__;
-    if (localCfg && typeof firebase !== 'undefined') {
-      firebase.initializeApp(localCfg);
-      db = firebase.firestore();
-      onFirebaseReady();
-    } else {
+    if (!localCfg || typeof firebase === 'undefined') {
+      alert('앱 초기화에 실패했습니다. 잠시 후 다시 시도해주세요.');
+      renderPool();
+      renderWeek();
+      return;
+    }
+
+    try {
+      await initializeFirebase(localCfg);
+    } catch (localErr) {
+      console.error('Firebase 로컬 초기화 실패:', localErr);
       alert('앱 초기화에 실패했습니다. 잠시 후 다시 시도해주세요.');
       renderPool();
       renderWeek();
     }
-  });
+  }
+}
+
+bootstrapFirebase();
 
 function uid() { return '_' + Math.random().toString(36).slice(2, 9); }
 
@@ -162,6 +217,57 @@ function escHtml(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+function renderApp() {
+  renderPool();
+  renderWeek();
+}
+
+function resetScheduleState() {
+  state.pool = [];
+  state.schedule = {};
+  state.dayMemo = {};
+  state.grade = DEFAULT_STATE.grade;
+  state.classNum = DEFAULT_STATE.classNum;
+}
+
+function applyPersistedState(data = {}) {
+  state.pool = data.pool || [];
+  state.schedule = data.schedule || {};
+  state.dayMemo = data.dayMemo || {};
+  state.grade = data.grade || DEFAULT_STATE.grade;
+  state.classNum = data.classNum || DEFAULT_STATE.classNum;
+}
+
+function readLocalState() {
+  return {
+    pool: JSON.parse(localStorage.getItem(STORAGE_KEYS.pool)),
+    schedule: JSON.parse(localStorage.getItem(STORAGE_KEYS.schedule)),
+    dayMemo: JSON.parse(localStorage.getItem(STORAGE_KEYS.dayMemo)),
+    grade: localStorage.getItem(STORAGE_KEYS.grade),
+    classNum: localStorage.getItem(STORAGE_KEYS.classNum)
+  };
+}
+
+function hasLocalState(data) {
+  return !!(data.pool || data.schedule || data.dayMemo || data.grade || data.classNum);
+}
+
+function persistLocalState() {
+  localStorage.setItem(STORAGE_KEYS.pool, JSON.stringify(state.pool));
+  localStorage.setItem(STORAGE_KEYS.schedule, JSON.stringify(state.schedule));
+  localStorage.setItem(STORAGE_KEYS.dayMemo, JSON.stringify(state.dayMemo));
+  localStorage.setItem(STORAGE_KEYS.grade, state.grade);
+  localStorage.setItem(STORAGE_KEYS.classNum, state.classNum);
+}
+
+function queueMemoSave() {
+  if (memoSaveTimer) clearTimeout(memoSaveTimer);
+  memoSaveTimer = setTimeout(() => {
+    memoSaveTimer = null;
+    saveState();
+  }, 250);
+}
+
 // ──────────────────────────────────────────────
 // 영속성
 // ──────────────────────────────────────────────
@@ -176,28 +282,14 @@ function loadState() {
     // onSnapshot을 사용하여 실시간으로 데이터 변화를 감지합니다
     unsubscribeSnapshot = db.collection('users').doc(currentUser.uid).onSnapshot(doc => {
       if (doc.exists) {
-        const data = doc.data();
-        state.pool     = data.pool || [];
-        state.schedule = data.schedule || {};
-        state.dayMemo  = data.dayMemo || {};
-        state.grade    = data.grade || '2';
-        state.classNum = data.classNum || '2';
+        applyPersistedState(doc.data());
       } else {
-        const localPool = JSON.parse(localStorage.getItem(STORAGE_KEY_POOL));
-        const localSched = JSON.parse(localStorage.getItem(STORAGE_KEY_SCHED));
-        const localMemo = JSON.parse(localStorage.getItem('dayMemo_v1'));
-        const localClass = localStorage.getItem('classNum_v1');
-        const localGrade = localStorage.getItem('grade_v1');
-
-        if (localPool || localSched || localMemo || localClass) {
-          state.pool = localPool || [];
-          state.schedule = localSched || {};
-          state.dayMemo = localMemo || {};
-          state.grade = localGrade || '2';
-          state.classNum = localClass || '2';
+        const localState = readLocalState();
+        if (hasLocalState(localState)) {
+          applyPersistedState(localState);
           saveState();
         } else {
-          state.pool = []; state.schedule = {}; state.dayMemo = {}; state.classNum = '2';
+          resetScheduleState();
         }
       }
       
@@ -207,8 +299,7 @@ function loadState() {
       // 메모장 포커스가 없을 때만 리렌더링 (타이핑 끊김 방지)
       const activeElement = document.activeElement;
       if (!activeElement || !activeElement.classList.contains('day-card__memo')) {
-        renderPool();
-        renderWeek();
+        renderApp();
       }
 
       updateSurveyVisibility();
@@ -218,27 +309,17 @@ function loadState() {
     });
   } else {
     // 로그인하지 않은 상태 (게스트) - 빈 상태
-    state.pool = [];
-    state.schedule = {};
-    state.dayMemo = {};
-    state.classNum = '2';
-    renderPool();
-    renderWeek();
+    resetScheduleState();
+    renderApp();
   }
 }
 
-function loadLocalState() {
-  // 사용하지 않음 (게스트는 무조건 빈 상태)
-  state.pool = [];
-  state.schedule = {};
-  state.dayMemo = {};
-  renderPool();
-  renderWeek();
-}
-
 function saveState() {
-  const statusEl = document.getElementById('syncStatus');
-  if (statusEl) statusEl.textContent = '☁️ 저장 중...';
+  if (memoSaveTimer) {
+    clearTimeout(memoSaveTimer);
+    memoSaveTimer = null;
+  }
+  setSyncStatus('☁️ 저장 중...');
 
   if (currentUser && db) {
     db.collection('users').doc(currentUser.uid).set({
@@ -249,52 +330,87 @@ function saveState() {
       classNum: state.classNum,
       lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
     }).then(() => {
-      if (statusEl) statusEl.textContent = '✅ 저장 완료';
+      setSyncStatus('✅ 저장 완료');
     }).catch(err => {
       console.error("Firestore 저장 에러:", err);
-      if (statusEl) statusEl.textContent = '❌ 저장 실패';
+      setSyncStatus('❌ 저장 실패');
     });
   } else {
-    localStorage.setItem(STORAGE_KEY_POOL,  JSON.stringify(state.pool));
-    localStorage.setItem(STORAGE_KEY_SCHED, JSON.stringify(state.schedule));
-    localStorage.setItem('dayMemo_v1',      JSON.stringify(state.dayMemo));
-    localStorage.setItem('grade_v1',        state.grade);
-    localStorage.setItem('classNum_v1',     state.classNum);
-    if (statusEl) statusEl.textContent = '💾 로컬 저장됨';
+    persistLocalState();
+    setSyncStatus('💾 로컬 저장됨');
   }
 }
 
 // ──────────────────────────────────────────────
 // DOM 레퍼런스
 // ──────────────────────────────────────────────
-const poolEl      = document.getElementById('taskPool');
-const dayGrid     = document.getElementById('dayGrid');
-const weekLabel   = document.getElementById('weekLabel');
-const ghost       = document.getElementById('dragGhost');
-const trashZone   = document.getElementById('trashZone');
-const addTaskBtn  = document.getElementById('addTaskBtn');
-const helpBtn      = document.getElementById('helpBtn');
-const helpModal    = document.getElementById('helpModal');
-const helpCloseBtn = document.getElementById('helpCloseBtn');
+const dom = {
+  poolEl: document.getElementById('taskPool'),
+  dayGrid: document.getElementById('dayGrid'),
+  weekLabel: document.getElementById('weekLabel'),
+  ghost: document.getElementById('dragGhost'),
+  trashZone: document.getElementById('trashZone'),
+  addTaskBtn: document.getElementById('addTaskBtn'),
+  taskInput: document.getElementById('taskInput'),
+  syncStatus: document.getElementById('syncStatus'),
+  helpBtn: document.getElementById('helpBtn'),
+  helpModal: document.getElementById('helpModal'),
+  helpCloseBtn: document.getElementById('helpCloseBtn'),
+  historyModal: document.getElementById('historyModal'),
+  historyList: document.getElementById('historyList'),
+  historyBtn: document.getElementById('historyBtn'),
+  historyCloseBtn: document.getElementById('historyCloseBtn'),
+  infoModal: document.getElementById('infoModal'),
+  infoBtn: document.getElementById('infoBtn'),
+  infoCloseBtn: document.getElementById('infoCloseBtn'),
+  infoHistoryBtn: document.getElementById('infoHistoryBtn'),
+  fbLoginBtn: document.getElementById('loginBtn'),
+  fbLogoutBtn: document.getElementById('logoutBtn'),
+  userInfo: document.getElementById('userInfo'),
+  userPhoto: document.getElementById('userPhoto'),
+  userName: document.getElementById('userName'),
+  settingsBtn: document.getElementById('settingsBtn'),
+  settingsModal: document.getElementById('settingsModal'),
+  settingsCloseBtn: document.getElementById('settingsCloseBtn'),
+  settingsSaveBtn: document.getElementById('settingsSaveBtn'),
+  classSelect: document.getElementById('classSelect'),
+  gradeSelect: document.getElementById('gradeSelect'),
+  surveyLinksDesktop: document.getElementById('surveyLinksDesktop'),
+  surveyLinksMobile: document.getElementById('surveyLinksMobile'),
+  prevWeekBtn: document.getElementById('prevWeekBtn'),
+  nextWeekBtn: document.getElementById('nextWeekBtn')
+};
 
-const historyModal    = document.getElementById('historyModal');
-const historyList     = document.getElementById('historyList');
-const historyBtn      = document.getElementById('historyBtn');
-const historyCloseBtn = document.getElementById('historyCloseBtn');
-
-const infoModal    = document.getElementById('infoModal');
-const infoBtn      = document.getElementById('infoBtn');
-const infoCloseBtn = document.getElementById('infoCloseBtn');
-const infoHistoryBtn = document.getElementById('infoHistoryBtn');
-
-const fbLoginBtn  = document.getElementById('loginBtn');
-const fbLogoutBtn = document.getElementById('logoutBtn');
-const settingsBtn = document.getElementById('settingsBtn');
-const settingsModal = document.getElementById('settingsModal');
-const settingsCloseBtn = document.getElementById('settingsCloseBtn');
-const settingsSaveBtn = document.getElementById('settingsSaveBtn');
-const classSelect = document.getElementById('classSelect');
-const gradeSelect = document.getElementById('gradeSelect');
+const {
+  poolEl,
+  dayGrid,
+  weekLabel,
+  ghost,
+  trashZone,
+  addTaskBtn,
+  taskInput,
+  helpBtn,
+  helpModal,
+  helpCloseBtn,
+  historyModal,
+  historyList,
+  historyBtn,
+  historyCloseBtn,
+  infoModal,
+  infoBtn,
+  infoCloseBtn,
+  infoHistoryBtn,
+  fbLoginBtn,
+  fbLogoutBtn,
+  settingsBtn,
+  settingsModal,
+  settingsCloseBtn,
+  settingsSaveBtn,
+  classSelect,
+  gradeSelect,
+  prevWeekBtn,
+  nextWeekBtn
+} = dom;
 
 if (helpBtn) {
   helpBtn.addEventListener('click', () => { helpModal.hidden = false; });
@@ -328,41 +444,15 @@ if (settingsSaveBtn) {
 // 설문 링크 가시성: 2학년일 때만 표시
 function updateSurveyVisibility() {
   const isGrade2 = state.grade === '2';
-  const desktopLinks = document.getElementById('surveyLinksDesktop');
-  const mobileLinks  = document.getElementById('surveyLinksMobile');
-  if (desktopLinks) desktopLinks.hidden = !isGrade2;
-  if (mobileLinks)  mobileLinks.hidden  = !isGrade2;
+  if (dom.surveyLinksDesktop) dom.surveyLinksDesktop.hidden = !isGrade2;
+  if (dom.surveyLinksMobile) dom.surveyLinksMobile.hidden = !isGrade2;
 }
 
 if (fbLoginBtn) {
   console.log("Login button found in DOM");
   fbLoginBtn.addEventListener('click', () => {
     console.log("Login button clicked");
-    if (typeof firebase !== 'undefined' && firebase.auth) {
-      if (firebaseConfig.apiKey === "YOUR_API_KEY") {
-        alert("Firebase 설정 키가 아직 입력되지 않았습니다!\nscript.js 상단의 firebaseConfig를 수정해주세요.");
-        return;
-      }
-      const provider = new firebase.auth.GoogleAuthProvider();
-
-      // 팝업 방식만 사용 (redirect는 Dynamic Links 의존성 및 iOS PWA 버그로 제거)
-      firebase.auth().signInWithPopup(provider).catch(err => {
-        console.error(err);
-        // 사용자가 직접 닫은 경우는 무시
-        if (
-          err.code === 'auth/popup-closed-by-user' ||
-          err.code === 'auth/cancelled-popup-request'
-        ) return;
-        // 팝업이 차단된 경우 안내
-        if (err.code === 'auth/popup-blocked') {
-          alert("팝업이 차단되었습니다.\n브라우저 설정에서 팝업을 허용하거나,\nSafari로 접속 후 로그인해주세요.");
-          return;
-        }
-        alert("로그인 중 오류가 발생했습니다: " + err.message);
-      });
-    } else {
-      alert("Firebase 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.");
-    }
+    startGoogleLogin().catch(handleGoogleAuthError);
   });
 }
 if (fbLogoutBtn) {
@@ -370,8 +460,8 @@ if (fbLogoutBtn) {
     if (typeof firebase !== 'undefined' && firebase.auth) {
       firebase.auth().signOut().then(() => {
         // 로그아웃 시 로컬 데이터 무시하고 화면 초기화
-        state.pool = []; state.schedule = {}; state.dayMemo = {};
-        renderPool(); renderWeek();
+        resetScheduleState();
+        renderApp();
       }).catch(err => {
         console.error(err);
         alert("로그아웃 중 오류가 발생했습니다: " + err.message);
@@ -379,6 +469,29 @@ if (fbLogoutBtn) {
     }
   });
 }
+
+const poolTapState = { taskId: null, lastTapTime: 0 };
+
+poolEl.addEventListener('dblclick', e => {
+  handlePoolCardActivate(e.target.closest('.pool-card'));
+});
+
+poolEl.addEventListener('touchend', e => {
+  const card = e.target.closest('.pool-card');
+  if (!currentUser || !card) return;
+
+  const now = Date.now();
+  if (poolTapState.taskId === card.dataset.taskId && now - poolTapState.lastTapTime < 350) {
+    e.preventDefault();
+    poolTapState.taskId = null;
+    poolTapState.lastTapTime = 0;
+    handlePoolCardActivate(card);
+    return;
+  }
+
+  poolTapState.taskId = card.dataset.taskId;
+  poolTapState.lastTapTime = now;
+}, { passive: false });
 
 // ──────────────────────────────────────────────
 // 풀(Pool) 렌더링 — X 버튼 없음, 드래그 가능
@@ -392,21 +505,60 @@ function addPoolItemToCurrentDay(taskId, text) {
   setTimeout(() => { addFromPoolLocked = false; }, 600);
 
   const key = dateKey(currentDay());
-  if ((state.schedule[key] || []).some(it => it.taskId === taskId)) return; // 이미 있으면 skip
+  if (schedulePoolTask(key, taskId, text)) {
+    saveState();
+    renderPool();
+    renderDayTasks(key);
+  }
+}
+
+function schedulePoolTask(key, taskId, text) {
+  if ((state.schedule[key] || []).some(it => it.taskId === taskId)) return false;
   state.pool = state.pool.filter(t => t.id !== taskId);
   if (!state.schedule[key]) state.schedule[key] = [];
   state.schedule[key].push({ id: uid(), taskId, text, status: null });
-  saveState();
-  renderPool();
-  renderDayTasks(key);
+  return true;
 }
 
-// 일정 → 풀로 반환
-function returnSchedItemToPool(key, itemId, taskId, text) {
-  state.schedule[key] = (state.schedule[key] || []).filter(it => it.id !== itemId);
+function restoreTaskToPool(taskId, text) {
   if (!state.pool.find(t => t.id === taskId)) {
     state.pool.push({ id: taskId, text });
   }
+}
+
+function removeScheduleItem(key, itemId) {
+  state.schedule[key] = (state.schedule[key] || []).filter(it => it.id !== itemId);
+}
+
+function removeTaskFromPool(taskId) {
+  state.pool = state.pool.filter(t => t.id !== taskId);
+}
+
+function renderEmptyPool() {
+  poolEl.innerHTML = '<span style="color:var(--text-sub);font-size:0.82rem;padding:4px 2px;">할일을 추가해보세요!</span>';
+}
+
+function createPoolCard(task) {
+  const card = document.createElement('div');
+  card.className = 'pool-card';
+  card.dataset.taskId = task.id;
+  card.draggable = !!currentUser;
+  card.textContent = task.text;
+  return card;
+}
+
+function getPoolCardText(card) {
+  return card ? card.textContent.trim() : '';
+}
+
+function handlePoolCardActivate(card) {
+  if (!currentUser || !card) return;
+  addPoolItemToCurrentDay(card.dataset.taskId, getPoolCardText(card));
+}
+
+function returnSchedItemToPool(key, itemId, taskId, text) {
+  removeScheduleItem(key, itemId);
+  restoreTaskToPool(taskId, text);
   saveState();
   renderPool();
   renderDayTasks(key);
@@ -415,37 +567,12 @@ function returnSchedItemToPool(key, itemId, taskId, text) {
 function renderPool() {
   poolEl.innerHTML = '';
   if (state.pool.length === 0) {
-    poolEl.innerHTML = '<span style="color:var(--text-sub);font-size:0.82rem;padding:4px 2px;">할일을 추가해보세요!</span>';
+    renderEmptyPool();
     return;
   }
-  state.pool.forEach(task => {
-    const card = document.createElement('div');
-    card.className = 'pool-card';
-    card.dataset.taskId = task.id;
-    card.draggable = !!currentUser; // 비로그인 시 드래그 불가
-    card.textContent = task.text;
-
-    // ── 더블클릭 / 더블탭 → 현재 날짜에 추가 ──
-    if (currentUser) {
-      card.addEventListener('dblclick', () => {
-        addPoolItemToCurrentDay(task.id, task.text);
-      });
-
-      let poolLastTap = 0;
-      card.addEventListener('touchend', e => {
-        const now = Date.now();
-        if (now - poolLastTap < 350) {
-          e.preventDefault();
-          addPoolItemToCurrentDay(task.id, task.text);
-          poolLastTap = 0;
-        } else {
-          poolLastTap = now;
-        }
-      }, { passive: false });
-    }
-
-    poolEl.appendChild(card);
-  });
+  const fragment = document.createDocumentFragment();
+  state.pool.forEach(task => fragment.appendChild(createPoolCard(task)));
+  poolEl.appendChild(fragment);
 }
 
 // ──────────────────────────────────────────────
@@ -456,8 +583,8 @@ function renderWeek() {
   const d     = currentDay();
   const key   = dateKey(d);
   const today = todayKey();
-  const isToday = key === today;
   const items = state.schedule[key] || [];
+  const isToday = key === today;
 
   const dow = d.getDay();
   let wdColor = '';
@@ -515,12 +642,15 @@ function renderDayTasks(key) {
     return;
   }
 
+  const fragment = document.createDocumentFragment();
+
   items.forEach(item => {
     const el = document.createElement('div');
     el.className = 'sched-item' + (item.status === 'O' ? ' done' : '');
     el.dataset.itemId = item.id;
     el.dataset.dateKey = key;
-    el.dataset.taskId  = item.taskId;
+    el.dataset.taskId = item.taskId;
+    el.dataset.text = item.text;
     el.draggable = !!currentUser;
     el.innerHTML = `
       <span class="sched-item__handle" title="드래그로 순서 변경">⠿</span>
@@ -528,13 +658,7 @@ function renderDayTasks(key) {
       <div class="sched-item__ox">
         <button class="btn-o${item.status==='O'?' active':''}" data-date="${key}" data-id="${item.id}" title="완료(O)">O</button>
       </div>`;
-    container.appendChild(el);
-
-    // ── 더블클릭 → 풀로 반환 ──
-    el.addEventListener('dblclick', e => {
-      if (e.target.closest('.sched-item__ox')) return;
-      returnSchedItemToPool(key, item.id, item.taskId, item.text);
-    });
+    fragment.appendChild(el);
 
     // ── 데스크톱 드래그로 같은 날 순서 바꾸기 ──
     el.addEventListener('dragover', e => {
@@ -631,6 +755,8 @@ function renderDayTasks(key) {
     }
   });
 
+  container.appendChild(fragment);
+
   updateProgress(key);
 }
 
@@ -638,7 +764,7 @@ function updateProgress(key) {
   const items = state.schedule[key] || [];
   const done  = items.filter(it => it.status === 'O').length;
   const pct   = items.length ? Math.round((done / items.length) * 100) : 0;
-  const bar   = document.querySelector(`[data-date="${key}"] .day-card__progress-bar`);
+  const bar = dayGrid.querySelector(`.day-card[data-date="${key}"] .day-card__progress-bar`);
   if (bar) bar.style.width = pct + '%';
 }
 
@@ -675,14 +801,6 @@ function startTouchReorderAt(clientX, clientY, el, key, itemId) {
   document.addEventListener('touchmove',   onTouchReorderMove,   { passive: false });
   document.addEventListener('touchend',    onTouchReorderEnd);
   document.addEventListener('touchcancel', onTouchReorderEnd);
-}
-
-// 이벤트 객체를 받는 래퍼 (핸들용)
-function startTouchReorder(e, el, key, itemId) {
-  if (!currentUser) return;
-  e.preventDefault();
-  const t = e.touches[0];
-  startTouchReorderAt(t.clientX, t.clientY, el, key, itemId);
 }
 
 function onTouchReorderMove(e) {
@@ -754,7 +872,7 @@ function initDrag() {
   poolEl.addEventListener('dragstart', e => {
     const card = e.target.closest('.pool-card');
     if (!card) return;
-    dragInfo = { type: 'pool', taskId: card.dataset.taskId, text: card.textContent.trim() };
+    dragInfo = { type: 'pool', taskId: card.dataset.taskId, text: getPoolCardText(card) };
     e.dataTransfer.setData('text/plain', dragInfo.taskId); // drop 허용에 필요
     e.dataTransfer.effectAllowed = 'move';
     setTimeout(() => card.classList.add('dragging'), 0);
@@ -779,7 +897,7 @@ function initDrag() {
       taskId:  item.dataset.taskId,
       itemId:  item.dataset.itemId,
       dateKey: item.dataset.dateKey,
-      text:    item.querySelector('.sched-item__text').textContent.trim(),
+      text:    item.dataset.text,
     };
     e.dataTransfer.setData('text/plain', dragInfo.itemId);
     e.dataTransfer.effectAllowed = 'move';
@@ -817,10 +935,8 @@ function initDrag() {
     e.preventDefault();
 
     const { taskId, itemId, dateKey: key, text } = dragInfo;
-    state.schedule[key] = (state.schedule[key] || []).filter(it => it.id !== itemId);
-    if (!state.pool.find(t => t.id === taskId)) {
-      state.pool.push({ id: taskId, text });
-    }
+    removeScheduleItem(key, itemId);
+    restoreTaskToPool(taskId, text);
     saveState();
     endDrag();          // 스케줄 아이템 DOM 제거 전 정리
     renderPool();
@@ -844,13 +960,13 @@ function initDrag() {
     if (!dragInfo) return;
 
     if (dragInfo.type === 'pool') {
-      state.pool = state.pool.filter(t => t.id !== dragInfo.taskId);
+      removeTaskFromPool(dragInfo.taskId);
       saveState();
       endDrag();        // DOM에서 제거 전 정리 (dragend 발화 안 됨)
       renderPool();
     } else if (dragInfo.type === 'day') {
       const key = dragInfo.dateKey;
-      state.schedule[key] = (state.schedule[key] || []).filter(it => it.id !== dragInfo.itemId);
+      removeScheduleItem(key, dragInfo.itemId);
       saveState();
       endDrag();
       renderDayTasks(key);
@@ -874,13 +990,7 @@ function setupDayDropZone(card, key) {
     e.preventDefault();
 
     const { taskId, text } = dragInfo;
-    // 같은 날에 이미 있으면 skip
-    if ((state.schedule[key] || []).some(it => it.taskId === taskId)) return;
-
-    // pool에서 제거 + day에 추가
-    state.pool = state.pool.filter(t => t.id !== taskId);
-    if (!state.schedule[key]) state.schedule[key] = [];
-    state.schedule[key].push({ id: uid(), taskId, text, status: null });
+    if (!schedulePoolTask(key, taskId, text)) return;
     saveState();
     endDrag();    // DOM에서 제거되기 전 정리 (dragend 대체)
     renderPool();
@@ -914,10 +1024,16 @@ function endDrag() {
 // ──────────────────────────────────────────────
 dayGrid.addEventListener('click', e => {
   const btnO = e.target.closest('.btn-o');
-  if (btnO) { toggleStatus(btnO.dataset.date, btnO.dataset.id, 'O'); return; }
+  if (btnO) { toggleStatus(btnO.dataset.date, btnO.dataset.id); return; }
 
   const deferBtn = e.target.closest('.defer-btn');
   if (deferBtn) { deferTasks(deferBtn.dataset.date); }
+});
+
+dayGrid.addEventListener('dblclick', e => {
+  const item = e.target.closest('.sched-item');
+  if (!item || e.target.closest('.sched-item__ox')) return;
+  returnSchedItemToPool(item.dataset.dateKey, item.dataset.itemId, item.dataset.taskId, item.dataset.text);
 });
 
 dayGrid.addEventListener('input', e => {
@@ -925,11 +1041,11 @@ dayGrid.addEventListener('input', e => {
   if (e.target.classList.contains('day-card__memo')) {
     const key = e.target.dataset.date;
     state.dayMemo[key] = e.target.value;
-    saveState();
+    queueMemoSave();
   }
 });
 
-function toggleStatus(date, id, status) {
+function toggleStatus(date, id) {
   if (!currentUser) { alert('로그인 후 이용 가능합니다.'); return; }
   const items = state.schedule[date] || [];
   const item  = items.find(it => it.id === id);
@@ -970,8 +1086,6 @@ function deferTasks(targetDateKey) {
 // ──────────────────────────────────────────────
 // 할일 추가 (인풋)
 // ──────────────────────────────────────────────
-const taskInput  = document.getElementById('taskInput');
-
 function addTask() {
   if (!currentUser) { alert("로그인이 필요합니다."); return; }
   const text = taskInput.value.trim();
@@ -992,8 +1106,8 @@ taskInput.addEventListener('keydown', e => {
 // ──────────────────────────────────────────────
 // 날짜 네비게이션
 // ──────────────────────────────────────────────
-document.getElementById('prevWeekBtn').addEventListener('click', () => { state.dayOffset--; renderWeek(); });
-document.getElementById('nextWeekBtn').addEventListener('click', () => { state.dayOffset++; renderWeek(); });
+prevWeekBtn.addEventListener('click', () => { state.dayOffset--; renderWeek(); });
+nextWeekBtn.addEventListener('click', () => { state.dayOffset++; renderWeek(); });
 
 // ──────────────────────────────────────────────
 // 과거 내역 모달
@@ -1010,6 +1124,8 @@ function openHistory() {
     historyModal.hidden = false;
     return;
   }
+
+  const fragment = document.createDocumentFragment();
 
   allKeys.forEach((key, idx) => {
     const items = state.schedule[key];
@@ -1043,15 +1159,19 @@ function openHistory() {
             }</span>
           </div>`).join('')}
       </div>`;
-
-    dayEl.querySelector('.history-day__header').addEventListener('click', () => {
-      dayEl.classList.toggle('open');
-    });
-    historyList.appendChild(dayEl);
+    fragment.appendChild(dayEl);
   });
+
+  historyList.appendChild(fragment);
 
   historyModal.hidden = false;
 }
+
+historyList.addEventListener('click', e => {
+  const header = e.target.closest('.history-day__header');
+  if (!header) return;
+  header.parentElement.classList.toggle('open');
+});
 
 historyBtn.addEventListener('click', openHistory);
 historyCloseBtn.addEventListener('click', () => { historyModal.hidden = true; });
@@ -1106,5 +1226,6 @@ function autoReturnExpiredTasks() {
 // ──────────────────────────────────────────────
 // 초기화
 // ──────────────────────────────────────────────
-loadLocalState();
+resetScheduleState();
+renderApp();
 initDrag();
