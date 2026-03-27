@@ -139,21 +139,6 @@ if (typeof firebase !== 'undefined' && firebaseConfig.apiKey !== "YOUR_API_KEY")
     }
   });
 
-  // PWA/상태바 환경에서의 리다이렉트 처리 데이터 로드
-  console.log("Checking for redirect result...");
-  firebase.auth().getRedirectResult().then(result => {
-    if (result.user) {
-      console.log("Redirect login successful:", result.user.displayName);
-    } else {
-      console.log("No redirect result found (normal page load)");
-    }
-  }).catch(err => {
-    if (err.code !== 'auth/configuration-not-found') {
-      console.error("리다이렉트 로그인 에러 상세:", err);
-      alert("로그인 중 오류가 발생했습니다 [" + err.code + "]: " + err.message);
-    }
-  });
-
   console.log("Firebase initialized successfully");
 } else {
   console.warn("Firebase script not loaded or API key not set");
@@ -359,24 +344,20 @@ if (fbLoginBtn) {
       }
       const provider = new firebase.auth.GoogleAuthProvider();
 
-      // iOS 16.4+부터 PWA standalone에서도 팝업 지원됨
-      // signInWithRedirect는 iOS PWA에서 인증 결과가 유실되는 버그 있음 → 항상 팝업 우선
-      console.log("Using signInWithPopup");
+      // 팝업 방식만 사용 (redirect는 Dynamic Links 의존성 및 iOS PWA 버그로 제거)
       firebase.auth().signInWithPopup(provider).catch(err => {
         console.error(err);
+        // 사용자가 직접 닫은 경우는 무시
+        if (
+          err.code === 'auth/popup-closed-by-user' ||
+          err.code === 'auth/cancelled-popup-request'
+        ) return;
+        // 팝업이 차단된 경우 안내
         if (err.code === 'auth/popup-blocked') {
-          // 팝업이 차단된 경우에만 redirect로 폴백
-          console.log("Popup blocked, falling back to redirect");
-          firebase.auth().signInWithRedirect(provider).catch(redirectErr => {
-            console.error(redirectErr);
-            alert("로그인 중 오류가 발생했습니다: " + redirectErr.message);
-          });
-        } else if (
-          err.code !== 'auth/popup-closed-by-user' &&
-          err.code !== 'auth/cancelled-popup-request'
-        ) {
-          alert("로그인 중 오류가 발생했습니다: " + err.message);
+          alert("팝업이 차단되었습니다.\n브라우저 설정에서 팝업을 허용하거나,\nSafari로 접속 후 로그인해주세요.");
+          return;
         }
+        alert("로그인 중 오류가 발생했습니다: " + err.message);
       });
     } else {
       alert("Firebase 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.");
