@@ -301,6 +301,11 @@ const historyList     = document.getElementById('historyList');
 const historyBtn      = document.getElementById('historyBtn');
 const historyCloseBtn = document.getElementById('historyCloseBtn');
 
+const infoModal    = document.getElementById('infoModal');
+const infoBtn      = document.getElementById('infoBtn');
+const infoCloseBtn = document.getElementById('infoCloseBtn');
+const infoHistoryBtn = document.getElementById('infoHistoryBtn');
+
 const fbLoginBtn  = document.getElementById('loginBtn');
 const fbLogoutBtn = document.getElementById('logoutBtn');
 const settingsBtn = document.getElementById('settingsBtn');
@@ -402,6 +407,30 @@ if (fbLogoutBtn) {
 // ──────────────────────────────────────────────
 // 풀(Pool) 렌더링 — X 버튼 없음, 드래그 가능
 // ──────────────────────────────────────────────
+
+// 풀 → 현재 날짜로 더블클릭/더블탭 추가
+function addPoolItemToCurrentDay(taskId, text) {
+  const key = dateKey(currentDay());
+  if ((state.schedule[key] || []).some(it => it.taskId === taskId)) return; // 이미 있으면 skip
+  state.pool = state.pool.filter(t => t.id !== taskId);
+  if (!state.schedule[key]) state.schedule[key] = [];
+  state.schedule[key].push({ id: uid(), taskId, text, status: null });
+  saveState();
+  renderPool();
+  renderDayTasks(key);
+}
+
+// 일정 → 풀로 반환
+function returnSchedItemToPool(key, itemId, taskId, text) {
+  state.schedule[key] = (state.schedule[key] || []).filter(it => it.id !== itemId);
+  if (!state.pool.find(t => t.id === taskId)) {
+    state.pool.push({ id: taskId, text });
+  }
+  saveState();
+  renderPool();
+  renderDayTasks(key);
+}
+
 function renderPool() {
   poolEl.innerHTML = '';
   if (state.pool.length === 0) {
@@ -414,6 +443,26 @@ function renderPool() {
     card.dataset.taskId = task.id;
     card.draggable = !!currentUser; // 비로그인 시 드래그 불가
     card.textContent = task.text;
+
+    // ── 더블클릭 / 더블탭 → 현재 날짜에 추가 ──
+    if (currentUser) {
+      card.addEventListener('dblclick', () => {
+        addPoolItemToCurrentDay(task.id, task.text);
+      });
+
+      let poolLastTap = 0;
+      card.addEventListener('touchend', e => {
+        const now = Date.now();
+        if (now - poolLastTap < 350) {
+          e.preventDefault();
+          addPoolItemToCurrentDay(task.id, task.text);
+          poolLastTap = 0;
+        } else {
+          poolLastTap = now;
+        }
+      }, { passive: false });
+    }
+
     poolEl.appendChild(card);
   });
 }
@@ -544,6 +593,12 @@ function renderDayTasks(key) {
       </div>`;
     container.appendChild(el);
 
+    // ── 더블클릭 → 풀로 반환 ──
+    el.addEventListener('dblclick', e => {
+      if (e.target.closest('.sched-item__ox')) return;
+      returnSchedItemToPool(key, item.id, item.taskId, item.text);
+    });
+
     // ── 데스크톱 드래그로 같은 날 순서 바꾸기 ──
     el.addEventListener('dragover', e => {
       if (dragInfo?.type !== 'day' || dragInfo.dateKey !== key || dragInfo.itemId === item.id) return;
@@ -581,9 +636,9 @@ function renderDayTasks(key) {
       }, { passive: false });
     }
 
-    // ── 탭 → 선택, 선택 상태에서 드래그 → 이동 ──
+    // ── 탭 → 선택, 선택 상태에서 드래그 → 이동, 더블탭 → 풀로 반환 ──
     if (currentUser) {
-      let tapX = 0, tapY = 0, tapTime = 0;
+      let tapX = 0, tapY = 0, tapTime = 0, lastTapTime = 0;
 
       el.addEventListener('touchstart', e => {
         if (e.target.closest('.sched-item__ox'))     return; // O 버튼 제외
@@ -611,17 +666,27 @@ function renderDayTasks(key) {
 
       el.addEventListener('touchend', e => {
         if (touchReorder) return; // 드래그 완료 후엔 탭 이벤트 무시
+        if (e.target.closest('.sched-item__ox')) return;
         const t = e.changedTouches[0];
         const dx = Math.abs(t.clientX - tapX);
         const dy = Math.abs(t.clientY - tapY);
         const dt = Date.now() - tapTime;
         if (dx < 10 && dy < 10 && dt < 400) {
-          // 탭 감지 → 선택 토글
-          const wasSelected = el.classList.contains('selected');
-          document.querySelectorAll('.sched-item.selected').forEach(s => s.classList.remove('selected'));
-          if (!wasSelected) el.classList.add('selected');
+          const now = Date.now();
+          if (now - lastTapTime < 350) {
+            // 더블탭 감지 → 풀로 반환
+            e.preventDefault();
+            lastTapTime = 0;
+            returnSchedItemToPool(key, item.id, item.taskId, item.text);
+          } else {
+            lastTapTime = now;
+            // 단일 탭 감지 → 선택 토글
+            const wasSelected = el.classList.contains('selected');
+            document.querySelectorAll('.sched-item.selected').forEach(s => s.classList.remove('selected'));
+            if (!wasSelected) el.classList.add('selected');
+          }
         }
-      });
+      }, { passive: false });
 
       el.addEventListener('touchcancel', () => {
         el.classList.remove('selected');
@@ -1054,7 +1119,12 @@ function openHistory() {
 historyBtn.addEventListener('click', openHistory);
 historyCloseBtn.addEventListener('click', () => { historyModal.hidden = true; });
 historyModal.addEventListener('click', e => { if (e.target === historyModal) historyModal.hidden = true; });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') historyModal.hidden = true; });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { historyModal.hidden = true; infoModal.hidden = true; } });
+
+if (infoBtn) infoBtn.addEventListener('click', () => { infoModal.hidden = false; });
+if (infoCloseBtn) infoCloseBtn.addEventListener('click', () => { infoModal.hidden = true; });
+if (infoModal) infoModal.addEventListener('click', e => { if (e.target === infoModal) infoModal.hidden = true; });
+if (infoHistoryBtn) infoHistoryBtn.addEventListener('click', () => { infoModal.hidden = true; openHistory(); });
 
 // ── 빈 곳 탭 → 선택 해제 ──
 document.addEventListener('touchend', e => {
