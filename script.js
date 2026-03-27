@@ -358,35 +358,26 @@ if (fbLoginBtn) {
         return;
       }
       const provider = new firebase.auth.GoogleAuthProvider();
-      
-      // iOS Safari는 ITP(지능형 추적 방지)로 signInWithRedirect 차단
-      // → 설치된 PWA(standalone) 모드에서만 redirect 사용, 나머지는 모두 popup 사용
-      const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
 
-      if (isStandalone) {
-        // PWA 설치 모드: 팝업 창이 지원되지 않아 리다이렉트 사용
-        console.log("Using signInWithRedirect (Standalone PWA mode)");
-        firebase.auth().signInWithRedirect(provider).catch(err => {
-          console.error(err);
+      // iOS 16.4+부터 PWA standalone에서도 팝업 지원됨
+      // signInWithRedirect는 iOS PWA에서 인증 결과가 유실되는 버그 있음 → 항상 팝업 우선
+      console.log("Using signInWithPopup");
+      firebase.auth().signInWithPopup(provider).catch(err => {
+        console.error(err);
+        if (err.code === 'auth/popup-blocked') {
+          // 팝업이 차단된 경우에만 redirect로 폴백
+          console.log("Popup blocked, falling back to redirect");
+          firebase.auth().signInWithRedirect(provider).catch(redirectErr => {
+            console.error(redirectErr);
+            alert("로그인 중 오류가 발생했습니다: " + redirectErr.message);
+          });
+        } else if (
+          err.code !== 'auth/popup-closed-by-user' &&
+          err.code !== 'auth/cancelled-popup-request'
+        ) {
           alert("로그인 중 오류가 발생했습니다: " + err.message);
-        });
-      } else {
-        // 일반 브라우저 (PC, 모바일, 아이패드): 팝업 사용 (iOS Safari 포함 모두 지원)
-        console.log("Using signInWithPopup (Browser mode)");
-        firebase.auth().signInWithPopup(provider).catch(err => {
-          console.error(err);
-          // 팝업 차단 시 redirect로 폴백
-          if (err.code === 'auth/popup-blocked') {
-            console.log("Popup blocked, falling back to redirect");
-            firebase.auth().signInWithRedirect(provider).catch(redirectErr => {
-              console.error(redirectErr);
-              alert("로그인 중 오류가 발생했습니다: " + redirectErr.message);
-            });
-          } else if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
-            alert("로그인 중 오류가 발생했습니다: " + err.message);
-          }
-        });
-      }
+        }
+      });
     } else {
       alert("Firebase 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.");
     }
