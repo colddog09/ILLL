@@ -570,28 +570,49 @@ function renderDayTasks(key) {
       }
     });
 
-    // ── 터치 드래그로 순서 바꾸기 (모바일) ──
+    // ── 핸들 터치 → 즉시 드래그 시작 ──
     const handle = el.querySelector('.sched-item__handle');
     if (handle && currentUser) {
-      handle.addEventListener('touchstart', e => startTouchReorder(e, el, key, item.id), { passive: false });
+      handle.addEventListener('touchstart', e => {
+        e.preventDefault();
+        e.stopPropagation(); // long-press 타이머 방지
+        const t = e.touches[0];
+        startTouchReorderAt(t.clientX, t.clientY, el, key, item.id);
+      }, { passive: false });
     }
 
-    // ── 아이템 long-press로 드래그 시작 (모바일 전체 터치) ──
+    // ── 아이템 long-press → 350ms 후 드래그 시작 ──
     if (currentUser) {
-      let longPressTimer = null;
+      let lpTimer = null;
+      let lpStartX = 0, lpStartY = 0;
+
       el.addEventListener('touchstart', e => {
-        if (e.target.closest('.sched-item__ox')) return; // O 버튼 제외
-        longPressTimer = setTimeout(() => {
-          startTouchReorder(e, el, key, item.id);
-        }, 300); // 300ms 이상 누르면 드래그 시작
+        if (e.target.closest('.sched-item__ox'))     return; // O 버튼 제외
+        if (e.target.closest('.sched-item__handle')) return; // 핸들은 위에서 처리
+        const t = e.touches[0];
+        lpStartX = t.clientX;
+        lpStartY = t.clientY;
+        lpTimer = setTimeout(() => {
+          lpTimer = null;
+          startTouchReorderAt(lpStartX, lpStartY, el, key, item.id);
+        }, 350);
       }, { passive: true });
 
-      el.addEventListener('touchmove', () => {
-        if (longPressTimer) clearTimeout(longPressTimer); // 스크롤 감지 시 취소
+      el.addEventListener('touchmove', e => {
+        if (!lpTimer) return;
+        const t = e.touches[0];
+        // 8px 이상 움직이면 스크롤 의도로 판단 → 타이머 취소
+        if (Math.abs(t.clientX - lpStartX) > 8 || Math.abs(t.clientY - lpStartY) > 8) {
+          clearTimeout(lpTimer);
+          lpTimer = null;
+        }
       }, { passive: true });
 
       el.addEventListener('touchend', () => {
-        if (longPressTimer) clearTimeout(longPressTimer);
+        if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; }
+      });
+      el.addEventListener('touchcancel', () => {
+        if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; }
       });
     }
   });
@@ -612,33 +633,42 @@ function updateProgress(key) {
 // ──────────────────────────────────────────────
 let touchReorder = null;
 
-function startTouchReorder(e, el, key, itemId) {
-  if (!currentUser) return;
-  e.preventDefault();
+// 공통 진입점 — 좌표를 직접 받아서 드래그 시작
+function startTouchReorderAt(clientX, clientY, el, key, itemId) {
+  if (!currentUser || touchReorder) return; // 이미 드래그 중이면 무시
 
-  const touch = e.touches[0];
-  const rect  = el.getBoundingClientRect();
-  const touchOffsetY = touch.clientY - rect.top;
+  const rect = el.getBoundingClientRect();
+  const offsetY = clientY - rect.top;
+  const offsetX = clientX - rect.left;
+
+  el.style.opacity = '0.25';
 
   const clone = el.cloneNode(true);
   clone.className = 'sched-item touch-drag-clone';
   clone.style.cssText = `
     position:fixed;
     width:${rect.width}px;
-    top:${touch.clientY - touchOffsetY}px;
-    left:${rect.left}px;
+    top:${clientY - offsetY}px;
+    left:${clientX - offsetX}px;
     margin:0; z-index:9999;
-    opacity:0.93;
+    opacity:0.95;
     pointer-events:none;
   `;
   document.body.appendChild(clone);
-  el.style.opacity = '0.3';
 
-  touchReorder = { el, key, itemId, clone, touchOffsetY, targetId: null };
+  touchReorder = { el, key, itemId, clone, offsetY, offsetX, targetId: null, insertBefore: true };
 
   document.addEventListener('touchmove',   onTouchReorderMove,   { passive: false });
   document.addEventListener('touchend',    onTouchReorderEnd);
   document.addEventListener('touchcancel', onTouchReorderEnd);
+}
+
+// 이벤트 객체를 받는 래퍼 (핸들용)
+function startTouchReorder(e, el, key, itemId) {
+  if (!currentUser) return;
+  e.preventDefault();
+  const t = e.touches[0];
+  startTouchReorderAt(t.clientX, t.clientY, el, key, itemId);
 }
 
 function onTouchReorderMove(e) {
@@ -646,10 +676,13 @@ function onTouchReorderMove(e) {
   e.preventDefault();
 
   const touch = e.touches[0];
-  const { clone, touchOffsetY } = touchReorder;
-  clone.style.top = (touch.clientY - touchOffsetY) + 'px';
+  const { clone, offsetY, offsetX } = touchReorder;
 
-  // 클론 일시 숨기고 아래 요소 탐색
+  // 클론을 손가락 위치에 따라 이동 (X, Y 모두)
+  clone.style.top  = (touch.clientY - offsetY) + 'px';
+  clone.style.left = (touch.clientX - offsetX) + 'px';
+
+  // 클론 숨기고 아래 요소 탐색
   clone.style.visibility = 'hidden';
   const below = document.elementFromPoint(touch.clientX, touch.clientY);
   clone.style.visibility = '';
@@ -658,6 +691,9 @@ function onTouchReorderMove(e) {
 
   const targetItem = below?.closest('.sched-item');
   if (targetItem && targetItem !== touchReorder.el && targetItem.dataset.dateKey === touchReorder.key) {
+    // 타겟 아이템 내 위/아래 절반 기준으로 삽입 위치 결정
+    const tRect = targetItem.getBoundingClientRect();
+    touchReorder.insertBefore = touch.clientY < (tRect.top + tRect.height / 2);
     targetItem.classList.add('reorder-over');
     touchReorder.targetId = targetItem.dataset.itemId;
   } else {
@@ -671,21 +707,25 @@ function onTouchReorderEnd() {
   document.removeEventListener('touchend',    onTouchReorderEnd);
   document.removeEventListener('touchcancel', onTouchReorderEnd);
 
-  const { el, key, itemId, clone, targetId } = touchReorder;
+  const { el, key, itemId, clone, targetId, insertBefore } = touchReorder;
   clone.remove();
   el.style.opacity = '';
   document.querySelectorAll('.sched-item.reorder-over').forEach(el => el.classList.remove('reorder-over'));
 
   if (targetId && targetId !== itemId) {
-    const arr      = state.schedule[key] || [];
-    const fromIdx  = arr.findIndex(it => it.id === itemId);
-    const toIdx    = arr.findIndex(it => it.id === targetId);
-    if (fromIdx !== -1 && toIdx !== -1 && fromIdx !== toIdx) {
-      const [moved] = arr.splice(fromIdx, 1);
-      arr.splice(toIdx, 0, moved);
-      state.schedule[key] = arr;
-      saveState();
-      renderDayTasks(key);
+    const arr = state.schedule[key] || [];
+    const fromIdx = arr.findIndex(it => it.id === itemId);
+    if (fromIdx !== -1) {
+      const [moved] = arr.splice(fromIdx, 1); // 원본 제거
+      const newToIdx = arr.findIndex(it => it.id === targetId); // 제거 후 재탐색
+      if (newToIdx !== -1) {
+        arr.splice(insertBefore ? newToIdx : newToIdx + 1, 0, moved);
+        state.schedule[key] = arr;
+        saveState();
+        renderDayTasks(key);
+      } else {
+        arr.splice(fromIdx, 0, moved); // 실패 시 원위치
+      }
     }
   }
   touchReorder = null;
