@@ -130,9 +130,17 @@ fetch('/api/config')
   })
   .catch(err => {
     console.error('Firebase 초기화 실패:', err);
-    alert('앱을 불러오지 못했습니다. 인터넷 연결을 확인하고 다시 시도해주세요.');
-    renderPool();
-    renderWeek();
+    // 로컬 개발 환경 폴백 (Vercel 함수 없을 때)
+    const localCfg = window.__FIREBASE_CONFIG__;
+    if (localCfg && typeof firebase !== 'undefined') {
+      firebase.initializeApp(localCfg);
+      db = firebase.firestore();
+      onFirebaseReady();
+    } else {
+      alert('앱 초기화에 실패했습니다. 잠시 후 다시 시도해주세요.');
+      renderPool();
+      renderWeek();
+    }
   });
 
 function uid() { return '_' + Math.random().toString(36).slice(2, 9); }
@@ -151,12 +159,7 @@ function dateKey(d) {
 function todayKey() { return dateKey(new Date()); }
 
 function escHtml(str) {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;');
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 // ──────────────────────────────────────────────
@@ -211,8 +214,7 @@ function loadState() {
       updateSurveyVisibility();
     }, err => {
       console.error("Firestore 실시간 수신 에러:", err);
-      console.error("Firestore 에러:", err.code, err.message);
-      alert("데이터를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.");
+      alert("데이터를 불러오지 못했습니다 [" + err.code + "]\n" + err.message + "\n\nFirebase Console에서 Firestore 보안 규칙을 확인해주세요.");
     });
   } else {
     // 로그인하지 않은 상태 (게스트) - 빈 상태
@@ -315,13 +317,8 @@ if (settingsCloseBtn) {
 }
 if (settingsSaveBtn) {
   settingsSaveBtn.addEventListener('click', () => {
-    const VALID_GRADES  = ['1','2','3'];
-    const VALID_CLASSES = ['1','2','3','4','5','6','7','8','9'];
-    const g = gradeSelect ? gradeSelect.value : state.grade;
-    const c = classSelect ? classSelect.value  : state.classNum;
-    if (!VALID_GRADES.includes(g) || !VALID_CLASSES.includes(c)) return; // 허용값 외 거부
-    state.grade    = g;
-    state.classNum = c;
+    if (gradeSelect) state.grade = gradeSelect.value;
+    if (classSelect) state.classNum = classSelect.value;
     saveState();
     updateSurveyVisibility();
     settingsModal.hidden = true;
