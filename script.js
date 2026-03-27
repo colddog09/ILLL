@@ -17,8 +17,8 @@ let state = {
   schedule: {},       // { 'YYYY-MM-DD': [{ id, taskId, text, status }] }
   dayMemo: {},        // { 'YYYY-MM-DD': 'memo text' }
   dayOffset: 0,
-  classNum: '2',
-  showTimetable: false // 시간표 표시 여부 (기본값: 꺼져있음)
+  grade: '2',         // 학년 (기본: 2학년)
+  classNum: '2'       // 반
 };
 
 /*
@@ -186,21 +186,23 @@ function loadState() {
     unsubscribeSnapshot = db.collection('users').doc(currentUser.uid).onSnapshot(doc => {
       if (doc.exists) {
         const data = doc.data();
-        state.pool          = data.pool || [];
-        state.schedule      = data.schedule || {};
-        state.dayMemo       = data.dayMemo || {};
-        state.classNum      = data.classNum || '2';
-        state.showTimetable = data.showTimetable === true; // 명시적으로 true일 때만 표시
+        state.pool     = data.pool || [];
+        state.schedule = data.schedule || {};
+        state.dayMemo  = data.dayMemo || {};
+        state.grade    = data.grade || '2';
+        state.classNum = data.classNum || '2';
       } else {
         const localPool = JSON.parse(localStorage.getItem(STORAGE_KEY_POOL));
         const localSched = JSON.parse(localStorage.getItem(STORAGE_KEY_SCHED));
         const localMemo = JSON.parse(localStorage.getItem('dayMemo_v1'));
         const localClass = localStorage.getItem('classNum_v1');
+        const localGrade = localStorage.getItem('grade_v1');
 
         if (localPool || localSched || localMemo || localClass) {
           state.pool = localPool || [];
           state.schedule = localSched || {};
           state.dayMemo = localMemo || {};
+          state.grade = localGrade || '2';
           state.classNum = localClass || '2';
           saveState();
         } else {
@@ -217,9 +219,8 @@ function loadState() {
         renderPool();
         renderWeek();
       }
-      
-      const cSel = document.getElementById('classSelect');
-      if (cSel) cSel.value = state.classNum;
+
+      updateSurveyVisibility();
     }, err => {
       console.error("Firestore 실시간 수신 에러:", err);
       alert("데이터를 불러오지 못했습니다 [" + err.code + "]\n" + err.message + "\n\nFirebase Console에서 Firestore 보안 규칙을 확인해주세요.");
@@ -253,8 +254,8 @@ function saveState() {
       pool: state.pool,
       schedule: state.schedule,
       dayMemo: state.dayMemo,
+      grade: state.grade,
       classNum: state.classNum,
-      showTimetable: state.showTimetable,
       lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
     }).then(() => {
       if (statusEl) statusEl.textContent = '✅ 저장 완료';
@@ -266,6 +267,7 @@ function saveState() {
     localStorage.setItem(STORAGE_KEY_POOL,  JSON.stringify(state.pool));
     localStorage.setItem(STORAGE_KEY_SCHED, JSON.stringify(state.schedule));
     localStorage.setItem('dayMemo_v1',      JSON.stringify(state.dayMemo));
+    localStorage.setItem('grade_v1',        state.grade);
     localStorage.setItem('classNum_v1',     state.classNum);
     if (statusEl) statusEl.textContent = '💾 로컬 저장됨';
   }
@@ -301,6 +303,7 @@ const settingsModal = document.getElementById('settingsModal');
 const settingsCloseBtn = document.getElementById('settingsCloseBtn');
 const settingsSaveBtn = document.getElementById('settingsSaveBtn');
 const classSelect = document.getElementById('classSelect');
+const gradeSelect = document.getElementById('gradeSelect');
 
 if (helpBtn) {
   helpBtn.addEventListener('click', () => { helpModal.hidden = false; });
@@ -312,9 +315,8 @@ if (helpCloseBtn) {
 
 if (settingsBtn) {
   settingsBtn.addEventListener('click', () => {
-    classSelect.value = state.classNum;
-    const timetableToggle = document.getElementById('timetableToggle');
-    if (timetableToggle) timetableToggle.checked = state.showTimetable !== false;
+    if (gradeSelect) gradeSelect.value = state.grade;
+    if (classSelect) classSelect.value = state.classNum;
     settingsModal.hidden = false;
   });
 }
@@ -324,13 +326,21 @@ if (settingsCloseBtn) {
 }
 if (settingsSaveBtn) {
   settingsSaveBtn.addEventListener('click', () => {
-    state.classNum = classSelect.value;
-    const timetableToggle = document.getElementById('timetableToggle');
-    state.showTimetable = timetableToggle ? timetableToggle.checked : true;
+    if (gradeSelect) state.grade = gradeSelect.value;
+    if (classSelect) state.classNum = classSelect.value;
     saveState();
-    renderWeek();
+    updateSurveyVisibility();
     settingsModal.hidden = true;
   });
+}
+
+// 설문 링크 가시성: 2학년일 때만 표시
+function updateSurveyVisibility() {
+  const isGrade2 = state.grade === '2';
+  const desktopLinks = document.getElementById('surveyLinksDesktop');
+  const mobileLinks  = document.getElementById('surveyLinksMobile');
+  if (desktopLinks) desktopLinks.hidden = !isGrade2;
+  if (mobileLinks)  mobileLinks.hidden  = !isGrade2;
 }
 
 if (fbLoginBtn) {
@@ -497,55 +507,10 @@ function renderWeek() {
     </div>`;
 
   dayGrid.appendChild(card);
-  renderTimetable(d);
   renderDayTasks(key);
   setupDayDropZone(card, key);
 }
 
-function renderTimetable(currentD) {
-  const widget = document.getElementById('timetableWidget');
-  if (!widget) return;
-  
-  // 로그인하지 않은 상태 또는 시간표 끈 경우 숨김
-  if (!currentUser || !state.showTimetable) {
-    widget.hidden = true;
-    return;
-  }
-
-  const cNum = state.classNum || '2';
-  const myTimetable = SCHOOL_TIMETABLE_ALL[cNum] || {};
-
-  // 오늘 표시할 날짜의 요일
-  const tzTodayDow = currentD.getDay();
-  // 내일 날짜와 요일 계산
-  const nextD = new Date(currentD);
-  nextD.setDate(nextD.getDate() + 1);
-  const tzNextDow = nextD.getDay();
-
-  // 토(6), 일(0) 은 빈 배열 처리
-  const todayTb = myTimetable[tzTodayDow] || [];
-  const nextTb = myTimetable[tzNextDow] || [];
-
-  if (todayTb.length === 0 && nextTb.length === 0) {
-    widget.hidden = true;
-    return;
-  }
-  
-  widget.hidden = false;
-
-  const buildHtml = (tb, title) => {
-    if (tb.length === 0) return `<div class="timetable-col"><div class="timetable-title">${title} <span style="font-size:0.8rem;color:var(--text-sub)">(수업 없음)</span></div></div>`;
-    let rows = tb.map(item => `
-      <div class="timetable-row">
-        <span class="tt-period">${item.p}</span>
-        <span class="tt-subject">${item.s}</span>
-      </div>
-    `).join('');
-    return `<div class="timetable-col"><div class="timetable-title">${title}</div>${rows}</div>`;
-  };
-
-  widget.innerHTML = buildHtml(todayTb, '오늘 시간표') + buildHtml(nextTb, '내일 시간표');
-}
 
 function renderDayTasks(key) {
   const container = document.getElementById(`tasks_${key}`);
