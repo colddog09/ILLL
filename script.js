@@ -75,29 +75,13 @@ const SCHOOL_TIMETABLE_ALL = {
 };
 
 // ──────────────────────────────────────────────
-// 유틸
+// Firebase 초기화 (환경변수에서 설정 fetch)
 // ──────────────────────────────────────────────
-// ──────────────────────────────────────────────
-// Firebase 연동 (설정 키 입력 준비)
-// ──────────────────────────────────────────────
-const firebaseConfig = {
-  apiKey: "AIzaSyAyTMaUoBSruJmtRdBpr3ZfU5TsVomG-Y4",
-  authDomain: "gbshs-351f8.firebaseapp.com",
-  projectId: "gbshs-351f8",
-  storageBucket: "gbshs-351f8.firebasestorage.app",
-  messagingSenderId: "423897285124",
-  appId: "1:423897285124:web:8db3306d579d4769cfeb51",
-  measurementId: "G-XGKD6QB591"
-};
-
 let currentUser = null;
 let db = null;
 let unsubscribeSnapshot = null;
 
-if (typeof firebase !== 'undefined' && firebaseConfig.apiKey !== "YOUR_API_KEY") {
-  firebase.initializeApp(firebaseConfig);
-  db = firebase.firestore();
-
+function onFirebaseReady() {
   firebase.auth().onAuthStateChanged(user => {
     const loginBtn  = document.getElementById('loginBtn');
     const userInfo  = document.getElementById('userInfo');
@@ -111,46 +95,53 @@ if (typeof firebase !== 'undefined' && firebaseConfig.apiKey !== "YOUR_API_KEY")
       if (userPhoto) userPhoto.src = user.photoURL || '';
       if (userName) userName.textContent = user.displayName || '사용자';
 
-      // 로그인 시 입력창 활성화
       const tInput = document.getElementById('taskInput');
       const tBtn   = document.getElementById('addTaskBtn');
-      if (tInput) {
-        tInput.disabled = false;
-        tInput.placeholder = "할일을 추가하세요 (엔터)";
-      }
-      if (tBtn) tBtn.disabled = false;
+      if (tInput) { tInput.disabled = false; tInput.placeholder = "할일을 추가하세요 (엔터)"; }
+      if (tBtn)   tBtn.disabled = false;
 
-      loadState(); // 로그인 시 Firestore 데이터 로드
+      loadState();
     } else {
       currentUser = null;
       if (loginBtn) loginBtn.hidden = false;
       if (userInfo) userInfo.hidden = true;
 
-      // 비로그인 시 입력창 비활성화
       const tInput = document.getElementById('taskInput');
       const tBtn   = document.getElementById('addTaskBtn');
-      if (tInput) {
-        tInput.disabled = true;
-        tInput.placeholder = "👉 로그인 후 일정을 추가할 수 있습니다.";
-      }
-      if (tBtn) tBtn.disabled = true;
+      if (tInput) { tInput.disabled = true; tInput.placeholder = "👉 로그인 후 일정을 추가할 수 있습니다."; }
+      if (tBtn)   tBtn.disabled = true;
 
-      loadState(); // 비로그인 시 로컬 로드
+      loadState();
     }
   });
-
-  console.log("Firebase initialized successfully");
-} else {
-  console.warn("Firebase script not loaded or API key not set");
-  if (typeof firebase === 'undefined') {
-    // 1초 뒤에 다시 확인 (CDN 로딩 지연 대비)
-    setTimeout(() => {
-      if (typeof firebase === 'undefined') {
-        alert("Firebase 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인해주세요.");
-      }
-    }, 1000);
-  }
 }
+
+// /api/config 에서 키를 받아 Firebase 초기화
+fetch('/api/config')
+  .then(r => {
+    if (!r.ok) throw new Error('config fetch failed: ' + r.status);
+    return r.json();
+  })
+  .then(cfg => {
+    if (typeof firebase === 'undefined') throw new Error('Firebase SDK not loaded');
+    firebase.initializeApp(cfg);
+    db = firebase.firestore();
+    onFirebaseReady();
+  })
+  .catch(err => {
+    console.error('Firebase 초기화 실패:', err);
+    // 로컬 개발 환경 폴백 (Vercel 함수 없을 때)
+    const localCfg = window.__FIREBASE_CONFIG__;
+    if (localCfg && typeof firebase !== 'undefined') {
+      firebase.initializeApp(localCfg);
+      db = firebase.firestore();
+      onFirebaseReady();
+    } else {
+      alert('앱 초기화에 실패했습니다. 잠시 후 다시 시도해주세요.');
+      renderPool();
+      renderWeek();
+    }
+  });
 
 function uid() { return '_' + Math.random().toString(36).slice(2, 9); }
 
