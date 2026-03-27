@@ -1,9 +1,9 @@
-const CACHE_NAME = 'illl-v2';
+const CACHE_NAME = 'illl-v3';
 const CORE_FILES = [
   '/',
   '/index.html',
-  '/style.css?v=8',
-  '/script.js?v=9',
+  '/style.css?v=9',
+  '/script.js?v=10',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
@@ -32,10 +32,14 @@ self.addEventListener('activate', e => {
 
 /* ── 요청 처리 ── */
 self.addEventListener('fetch', e => {
+  if (e.request.method !== 'GET') return;
+
   const url = new URL(e.request.url);
 
   // Firebase / Google 요청은 항상 네트워크 통과 (캐시 X)
   if (
+    url.pathname.startsWith('/__/') ||
+    url.pathname.startsWith('/api/') ||
     url.hostname.includes('googleapis.com') ||
     url.hostname.includes('firebaseapp.com') ||
     url.hostname.includes('firebasestorage') ||

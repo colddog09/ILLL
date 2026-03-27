@@ -57,6 +57,11 @@ const IGNORED_AUTH_CODES = new Set([
   'auth/popup-closed-by-user',
   'auth/cancelled-popup-request'
 ]);
+const POPUP_FIRST_AUTH_CODES = new Set([
+  'auth/popup-blocked',
+  'auth/operation-not-supported-in-this-environment',
+  'auth/web-storage-unsupported'
+]);
 const AUTH_ERROR_MESSAGES = {
   'auth/popup-blocked': "팝업이 차단되었습니다.\n앱 또는 모바일 환경에서는 브라우저 이동 방식으로 다시 시도해주세요.",
   'auth/operation-not-supported-in-this-environment': "현재 앱 환경에서는 팝업 로그인이 지원되지 않아 브라우저 이동 방식으로 로그인해야 합니다.",
@@ -66,6 +71,11 @@ const AUTH_ERROR_MESSAGES = {
 
 function isStandaloneApp() {
   return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+function updateStandaloneAuthHint(user = currentUser) {
+  if (!dom.authHint) return;
+  dom.authHint.hidden = !!user || !isStandaloneApp();
 }
 
 function getAuth() {
@@ -100,6 +110,7 @@ function updateAuthUi(user) {
   if (userName) userName.textContent = user?.displayName || '사용자';
 
   setTaskInputEnabled(!!user);
+  updateStandaloneAuthHint(user);
   loadState();
 }
 
@@ -134,14 +145,13 @@ function startGoogleLogin() {
 
   const provider = new firebase.auth.GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
-
-  if (isStandaloneApp()) {
-    return startRedirectLogin(auth, provider, '🔐 로그인 페이지로 이동 중...');
-  }
+  const redirectStatus = isStandaloneApp()
+    ? '🔐 브라우저 로그인으로 전환 중...'
+    : '🔐 로그인 페이지로 이동 중...';
 
   return auth.signInWithPopup(provider).catch(err => {
-    if (REDIRECT_AUTH_CODES.has(err.code)) {
-      return startRedirectLogin(auth, provider, '🔐 브라우저 로그인으로 전환 중...');
+    if (POPUP_FIRST_AUTH_CODES.has(err.code) || (isStandaloneApp() && REDIRECT_AUTH_CODES.has(err.code))) {
+      return startRedirectLogin(auth, provider, redirectStatus);
     }
     throw err;
   });
@@ -366,6 +376,7 @@ const dom = {
   infoHistoryBtn: document.getElementById('infoHistoryBtn'),
   fbLoginBtn: document.getElementById('loginBtn'),
   fbLogoutBtn: document.getElementById('logoutBtn'),
+  authHint: document.getElementById('authHint'),
   userInfo: document.getElementById('userInfo'),
   userPhoto: document.getElementById('userPhoto'),
   userName: document.getElementById('userName'),
@@ -375,6 +386,7 @@ const dom = {
   settingsSaveBtn: document.getElementById('settingsSaveBtn'),
   classSelect: document.getElementById('classSelect'),
   gradeSelect: document.getElementById('gradeSelect'),
+  surveyVisibilityBadge: document.getElementById('surveyVisibilityBadge'),
   surveyLinksDesktop: document.getElementById('surveyLinksDesktop'),
   surveyLinksMobile: document.getElementById('surveyLinksMobile'),
   prevWeekBtn: document.getElementById('prevWeekBtn'),
@@ -424,6 +436,7 @@ if (settingsBtn) {
   settingsBtn.addEventListener('click', () => {
     if (gradeSelect) gradeSelect.value = state.grade;
     if (classSelect) classSelect.value = state.classNum;
+    updateSettingsPreview();
     settingsModal.hidden = false;
   });
 }
@@ -441,11 +454,23 @@ if (settingsSaveBtn) {
   });
 }
 
+if (gradeSelect) {
+  gradeSelect.addEventListener('change', updateSettingsPreview);
+}
+
 // 설문 링크 가시성: 2학년일 때만 표시
 function updateSurveyVisibility() {
   const isGrade2 = state.grade === '2';
   if (dom.surveyLinksDesktop) dom.surveyLinksDesktop.hidden = !isGrade2;
   if (dom.surveyLinksMobile) dom.surveyLinksMobile.hidden = !isGrade2;
+}
+
+function updateSettingsPreview() {
+  if (!dom.surveyVisibilityBadge) return;
+  const selectedGrade = gradeSelect ? gradeSelect.value : state.grade;
+  const visible = selectedGrade === '2';
+  dom.surveyVisibilityBadge.dataset.active = visible ? 'true' : 'false';
+  dom.surveyVisibilityBadge.textContent = visible ? '질문노트 링크 표시' : '질문노트 링크 숨김';
 }
 
 if (fbLoginBtn) {
@@ -1182,6 +1207,8 @@ if (infoBtn) infoBtn.addEventListener('click', () => { infoModal.hidden = false;
 if (infoCloseBtn) infoCloseBtn.addEventListener('click', () => { infoModal.hidden = true; });
 if (infoModal) infoModal.addEventListener('click', e => { if (e.target === infoModal) infoModal.hidden = true; });
 if (infoHistoryBtn) infoHistoryBtn.addEventListener('click', () => { infoModal.hidden = true; openHistory(); });
+updateStandaloneAuthHint();
+updateSettingsPreview();
 
 // ── 빈 곳 탭 → 선택 해제 ──
 document.addEventListener('touchend', e => {
