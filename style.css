@@ -583,6 +583,18 @@ body {
   transform: translateY(-1px);
 }
 .sched-item:active { cursor: grabbing; }
+
+/* 탭으로 선택된 상태 */
+.sched-item.selected {
+  border-color: var(--accent);
+  background: rgba(108,99,255,0.07);
+  box-shadow: 0 0 0 3px rgba(108,99,255,0.18), var(--shadow);
+  transform: translateY(-1px);
+}
+.sched-item.selected .sched-item__handle {
+  opacity: 1;
+  color: var(--accent);
+}
 .sched-item.dragging { opacity: 0.28; pointer-events: none; }
 
 .sched-item__text {

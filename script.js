@@ -570,49 +570,61 @@ function renderDayTasks(key) {
       }
     });
 
-    // ── 핸들 터치 → 즉시 드래그 시작 ──
+    // ── 핸들 터치 → 즉시 드래그 시작 (선택 여부 무관) ──
     const handle = el.querySelector('.sched-item__handle');
     if (handle && currentUser) {
       handle.addEventListener('touchstart', e => {
         e.preventDefault();
-        e.stopPropagation(); // long-press 타이머 방지
+        e.stopPropagation();
         const t = e.touches[0];
         startTouchReorderAt(t.clientX, t.clientY, el, key, item.id);
       }, { passive: false });
     }
 
-    // ── 아이템 long-press → 350ms 후 드래그 시작 ──
+    // ── 탭 → 선택, 선택 상태에서 드래그 → 이동 ──
     if (currentUser) {
-      let lpTimer = null;
-      let lpStartX = 0, lpStartY = 0;
+      let tapX = 0, tapY = 0, tapTime = 0;
 
       el.addEventListener('touchstart', e => {
         if (e.target.closest('.sched-item__ox'))     return; // O 버튼 제외
         if (e.target.closest('.sched-item__handle')) return; // 핸들은 위에서 처리
         const t = e.touches[0];
-        lpStartX = t.clientX;
-        lpStartY = t.clientY;
-        lpTimer = setTimeout(() => {
-          lpTimer = null;
-          startTouchReorderAt(lpStartX, lpStartY, el, key, item.id);
-        }, 350);
-      }, { passive: true });
+        tapX = t.clientX;
+        tapY = t.clientY;
+        tapTime = Date.now();
+        // 이미 선택된 상태면 스크롤 방지 (드래그 준비)
+        if (el.classList.contains('selected')) e.preventDefault();
+      }, { passive: false });
 
       el.addEventListener('touchmove', e => {
-        if (!lpTimer) return;
+        if (e.target.closest('.sched-item__ox'))    return;
+        if (!el.classList.contains('selected'))     return; // 비선택 상태면 무시
+        if (touchReorder)                           return; // 이미 드래그 중이면 무시
         const t = e.touches[0];
-        // 8px 이상 움직이면 스크롤 의도로 판단 → 타이머 취소
-        if (Math.abs(t.clientX - lpStartX) > 8 || Math.abs(t.clientY - lpStartY) > 8) {
-          clearTimeout(lpTimer);
-          lpTimer = null;
+        const dx = Math.abs(t.clientX - tapX);
+        const dy = Math.abs(t.clientY - tapY);
+        if (dx > 5 || dy > 5) {
+          // 선택된 상태에서 손가락을 움직이면 드래그 시작
+          startTouchReorderAt(tapX, tapY, el, key, item.id);
         }
       }, { passive: true });
 
-      el.addEventListener('touchend', () => {
-        if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; }
+      el.addEventListener('touchend', e => {
+        if (touchReorder) return; // 드래그 완료 후엔 탭 이벤트 무시
+        const t = e.changedTouches[0];
+        const dx = Math.abs(t.clientX - tapX);
+        const dy = Math.abs(t.clientY - tapY);
+        const dt = Date.now() - tapTime;
+        if (dx < 10 && dy < 10 && dt < 400) {
+          // 탭 감지 → 선택 토글
+          const wasSelected = el.classList.contains('selected');
+          document.querySelectorAll('.sched-item.selected').forEach(s => s.classList.remove('selected'));
+          if (!wasSelected) el.classList.add('selected');
+        }
       });
+
       el.addEventListener('touchcancel', () => {
-        if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; }
+        el.classList.remove('selected');
       });
     }
   });
@@ -1043,6 +1055,14 @@ historyBtn.addEventListener('click', openHistory);
 historyCloseBtn.addEventListener('click', () => { historyModal.hidden = true; });
 historyModal.addEventListener('click', e => { if (e.target === historyModal) historyModal.hidden = true; });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') historyModal.hidden = true; });
+
+// ── 빈 곳 탭 → 선택 해제 ──
+document.addEventListener('touchend', e => {
+  if (touchReorder) return; // 드래그 중엔 무시
+  if (!e.target.closest('.sched-item')) {
+    document.querySelectorAll('.sched-item.selected').forEach(s => s.classList.remove('selected'));
+  }
+}, { passive: true });
 
 // ──────────────────────────────────────────────
 // 초기화
