@@ -222,18 +222,13 @@ body {
    ============================ */
 .task-pool {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;          /* 태블릿/PC: 줄바꿈으로 전체 표시 */
   gap: 8px;
   min-height: 36px;
   border-radius: var(--radius-sm);
   padding: 6px 4px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;  /* iOS 부드러운 스크롤 */
-  overscroll-behavior-x: contain;
   transition: background 0.2s, border-color 0.2s;
 }
-.task-pool::-webkit-scrollbar { height: 4px; }
-.task-pool::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
 .task-pool.drag-over-pool {
   background: rgba(108,99,255,0.07);
   outline: 2px dashed var(--accent);
@@ -1061,13 +1056,17 @@ body {
     flex-shrink: 0;
   }
 
-  /* ── 할일 풀 ── */
+  /* ── 할일 풀: 모바일에서만 가로 스크롤 ── */
   .task-pool {
     padding: 4px 2px;
     gap: 6px;
     flex-wrap: nowrap;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
   }
+  .task-pool::-webkit-scrollbar { height: 3px; }
+  .task-pool::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
 
   .pool-card {
     padding: 6px 12px;
