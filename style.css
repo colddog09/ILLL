@@ -255,7 +255,6 @@ body {
   transition: background 0.2s, border-color 0.2s, transform 0.15s, box-shadow 0.2s, opacity 0.15s;
   box-shadow: var(--shadow);
   color: var(--text);
-  animation: popIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
 }
 .pool-card:hover {
   background: var(--surface-hover);
@@ -274,7 +273,7 @@ body {
   max-width: 1100px;
   width: 100%;
   margin: 0 auto;
-  padding: 28px 20px 60px;
+  padding: 28px 20px calc(60px + env(safe-area-inset-bottom, 0px));
   overflow-y: auto;                    /* 스케줄 영역만 스크롤 */
   -webkit-overflow-scrolling: touch;   /* iOS 부드러운 스크롤 */
   overscroll-behavior-y: contain;      /* 맨 위/아래 바운스 방지 */
@@ -617,7 +616,6 @@ body {
   cursor: grab;
   user-select: none;
   transition: background 0.2s, box-shadow 0.2s, transform 0.15s, opacity 0.15s;
-  animation: popIn 0.22s cubic-bezier(0.34,1.56,0.64,1);
 }
 .sched-item:hover {
   background: var(--surface-hover);
@@ -752,7 +750,6 @@ body {
   white-space: nowrap;
   cursor: default;
   transition: background 0.15s, border-color 0.15s, transform 0.15s, box-shadow 0.15s;
-  animation: popIn 0.18s cubic-bezier(0.34,1.56,0.64,1);
 }
 .trash-zone[hidden] { display: none; }
 .trash-zone.danger {
@@ -978,73 +975,228 @@ body {
   }
 }
 
+/* ============================
+   MOBILE  (≤ 600px)
+   ============================ */
 @media (max-width: 600px) {
-  .top-bar { padding: 8px 12px; }
-  .top-bar__inner { gap: 10px; }
-  
-  .top-header-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-  .header-right {
-    width: 100%;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-  .survey-links {
-    flex-direction: column;
-    width: 100%;
-    gap: 4px;
-  }
-  .survey-links a {
-    font-size: 0.75rem;
-    padding: 6px 10px;
-    background: rgba(255,255,255,0.4);
-    border-radius: 8px;
-    display: block;
-    width: auto;
-  }
-  
-  .logo { font-size: 1.1rem; }
-  .week-label { font-size: 0.85rem; padding: 12px; }
-  
-  .task-input-wrap {
-    flex-direction: column;
-    width: 100%;
-  }
-  #taskInput { width: 100%; box-sizing: border-box; }
-  #addTaskBtn { width: 100%; padding: 12px; }
-  
-  .desktop-only { display: none !important; }
-  .mobile-only { display: inline-flex; align-items: center; }
 
-  .task-pool {
-    padding: 6px 4px;
+  /* ── 가시성 ── */
+  .desktop-only { display: none !important; }
+  .mobile-only  { display: inline-flex; align-items: center; }
+
+  /* ── 상단 바 ── */
+  .top-bar {
+    padding: 10px 14px 8px;
+  }
+  .top-bar__inner { gap: 6px; }
+
+  /* 로고 + 인증 버튼을 한 줄에 */
+  .top-header-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap;
     gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .logo {
+    font-size: 1rem;
+    white-space: nowrap;
+  }
+
+  .header-right {
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* 모바일에서 사용자 이름 숨김 (아이콘만) */
+  .user-name { display: none; }
+
+  .user-photo {
+    width: 26px;
+    height: 26px;
+  }
+
+  .icon-btn {
+    font-size: 1rem;
+    padding: 5px;
+    min-width: 32px;
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .auth-btn {
+    font-size: 0.75rem;
+    padding: 5px 10px;
+    white-space: nowrap;
+  }
+
+  .auth-btn--outline {
+    padding: 5px 8px;
+    font-size: 0.72rem;
+  }
+
+  /* ── 입력창: 가로 유지, 컴팩트하게 ── */
+  .task-input-wrap {
+    flex-direction: row;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .task-input-wrap input {
+    flex: 1;
+    padding: 9px 12px;
+    font-size: 0.88rem;
+    min-width: 0;
+  }
+  .task-input-wrap button {
+    padding: 9px 14px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* ── 할일 풀 ── */
+  .task-pool {
+    padding: 4px 2px;
+    gap: 6px;
     flex-wrap: nowrap;
     overflow-x: auto;
   }
-  
+
+  .pool-card {
+    padding: 6px 12px;
+    font-size: 0.82rem;
+  }
+
+  /* ── 일정 영역 ── */
+  .schedule-area {
+    padding: 14px 10px 80px; /* 하단 홈바 여백 */
+  }
+
+  .schedule-area__header {
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .week-label {
+    font-size: 0.82rem;
+    min-width: 0;
+    text-align: center;
+  }
+
+  .week-nav-btn {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+  }
+
+  .info-btn {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+
+  /* ── 날짜 카드 ── */
   .day-card {
-    width: 95%;
-    margin: 0 auto;
+    width: 100%;
     min-height: auto;
-    padding: 16px;
+    padding: 14px 12px;
+    border-radius: 14px;
+    gap: 8px;
   }
-  .day-card__date { font-size: 1.3rem; }
-  
+
+  .day-card__date { font-size: 1.25rem; }
+  .day-card__weekday { font-size: 0.78rem; }
+
+  .today-badge {
+    font-size: 0.65rem;
+    padding: 2px 8px;
+  }
+
+  .defer-btn {
+    font-size: 0.7rem;
+    padding: 4px 9px;
+    border-radius: 6px;
+  }
+
+  .day-card__memo {
+    font-size: 0.82rem;
+    min-height: 44px;
+    padding: 8px 10px;
+  }
+
+  /* ── 일정 아이템 ── */
   .sched-item {
-    padding: 12px;
+    padding: 10px 10px;
+    font-size: 0.83rem;
+    border-radius: 9px;
   }
+
+  .sched-item__text {
+    font-size: 0.83rem;
+  }
+
+  .sched-item__handle {
+    font-size: 0.95rem;
+    padding: 0 6px 0 0;
+    /* 터치 타겟 확대 */
+    min-width: 28px;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+  }
+
   .btn-o {
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
+    font-size: 0.85rem;
+    border-radius: 7px;
   }
-  
+
+  /* ── 모달: 바텀시트 스타일 ── */
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
   .modal-box {
-    max-width: 90%;
-    border-radius: 16px;
+    width: 100%;
+    max-width: 100%;
+    max-height: 88vh;
+    border-radius: 22px 22px 0 0;
+    animation: slideUpSheet 0.28s cubic-bezier(0.34, 1.3, 0.64, 1);
+  }
+
+  @keyframes slideUpSheet {
+    from { transform: translateY(100%); opacity: 0.6; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+
+  /* 바텀시트 상단 드래그 핸들 */
+  .modal-box::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 4px;
+    background: var(--border-strong);
+    border-radius: 999px;
+    margin: 10px auto -6px;
+    flex-shrink: 0;
+  }
+
+  .modal-header {
+    padding: 14px 18px 12px;
+  }
+
+  .modal-body {
+    padding: 16px 18px 28px; /* 홈바 여백 */
+  }
+
+  .history-list {
+    padding: 10px 18px 28px;
   }
 }

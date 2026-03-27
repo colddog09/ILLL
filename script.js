@@ -223,6 +223,9 @@ function loadState() {
         }
       }
       
+      // 하루 지난 미완료 일정 자동 반환 (렌더링 전에 처리)
+      autoReturnExpiredTasks();
+
       // 메모장 포커스가 없을 때만 리렌더링 (타이핑 끊김 방지)
       const activeElement = document.activeElement;
       if (!activeElement || !activeElement.classList.contains('day-card__memo')) {
@@ -408,8 +411,13 @@ if (fbLogoutBtn) {
 // 풀(Pool) 렌더링 — X 버튼 없음, 드래그 가능
 // ──────────────────────────────────────────────
 
-// 풀 → 현재 날짜로 더블클릭/더블탭 추가
+// 풀 → 현재 날짜로 더블클릭/더블탭 추가 (연속 중복 추가 방지 락)
+let addFromPoolLocked = false;
 function addPoolItemToCurrentDay(taskId, text) {
+  if (addFromPoolLocked) return;
+  addFromPoolLocked = true;
+  setTimeout(() => { addFromPoolLocked = false; }, 600);
+
   const key = dateKey(currentDay());
   if ((state.schedule[key] || []).some(it => it.taskId === taskId)) return; // 이미 있으면 skip
   state.pool = state.pool.filter(t => t.id !== taskId);
@@ -489,10 +497,11 @@ function renderWeek() {
   const done = items.filter(it => it.status === 'O').length;
   const pct  = items.length ? Math.round((done / items.length) * 100) : 0;
 
-  // 23시 이후인지 확인
-  const isLate = new Date().getHours() >= 23;
-  const deferBtnHtml = (isToday && isLate) 
-    ? `<button class="defer-btn" data-date="${key}" title="미완료 할일을 내일로 미룹니다">⏳ 뒤로 미루기</button>` 
+  // 미완료 항목이 있을 때 항상 뒤로 미루기 버튼 표시 (오늘 + 이전 날짜만)
+  const hasPendingItems = items.some(it => it.status !== 'O');
+  const isPastOrToday = key <= today;
+  const deferBtnHtml = (isPastOrToday && hasPendingItems)
+    ? `<button class="defer-btn" data-date="${key}" title="미완료 할일을 내일로 미룹니다">⏳ 뒤로 미루기</button>`
     : '';
 
   const memoText = state.dayMemo[key] || '';
@@ -1133,6 +1142,38 @@ document.addEventListener('touchend', e => {
     document.querySelectorAll('.sched-item.selected').forEach(s => s.classList.remove('selected'));
   }
 }, { passive: true });
+
+// ──────────────────────────────────────────────
+// 하루 지난 미완료 일정 자동 풀 반환
+// ──────────────────────────────────────────────
+function autoReturnExpiredTasks() {
+  if (!currentUser) return;
+  const today = todayKey();
+  let changed = false;
+
+  Object.keys(state.schedule).forEach(key => {
+    if (key >= today) return; // 오늘 이후는 건드리지 않음
+    const items = state.schedule[key] || [];
+    const pending = items.filter(it => it.status !== 'O');
+    if (pending.length === 0) return;
+
+    // 미완료 항목을 풀로 반환 (이미 풀에 없는 경우만)
+    pending.forEach(it => {
+      if (!state.pool.find(t => t.id === it.taskId)) {
+        state.pool.push({ id: it.taskId, text: it.text });
+      }
+    });
+    // 해당 날짜에서 미완료 항목 제거
+    state.schedule[key] = items.filter(it => it.status === 'O');
+    changed = true;
+  });
+
+  if (changed) {
+    saveState();
+    renderPool();
+    renderWeek();
+  }
+}
 
 // ──────────────────────────────────────────────
 // 초기화

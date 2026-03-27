@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>일정관리</title>
   <meta name="description" content="드래그앤드롭 방식의 일정 및 할일 관리 사이트" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="icon.png">
   <meta name="theme-color" content="#6c63ff">
-  <link rel="stylesheet" href="style.css?v=4" />
+  <link rel="stylesheet" href="style.css?v=6" />
 </head>
 <body>
 
@@ -149,23 +149,31 @@
       <div class="modal-body help-content">
         <section>
           <h3>1. 구글 로그인</h3>
-          <p>우측 상단의 버튼을 통해 로그인하세요. 로그인을 해야 일정을 추가하고 모든 기기에서 동기화할 수 있습니다.</p>
+          <p>우측 상단의 Google 로그인 버튼으로 로그인하세요. 로그인해야 일정을 추가하고, 모든 기기에서 동기화할 수 있습니다.</p>
         </section>
         <section>
-          <h3>2. 일정 추가 및 배치</h3>
-          <p>상단 입력창에 할일을 적고 엔터를 치면 '할일 풀'에 담깁니다. 이 할일들을 드래그해서 원하는 날짜 카드에 놓으세요.</p>
+          <h3>2. 할일 추가</h3>
+          <p>상단 입력창에 할일을 입력하고 엔터를 누르면 '할일 풀'에 추가됩니다. 할일 풀은 가로로 스크롤 됩니다.</p>
         </section>
         <section>
-          <h3>3. 완료 및 삭제</h3>
-          <p>일정의 'O' 버튼을 누르면 완료 처리됩니다. 일정을 삭제하려면 드래그하여 상단의 휴지통 영역에 놓으세요.</p>
+          <h3>3. 일정에 배치하기</h3>
+          <p>할일 카드를 날짜 영역으로 <b>드래그</b>하거나, <b>더블클릭 / 더블탭</b>하면 오늘 날짜에 바로 추가됩니다.</p>
         </section>
         <section>
-          <h3>4. 뒤로 미루기 & 메모</h3>
-          <p>밤 11시 이후에는 완료하지 못한 일정을 내일로 넘기는 버튼이 생깁니다. 각 날짜의 메모장에는 자유로운 기록이 가능합니다.</p>
+          <h3>4. 일정 되돌리기 & 순서 변경</h3>
+          <p>배치된 일정을 <b>더블클릭 / 더블탭</b>하면 풀로 돌아갑니다. <b>⠿ 핸들</b>을 드래그(모바일은 탭으로 선택 후 이동)하면 순서를 바꿀 수 있습니다.</p>
         </section>
         <section>
-          <h3>5. 시간표 확인</h3>
-          <p>톱니바퀴(⚙️) 버튼에서 자신의 반을 선택하면 우측에 해당 반의 오늘/내일 시간표가 자동으로 표시됩니다.</p>
+          <h3>5. 완료 & 삭제</h3>
+          <p>일정의 'O' 버튼을 누르면 완료 처리됩니다. 삭제하려면 드래그해서 상단에 나타나는 🗑️ 휴지통에 놓으세요.</p>
+        </section>
+        <section>
+          <h3>6. 뒤로 미루기 & 메모</h3>
+          <p>밤 11시 이후, 미완료 일정을 내일로 넘기는 버튼이 생깁니다. 각 날짜 카드 메모란에 자유롭게 기록할 수 있습니다.</p>
+        </section>
+        <section>
+          <h3>7. 시간표 & 설정</h3>
+          <p>⚙️ 버튼에서 자신의 반을 선택하고 시간표를 켜면, 오늘/내일 시간표가 화면에 표시됩니다.</p>
         </section>
       </div>
     </div>
