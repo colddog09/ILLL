@@ -3,8 +3,8 @@ export default function handler(req, res) {
   const origin = req.headers.origin || req.headers.referer || '';
   const allowed = [
     'planmanager-six.vercel.app',
-    'localhost',
-    '127.0.0.1'
+    'gbshs-351f8.firebaseapp.com',
+    'gbshs-351f8.web.app'
   ];
   const isAllowed = allowed.some(d => origin.includes(d));
 
