@@ -52,6 +52,8 @@ body {
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1.5px solid var(--border);
   padding: 18px 28px 14px;
+  /* iOS PWA 상태바 영역 확보 */
+  padding-top: calc(18px + env(safe-area-inset-top, 0px));
   box-shadow: 0 2px 16px rgba(108,99,255,0.07);
 }
 
@@ -982,6 +984,7 @@ body {
   /* ── 상단 바 ── */
   .top-bar {
     padding: 10px 14px 8px;
+    padding-top: calc(10px + env(safe-area-inset-top, 0px));
   }
   .top-bar__inner { gap: 6px; }
 
