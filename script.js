@@ -87,6 +87,37 @@ function setSyncStatus(message) {
   if (dom.syncStatus) dom.syncStatus.textContent = message;
 }
 
+function setModalOpen(modal, open) {
+  if (modal) modal.hidden = !open;
+}
+
+function bindModal(openBtn, modal, closeBtn, beforeOpen) {
+  if (openBtn) {
+    openBtn.addEventListener('click', () => {
+      if (beforeOpen) beforeOpen();
+      setModalOpen(modal, true);
+    });
+  }
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => setModalOpen(modal, false));
+  }
+  if (modal) {
+    modal.addEventListener('click', e => {
+      if (e.target === modal) setModalOpen(modal, false);
+    });
+  }
+}
+
+function requireLogin(message = '로그인 후 이용 가능합니다.') {
+  if (currentUser) return true;
+  alert(message);
+  return false;
+}
+
+function clearSelectedScheduleItems() {
+  document.querySelectorAll('.sched-item.selected').forEach(item => item.classList.remove('selected'));
+}
+
 function setTaskInputEnabled(enabled) {
   if (taskInput) {
     taskInput.disabled = !enabled;
@@ -222,6 +253,21 @@ function dateKey(d) {
   return `${y}-${m}-${day}`;
 }
 function todayKey() { return dateKey(new Date()); }
+
+function getNextDateKey(key) {
+  const [y, m, d] = key.split('-');
+  const nextDate = new Date(y, m - 1, d);
+  nextDate.setDate(nextDate.getDate() + 1);
+  return dateKey(nextDate);
+}
+
+function formatFullDateLabel(date, dayNames = DAYS_KO) {
+  return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일 (${dayNames[date.getDay()]})`;
+}
+
+function formatHistoryDateLabel(date) {
+  return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일 ${DAYS_FULL[date.getDay()]}`;
+}
 
 function escHtml(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -424,33 +470,19 @@ const {
   nextWeekBtn
 } = dom;
 
-if (helpBtn) {
-  helpBtn.addEventListener('click', () => { helpModal.hidden = false; });
-}
-if (helpCloseBtn) {
-  helpCloseBtn.addEventListener('click', () => { helpModal.hidden = true; });
-  helpModal.addEventListener('click', e => { if (e.target === helpModal) helpModal.hidden = true; });
-}
-
-if (settingsBtn) {
-  settingsBtn.addEventListener('click', () => {
-    if (gradeSelect) gradeSelect.value = state.grade;
-    if (classSelect) classSelect.value = state.classNum;
-    updateSettingsPreview();
-    settingsModal.hidden = false;
-  });
-}
-if (settingsCloseBtn) {
-  settingsCloseBtn.addEventListener('click', () => settingsModal.hidden = true);
-  settingsModal.addEventListener('click', e => { if (e.target === settingsModal) settingsModal.hidden = true; });
-}
+bindModal(helpBtn, helpModal, helpCloseBtn);
+bindModal(settingsBtn, settingsModal, settingsCloseBtn, () => {
+  if (gradeSelect) gradeSelect.value = state.grade;
+  if (classSelect) classSelect.value = state.classNum;
+  updateSettingsPreview();
+});
 if (settingsSaveBtn) {
   settingsSaveBtn.addEventListener('click', () => {
     if (gradeSelect) state.grade = gradeSelect.value;
     if (classSelect) state.classNum = classSelect.value;
     saveState();
     updateSurveyVisibility();
-    settingsModal.hidden = true;
+    setModalOpen(settingsModal, false);
   });
 }
 
@@ -532,8 +564,7 @@ function addPoolItemToCurrentDay(taskId, text) {
   const key = dateKey(currentDay());
   if (schedulePoolTask(key, taskId, text)) {
     saveState();
-    renderPool();
-    renderDayTasks(key);
+    refreshPoolAndDay(key);
   }
 }
 
@@ -557,6 +588,11 @@ function removeScheduleItem(key, itemId) {
 
 function removeTaskFromPool(taskId) {
   state.pool = state.pool.filter(t => t.id !== taskId);
+}
+
+function refreshPoolAndDay(key) {
+  renderPool();
+  renderDayTasks(key);
 }
 
 function renderEmptyPool() {
@@ -585,8 +621,7 @@ function returnSchedItemToPool(key, itemId, taskId, text) {
   removeScheduleItem(key, itemId);
   restoreTaskToPool(taskId, text);
   saveState();
-  renderPool();
-  renderDayTasks(key);
+  refreshPoolAndDay(key);
 }
 
 function renderPool() {
@@ -616,8 +651,7 @@ function renderWeek() {
   if (dow === 0) wdColor = 'style="color:#dc2626"';
   if (dow === 6) wdColor = 'style="color:#2563eb"';
 
-  weekLabel.textContent =
-    `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 (${DAYS_KO[dow]})`;
+  weekLabel.textContent = formatFullDateLabel(d);
 
   const done = items.filter(it => it.status === 'O').length;
   const pct  = items.length ? Math.round((done / items.length) * 100) : 0;
@@ -768,7 +802,7 @@ function renderDayTasks(key) {
             lastTapTime = now;
             // 단일 탭 감지 → 선택 토글
             const wasSelected = el.classList.contains('selected');
-            document.querySelectorAll('.sched-item.selected').forEach(s => s.classList.remove('selected'));
+            clearSelectedScheduleItems();
             if (!wasSelected) el.classList.add('selected');
           }
         }
@@ -964,8 +998,7 @@ function initDrag() {
     restoreTaskToPool(taskId, text);
     saveState();
     endDrag();          // 스케줄 아이템 DOM 제거 전 정리
-    renderPool();
-    renderDayTasks(key);
+    refreshPoolAndDay(key);
   });
 
   // ── 휴지통 드롭존 (pool 또는 day → trash: 완전 삭제) ──
@@ -1018,8 +1051,7 @@ function setupDayDropZone(card, key) {
     if (!schedulePoolTask(key, taskId, text)) return;
     saveState();
     endDrag();    // DOM에서 제거되기 전 정리 (dragend 대체)
-    renderPool();
-    renderDayTasks(key);
+    refreshPoolAndDay(key);
   });
 }
 
@@ -1071,7 +1103,7 @@ dayGrid.addEventListener('input', e => {
 });
 
 function toggleStatus(date, id) {
-  if (!currentUser) { alert('로그인 후 이용 가능합니다.'); return; }
+  if (!requireLogin()) return;
   const items = state.schedule[date] || [];
   const item  = items.find(it => it.id === id);
   if (!item) return;
@@ -1082,17 +1114,13 @@ function toggleStatus(date, id) {
 }
 
 function deferTasks(targetDateKey) {
-  if (!currentUser) { alert('로그인 후 이용 가능합니다.'); return; }
+  if (!requireLogin()) return;
   const items = state.schedule[targetDateKey] || [];
   // 완료되지 않은 항목들 (null 이나 X)
   const unfinished = items.filter(it => it.status !== 'O');
   if (unfinished.length === 0) return;
 
-  // targetDateKey 파싱 (로컬 시간 기준)
-  const [y, m, d] = targetDateKey.split('-');
-  const currentD = new Date(y, m - 1, d);
-  currentD.setDate(currentD.getDate() + 1);
-  const nextDateKey = dateKey(currentD); // 전역 dateKey() 함수 호출 안전
+  const nextDateKey = getNextDateKey(targetDateKey);
 
   // 현재 날짜에서는 제거
   state.schedule[targetDateKey] = items.filter(it => it.status === 'O');
@@ -1112,7 +1140,7 @@ function deferTasks(targetDateKey) {
 // 할일 추가 (인풋)
 // ──────────────────────────────────────────────
 function addTask() {
-  if (!currentUser) { alert("로그인이 필요합니다."); return; }
+  if (!requireLogin('로그인이 필요합니다.')) return;
   const text = taskInput.value.trim();
   if (!text) { taskInput.focus(); return; }
   state.pool.push({ id: uid(), text });
@@ -1146,7 +1174,7 @@ function openHistory() {
 
   if (allKeys.length === 0) {
     historyList.innerHTML = '<p class="history-empty">아직 기록된 일정이 없어요.</p>';
-    historyModal.hidden = false;
+    setModalOpen(historyModal, true);
     return;
   }
 
@@ -1168,7 +1196,7 @@ function openHistory() {
     dayEl.innerHTML = `
       <div class="history-day__header">
         <span class="history-day__title" ${titleColor}>
-          ${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 ${DAYS_FULL[dow]}
+          ${formatHistoryDateLabel(d)}
         </span>
         <span class="history-day__summary">${done}/${items.length} 완료</span>
         <span class="history-day__chevron">▼</span>
@@ -1189,7 +1217,7 @@ function openHistory() {
 
   historyList.appendChild(fragment);
 
-  historyModal.hidden = false;
+  setModalOpen(historyModal, true);
 }
 
 historyList.addEventListener('click', e => {
@@ -1199,14 +1227,20 @@ historyList.addEventListener('click', e => {
 });
 
 historyBtn.addEventListener('click', openHistory);
-historyCloseBtn.addEventListener('click', () => { historyModal.hidden = true; });
-historyModal.addEventListener('click', e => { if (e.target === historyModal) historyModal.hidden = true; });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { historyModal.hidden = true; infoModal.hidden = true; } });
+bindModal(null, historyModal, historyCloseBtn);
+bindModal(infoBtn, infoModal, infoCloseBtn);
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  setModalOpen(historyModal, false);
+  setModalOpen(infoModal, false);
+  setModalOpen(helpModal, false);
+  setModalOpen(settingsModal, false);
+});
 
-if (infoBtn) infoBtn.addEventListener('click', () => { infoModal.hidden = false; });
-if (infoCloseBtn) infoCloseBtn.addEventListener('click', () => { infoModal.hidden = true; });
-if (infoModal) infoModal.addEventListener('click', e => { if (e.target === infoModal) infoModal.hidden = true; });
-if (infoHistoryBtn) infoHistoryBtn.addEventListener('click', () => { infoModal.hidden = true; openHistory(); });
+if (infoHistoryBtn) infoHistoryBtn.addEventListener('click', () => {
+  setModalOpen(infoModal, false);
+  openHistory();
+});
 updateStandaloneAuthHint();
 updateSettingsPreview();
 
@@ -1214,7 +1248,7 @@ updateSettingsPreview();
 document.addEventListener('touchend', e => {
   if (touchReorder) return; // 드래그 중엔 무시
   if (!e.target.closest('.sched-item')) {
-    document.querySelectorAll('.sched-item.selected').forEach(s => s.classList.remove('selected'));
+    clearSelectedScheduleItems();
   }
 }, { passive: true });
 
