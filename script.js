@@ -677,7 +677,7 @@ function openHistory() {
       <div class="history-day__tasks">
         ${items.map(it => `
           <div class="history-task status-${it.status||'none'}">
-            <span class="history-task__text">${escHtml(it.text)}</span>
+            <span class="history-task__text">${escHtml(it.text)}${it.deadline ? `<span class="history-task__deadline">⏰ ${formatDeadlineText(it.deadline)}</span>` : ''}</span>
             <span class="history-badge ${it.status||'none'}">${
               it.status === 'O' ? '✓ 완료' : it.status === 'X' ? '✕ 미완료' : '— 미기록'
             }</span>
