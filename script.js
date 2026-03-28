@@ -476,7 +476,8 @@ const {
   nextWeekBtn
 } = dom;
 
-bindModal(helpBtn, helpModal, helpCloseBtn);
+// helpBtn → infoModal로 통합 (사용법 포함)
+bindModal(helpBtn, infoModal, infoCloseBtn);
 bindModal(settingsBtn, settingsModal, settingsCloseBtn, () => {
   if (gradeSelect) gradeSelect.value = state.grade;
   if (classSelect) classSelect.value = state.classNum;
@@ -636,7 +637,8 @@ function createPoolCard(task) {
 
   const catBadge = document.createElement('span');
   catBadge.className = 'pool-card__cat';
-  catBadge.textContent = cat.id === 'none' ? '+' : cat.label;
+  catBadge.textContent = cat.label;
+  if (cat.id === 'none') { catBadge.style.opacity = '0.4'; }
   catBadge.style.setProperty('--cat-color', cat.color);
   catBadge.title = '클릭해서 분류 변경';
   catBadge.addEventListener('click', e => {
@@ -1274,37 +1276,64 @@ function deferTasks(targetDateKey) {
 // ──────────────────────────────────────────────
 // 할일 추가 (인풋)
 // ──────────────────────────────────────────────
-let selectedCategory = '수행'; // 기본값
+// ── 카테고리 팝업 ──
+const categoryPicker = document.getElementById('categoryPicker');
+let pendingTaskText = '';
+
+function showCategoryPicker(text) {
+  pendingTaskText = text;
+  if (categoryPicker) categoryPicker.hidden = false;
+  taskInput.blur();
+}
+
+function hideCategoryPicker() {
+  if (categoryPicker) categoryPicker.hidden = true;
+  pendingTaskText = '';
+}
+
+function commitTask(category) {
+  if (!pendingTaskText) return;
+  state.pool.push({ id: uid(), text: pendingTaskText, category });
+  saveState();
+  renderPool();
+  taskInput.value = '';
+  hideCategoryPicker();
+  taskInput.focus();
+}
+
+if (categoryPicker) {
+  categoryPicker.querySelectorAll('.cat-pick-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      commitTask(btn.dataset.category);
+    });
+  });
+}
+
+// 팝업 바깥 클릭 시 닫기
+document.addEventListener('click', e => {
+  if (!e.target.closest('#categoryPicker') && !e.target.closest('#taskInput')) {
+    hideCategoryPicker();
+  }
+});
+
+taskInput.addEventListener('keydown', e => {
+  if (e.isComposing || e.keyCode === 229) return;
+  if (e.key === 'Enter') {
+    if (!requireLogin('로그인이 필요합니다.')) return;
+    const text = taskInput.value.trim();
+    if (!text) return;
+    showCategoryPicker(text);
+  }
+  if (e.key === 'Escape') hideCategoryPicker();
+});
 
 function addTask() {
   if (!requireLogin('로그인이 필요합니다.')) return;
   const text = taskInput.value.trim();
   if (!text) { taskInput.focus(); return; }
-
-  state.pool.push({ id: uid(), text, category: selectedCategory });
-  saveState();
-  renderPool();
-  taskInput.value = '';
-  taskInput.focus();
+  showCategoryPicker(text);
 }
-
-// 카테고리 탭 버튼
-document.querySelectorAll('.task-category-btn').forEach(btn => {
-  btn.addEventListener('click', e => {
-    e.preventDefault();
-    document.querySelectorAll('.task-category-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    selectedCategory = btn.dataset.category;
-  });
-});
-
-taskInput.addEventListener('keydown', e => {
-  if (e.isComposing || e.keyCode === 229) return;
-  if (e.key === 'Enter') addTask();
-});
-
-// 초기 활성 버튼 설정
-document.querySelector('.task-category-btn')?.classList.add('active');
 
 // ──────────────────────────────────────────────
 // 날짜 네비게이션
@@ -1376,9 +1405,8 @@ historyList.addEventListener('click', e => {
   header.parentElement.classList.toggle('open');
 });
 
-historyBtn.addEventListener('click', openHistory);
+if (historyBtn) historyBtn.addEventListener('click', openHistory);
 bindModal(null, historyModal, historyCloseBtn);
-bindModal(infoBtn, infoModal, infoCloseBtn);
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   setModalOpen(historyModal, false);
