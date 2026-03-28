@@ -628,6 +628,12 @@ function createPoolCard(task) {
   card.draggable = !!currentUser;
 
   const cat = getCategoryInfo(task.category || 'none');
+  // 카테고리별 배경색 적용
+  if (cat.id !== 'none') {
+    card.style.backgroundColor = cat.color + '20'; // 20% 투명도
+    card.style.borderColor = cat.color;
+  }
+
   const catBadge = document.createElement('span');
   catBadge.className = 'pool-card__cat';
   catBadge.textContent = cat.id === 'none' ? '+' : cat.label;
@@ -1268,22 +1274,37 @@ function deferTasks(targetDateKey) {
 // ──────────────────────────────────────────────
 // 할일 추가 (인풋)
 // ──────────────────────────────────────────────
+let selectedCategory = '수행'; // 기본값
+
 function addTask() {
   if (!requireLogin('로그인이 필요합니다.')) return;
   const text = taskInput.value.trim();
   if (!text) { taskInput.focus(); return; }
-  state.pool.push({ id: uid(), text });
+
+  state.pool.push({ id: uid(), text, category: selectedCategory });
   saveState();
   renderPool();
   taskInput.value = '';
   taskInput.focus();
 }
 
-addTaskBtn.addEventListener('click', addTask);
-taskInput.addEventListener('keydown', e => { 
-  if (e.isComposing || e.keyCode === 229) return;
-  if (e.key === 'Enter') addTask(); 
+// 카테고리 탭 버튼
+document.querySelectorAll('.task-category-btn').forEach(btn => {
+  btn.addEventListener('click', e => {
+    e.preventDefault();
+    document.querySelectorAll('.task-category-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedCategory = btn.dataset.category;
+  });
 });
+
+taskInput.addEventListener('keydown', e => {
+  if (e.isComposing || e.keyCode === 229) return;
+  if (e.key === 'Enter') addTask();
+});
+
+// 초기 활성 버튼 설정
+document.querySelector('.task-category-btn')?.classList.add('active');
 
 // ──────────────────────────────────────────────
 // 날짜 네비게이션
@@ -1422,15 +1443,15 @@ function autoReturnExpiredTasks() {
 // 시험 D-day 표시
 // ──────────────────────────────────────────────
 function updateDday() {
-  const badge = document.getElementById('ddayBadge');
-  if (!badge) return;
   const exam = new Date('2026-04-20T00:00:00');
   const now = new Date();
   const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const diff = Math.round((exam - todayMidnight) / (1000 * 60 * 60 * 24));
-  if (diff > 0)      badge.textContent = `📝 시험 D-${diff}`;
-  else if (diff === 0) badge.textContent = `📝 시험 D-Day!`;
-  else               badge.textContent = `📝 시험 D+${Math.abs(diff)}`;
+  const textTop = diff > 0 ? `📝 시험 D-${diff}` : diff === 0 ? `📝 시험 D-Day!` : `📝 시험 D+${Math.abs(diff)}`;
+  const textSchedule = diff > 0 ? `🔥 시험 D-${diff}` : diff === 0 ? `🔥 시험 D-Day!` : `🔥 시험 D+${Math.abs(diff)}`;
+
+  const badgeSchedule = document.getElementById('ddayBadge');
+  if (badgeSchedule) badgeSchedule.textContent = textSchedule;
 }
 
 // ──────────────────────────────────────────────

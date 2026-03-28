@@ -45,7 +45,11 @@
       </div>
       <div class="task-input-wrap">
         <input id="taskInput" type="text" placeholder="새 할일을 입력하세요…" autocomplete="off" />
-        <button id="addTaskBtn" aria-label="할일 추가">＋ 추가</button>
+        <div class="task-category-tabs">
+          <button class="task-category-btn" data-category="수행" aria-label="수행 분류">수행</button>
+          <button class="task-category-btn" data-category="과제" aria-label="과제 분류">과제</button>
+          <button class="task-category-btn" data-category="시험" aria-label="시험 분류">시험</button>
+        </div>
         <div id="trashZone" class="trash-zone" hidden aria-label="여기에 놓으면 삭제">
           <span class="trash-zone__icon">🗑️</span>
           <span class="trash-zone__label">여기에 놓으면 삭제</span>
@@ -62,7 +66,7 @@
   <!-- ─── 날짜별 일정 및 시간표 영역 ─── -->
   <main class="schedule-area">
     <div class="schedule-area__header">
-      <span id="ddayBadge" class="dday-badge"></span>
+      <span id="ddayBadge" class="dday-badge dday-badge--schedule"></span>
       <button id="prevWeekBtn" class="week-nav-btn" aria-label="이전 날">◀</button>
       <span id="weekLabel" class="week-label"></span>
       <button id="nextWeekBtn" class="week-nav-btn" aria-label="다음 날">▶</button>

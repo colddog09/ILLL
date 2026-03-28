@@ -197,8 +197,21 @@ body {
 /* Input row */
 .task-input-wrap {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 14px;
+  align-items: flex-start;
+}
+
+.task-category-tabs {
+  display: flex;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+  gap: 0;
+  position: relative;
+  box-shadow: var(--shadow);
 }
 
 .task-input-wrap input {
@@ -236,6 +249,61 @@ body {
 }
 .task-input-wrap button:hover { opacity: 0.88; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(108,99,255,0.45); }
 .task-input-wrap button:active { transform: scale(0.96); }
+
+/* 카테고리 탭 버튼 */
+.task-category-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: calc(var(--radius-sm) - 3px);
+  background: #fff;
+  color: var(--text-sub);
+  font-size: 0.86rem;
+  font-family: var(--font);
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: color 0.2s, background 0.22s, box-shadow 0.22s;
+  white-space: nowrap;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+.task-category-btn:hover {
+  color: var(--text);
+}
+/* 수행 — 주황 */
+.task-category-btn[data-category="수행"].active {
+  background: #f59e0b;
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(245,158,11,0.45);
+}
+/* 과제 — 파랑 */
+.task-category-btn[data-category="과제"].active {
+  background: #3b82f6;
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(59,130,246,0.45);
+}
+/* 시험 — 빨강 */
+.task-category-btn[data-category="시험"].active {
+  background: #ef4444;
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(239,68,68,0.45);
+}
+/* 호버도 연하게 */
+.task-category-btn[data-category="수행"]:hover:not(.active) { color: #f59e0b; }
+.task-category-btn[data-category="과제"]:hover:not(.active) { color: #3b82f6; }
+.task-category-btn[data-category="시험"]:hover:not(.active) { color: #ef4444; }
+
+/* D-day 배지 (상단) */
+.dday-badge--top {
+  padding: 6px 12px;
+  font-size: 0.82rem;
+  border-radius: 20px;
+}
+
+.dday-badge--header {
+  margin-left: auto;
+}
 
 /* ============================
    TASK POOL
@@ -313,8 +381,13 @@ body {
   padding: 4px 12px;
   white-space: nowrap;
   box-shadow: 0 2px 8px rgba(108,99,255,0.25);
+}
+
+/* 스케줄 헤더 D-day 배지 — 빨간색 */
+.dday-badge--schedule {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  box-shadow: 0 2px 8px rgba(239,68,68,0.35) !important;
   order: -1;
-  margin-right: auto;
 }
 
 .week-label {
@@ -1246,21 +1319,39 @@ body {
 
   /* ── 입력창: 가로 유지, 컴팩트하게 ── */
   .task-input-wrap {
-    flex-direction: row;
     gap: 6px;
     margin-bottom: 8px;
   }
+
+  .task-input-row {
+    flex: 1;
+    min-width: 0;
+    gap: 6px;
+  }
+
   .task-input-wrap input {
     flex: 1;
     padding: 9px 12px;
     font-size: 0.88rem;
     min-width: 0;
   }
+
+  .task-category-select {
+    padding: 9px 10px;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+  }
+
   .task-input-wrap button {
     padding: 9px 14px;
     font-size: 0.85rem;
     white-space: nowrap;
     flex-shrink: 0;
+  }
+
+  .dday-badge--top {
+    font-size: 0.75rem;
+    padding: 4px 10px;
   }
 
   /* ── 할일 풀: 모바일에서만 가로 스크롤 ── */
