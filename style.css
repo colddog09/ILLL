@@ -1230,6 +1230,13 @@ body {
     font-size: 0.8rem;
   }
 
+  /* ── 할일 풀: 모바일 패딩(14px)에 맞게 네거티브 마진 조정 ── */
+  .task-pool {
+    margin-left: -14px;
+    margin-right: -14px;
+    padding: 4px 14px;
+  }
+
   /* ── 풀 카드 ── */
   .pool-card {
     padding: 7px 13px;
