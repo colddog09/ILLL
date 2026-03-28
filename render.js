@@ -84,7 +84,9 @@ function createPoolCard(task) {
 }
 
 function getPoolCardText(card) {
-  return card ? card.textContent.trim() : '';
+  if (!card) return '';
+  const span = card.querySelector('span:first-child');
+  return span ? span.textContent.trim() : card.firstChild?.textContent?.trim() || '';
 }
 
 function handlePoolCardActivate(card) {
