@@ -1,7 +1,13 @@
 {
   "functions": {
-    "api/config.js": {
-      "maxDuration": 5
+    "api/config.js": { "maxDuration": 5 },
+    "api/push-subscribe.js": { "maxDuration": 10 },
+    "api/push-notify.js": { "maxDuration": 30 }
+  },
+  "crons": [
+    {
+      "path": "/api/push-notify",
+      "schedule": "0 * * * *"
     }
-  }
+  ]
 }

@@ -1,9 +1,9 @@
-const CACHE_NAME = 'illl-v3';
+const CACHE_NAME = 'illl-v4';
 const CORE_FILES = [
   '/',
   '/index.html',
-  '/style.css?v=9',
-  '/script.js?v=10',
+  '/style.css?v=11',
+  '/script.js?v=13',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
@@ -28,6 +28,31 @@ self.addEventListener('activate', e => {
       )
     ).then(() => self.clients.claim())
   );
+});
+
+/* ── SKIP_WAITING 메시지 처리 ── */
+self.addEventListener('message', e => {
+  if (e.data?.type === 'SKIP_WAITING') self.skipWaiting();
+});
+
+/* ── 푸시 알림 수신 ── */
+self.addEventListener('push', e => {
+  let data = { title: '일정 알림', body: '기한이 다가온 할일이 있어요!' };
+  try { if (e.data) data = e.data.json(); } catch {}
+  e.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      tag: 'deadline-alert',
+      renotify: true,
+    })
+  );
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(clients.openWindow('/'));
 });
 
 /* ── 요청 처리 ── */

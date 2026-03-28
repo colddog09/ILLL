@@ -358,7 +358,40 @@ function bindModal(openBtn, modal, closeBtn, beforeOpen) {
 }
 
 bindModal(helpBtn, helpModal, helpCloseBtn);
-bindModal(infoBtn, infoModal, infoCloseBtn);
+bindModal(infoBtn, infoModal, infoCloseBtn, renderDeadlineList);
+
+function renderDeadlineList() {
+  const listEl = document.getElementById('deadlineList');
+  if (!listEl) return;
+  const tasks = (state.pool || []).filter(t => t.deadline);
+  if (tasks.length === 0) {
+    listEl.innerHTML = '<p style="font-size:0.82rem;color:var(--text-sub);">기한이 설정된 할일이 없어요.</p>';
+    return;
+  }
+  // 기한 가까운 순 정렬
+  const now = new Date();
+  const year = now.getFullYear();
+  tasks.sort((a, b) => {
+    const toDate = dl => {
+      const d = new Date(year, parseInt(dl.month) - 1, parseInt(dl.day), ...dl.time.split(':').map(Number));
+      if (d < now) d.setFullYear(year + 1);
+      return d;
+    };
+    return toDate(a.deadline) - toDate(b.deadline);
+  });
+  listEl.innerHTML = '';
+  tasks.forEach(t => {
+    const urgent = isDeadlineUrgent(t.deadline);
+    const row = document.createElement('div');
+    row.className = 'deadline-list__item' + (urgent ? ' deadline-list__item--urgent' : '');
+    row.innerHTML = `
+      <span class="deadline-list__clock">${urgent ? '🔴' : '⏰'}</span>
+      <span class="deadline-list__text">${escHtml(t.text)}</span>
+      <span class="deadline-list__due">${formatDeadlineText(t.deadline)}</span>
+    `;
+    listEl.appendChild(row);
+  });
+}
 bindModal(settingsBtn, settingsModal, settingsCloseBtn, () => {
   if (gradeSelect) gradeSelect.value = state.grade;
   if (classSelect) classSelect.value = state.classNum;
@@ -486,20 +519,122 @@ function deferTasks(targetDateKey) {
 }
 
 // ──────────────────────────────────────────────
-// 할일 추가 (인풋)
+// 기한 설정
 // ──────────────────────────────────────────────
-taskInput.addEventListener('keydown', e => {
-  if (e.isComposing || e.keyCode === 229) return;
-  if (e.key === 'Enter') {
-    if (!requireLogin('로그인이 필요합니다.')) return;
-    const text = taskInput.value.trim();
-    if (!text) return;
-    state.pool.push({ id: uid(), text });
-    saveState();
-    renderPool();
-    taskInput.value = '';
+let pendingDeadline = null; // { month, day, time } or null
+
+function formatDeadlineText(dl) {
+  if (!dl) return '';
+  return `${dl.month}월 ${dl.day}일 ${dl.time}까지`;
+}
+
+function isDeadlineUrgent(dl) {
+  if (!dl) return false;
+  const now = new Date();
+  const year = now.getFullYear();
+  const target = new Date(year, parseInt(dl.month) - 1, parseInt(dl.day), ...dl.time.split(':').map(Number));
+  // 내년으로 넘어가는 경우 처리
+  if (target < now) target.setFullYear(year + 1);
+  const diffMs = target - now;
+  return diffMs >= 0 && diffMs <= 24 * 60 * 60 * 1000; // 24시간 이내
+}
+
+const deadlineToggleBtn = document.getElementById('deadlineToggleBtn');
+const deadlinePopup    = document.getElementById('deadlinePopup');
+const deadlineMonth    = document.getElementById('deadlineMonth');
+const deadlineDay      = document.getElementById('deadlineDay');
+const deadlineTime     = document.getElementById('deadlineTime');
+const deadlineConfirmBtn = document.getElementById('deadlineConfirmBtn');
+const deadlineClearBtn   = document.getElementById('deadlineClearBtn');
+const addTaskBtn         = document.getElementById('addTaskBtn');
+
+// 월/일 select 옵션 채우기
+(function initDeadlineSelects() {
+  const now = new Date();
+  for (let m = 1; m <= 12; m++) {
+    const opt = document.createElement('option');
+    opt.value = m;
+    opt.textContent = m + '월';
+    if (m === now.getMonth() + 1) opt.selected = true;
+    deadlineMonth.appendChild(opt);
+  }
+  function fillDays(month) {
+    deadlineDay.innerHTML = '';
+    const days = new Date(new Date().getFullYear(), month, 0).getDate();
+    for (let d = 1; d <= days; d++) {
+      const opt = document.createElement('option');
+      opt.value = d;
+      opt.textContent = d + '일';
+      if (d === now.getDate() && month === now.getMonth() + 1) opt.selected = true;
+      deadlineDay.appendChild(opt);
+    }
+  }
+  fillDays(now.getMonth() + 1);
+  deadlineMonth.addEventListener('change', () => fillDays(parseInt(deadlineMonth.value)));
+})();
+
+function updateDeadlineBtn() {
+  if (pendingDeadline) {
+    deadlineToggleBtn.textContent = `${pendingDeadline.month}/${pendingDeadline.day} ${pendingDeadline.time}`;
+    deadlineToggleBtn.classList.add('deadline-toggle-btn--set');
+  } else {
+    deadlineToggleBtn.textContent = '기한';
+    deadlineToggleBtn.classList.remove('deadline-toggle-btn--set');
+  }
+}
+
+deadlineToggleBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  deadlinePopup.hidden = !deadlinePopup.hidden;
+});
+
+deadlineConfirmBtn.addEventListener('click', () => {
+  pendingDeadline = {
+    month: deadlineMonth.value,
+    day: deadlineDay.value,
+    time: deadlineTime.value || '23:59'
+  };
+  updateDeadlineBtn();
+  deadlinePopup.hidden = true;
+});
+
+deadlineClearBtn.addEventListener('click', () => {
+  pendingDeadline = null;
+  updateDeadlineBtn();
+  deadlinePopup.hidden = true;
+});
+
+// 팝업 외부 클릭 시 닫기
+document.addEventListener('click', e => {
+  if (!deadlinePopup.hidden && !deadlinePopup.contains(e.target) && e.target !== deadlineToggleBtn) {
+    deadlinePopup.hidden = true;
   }
 });
+
+// ──────────────────────────────────────────────
+// 할일 추가 (인풋)
+// ──────────────────────────────────────────────
+function addTaskFromInput() {
+  if (!requireLogin('로그인이 필요합니다.')) return;
+  const text = taskInput.value.trim();
+  if (!text) return;
+  const task = { id: uid(), text };
+  if (pendingDeadline) task.deadline = { ...pendingDeadline };
+  state.pool.push(task);
+  saveState();
+  renderPool();
+  taskInput.value = '';
+  pendingDeadline = null;
+  updateDeadlineBtn();
+  deadlinePopup.hidden = true;
+}
+
+taskInput.addEventListener('keydown', e => {
+  if (e.isComposing || e.keyCode === 229) return;
+  if (e.key === 'Enter') addTaskFromInput();
+});
+
+addTaskBtn.addEventListener('click', () => addTaskFromInput());
 
 // ──────────────────────────────────────────────
 // 날짜 네비게이션
@@ -618,3 +753,59 @@ function updateDday() {
 
 updateStandaloneAuthHint();
 updateSettingsPreview();
+
+// ──────────────────────────────────────────────
+// Web Push 알림 구독
+// ──────────────────────────────────────────────
+const VAPID_PUBLIC_KEY = 'BLticCEr3F_SW9_fyC-7lweNR-vIGsVzODCwkAY8TqTJeGy59_jSQNcNwpKblx9nBeetCI3TqqFczbJ5GlGNmAg';
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
+
+async function subscribePush(uid) {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+      });
+    }
+    await fetch('/api/push-subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid, subscription: sub.toJSON() }),
+    });
+  } catch (err) {
+    console.warn('Push 구독 실패:', err);
+  }
+}
+
+async function requestPushPermission(uid) {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'granted') {
+    subscribePush(uid);
+    return;
+  }
+  if (Notification.permission === 'denied') return;
+  const perm = await Notification.requestPermission();
+  if (perm === 'granted') subscribePush(uid);
+}
+
+// 로그인 후 push 구독 요청 (updateAuthUi 다음에 연결)
+const _origUpdateAuthUi = updateAuthUi;
+// updateAuthUi는 onAuthStateChanged에서 호출됨 — 로그인 감지 시 push 요청
+const _auth = () => {
+  const auth = getAuth();
+  if (!auth) return;
+  auth.onAuthStateChanged(user => {
+    if (user) requestPushPermission(user.uid);
+  });
+};
+_auth();

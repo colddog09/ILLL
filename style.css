@@ -148,16 +148,16 @@ body {
 }
 
 #infoBtn {
-  background: rgba(37, 99, 235, 0.08);
-  border: 1.5px solid #2563eb;
+  background: rgba(108, 99, 255, 0.08);
+  border: 1.5px solid var(--accent);
   border-radius: 8px;
   padding: 4px 8px;
   font-size: 1rem;
   transition: background 0.2s, box-shadow 0.2s;
 }
 #infoBtn:hover {
-  background: rgba(37, 99, 235, 0.16);
-  box-shadow: 0 2px 8px rgba(37,99,235,0.2);
+  background: rgba(108, 99, 255, 0.16);
+  box-shadow: 0 2px 8px rgba(108,99,255,0.25);
 }
 
 .user-info {
@@ -228,6 +228,148 @@ body {
 .task-input-wrap button:hover { opacity: 0.88; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(108,99,255,0.45); }
 .task-input-wrap button:active { transform: scale(0.96); }
 
+/* + 버튼 */
+.add-task-btn {
+  padding: 11px 18px !important;
+  font-size: 1.3rem !important;
+  line-height: 1;
+}
+
+/* 기한 버튼 */
+.deadline-toggle-btn {
+  background: var(--surface) !important;
+  color: var(--text-sub) !important;
+  border: 1.5px solid var(--border) !important;
+  box-shadow: var(--shadow) !important;
+  font-size: 0.85rem !important;
+  padding: 11px 14px !important;
+}
+.deadline-toggle-btn--set {
+  background: rgba(108,99,255,0.08) !important;
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
+}
+
+/* 기한 팝업 */
+.deadline-popup {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  box-shadow: var(--shadow-lg);
+  z-index: 200;
+  min-width: 220px;
+}
+.deadline-popup__title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.deadline-popup__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: 0.88rem;
+  color: var(--text-sub);
+}
+.deadline-select {
+  padding: 5px 8px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-family: var(--font);
+  font-size: 0.88rem;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+.deadline-time {
+  padding: 5px 8px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-family: var(--font);
+  font-size: 0.88rem;
+  background: var(--surface);
+  color: var(--text);
+}
+.deadline-popup__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.deadline-btn {
+  flex: 1;
+  padding: 7px 10px !important;
+  font-size: 0.82rem !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+.deadline-btn--clear {
+  background: var(--surface) !important;
+  color: var(--text-sub) !important;
+  border: 1.5px solid var(--border) !important;
+}
+.deadline-btn--confirm {
+  background: linear-gradient(135deg, var(--accent), var(--accent2)) !important;
+  color: #fff !important;
+}
+
+/* 기한 목록 (정보 모달) */
+.deadline-list { display: flex; flex-direction: column; gap: 6px; }
+.deadline-list__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  background: var(--bg);
+  border-radius: 8px;
+  font-size: 0.84rem;
+}
+.deadline-list__item--urgent { background: #fff1f1; }
+.deadline-list__clock { font-size: 1rem; flex-shrink: 0; }
+.deadline-list__text { flex: 1; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.deadline-list__due { font-size: 0.78rem; color: var(--text-sub); white-space: nowrap; flex-shrink: 0; }
+.deadline-list__item--urgent .deadline-list__due { color: #dc2626; font-weight: 700; }
+
+/* 풀 카드 시계 버튼 */
+.pool-card__clock {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0 0 0 4px;
+  line-height: 1;
+  opacity: 0.75;
+  transition: opacity 0.15s, transform 0.15s;
+  flex-shrink: 0;
+}
+.pool-card__clock:hover { opacity: 1; transform: scale(1.15); }
+.pool-card__clock--urgent { filter: sepia(1) saturate(5) hue-rotate(-20deg); opacity: 1; animation: clock-pulse 1.5s ease-in-out infinite; }
+@keyframes clock-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+
+.pool-card__clock-tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 8px;
+  white-space: nowrap;
+  z-index: 300;
+  pointer-events: none;
+}
+.pool-card__clock-tooltip.visible { display: block; }
+.pool-card { position: relative; }
+
 /* ============================
    TASK POOL
    ============================ */
@@ -237,7 +379,9 @@ body {
   gap: 8px;
   min-height: 36px;
   border-radius: var(--radius-sm);
-  padding: 6px 4px;
+  padding: 6px 28px;
+  margin-left: -28px;
+  margin-right: -28px;
   transition: background 0.2s, border-color 0.2s;
 }
 .task-pool.drag-over-pool {
@@ -313,11 +457,16 @@ body {
 
 /* 타이틀 옆 D-day 배지 — 빨간색 */
 .dday-badge--title {
+  display: inline-block;
   background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  -webkit-text-fill-color: #fff;
+  color: #fff;
   box-shadow: 0 2px 8px rgba(239,68,68,0.35) !important;
   vertical-align: middle;
-  margin-left: 8px;
-  font-size: 0.75rem;
+  margin-left: 10px;
+  font-size: 0.82rem;
+  line-height: 1;
+  padding: 5px 12px;
 }
 
 .week-label {

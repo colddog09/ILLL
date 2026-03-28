@@ -41,6 +41,24 @@
       </div>
       <div class="task-input-wrap">
         <input id="taskInput" type="text" placeholder="새 할일을 입력하세요…" autocomplete="off" />
+        <button id="deadlineToggleBtn" class="deadline-toggle-btn" title="기한 설정">기한</button>
+        <button id="addTaskBtn" class="add-task-btn" title="할일 추가">+</button>
+        <!-- 기한 설정 팝업 -->
+        <div id="deadlinePopup" class="deadline-popup" hidden>
+          <div class="deadline-popup__title">⏰ 기한 설정</div>
+          <div class="deadline-popup__row">
+            <select id="deadlineMonth" class="deadline-select"></select><span>월</span>
+            <select id="deadlineDay" class="deadline-select"></select><span>일</span>
+          </div>
+          <div class="deadline-popup__row">
+            <input id="deadlineTime" type="time" class="deadline-time" value="23:59" />
+            <span>까지</span>
+          </div>
+          <div class="deadline-popup__actions">
+            <button id="deadlineClearBtn" class="deadline-btn deadline-btn--clear">기한 없음</button>
+            <button id="deadlineConfirmBtn" class="deadline-btn deadline-btn--confirm">확인</button>
+          </div>
+        </div>
         <div id="trashZone" class="trash-zone" hidden aria-label="여기에 놓으면 삭제">
           <span class="trash-zone__icon">🗑️</span>
           <span class="trash-zone__label">여기에 놓으면 삭제</span>
@@ -145,6 +163,12 @@
         <button id="infoCloseBtn" class="modal-close">&times;</button>
       </div>
       <div class="modal-body" style="display:flex;flex-direction:column;gap:14px;">
+        <!-- 기한 있는 일정 목록 -->
+        <div>
+          <p style="font-size:0.82rem;font-weight:700;color:var(--text);margin-bottom:8px;">⏰ 기한 있는 할일</p>
+          <div id="deadlineList" class="deadline-list"></div>
+        </div>
+        <hr style="border:none;border-top:1px solid var(--border);margin:0;">
         <div id="surveyLinksMobile" hidden>
           <p style="font-size:0.82rem;color:var(--text-sub);margin-bottom:8px;">📋 질문노트 설문 링크</p>
           <a href="https://forms.gle/rUwhENomLZjW7b2r6" target="_blank" rel="noopener noreferrer" class="info-link" style="display:block;margin-bottom:10px;">♥️ 이다현 선생님 설문 링크</a>

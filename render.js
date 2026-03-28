@@ -54,7 +54,32 @@ function createPoolCard(task) {
   card.className = 'pool-card';
   card.dataset.taskId = task.id;
   card.draggable = !!currentUser;
-  card.textContent = task.text;
+
+  const textSpan = document.createElement('span');
+  textSpan.textContent = task.text;
+  card.appendChild(textSpan);
+
+  if (task.deadline) {
+    const urgent = isDeadlineUrgent(task.deadline);
+    const clock = document.createElement('button');
+    clock.className = 'pool-card__clock' + (urgent ? ' pool-card__clock--urgent' : '');
+    clock.textContent = '⏰';
+    clock.title = formatDeadlineText(task.deadline);
+
+    // 툴팁 토글
+    const tooltip = document.createElement('span');
+    tooltip.className = 'pool-card__clock-tooltip';
+    tooltip.textContent = formatDeadlineText(task.deadline);
+
+    clock.addEventListener('click', e => {
+      e.stopPropagation();
+      e.preventDefault();
+      tooltip.classList.toggle('visible');
+    });
+    card.appendChild(clock);
+    card.appendChild(tooltip);
+  }
+
   return card;
 }
 
