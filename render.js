@@ -107,12 +107,6 @@ function returnSchedItemToPool(key, itemId, taskId, text) {
   refreshPoolAndDay(key);
 }
 
-function deleteSchedItemCompletely(key, itemId) {
-  removeScheduleItem(key, itemId);
-  saveState();
-  renderDayTasks(key);
-  updateProgress(key);
-}
 
 function renderPool() {
   poolEl.innerHTML = '';

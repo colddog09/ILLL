@@ -1126,7 +1126,6 @@ body {
 }
 .history-task__text { flex: 1; color: var(--text); }
 .history-task.status-O .history-task__text { text-decoration: line-through; color: var(--text-sub); }
-.history-task__clock-wrap { position: relative; display: flex; align-items: center; }
 
 .history-badge {
   font-size: 0.71rem;
