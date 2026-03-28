@@ -636,29 +636,12 @@ body {
    ============================ */
 .schedule-layout {
   position: relative;
-  max-width: 1060px;
+  max-width: 860px;
   margin: 0 auto;
-  display: flex;
-  gap: 18px;
-  align-items: flex-start;
+  width: 100%;
 }
 
-/* 카테고리 사이드바 — 태블릿/PC에서만 표시 */
-.category-sidebar {
-  display: none;
-}
-
-@media (min-width: 768px) {
-  .category-sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 160px;
-    flex-shrink: 0;
-    position: sticky;
-    top: 12px;
-  }
-}
+.category-sidebar { display: none; }
 
 .cat-section {
   background: var(--surface);

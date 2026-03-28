@@ -476,8 +476,8 @@ const {
   nextWeekBtn
 } = dom;
 
-// helpBtn → infoModal로 통합 (사용법 포함)
-bindModal(helpBtn, infoModal, infoCloseBtn);
+bindModal(helpBtn, helpModal, helpCloseBtn);
+bindModal(infoBtn, infoModal, infoCloseBtn);
 bindModal(settingsBtn, settingsModal, settingsCloseBtn, () => {
   if (gradeSelect) gradeSelect.value = state.grade;
   if (classSelect) classSelect.value = state.classNum;
@@ -631,32 +631,11 @@ function createPoolCard(task) {
   const cat = getCategoryInfo(task.category || 'none');
   // 카테고리별 배경색 적용
   if (cat.id !== 'none') {
-    card.style.backgroundColor = cat.color + '20'; // 20% 투명도
+    card.style.backgroundColor = cat.color + '20';
     card.style.borderColor = cat.color;
   }
 
-  const catBadge = document.createElement('span');
-  catBadge.className = 'pool-card__cat';
-  catBadge.textContent = cat.label;
-  if (cat.id === 'none') { catBadge.style.opacity = '0.4'; }
-  catBadge.style.setProperty('--cat-color', cat.color);
-  catBadge.title = '클릭해서 분류 변경';
-  catBadge.addEventListener('click', e => {
-    e.stopPropagation();
-    if (currentUser) cycleCategory(task.id);
-  });
-  catBadge.addEventListener('touchend', e => {
-    e.stopPropagation();
-    e.preventDefault();
-    if (currentUser) cycleCategory(task.id);
-  }, { passive: false });
-
-  const textSpan = document.createElement('span');
-  textSpan.className = 'pool-card__text';
-  textSpan.textContent = task.text;
-
-  card.appendChild(textSpan);
-  card.appendChild(catBadge);
+  card.textContent = task.text;
   return card;
 }
 
@@ -810,13 +789,8 @@ function renderDayTasks(key) {
     el.dataset.taskId = item.taskId;
     el.dataset.text = item.text;
     el.draggable = !!currentUser;
-    const cat = getCategoryInfo(item.category || 'none');
-    const catHtml = cat.id !== 'none'
-      ? `<span class="sched-item__cat" style="background:${cat.color}">${cat.label}</span>`
-      : '';
     el.innerHTML = `
       <span class="sched-item__handle" title="드래그로 순서 변경">⠿</span>
-      ${catHtml}
       <span class="sched-item__text" title="${escHtml(item.text)}">${escHtml(item.text)}</span>
       <div class="sched-item__ox">
         <button class="btn-o${item.status==='O'?' active':''}" data-date="${key}" data-id="${item.id}" title="완료(O)">O</button>
