@@ -21,7 +21,7 @@
   <header class="top-bar">
     <div class="top-bar__inner">
       <div class="top-header-row">
-        <h1 class="logo">📋 일정 관리 <span id="syncStatus" class="sync-status"></span></h1>
+        <h1 class="logo">📋 일정 관리 <span id="ddayBadge" class="dday-badge dday-badge--title"></span><span id="syncStatus" class="sync-status"></span></h1>
         <div class="header-right">
           <!-- ─── Firebase 인증 UI ─── -->
           <div id="authSection" class="auth-section">
@@ -57,7 +57,6 @@
   <!-- ─── 날짜별 일정 및 시간표 영역 ─── -->
   <main class="schedule-area">
     <div class="schedule-area__header">
-      <span id="ddayBadge" class="dday-badge dday-badge--schedule"></span>
       <div class="week-nav">
         <button id="prevWeekBtn" class="week-nav-btn" aria-label="이전 날">◀</button>
         <span id="weekLabel" class="week-label"></span>

@@ -147,6 +147,19 @@ body {
   background: var(--surface-hover);
 }
 
+#infoBtn {
+  background: rgba(37, 99, 235, 0.08);
+  border: 1.5px solid #2563eb;
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 1rem;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+#infoBtn:hover {
+  background: rgba(37, 99, 235, 0.16);
+  box-shadow: 0 2px 8px rgba(37,99,235,0.2);
+}
+
 .user-info {
   display: flex;
   align-items: center;
@@ -298,12 +311,13 @@ body {
   box-shadow: 0 2px 8px rgba(108,99,255,0.25);
 }
 
-/* 스케줄 헤더 D-day 배지 — 빨간색 */
-.dday-badge--schedule {
+/* 타이틀 옆 D-day 배지 — 빨간색 */
+.dday-badge--title {
   background: linear-gradient(135deg, #ef4444, #dc2626) !important;
   box-shadow: 0 2px 8px rgba(239,68,68,0.35) !important;
-  position: absolute;
-  left: 0;
+  vertical-align: middle;
+  margin-left: 8px;
+  font-size: 0.75rem;
 }
 
 .week-label {
