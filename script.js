@@ -465,7 +465,7 @@ dayGrid.addEventListener('click', e => {
   if (deferBtn) { deferTasks(deferBtn.dataset.date); }
 });
 
-// 더블클릭 → 풀로 반환, 세번클릭 → 완전 삭제
+// 더블클릭 → 풀로 반환
 let _clickCountEl = null, _clickCount = 0, _clickTimer = null;
 dayGrid.addEventListener('click', e => {
   const item = e.target.closest('.sched-item');
@@ -478,8 +478,6 @@ dayGrid.addEventListener('click', e => {
     _clickCount = 0; _clickCountEl = null;
     if (cnt === 2) {
       returnSchedItemToPool(item.dataset.dateKey, item.dataset.itemId, item.dataset.taskId, item.dataset.text);
-    } else if (cnt >= 3) {
-      deleteSchedItemCompletely(item.dataset.dateKey, item.dataset.itemId);
     }
   }, 300);
 });
@@ -678,7 +676,6 @@ function openHistory() {
         ${items.map(it => `
           <div class="history-task status-${it.status||'none'}">
             <span class="history-task__text">${escHtml(it.text)}</span>
-            ${it.deadline ? `<span class="history-task__clock-wrap"><button class="pool-card__clock${isDeadlineUrgent(it.deadline) ? ' pool-card__clock--urgent' : ''}" type="button">⏰</button><span class="pool-card__clock-tooltip">${escHtml(formatDeadlineText(it.deadline))}</span></span>` : ''}
             <span class="history-badge ${it.status||'none'}">${
               it.status === 'O' ? '✓ 완료' : it.status === 'X' ? '✕ 미완료' : '— 미기록'
             }</span>
@@ -691,13 +688,6 @@ function openHistory() {
 }
 
 historyList.addEventListener('click', e => {
-  const clock = e.target.closest('.history-task__clock-wrap .pool-card__clock');
-  if (clock) {
-    e.stopPropagation();
-    const tooltip = clock.nextElementSibling;
-    if (tooltip) tooltip.classList.toggle('visible');
-    return;
-  }
   const header = e.target.closest('.history-day__header');
   if (!header) return;
   header.parentElement.classList.toggle('open');
