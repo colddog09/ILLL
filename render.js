@@ -20,15 +20,20 @@ function addPoolItemToCurrentDay(taskId, text) {
 
 function schedulePoolTask(key, taskId, text) {
   if ((state.schedule[key] || []).some(it => it.taskId === taskId)) return false;
+  const poolTask = state.pool.find(t => t.id === taskId);
   state.pool = state.pool.filter(t => t.id !== taskId);
   if (!state.schedule[key]) state.schedule[key] = [];
-  state.schedule[key].push({ id: uid(), taskId, text, status: null });
+  const item = { id: uid(), taskId, text, status: null };
+  if (poolTask?.deadline) item.deadline = poolTask.deadline;
+  state.schedule[key].push(item);
   return true;
 }
 
-function restoreTaskToPool(taskId, text) {
+function restoreTaskToPool(taskId, text, deadline) {
   if (!state.pool.find(t => t.id === taskId)) {
-    state.pool.push({ id: taskId, text });
+    const task = { id: taskId, text };
+    if (deadline) task.deadline = deadline;
+    state.pool.push(task);
   }
 }
 
@@ -95,8 +100,9 @@ function handlePoolCardActivate(card) {
 }
 
 function returnSchedItemToPool(key, itemId, taskId, text) {
+  const item = (state.schedule[key] || []).find(it => it.id === itemId);
   removeScheduleItem(key, itemId);
-  restoreTaskToPool(taskId, text);
+  restoreTaskToPool(taskId, text, item?.deadline);
   saveState();
   refreshPoolAndDay(key);
 }
@@ -178,7 +184,8 @@ function renderDayTasks(key) {
   const items = state.schedule[key] || [];
 
   if (items.length === 0) {
-    container.innerHTML = '<div class="drop-hint">📌 여기에 할일을<br>드래그해서 추가</div>';
+    const isMobile = window.matchMedia('(max-width:600px)').matches;
+    container.innerHTML = `<div class="drop-hint">${isMobile ? '📌 할일을 두 번 탭해서 추가' : '📌 여기에 할일을 드래그해서 추가'}</div>`;
     updateProgress(key);
     return;
   }
@@ -279,13 +286,8 @@ function renderDayTasks(key) {
             clearTimeout(tapCountTimer);
             if (tapCount >= 2) {
               e.preventDefault();
-              const cnt = tapCount;
               tapCount = 0; lastTapTime = 0;
-              if (cnt === 2) {
-                returnSchedItemToPool(key, item.id, item.taskId, item.text);
-              } else {
-                deleteSchedItemCompletely(key, item.id);
-              }
+              returnSchedItemToPool(key, item.id, item.taskId, item.text);
             } else {
               tapCountTimer = setTimeout(() => { tapCount = 0; }, 400);
             }

@@ -1205,24 +1205,35 @@ body {
     font-size: 0.72rem;
   }
 
-  /* ── 입력창: 가로 유지, 컴팩트하게 ── */
+  /* ── 입력창 ── */
   .task-input-wrap {
     gap: 6px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
   }
 
   .task-input-wrap input {
     flex: 1;
-    padding: 9px 12px;
-    font-size: 0.88rem;
     min-width: 0;
+    padding: 10px 13px;
+    font-size: 0.9rem;
   }
 
-  .task-input-wrap button {
-    padding: 9px 14px;
-    font-size: 0.85rem;
-    white-space: nowrap;
-    flex-shrink: 0;
+  .add-task-btn {
+    padding: 10px 14px;
+    font-size: 0.9rem;
+  }
+
+  .deadline-toggle-btn {
+    padding: 8px 10px;
+    font-size: 0.8rem;
+  }
+
+  /* ── 풀 카드 ── */
+  .pool-card {
+    padding: 7px 13px;
+    font-size: 0.83rem;
+    gap: 5px;
   }
 
   /* ── 할일 풀: 모바일에서만 가로 스크롤 ── */
@@ -1299,30 +1310,32 @@ body {
 
   /* ── 일정 아이템 ── */
   .sched-item {
-    padding: 10px 10px;
-    font-size: 0.83rem;
-    border-radius: 9px;
+    padding: 11px 10px;
+    font-size: 0.85rem;
+    border-radius: 10px;
+    gap: 8px;
   }
 
   .sched-item__text {
-    font-size: 0.83rem;
+    font-size: 0.85rem;
+    line-height: 1.4;
   }
 
   .sched-item__handle {
-    font-size: 0.95rem;
-    padding: 0 6px 0 0;
-    /* 터치 타겟 확대 */
+    font-size: 1rem;
+    padding: 0 4px 0 0;
     min-width: 28px;
-    min-height: 36px;
+    min-height: 40px;
     display: flex;
     align-items: center;
+    color: var(--text-sub);
   }
 
   .btn-o {
-    width: 34px;
-    height: 34px;
-    font-size: 0.85rem;
-    border-radius: 7px;
+    width: 38px;
+    height: 38px;
+    font-size: 0.9rem;
+    border-radius: 8px;
   }
 
   /* ── 모달: 바텀시트 스타일 ── */
