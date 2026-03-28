@@ -13,7 +13,7 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
   <meta name="theme-color" content="#6c63ff">
-  <link rel="stylesheet" href="style.css?v=9" />
+  <link rel="stylesheet" href="style.css?v=11" />
 </head>
 <body>
 
@@ -42,12 +42,6 @@
       </div>
       <div class="task-input-wrap">
         <input id="taskInput" type="text" placeholder="새 할일을 입력하세요…" autocomplete="off" />
-        <!-- 카테고리 팝업 -->
-        <div id="categoryPicker" class="category-picker" hidden>
-          <button class="cat-pick-btn" data-category="수행" style="--c:#f59e0b">수행</button>
-          <button class="cat-pick-btn" data-category="과제" style="--c:#3b82f6">과제</button>
-          <button class="cat-pick-btn" data-category="시험" style="--c:#ef4444">시험</button>
-        </div>
         <div id="trashZone" class="trash-zone" hidden aria-label="여기에 놓으면 삭제">
           <span class="trash-zone__icon">🗑️</span>
           <span class="trash-zone__label">여기에 놓으면 삭제</span>
@@ -65,9 +59,11 @@
   <main class="schedule-area">
     <div class="schedule-area__header">
       <span id="ddayBadge" class="dday-badge dday-badge--schedule"></span>
-      <button id="prevWeekBtn" class="week-nav-btn" aria-label="이전 날">◀</button>
-      <span id="weekLabel" class="week-label"></span>
-      <button id="nextWeekBtn" class="week-nav-btn" aria-label="다음 날">▶</button>
+      <div class="week-nav">
+        <button id="prevWeekBtn" class="week-nav-btn" aria-label="이전 날">◀</button>
+        <span id="weekLabel" class="week-label"></span>
+        <button id="nextWeekBtn" class="week-nav-btn" aria-label="다음 날">▶</button>
+      </div>
     </div>
 
     <div class="schedule-layout">
@@ -210,7 +206,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
 
-  <script src="script.js?v=10"></script>
+  <script src="script.js?v=12"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').then(reg => {

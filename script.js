@@ -9,12 +9,6 @@
 // ──────────────────────────────────────────────
 const DAYS_KO   = ['일','월','화','수','목','금','토'];
 const DAYS_FULL = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
-const CATEGORIES = [
-  { id: 'none', label: '미분류', color: '#9ca3af' },
-  { id: '수행',  label: '수행',   color: '#f59e0b' },
-  { id: '과제',  label: '과제',   color: '#3b82f6' },
-  { id: '시험',  label: '시험',   color: '#ef4444' },
-];
 const STORAGE_KEYS = {
   pool: 'taskPool_v2',
   schedule: 'taskSchedule_v2',
@@ -412,7 +406,6 @@ const dom = {
   weekLabel: document.getElementById('weekLabel'),
   ghost: document.getElementById('dragGhost'),
   trashZone: document.getElementById('trashZone'),
-  addTaskBtn: document.getElementById('addTaskBtn'),
   taskInput: document.getElementById('taskInput'),
   syncStatus: document.getElementById('syncStatus'),
   helpBtn: document.getElementById('helpBtn'),
@@ -420,7 +413,6 @@ const dom = {
   helpCloseBtn: document.getElementById('helpCloseBtn'),
   historyModal: document.getElementById('historyModal'),
   historyList: document.getElementById('historyList'),
-  historyBtn: document.getElementById('historyBtn'),
   historyCloseBtn: document.getElementById('historyCloseBtn'),
   infoModal: document.getElementById('infoModal'),
   infoBtn: document.getElementById('infoBtn'),
@@ -439,7 +431,6 @@ const dom = {
   classSelect: document.getElementById('classSelect'),
   gradeSelect: document.getElementById('gradeSelect'),
   surveyVisibilityBadge: document.getElementById('surveyVisibilityBadge'),
-  surveyLinksDesktop: document.getElementById('surveyLinksDesktop'),
   surveyLinksMobile: document.getElementById('surveyLinksMobile'),
   prevWeekBtn: document.getElementById('prevWeekBtn'),
   nextWeekBtn: document.getElementById('nextWeekBtn')
@@ -451,14 +442,12 @@ const {
   weekLabel,
   ghost,
   trashZone,
-  addTaskBtn,
   taskInput,
   helpBtn,
   helpModal,
   helpCloseBtn,
   historyModal,
   historyList,
-  historyBtn,
   historyCloseBtn,
   infoModal,
   infoBtn,
@@ -500,7 +489,6 @@ if (gradeSelect) {
 // 설문 링크 가시성: 2학년일 때만 표시
 function updateSurveyVisibility() {
   const isGrade2 = state.grade === '2';
-  if (dom.surveyLinksDesktop) dom.surveyLinksDesktop.hidden = !isGrade2;
   if (dom.surveyLinksMobile) dom.surveyLinksMobile.hidden = !isGrade2;
 }
 
@@ -513,9 +501,7 @@ function updateSettingsPreview() {
 }
 
 if (fbLoginBtn) {
-  console.log("Login button found in DOM");
   fbLoginBtn.addEventListener('click', () => {
-    console.log("Login button clicked");
     startGoogleLogin().catch(handleGoogleAuthError);
   });
 }
@@ -577,17 +563,15 @@ function addPoolItemToCurrentDay(taskId, text) {
 
 function schedulePoolTask(key, taskId, text) {
   if ((state.schedule[key] || []).some(it => it.taskId === taskId)) return false;
-  const poolTask = state.pool.find(t => t.id === taskId);
-  const category = poolTask ? (poolTask.category || 'none') : 'none';
   state.pool = state.pool.filter(t => t.id !== taskId);
   if (!state.schedule[key]) state.schedule[key] = [];
-  state.schedule[key].push({ id: uid(), taskId, text, status: null, category });
+  state.schedule[key].push({ id: uid(), taskId, text, status: null });
   return true;
 }
 
-function restoreTaskToPool(taskId, text, category) {
+function restoreTaskToPool(taskId, text) {
   if (!state.pool.find(t => t.id === taskId)) {
-    state.pool.push({ id: taskId, text, ...(category && category !== 'none' ? { category } : {}) });
+    state.pool.push({ id: taskId, text });
   }
 }
 
@@ -608,33 +592,11 @@ function renderEmptyPool() {
   poolEl.innerHTML = '<span style="color:var(--text-sub);font-size:0.82rem;padding:4px 2px;">할일을 추가해보세요!</span>';
 }
 
-function getCategoryInfo(catId) {
-  return CATEGORIES.find(c => c.id === catId) || CATEGORIES[0];
-}
-
-function cycleCategory(taskId) {
-  const task = state.pool.find(t => t.id === taskId);
-  if (!task) return;
-  const idx = CATEGORIES.findIndex(c => c.id === (task.category || 'none'));
-  task.category = CATEGORIES[(idx + 1) % CATEGORIES.length].id;
-  saveState();
-  renderPool();
-  renderCategorySidebar(dateKey(currentDay()));
-}
-
 function createPoolCard(task) {
   const card = document.createElement('div');
   card.className = 'pool-card';
   card.dataset.taskId = task.id;
   card.draggable = !!currentUser;
-
-  const cat = getCategoryInfo(task.category || 'none');
-  // 카테고리별 배경색 적용
-  if (cat.id !== 'none') {
-    card.style.backgroundColor = cat.color + '20';
-    card.style.borderColor = cat.color;
-  }
-
   card.textContent = task.text;
   return card;
 }
@@ -649,13 +611,10 @@ function handlePoolCardActivate(card) {
 }
 
 function returnSchedItemToPool(key, itemId, taskId, text) {
-  const item = (state.schedule[key] || []).find(it => it.id === itemId);
-  const category = item ? item.category : undefined;
   removeScheduleItem(key, itemId);
-  restoreTaskToPool(taskId, text, category);
+  restoreTaskToPool(taskId, text);
   saveState();
   refreshPoolAndDay(key);
-  renderCategorySidebar(key);
 }
 
 function deleteSchedItemCompletely(key, itemId) {
@@ -727,7 +686,6 @@ function renderWeek() {
   dayGrid.appendChild(card);
   renderDayTasks(key);
   setupDayDropZone(card, key);
-  renderCategorySidebar(key);
 }
 
 function renderCategorySidebar(key) {
@@ -913,7 +871,6 @@ function renderDayTasks(key) {
   container.appendChild(fragment);
 
   updateProgress(key);
-  renderCategorySidebar(key);
 }
 
 function updateProgress(key) {
@@ -1034,8 +991,7 @@ function initDrag() {
     setTimeout(() => card.classList.add('dragging'), 0);
     showGhost(dragInfo.text);
     hideDefaultImage(e);
-    trashZone.hidden = false;   // + 버튼 자리에 휴지통 표시
-    addTaskBtn.hidden = true;
+    trashZone.hidden = false;
   });
 
   poolEl.addEventListener('dragend', e => {
@@ -1060,8 +1016,7 @@ function initDrag() {
     setTimeout(() => item.classList.add('dragging'), 0);
     showGhost(dragInfo.text);
     hideDefaultImage(e);
-    trashZone.hidden = false; // day 드래그 시에도 휴지통 표시
-    addTaskBtn.hidden = true;
+    trashZone.hidden = false;
   });
 
   dayGrid.addEventListener('dragend', e => {
@@ -1170,7 +1125,6 @@ function endDrag() {
   ghost.style.top = '-999px'; ghost.style.left = '-999px';
   trashZone.hidden = true;
   trashZone.classList.remove('danger');
-  addTaskBtn.hidden = false;   // + 버튼 복원
 }
 
 // ──────────────────────────────────────────────
@@ -1250,64 +1204,18 @@ function deferTasks(targetDateKey) {
 // ──────────────────────────────────────────────
 // 할일 추가 (인풋)
 // ──────────────────────────────────────────────
-// ── 카테고리 팝업 ──
-const categoryPicker = document.getElementById('categoryPicker');
-let pendingTaskText = '';
-
-function showCategoryPicker(text) {
-  pendingTaskText = text;
-  if (categoryPicker) categoryPicker.hidden = false;
-  taskInput.blur();
-}
-
-function hideCategoryPicker() {
-  if (categoryPicker) categoryPicker.hidden = true;
-  pendingTaskText = '';
-}
-
-function commitTask(category) {
-  if (!pendingTaskText) return;
-  state.pool.push({ id: uid(), text: pendingTaskText, category });
-  saveState();
-  renderPool();
-  taskInput.value = '';
-  hideCategoryPicker();
-  taskInput.focus();
-}
-
-if (categoryPicker) {
-  categoryPicker.querySelectorAll('.cat-pick-btn').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      commitTask(btn.dataset.category);
-    });
-  });
-}
-
-// 팝업 바깥 클릭 시 닫기
-document.addEventListener('click', e => {
-  if (!e.target.closest('#categoryPicker') && !e.target.closest('#taskInput')) {
-    hideCategoryPicker();
-  }
-});
-
 taskInput.addEventListener('keydown', e => {
   if (e.isComposing || e.keyCode === 229) return;
   if (e.key === 'Enter') {
     if (!requireLogin('로그인이 필요합니다.')) return;
     const text = taskInput.value.trim();
     if (!text) return;
-    showCategoryPicker(text);
+    state.pool.push({ id: uid(), text });
+    saveState();
+    renderPool();
+    taskInput.value = '';
   }
-  if (e.key === 'Escape') hideCategoryPicker();
 });
-
-function addTask() {
-  if (!requireLogin('로그인이 필요합니다.')) return;
-  const text = taskInput.value.trim();
-  if (!text) { taskInput.focus(); return; }
-  showCategoryPicker(text);
-}
 
 // ──────────────────────────────────────────────
 // 날짜 네비게이션
@@ -1379,7 +1287,6 @@ historyList.addEventListener('click', e => {
   header.parentElement.classList.toggle('open');
 });
 
-if (historyBtn) historyBtn.addEventListener('click', openHistory);
 bindModal(null, historyModal, historyCloseBtn);
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
@@ -1449,7 +1356,6 @@ function updateDday() {
   const now = new Date();
   const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const diff = Math.round((exam - todayMidnight) / (1000 * 60 * 60 * 24));
-  const textTop = diff > 0 ? `📝 시험 D-${diff}` : diff === 0 ? `📝 시험 D-Day!` : `📝 시험 D+${Math.abs(diff)}`;
   const textSchedule = diff > 0 ? `🔥 시험 D-${diff}` : diff === 0 ? `🔥 시험 D-Day!` : `🔥 시험 D+${Math.abs(diff)}`;
 
   const badgeSchedule = document.getElementById('ddayBadge');

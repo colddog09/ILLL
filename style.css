@@ -169,31 +169,6 @@ body {
   margin-right: 4px;
 }
 
-/* ============================
-   LINKS
-   ============================ */
-.survey-links {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  align-items: flex-end;
-}
-.survey-links a {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--accent);
-  text-decoration: none;
-  background: rgba(108,99,255,0.08);
-  padding: 4px 10px;
-  border-radius: 999px;
-  transition: background 0.2s, color 0.2s;
-  white-space: nowrap;
-}
-.survey-links a:hover {
-  background: var(--accent);
-  color: #fff;
-}
-
 /* Input row */
 .task-input-wrap {
   display: flex;
@@ -202,41 +177,6 @@ body {
   margin-bottom: 14px;
   align-items: flex-start;
   position: relative;
-}
-
-/* 카테고리 팝업 */
-.category-picker {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  display: flex;
-  gap: 6px;
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 8px;
-  box-shadow: var(--shadow-lg);
-  z-index: 200;
-  animation: popIn 0.15s cubic-bezier(0.34,1.56,0.64,1);
-}
-
-.cat-pick-btn {
-  padding: 8px 18px;
-  border: none;
-  border-radius: calc(var(--radius-sm) - 2px);
-  background: color-mix(in srgb, var(--c) 15%, transparent);
-  color: var(--c);
-  font-size: 0.9rem;
-  font-family: var(--font);
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s, transform 0.1s;
-  border: 1.5px solid color-mix(in srgb, var(--c) 30%, transparent);
-}
-.cat-pick-btn:hover {
-  background: var(--c);
-  color: #fff;
-  transform: translateY(-1px);
 }
 
 .task-input-wrap input {
@@ -274,61 +214,6 @@ body {
 }
 .task-input-wrap button:hover { opacity: 0.88; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(108,99,255,0.45); }
 .task-input-wrap button:active { transform: scale(0.96); }
-
-/* 카테고리 탭 버튼 */
-.task-category-btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: calc(var(--radius-sm) - 3px);
-  background: #fff;
-  color: var(--text-sub);
-  font-size: 0.86rem;
-  font-family: var(--font);
-  font-weight: 600;
-  cursor: pointer;
-  outline: none;
-  transition: color 0.2s, background 0.22s, box-shadow 0.22s;
-  white-space: nowrap;
-  flex-shrink: 0;
-  position: relative;
-  z-index: 1;
-}
-.task-category-btn:hover {
-  color: var(--text);
-}
-/* 수행 — 주황 */
-.task-category-btn[data-category="수행"].active {
-  background: #f59e0b;
-  color: #fff;
-  box-shadow: 0 3px 10px rgba(245,158,11,0.45);
-}
-/* 과제 — 파랑 */
-.task-category-btn[data-category="과제"].active {
-  background: #3b82f6;
-  color: #fff;
-  box-shadow: 0 3px 10px rgba(59,130,246,0.45);
-}
-/* 시험 — 빨강 */
-.task-category-btn[data-category="시험"].active {
-  background: #ef4444;
-  color: #fff;
-  box-shadow: 0 3px 10px rgba(239,68,68,0.45);
-}
-/* 호버도 연하게 */
-.task-category-btn[data-category="수행"]:hover:not(.active) { color: #f59e0b; }
-.task-category-btn[data-category="과제"]:hover:not(.active) { color: #3b82f6; }
-.task-category-btn[data-category="시험"]:hover:not(.active) { color: #ef4444; }
-
-/* D-day 배지 (상단) */
-.dday-badge--top {
-  padding: 6px 12px;
-  font-size: 0.82rem;
-  border-radius: 20px;
-}
-
-.dday-badge--header {
-  margin-left: auto;
-}
 
 /* ============================
    TASK POOL
@@ -391,9 +276,14 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  position: relative;
   margin-bottom: 22px;
-  flex-wrap: wrap;
+}
+
+.week-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 /* D-day 배지 */
@@ -412,7 +302,8 @@ body {
 .dday-badge--schedule {
   background: linear-gradient(135deg, #ef4444, #dc2626) !important;
   box-shadow: 0 2px 8px rgba(239,68,68,0.35) !important;
-  order: -1;
+  position: absolute;
+  left: 0;
 }
 
 .week-label {
@@ -423,13 +314,6 @@ body {
   text-align: center;
 }
 
-.week-labe.logo {
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: var(--accent);
-  margin: 0;
-  letter-spacing: -0.02em;
-}
 .sync-status {
   font-size: 0.72rem;
   font-weight: 500;
@@ -452,23 +336,6 @@ body {
   box-shadow: var(--shadow);
 }
 .week-nav-btn:hover { background: var(--surface-hover); border-color: var(--accent); box-shadow: var(--shadow-lg); }
-
-/* 모바일 정보 버튼 */
-.info-btn {
-  padding: 7px 16px;
-  border: 1.5px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface);
-  color: var(--text-sub);
-  font-size: 0.83rem;
-  font-family: var(--font);
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
-  box-shadow: var(--shadow);
-  white-space: nowrap;
-}
-.info-btn:hover { background: var(--surface-hover); border-color: var(--accent2); color: var(--accent); box-shadow: var(--shadow-lg); }
 
 /* 정보 모달 링크 */
 .info-link {
@@ -612,9 +479,6 @@ body {
   box-shadow: 0 10px 24px rgba(108,99,255,0.2);
 }
 
-/* 모바일/데스크톱 가시성 */
-.mobile-only { display: none; }
-
 .history-btn {
   padding: 7px 16px;
   border: 1.5px solid var(--border);
@@ -643,102 +507,12 @@ body {
 
 .category-sidebar { display: none; }
 
-.cat-section {
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 10px 12px;
-  box-shadow: var(--shadow);
-}
-
-.cat-section__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 6px;
-}
-
-.cat-badge {
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: #fff;
-  border-radius: 20px;
-  padding: 2px 9px;
-}
-
-.cat-section__count {
-  font-size: 0.78rem;
-  color: var(--text-sub);
-  font-weight: 600;
-}
-
-.cat-section__list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 0;
-}
-
-.cat-section__item {
-  font-size: 0.75rem;
-  color: var(--text);
-  line-height: 1.3;
-  padding: 2px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.cat-section__item.done {
-  color: var(--text-sub);
-  text-decoration: line-through;
-}
-
-.cat-section__empty {
-  font-size: 0.72rem;
-  color: var(--text-sub);
-}
-
 .day-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 10px;
   flex: 1;
   min-width: 0;
-}
-
-/* 풀 카드 카테고리 배지 */
-.pool-card { gap: 6px; }
-
-.pool-card__text {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.pool-card__cat {
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: #fff;
-  background: var(--cat-color, #9ca3af);
-  border-radius: 20px;
-  padding: 1px 6px;
-  flex-shrink: 0;
-  cursor: pointer;
-  transition: opacity 0.15s;
-}
-
-.pool-card__cat:hover { opacity: 0.8; }
-
-/* 일정 아이템 카테고리 배지 */
-.sched-item__cat {
-  font-size: 0.62rem;
-  font-weight: 700;
-  color: #fff;
-  border-radius: 20px;
-  padding: 1px 6px;
-  flex-shrink: 0;
 }
 
 /* ============================
@@ -1052,40 +826,6 @@ body {
 .trash-zone__label { font-size: 0.82rem; }
 
 /* ============================
-   TOGGLE SWITCH (설정)
-   ============================ */
-.toggle-switch {
-  position: relative;
-  display: inline-block;
-  width: 50px;
-  height: 28px;
-  flex-shrink: 0;
-}
-.toggle-switch input { opacity: 0; width: 0; height: 0; }
-.toggle-slider {
-  position: absolute;
-  cursor: pointer;
-  inset: 0;
-  background: #d1d5db;
-  border-radius: 999px;
-  transition: background 0.2s;
-}
-.toggle-slider::before {
-  content: '';
-  position: absolute;
-  width: 22px;
-  height: 22px;
-  left: 3px;
-  top: 3px;
-  background: #fff;
-  border-radius: 50%;
-  transition: transform 0.2s;
-  box-shadow: 0 1px 5px rgba(0,0,0,0.2);
-}
-.toggle-switch input:checked + .toggle-slider { background: var(--accent); }
-.toggle-switch input:checked + .toggle-slider::before { transform: translateX(22px); }
-
-/* ============================
    MODAL
    ============================ */
 .modal-overlay {
@@ -1178,8 +918,6 @@ body {
   flex-direction: column;
   gap: 12px;
 }
-.history-list::-webkit-scrollbar { width: 5px; }
-.history-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
 
 .history-empty {
   text-align: center;
@@ -1238,33 +976,12 @@ body {
 .history-badge.none { background: var(--bg); color: var(--text-sub); border: 1.5px solid var(--border); }
 
 /* ============================
-   ANIMATIONS
-   ============================ */
-@keyframes popIn {
-  from { opacity: 0; transform: scale(0.75); }
-  to   { opacity: 1; transform: scale(1); }
-}
-
-/* ============================
    RESPONSIVE
    ============================ */
-@media (max-width: 1180px) {
-  .schedule-layout {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
-  }
-}
-
 /* ============================
    MOBILE  (≤ 600px)
    ============================ */
 @media (max-width: 600px) {
-
-  /* ── 가시성 ── */
-  .desktop-only { display: none !important; }
-  .mobile-only  { display: inline-flex; align-items: center; }
 
   /* ── 상단 바 ── */
   .top-bar {
@@ -1331,12 +1048,6 @@ body {
     margin-bottom: 8px;
   }
 
-  .task-input-row {
-    flex: 1;
-    min-width: 0;
-    gap: 6px;
-  }
-
   .task-input-wrap input {
     flex: 1;
     padding: 9px 12px;
@@ -1344,22 +1055,11 @@ body {
     min-width: 0;
   }
 
-  .task-category-select {
-    padding: 9px 10px;
-    font-size: 0.8rem;
-    flex-shrink: 0;
-  }
-
   .task-input-wrap button {
     padding: 9px 14px;
     font-size: 0.85rem;
     white-space: nowrap;
     flex-shrink: 0;
-  }
-
-  .dday-badge--top {
-    font-size: 0.75rem;
-    padding: 4px 10px;
   }
 
   /* ── 할일 풀: 모바일에서만 가로 스크롤 ── */
@@ -1371,9 +1071,6 @@ body {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
   }
-  .task-pool::-webkit-scrollbar { height: 3px; }
-  .task-pool::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
-
   .pool-card {
     padding: 6px 12px;
     font-size: 0.82rem;
@@ -1398,11 +1095,6 @@ body {
   .week-nav-btn {
     padding: 6px 12px;
     font-size: 0.85rem;
-  }
-
-  .info-btn {
-    padding: 6px 12px;
-    font-size: 0.8rem;
   }
 
   .auth-stack {
