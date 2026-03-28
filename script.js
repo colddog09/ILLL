@@ -9,6 +9,12 @@
 // ──────────────────────────────────────────────
 const DAYS_KO   = ['일','월','화','수','목','금','토'];
 const DAYS_FULL = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
+const CATEGORIES = [
+  { id: 'none', label: '미분류', color: '#9ca3af' },
+  { id: '수행',  label: '수행',   color: '#f59e0b' },
+  { id: '과제',  label: '과제',   color: '#3b82f6' },
+  { id: '시험',  label: '시험',   color: '#ef4444' },
+];
 const STORAGE_KEYS = {
   pool: 'taskPool_v2',
   schedule: 'taskSchedule_v2',
@@ -570,15 +576,17 @@ function addPoolItemToCurrentDay(taskId, text) {
 
 function schedulePoolTask(key, taskId, text) {
   if ((state.schedule[key] || []).some(it => it.taskId === taskId)) return false;
+  const poolTask = state.pool.find(t => t.id === taskId);
+  const category = poolTask ? (poolTask.category || 'none') : 'none';
   state.pool = state.pool.filter(t => t.id !== taskId);
   if (!state.schedule[key]) state.schedule[key] = [];
-  state.schedule[key].push({ id: uid(), taskId, text, status: null });
+  state.schedule[key].push({ id: uid(), taskId, text, status: null, category });
   return true;
 }
 
-function restoreTaskToPool(taskId, text) {
+function restoreTaskToPool(taskId, text, category) {
   if (!state.pool.find(t => t.id === taskId)) {
-    state.pool.push({ id: taskId, text });
+    state.pool.push({ id: taskId, text, ...(category && category !== 'none' ? { category } : {}) });
   }
 }
 
@@ -599,12 +607,48 @@ function renderEmptyPool() {
   poolEl.innerHTML = '<span style="color:var(--text-sub);font-size:0.82rem;padding:4px 2px;">할일을 추가해보세요!</span>';
 }
 
+function getCategoryInfo(catId) {
+  return CATEGORIES.find(c => c.id === catId) || CATEGORIES[0];
+}
+
+function cycleCategory(taskId) {
+  const task = state.pool.find(t => t.id === taskId);
+  if (!task) return;
+  const idx = CATEGORIES.findIndex(c => c.id === (task.category || 'none'));
+  task.category = CATEGORIES[(idx + 1) % CATEGORIES.length].id;
+  saveState();
+  renderPool();
+  renderCategorySidebar(dateKey(currentDay()));
+}
+
 function createPoolCard(task) {
   const card = document.createElement('div');
   card.className = 'pool-card';
   card.dataset.taskId = task.id;
   card.draggable = !!currentUser;
-  card.textContent = task.text;
+
+  const cat = getCategoryInfo(task.category || 'none');
+  const catBadge = document.createElement('span');
+  catBadge.className = 'pool-card__cat';
+  catBadge.textContent = cat.id === 'none' ? '+' : cat.label;
+  catBadge.style.setProperty('--cat-color', cat.color);
+  catBadge.title = '클릭해서 분류 변경';
+  catBadge.addEventListener('click', e => {
+    e.stopPropagation();
+    if (currentUser) cycleCategory(task.id);
+  });
+  catBadge.addEventListener('touchend', e => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (currentUser) cycleCategory(task.id);
+  }, { passive: false });
+
+  const textSpan = document.createElement('span');
+  textSpan.className = 'pool-card__text';
+  textSpan.textContent = task.text;
+
+  card.appendChild(textSpan);
+  card.appendChild(catBadge);
   return card;
 }
 
@@ -618,10 +662,20 @@ function handlePoolCardActivate(card) {
 }
 
 function returnSchedItemToPool(key, itemId, taskId, text) {
+  const item = (state.schedule[key] || []).find(it => it.id === itemId);
+  const category = item ? item.category : undefined;
   removeScheduleItem(key, itemId);
-  restoreTaskToPool(taskId, text);
+  restoreTaskToPool(taskId, text, category);
   saveState();
   refreshPoolAndDay(key);
+  renderCategorySidebar(key);
+}
+
+function deleteSchedItemCompletely(key, itemId) {
+  removeScheduleItem(key, itemId);
+  saveState();
+  renderDayTasks(key);
+  updateProgress(key);
 }
 
 function renderPool() {
@@ -686,6 +740,43 @@ function renderWeek() {
   dayGrid.appendChild(card);
   renderDayTasks(key);
   setupDayDropZone(card, key);
+  renderCategorySidebar(key);
+}
+
+function renderCategorySidebar(key) {
+  const sidebar = document.getElementById('categorySidebar');
+  if (!sidebar) return;
+  sidebar.innerHTML = '';
+  const items = state.schedule[key] || [];
+
+  CATEGORIES.filter(c => c.id !== 'none').forEach(cat => {
+    const catItems = items.filter(it => (it.category || 'none') === cat.id);
+    const section = document.createElement('div');
+    section.className = 'cat-section';
+
+    const header = document.createElement('div');
+    header.className = 'cat-section__header';
+    header.innerHTML = `<span class="cat-badge" style="background:${cat.color}">${cat.label}</span><span class="cat-section__count">${catItems.length}</span>`;
+    section.appendChild(header);
+
+    if (catItems.length > 0) {
+      const list = document.createElement('ul');
+      list.className = 'cat-section__list';
+      catItems.forEach(it => {
+        const li = document.createElement('li');
+        li.className = 'cat-section__item' + (it.status === 'O' ? ' done' : '');
+        li.textContent = it.text;
+        list.appendChild(li);
+      });
+      section.appendChild(list);
+    } else {
+      const empty = document.createElement('p');
+      empty.className = 'cat-section__empty';
+      empty.textContent = '없음';
+      section.appendChild(empty);
+    }
+    sidebar.appendChild(section);
+  });
 }
 
 
@@ -711,8 +802,13 @@ function renderDayTasks(key) {
     el.dataset.taskId = item.taskId;
     el.dataset.text = item.text;
     el.draggable = !!currentUser;
+    const cat = getCategoryInfo(item.category || 'none');
+    const catHtml = cat.id !== 'none'
+      ? `<span class="sched-item__cat" style="background:${cat.color}">${cat.label}</span>`
+      : '';
     el.innerHTML = `
       <span class="sched-item__handle" title="드래그로 순서 변경">⠿</span>
+      ${catHtml}
       <span class="sched-item__text" title="${escHtml(item.text)}">${escHtml(item.text)}</span>
       <div class="sched-item__ox">
         <button class="btn-o${item.status==='O'?' active':''}" data-date="${key}" data-id="${item.id}" title="완료(O)">O</button>
@@ -758,7 +854,7 @@ function renderDayTasks(key) {
 
     // ── 탭 → 선택, 선택 상태에서 드래그 → 이동, 더블탭 → 풀로 반환 ──
     if (currentUser) {
-      let tapX = 0, tapY = 0, tapTime = 0, lastTapTime = 0;
+      let tapX = 0, tapY = 0, tapTime = 0, lastTapTime = 0, tapCount = 0, tapCountTimer = null;
 
       el.addEventListener('touchstart', e => {
         if (e.target.closest('.sched-item__ox'))     return; // O 버튼 제외
@@ -793,17 +889,35 @@ function renderDayTasks(key) {
         const dt = Date.now() - tapTime;
         if (dx < 10 && dy < 10 && dt < 400) {
           const now = Date.now();
-          if (now - lastTapTime < 350) {
-            // 더블탭 감지 → 풀로 반환
-            e.preventDefault();
-            lastTapTime = 0;
-            returnSchedItemToPool(key, item.id, item.taskId, item.text);
+          if (now - lastTapTime < 400) {
+            tapCount++;
+            lastTapTime = now;
+            clearTimeout(tapCountTimer);
+            if (tapCount >= 2) {
+              e.preventDefault();
+              const cnt = tapCount;
+              tapCount = 0; lastTapTime = 0;
+              if (cnt === 2) {
+                returnSchedItemToPool(key, item.id, item.taskId, item.text);
+              } else {
+                deleteSchedItemCompletely(key, item.id);
+              }
+            } else {
+              tapCountTimer = setTimeout(() => { tapCount = 0; }, 400);
+            }
           } else {
             lastTapTime = now;
-            // 단일 탭 감지 → 선택 토글
-            const wasSelected = el.classList.contains('selected');
-            clearSelectedScheduleItems();
-            if (!wasSelected) el.classList.add('selected');
+            tapCount = 1;
+            clearTimeout(tapCountTimer);
+            tapCountTimer = setTimeout(() => {
+              if (tapCount === 1) {
+                // 단일 탭 감지 → 선택 토글
+                const wasSelected = el.classList.contains('selected');
+                clearSelectedScheduleItems();
+                if (!wasSelected) el.classList.add('selected');
+              }
+              tapCount = 0;
+            }, 400);
           }
         }
       }, { passive: false });
@@ -817,6 +931,7 @@ function renderDayTasks(key) {
   container.appendChild(fragment);
 
   updateProgress(key);
+  renderCategorySidebar(key);
 }
 
 function updateProgress(key) {
@@ -1087,10 +1202,24 @@ dayGrid.addEventListener('click', e => {
   if (deferBtn) { deferTasks(deferBtn.dataset.date); }
 });
 
-dayGrid.addEventListener('dblclick', e => {
+// 더블클릭 → 풀로 반환, 세번클릭 → 완전 삭제
+let _clickCountEl = null, _clickCount = 0, _clickTimer = null;
+dayGrid.addEventListener('click', e => {
   const item = e.target.closest('.sched-item');
   if (!item || e.target.closest('.sched-item__ox')) return;
-  returnSchedItemToPool(item.dataset.dateKey, item.dataset.itemId, item.dataset.taskId, item.dataset.text);
+
+  if (_clickCountEl !== item) { _clickCountEl = item; _clickCount = 0; }
+  _clickCount++;
+  clearTimeout(_clickTimer);
+  _clickTimer = setTimeout(() => {
+    const cnt = _clickCount;
+    _clickCount = 0; _clickCountEl = null;
+    if (cnt === 2) {
+      returnSchedItemToPool(item.dataset.dateKey, item.dataset.itemId, item.dataset.taskId, item.dataset.text);
+    } else if (cnt >= 3) {
+      deleteSchedItemCompletely(item.dataset.dateKey, item.dataset.itemId);
+    }
+  }, 300);
 });
 
 dayGrid.addEventListener('input', e => {
@@ -1257,31 +1386,51 @@ document.addEventListener('touchend', e => {
 // ──────────────────────────────────────────────
 function autoReturnExpiredTasks() {
   if (!currentUser) return;
-  const today = todayKey();
+
+  // 새벽 5시 기준: 현재 시각이 5시 미만이면 어제를 "오늘"로 처리
+  const now = new Date();
+  const effectiveToday = new Date(now);
+  if (now.getHours() < 5) {
+    effectiveToday.setDate(effectiveToday.getDate() - 1);
+  }
+  const today = dateKey(effectiveToday);
+
   let changed = false;
 
   Object.keys(state.schedule).forEach(key => {
-    if (key >= today) return; // 오늘 이후는 건드리지 않음
+    if (key >= today) return; // 오늘(기준) 이후는 건드리지 않음
     const items = state.schedule[key] || [];
     const pending = items.filter(it => it.status !== 'O');
     if (pending.length === 0) return;
 
-    // 미완료 항목을 풀로 반환 (이미 풀에 없는 경우만)
+    // 미완료 항목을 풀로 반환 (이미 풀에 없는 경우만) — 칸의 일정은 삭제하지 않음
     pending.forEach(it => {
       if (!state.pool.find(t => t.id === it.taskId)) {
         state.pool.push({ id: it.taskId, text: it.text });
       }
     });
-    // 해당 날짜에서 미완료 항목 제거
-    state.schedule[key] = items.filter(it => it.status === 'O');
     changed = true;
   });
 
   if (changed) {
     saveState();
     renderPool();
-    renderWeek();
   }
+}
+
+// ──────────────────────────────────────────────
+// 시험 D-day 표시
+// ──────────────────────────────────────────────
+function updateDday() {
+  const badge = document.getElementById('ddayBadge');
+  if (!badge) return;
+  const exam = new Date('2026-04-20T00:00:00');
+  const now = new Date();
+  const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diff = Math.round((exam - todayMidnight) / (1000 * 60 * 60 * 24));
+  if (diff > 0)      badge.textContent = `📝 시험 D-${diff}`;
+  else if (diff === 0) badge.textContent = `📝 시험 D-Day!`;
+  else               badge.textContent = `📝 시험 D+${Math.abs(diff)}`;
 }
 
 // ──────────────────────────────────────────────
@@ -1290,3 +1439,4 @@ function autoReturnExpiredTasks() {
 resetScheduleState();
 renderApp();
 initDrag();
+updateDday();
