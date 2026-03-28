@@ -159,23 +159,29 @@
   <div id="infoModal" class="modal-overlay" hidden>
     <div class="modal-box">
       <div class="modal-header">
-        <h2>ℹ️ 정보</h2>
+        <h2>📌 빠른 정보</h2>
         <button id="infoCloseBtn" class="modal-close">&times;</button>
       </div>
-      <div class="modal-body" style="display:flex;flex-direction:column;gap:14px;">
-        <!-- 기한 있는 일정 목록 -->
+      <div class="modal-body" style="display:flex;flex-direction:column;gap:12px;">
+
+        <!-- 기한 있는 할일 -->
         <div>
-          <p style="font-size:0.82rem;font-weight:700;color:var(--text);margin-bottom:8px;">⏰ 기한 있는 할일</p>
+          <p style="font-size:0.8rem;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">⏰ 마감 임박</p>
           <div id="deadlineList" class="deadline-list"></div>
         </div>
+
         <hr style="border:none;border-top:1px solid var(--border);margin:0;">
+
+        <!-- 질문노트 링크 (2학년만) -->
         <div id="surveyLinksMobile" hidden>
-          <p style="font-size:0.82rem;color:var(--text-sub);margin-bottom:8px;">📋 질문노트 설문 링크</p>
-          <a href="https://forms.gle/rUwhENomLZjW7b2r6" target="_blank" rel="noopener noreferrer" class="info-link" style="display:block;margin-bottom:10px;">♥️ 이다현 선생님 설문 링크</a>
-          <a href="https://forms.gle/La8gfRFc9KaGGN7z5" target="_blank" rel="noopener noreferrer" class="info-link" style="display:block;margin-bottom:4px;">♥️ 백민준 선생님 설문 링크</a>
-          <hr style="border:none;border-top:1px solid var(--border);margin:10px 0;">
+          <p style="font-size:0.8rem;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">📋 질문노트</p>
+          <a href="https://forms.gle/rUwhENomLZjW7b2r6" target="_blank" rel="noopener noreferrer" class="info-link" style="display:block;margin-bottom:8px;">이다현 선생님</a>
+          <a href="https://forms.gle/La8gfRFc9KaGGN7z5" target="_blank" rel="noopener noreferrer" class="info-link" style="display:block;">백민준 선생님</a>
+          <hr style="border:none;border-top:1px solid var(--border);margin:12px 0 0;">
         </div>
-        <button id="infoHistoryBtn" class="history-btn" style="width:100%;text-align:center;padding:12px;">📂 과거 내역 보기</button>
+
+        <!-- 과거 내역 -->
+        <button id="infoHistoryBtn" class="history-btn" style="width:100%;text-align:center;padding:11px;">📂 과거 내역</button>
       </div>
     </div>
   </div>
