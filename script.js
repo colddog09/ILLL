@@ -677,7 +677,8 @@ function openHistory() {
       <div class="history-day__tasks">
         ${items.map(it => `
           <div class="history-task status-${it.status||'none'}">
-            <span class="history-task__text">${escHtml(it.text)}${it.deadline ? `<span class="history-task__deadline">⏰ ${formatDeadlineText(it.deadline)}</span>` : ''}</span>
+            <span class="history-task__text">${escHtml(it.text)}</span>
+            ${it.deadline ? `<span class="history-task__clock-wrap"><button class="pool-card__clock${isDeadlineUrgent(it.deadline) ? ' pool-card__clock--urgent' : ''}" type="button">⏰</button><span class="pool-card__clock-tooltip">${escHtml(formatDeadlineText(it.deadline))}</span></span>` : ''}
             <span class="history-badge ${it.status||'none'}">${
               it.status === 'O' ? '✓ 완료' : it.status === 'X' ? '✕ 미완료' : '— 미기록'
             }</span>
@@ -690,6 +691,13 @@ function openHistory() {
 }
 
 historyList.addEventListener('click', e => {
+  const clock = e.target.closest('.history-task__clock-wrap .pool-card__clock');
+  if (clock) {
+    e.stopPropagation();
+    const tooltip = clock.nextElementSibling;
+    if (tooltip) tooltip.classList.toggle('visible');
+    return;
+  }
   const header = e.target.closest('.history-day__header');
   if (!header) return;
   header.parentElement.classList.toggle('open');

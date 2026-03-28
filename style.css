@@ -1124,9 +1124,9 @@ body {
   font-size: 0.83rem;
   background: var(--surface);
 }
-.history-task__text { flex: 1; color: var(--text); display: flex; flex-direction: column; gap: 2px; }
+.history-task__text { flex: 1; color: var(--text); }
 .history-task.status-O .history-task__text { text-decoration: line-through; color: var(--text-sub); }
-.history-task__deadline { font-size: 0.72rem; color: var(--text-sub); text-decoration: none; }
+.history-task__clock-wrap { position: relative; display: flex; align-items: center; }
 
 .history-badge {
   font-size: 0.71rem;
