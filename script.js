@@ -36,7 +36,8 @@ let db                   = null;
 let unsubscribeSnapshot  = null;
 let firebaseReady        = false;
 let memoSaveTimer        = null;
-let saveDebounceTimer    = null; // saveState 디바운스용
+let saveDebounceTimer    = null;
+let lastSavedSnapshot    = null; // 마지막 저장 상태 (변경 감지용)
 
 const REDIRECT_AUTH_CODES = new Set([
   'auth/popup-blocked',
@@ -195,37 +196,54 @@ function queueMemoSave() {
   memoSaveTimer = setTimeout(() => { memoSaveTimer = null; saveState(); }, 250);
 }
 
+// 현재 state를 문자열로 직렬화 (변경 감지용)
+function stateSnapshot() {
+  return JSON.stringify({ pool: state.pool, schedule: state.schedule, dayMemo: state.dayMemo, grade: state.grade, classNum: state.classNum });
+}
+
 function loadState() {
+  // 기존 리스너 해제
   if (unsubscribeSnapshot) { unsubscribeSnapshot(); unsubscribeSnapshot = null; }
 
   if (currentUser && db) {
-    unsubscribeSnapshot = db.collection('users').doc(currentUser.uid)
-      .onSnapshot(doc => {
-        // 로컬 write로 인한 재실행은 무시 (불필요한 리렌더 방지)
-        if (doc.metadata.hasPendingWrites) return;
+    // ✅ onSnapshot 대신 get() 1회 읽기 → 읽기 횟수 최소화
+    setSyncStatus('☁️ 불러오는 중...');
 
+    // 1) 로컬 데이터 먼저 즉시 표시 (빠른 초기 렌더)
+    const localState = readLocalState();
+    if (hasLocalState(localState)) {
+      applyPersistedState(localState);
+      renderApp();
+      if (typeof updateSurveyVisibility === 'function') updateSurveyVisibility();
+    }
+
+    // 2) Firestore에서 최신 데이터 1회 읽기
+    db.collection('users').doc(currentUser.uid).get()
+      .then(doc => {
         if (doc.exists) {
           applyPersistedState(doc.data());
+          persistLocalState(); // 로컬에도 동기화
         } else {
-          const localState = readLocalState();
-          if (hasLocalState(localState)) { applyPersistedState(localState); saveState(); }
+          // 신규 유저: 로컬 데이터가 있으면 Firestore에 첫 저장
+          if (hasLocalState(localState)) { applyPersistedState(localState); _doSave(); }
           else resetScheduleState();
         }
+        lastSavedSnapshot = stateSnapshot();
         autoReturnExpiredTasks();
         const activeElement = document.activeElement;
         if (!activeElement || !activeElement.classList.contains('day-card__memo')) renderApp();
         if (typeof updateSurveyVisibility === 'function') updateSurveyVisibility();
-      }, err => {
-        console.error('Firestore 실시간 수신 에러:', err);
+        setSyncStatus('');
+      })
+      .catch(err => {
+        console.error('Firestore 읽기 에러:', err);
         if (err.code === 'resource-exhausted') {
-          // 할당량 초과 시 로컬 데이터로 폴백
-          const localState = readLocalState();
-          if (hasLocalState(localState)) applyPersistedState(localState);
-          renderApp();
           setSyncStatus('⚠️ 일일 한도 초과 — 로컬 데이터 표시 중');
         } else {
-          setSyncStatus('❌ 동기화 오류 — 새로고침 해주세요');
+          setSyncStatus('❌ 불러오기 실패 — 로컬 데이터 표시 중');
         }
+        // 에러 시 로컬 데이터 유지 (이미 렌더됨)
+        if (!hasLocalState(localState)) { resetScheduleState(); renderApp(); }
       });
   } else {
     resetScheduleState();
@@ -235,36 +253,39 @@ function loadState() {
 
 function _doSave() {
   if (memoSaveTimer) { clearTimeout(memoSaveTimer); memoSaveTimer = null; }
+  persistLocalState(); // 항상 로컬에 즉시 저장
+
+  if (!currentUser || !db) { setSyncStatus('💾 로컬 저장됨'); return; }
+
+  // 변경된 내용이 없으면 Firestore 쓰기 스킵
+  const snap = stateSnapshot();
+  if (snap === lastSavedSnapshot) { setSyncStatus('✅ 저장 완료'); return; }
+
   setSyncStatus('☁️ 저장 중...');
-  if (currentUser && db) {
-    db.collection('users').doc(currentUser.uid).set({
-      pool:        state.pool,
-      schedule:    state.schedule,
-      dayMemo:     state.dayMemo,
-      grade:       state.grade,
-      classNum:    state.classNum,
-      lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(() => setSyncStatus('✅ 저장 완료'))
-      .catch(err => {
-        console.error('Firestore 저장 에러:', err);
-        if (err.code === 'resource-exhausted') {
-          // 할당량 초과 시 로컬스토리지에 임시 저장
-          persistLocalState();
-          setSyncStatus('⚠️ 일일 한도 초과 — 로컬 저장됨');
-        } else {
-          setSyncStatus('❌ 저장 실패');
-        }
-      });
-  } else {
-    persistLocalState();
-    setSyncStatus('💾 로컬 저장됨');
-  }
+  db.collection('users').doc(currentUser.uid).set({
+    pool:        state.pool,
+    schedule:    state.schedule,
+    dayMemo:     state.dayMemo,
+    grade:       state.grade,
+    classNum:    state.classNum,
+    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    lastSavedSnapshot = snap;
+    setSyncStatus('✅ 저장 완료');
+  }).catch(err => {
+    console.error('Firestore 저장 에러:', err);
+    if (err.code === 'resource-exhausted') {
+      setSyncStatus('⚠️ 일일 한도 초과 — 로컬 저장됨');
+    } else {
+      setSyncStatus('❌ 저장 실패');
+    }
+  });
 }
 
 function saveState() {
-  // 300ms 디바운스: 연속 동작 시 마지막 1번만 실제 저장
+  // 1초 디바운스: 연속 동작 시 마지막 1번만 Firestore에 저장
   if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
-  saveDebounceTimer = setTimeout(() => { saveDebounceTimer = null; _doSave(); }, 300);
+  saveDebounceTimer = setTimeout(() => { saveDebounceTimer = null; _doSave(); }, 1000);
 }
 
 // ──────────────────────────────────────────────
