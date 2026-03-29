@@ -11,12 +11,60 @@ if (!admin.apps.length) {
   });
 }
 const db = admin.firestore();
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 
 webpush.setVapidDetails(
   'mailto:admin@planmanager-six.vercel.app',
   process.env.VAPID_PUBLIC_KEY,
   process.env.VAPID_PRIVATE_KEY
 );
+
+function getKstDateKey(date = new Date()) {
+  const kst = new Date(date.getTime() + KST_OFFSET_MS);
+  return kst.toISOString().slice(0, 10);
+}
+
+function getNextKstDateKey(date = new Date()) {
+  const kst = new Date(date.getTime() + KST_OFFSET_MS);
+  kst.setUTCDate(kst.getUTCDate() + 1);
+  return kst.toISOString().slice(0, 10);
+}
+
+function normalizeDeadlinePart(value) {
+  return String(value).padStart(2, '0');
+}
+
+function getDeadlineDateKey(deadline, baseYear) {
+  if (!deadline?.month || !deadline?.day) return null;
+  const month = normalizeDeadlinePart(deadline.month);
+  const day = normalizeDeadlinePart(deadline.day);
+  const thisYearKey = `${baseYear}-${month}-${day}`;
+  return thisYearKey;
+}
+
+function getTaskKey(task) {
+  return task.taskId || task.id || `${task.text}:${JSON.stringify(task.deadline || {})}`;
+}
+
+function collectDueTasks(userData, targetDateKey, baseYear) {
+  const seen = new Set();
+  const dueTasks = [];
+  const pushTask = task => {
+    if (!task?.deadline || !task?.text) return;
+    if (getDeadlineDateKey(task.deadline, baseYear) !== targetDateKey) return;
+    const taskKey = getTaskKey(task);
+    if (seen.has(taskKey)) return;
+    seen.add(taskKey);
+    dueTasks.push(task);
+  };
+
+  (userData.pool || []).forEach(pushTask);
+  Object.values(userData.schedule || {}).forEach(items => {
+    (items || []).forEach(pushTask);
+  });
+
+  return dueTasks;
+}
 
 export default async function handler(req, res) {
   // cron 인증: Vercel Cron은 Authorization 헤더를 자동으로 붙임
@@ -26,7 +74,9 @@ export default async function handler(req, res) {
   }
 
   const now = new Date();
-  const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  const todayKstKey = getKstDateKey(now);
+  const tomorrowKstKey = getNextKstDateKey(now);
+  const baseYear = Number(todayKstKey.slice(0, 4));
 
   try {
     // 모든 사용자 데이터 조회
@@ -34,38 +84,40 @@ export default async function handler(req, res) {
     const subSnap    = await db.collection('push_subscriptions').get();
 
     const subMap = {};
-    subSnap.forEach(doc => { subMap[doc.id] = doc.data().subscription; });
+    subSnap.forEach(doc => { subMap[doc.id] = { id: doc.id, ...doc.data() }; });
 
     let sent = 0;
     const tasks = [];
 
     for (const userDoc of usersSnap.docs) {
       const uid = userDoc.id;
-      const sub = subMap[uid];
-      if (!sub) continue;
+      const subDoc = subMap[uid];
+      const subscription = subDoc?.subscription;
+      if (!subscription) continue;
+      if (subDoc.lastNotifiedKstDate === todayKstKey) continue;
 
-      const pool = userDoc.data().pool || [];
-      const urgentTasks = pool.filter(task => {
-        if (!task.deadline) return false;
-        const { month, day, time } = task.deadline;
-        const yr = now.getFullYear();
-        const deadlineDate = new Date(yr, parseInt(month) - 1, parseInt(day), ...time.split(':').map(Number));
-        // 내년 기한인 경우 처리 (현재보다 과거면 내년으로)
-        if (deadlineDate < now) deadlineDate.setFullYear(yr + 1);
-        return deadlineDate > now && deadlineDate <= in24h;
-      });
-
+      const urgentTasks = collectDueTasks(userDoc.data(), tomorrowKstKey, baseYear);
       if (urgentTasks.length === 0) continue;
 
+      const firstTask = urgentTasks[0];
+      const deadlineText = firstTask.deadline?.time
+        ? `${Number(firstTask.deadline.month)}월 ${Number(firstTask.deadline.day)}일 ${firstTask.deadline.time}`
+        : `${Number(firstTask.deadline.month)}월 ${Number(firstTask.deadline.day)}일`;
       const body = urgentTasks.length === 1
-        ? `⏰ "${urgentTasks[0].text}" 기한이 24시간 이내입니다!`
-        : `⏰ 기한이 24시간 이내인 할일이 ${urgentTasks.length}개 있어요!`;
+        ? `내일 마감인 "${firstTask.text}" 일정을 확인해보세요. (${deadlineText})`
+        : `내일 마감인 일정이 ${urgentTasks.length}개 있어요. 놓치지 않게 확인해보세요.`;
 
       tasks.push(
-        webpush.sendNotification(sub, JSON.stringify({
+        webpush.sendNotification(subscription, JSON.stringify({
           title: '📋 일정 기한 알림',
           body,
-        })).then(() => { sent++; }).catch(err => {
+        })).then(async () => {
+          sent++;
+          await db.collection('push_subscriptions').doc(uid).set({
+            lastNotifiedKstDate: todayKstKey,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          }, { merge: true });
+        }).catch(err => {
           console.warn(`push failed for ${uid}:`, err.statusCode);
           // 구독 만료(410) 시 삭제
           if (err.statusCode === 410) {
