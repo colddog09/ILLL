@@ -149,6 +149,8 @@ function initDrag() {
   poolEl.addEventListener('dragstart', e => {
     const card = e.target.closest('.pool-card');
     if (!card) return;
+    // 드래그 시작 시 열려 있는 기한 툴팁 닫기
+    card.querySelectorAll('.pool-card__clock-tooltip.visible').forEach(t => t.classList.remove('visible'));
     dragInfo = { type: 'pool', taskId: card.dataset.taskId, text: getPoolCardText(card) };
     e.dataTransfer.setData('text/plain', dragInfo.taskId);
     e.dataTransfer.effectAllowed = 'move';
@@ -163,6 +165,13 @@ function initDrag() {
     if (card) card.classList.remove('dragging');
     endDrag();
   });
+
+  // 모바일 터치 드래그 시작 시에도 툴팁 닫기
+  poolEl.addEventListener('touchstart', e => {
+    const card = e.target.closest('.pool-card');
+    if (!card) return;
+    card.querySelectorAll('.pool-card__clock-tooltip.visible').forEach(t => t.classList.remove('visible'));
+  }, { passive: true });
 
   // ── 스케줄 아이템 dragstart (from day card) ──
   dayGrid.addEventListener('dragstart', e => {
@@ -248,10 +257,4 @@ function initDrag() {
   });
 }
 
-// ──────────────────────────────────────────────
-// 초기화 (모든 스크립트 로드 후 실행)
-// ──────────────────────────────────────────────
-resetScheduleState();
-renderApp();
-initDrag();
-updateDday();
+// 초기화는 events.js 하단에서 실행 (모든 스크립트 로드 완료 후)

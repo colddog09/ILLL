@@ -194,9 +194,13 @@ function renderDayTasks(key) {
     el.dataset.taskId = item.taskId;
     el.dataset.text = item.text;
     el.draggable = !!currentUser;
+    const deadlineBadge = item.deadline
+      ? `<span class="sched-item__deadline${isDeadlineUrgent(item.deadline) ? ' sched-item__deadline--urgent' : ''}" title="${escHtml(formatDeadlineText(item.deadline))}">⏰ ${escHtml(formatDeadlineText(item.deadline))}</span>`
+      : '';
     el.innerHTML = `
       <span class="sched-item__handle" title="드래그로 순서 변경">⠿</span>
       <span class="sched-item__text" title="${escHtml(item.text)}">${escHtml(item.text)}</span>
+      ${deadlineBadge}
       <div class="sched-item__ox">
         <button class="btn-o${item.status==='O'?' active':''}" data-date="${key}" data-id="${item.id}" title="완료(O)">O</button>
       </div>`;
