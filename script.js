@@ -713,17 +713,29 @@ function autoReturnExpiredTasks() {
   if (now.getHours() < 5) effectiveToday.setDate(effectiveToday.getDate() - 1);
   const today = dateKey(effectiveToday);
   let changed = false;
+
   Object.keys(state.schedule).forEach(key => {
     if (key >= today) return;
     const items = state.schedule[key] || [];
     const pending = items.filter(it => it.status !== 'O');
     if (pending.length === 0) return;
+
     pending.forEach(it => {
-      if (!state.pool.find(t => t.id === it.taskId)) state.pool.push({ id: it.taskId, text: it.text });
+      const restoredTaskId = it.taskId || it.id;
+      if (!state.pool.find(t => t.id === restoredTaskId)) {
+        state.pool.push({ id: restoredTaskId, text: it.text });
+      }
     });
+
+    state.schedule[key] = items.filter(it => it.status === 'O');
     changed = true;
   });
-  if (changed) { saveState(); renderPool(); }
+
+  if (changed) {
+    saveState();
+    renderPool();
+    renderWeek();
+  }
 }
 
 // ──────────────────────────────────────────────
@@ -741,6 +753,32 @@ function updateDday() {
 
 updateStandaloneAuthHint();
 updateSettingsPreview();
+
+// ── 알림 권한 버튼 ──
+const notifyPermBtn = document.getElementById('notifyPermBtn');
+const notifyStatus  = document.getElementById('notifyStatus');
+function updateNotifyStatus() {
+  if (!notifyStatus) return;
+  const perm = Notification?.permission;
+  if (perm === 'granted')  { notifyStatus.textContent = '✅ 알림 허용됨'; if (notifyPermBtn) notifyPermBtn.disabled = true; }
+  else if (perm === 'denied') { notifyStatus.textContent = '❌ 알림 차단됨 — 브라우저 설정에서 직접 허용해주세요'; }
+  else { notifyStatus.textContent = ''; }
+}
+if (notifyPermBtn) {
+  updateNotifyStatus();
+  notifyPermBtn.addEventListener('click', async () => {
+    if (!currentUser) { alert('로그인 후 이용해주세요.'); return; }
+    notifyStatus.textContent = '요청 중...';
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted') {
+      await subscribePush(currentUser.uid);
+      notifyStatus.textContent = '✅ 알림이 활성화됐습니다!';
+      notifyPermBtn.disabled = true;
+    } else {
+      notifyStatus.textContent = '❌ 알림이 차단됐습니다. 브라우저 설정에서 허용해주세요.';
+    }
+  });
+}
 
 // ──────────────────────────────────────────────
 // Web Push 알림 구독
