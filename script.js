@@ -202,13 +202,9 @@ function stateSnapshot() {
 }
 
 function loadState() {
-  // 기존 리스너 해제
   if (unsubscribeSnapshot) { unsubscribeSnapshot(); unsubscribeSnapshot = null; }
 
   if (currentUser && db) {
-    // ✅ onSnapshot 대신 get() 1회 읽기 → 읽기 횟수 최소화
-    setSyncStatus('☁️ 불러오는 중...');
-
     // 1) 로컬 데이터 먼저 즉시 표시 (빠른 초기 렌더)
     const localState = readLocalState();
     if (hasLocalState(localState)) {
@@ -217,14 +213,15 @@ function loadState() {
       if (typeof updateSurveyVisibility === 'function') updateSurveyVisibility();
     }
 
-    // 2) Firestore에서 최신 데이터 1회 읽기
-    db.collection('users').doc(currentUser.uid).get()
-      .then(doc => {
+    // 2) 실시간 리스너 — 여러 기기 동기화 + 최신 데이터 수신
+    unsubscribeSnapshot = db.collection('users').doc(currentUser.uid)
+      .onSnapshot(doc => {
+        if (doc.metadata.hasPendingWrites) return; // 로컬 쓰기 반응 무시
+
         if (doc.exists) {
           applyPersistedState(doc.data());
-          persistLocalState(); // 로컬에도 동기화
+          persistLocalState();
         } else {
-          // 신규 유저: 로컬 데이터가 있으면 Firestore에 첫 저장
           if (hasLocalState(localState)) { applyPersistedState(localState); _doSave(); }
           else resetScheduleState();
         }
@@ -234,16 +231,9 @@ function loadState() {
         if (!activeElement || !activeElement.classList.contains('day-card__memo')) renderApp();
         if (typeof updateSurveyVisibility === 'function') updateSurveyVisibility();
         setSyncStatus('');
-      })
-      .catch(err => {
-        console.error('Firestore 읽기 에러:', err);
-        if (err.code === 'resource-exhausted') {
-          setSyncStatus('⚠️ 일일 한도 초과 — 로컬 데이터 표시 중');
-        } else {
-          setSyncStatus('❌ 불러오기 실패 — 로컬 데이터 표시 중');
-        }
-        // 에러 시 로컬 데이터 유지 (이미 렌더됨)
-        if (!hasLocalState(localState)) { resetScheduleState(); renderApp(); }
+      }, err => {
+        console.error('Firestore 수신 에러:', err);
+        setSyncStatus('❌ 동기화 오류 — 새로고침 해주세요');
       });
   } else {
     resetScheduleState();
