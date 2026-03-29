@@ -219,7 +219,9 @@ function deferTasks(targetDateKey) {
   state.schedule[targetDateKey] = items.filter(it => it.status === 'O');
   if (!state.schedule[nextDateKey]) state.schedule[nextDateKey] = [];
   unfinished.forEach(it => {
-    state.schedule[nextDateKey].push({ id: uid(), taskId: it.taskId, text: it.text, status: null });
+    const moved = { id: uid(), taskId: it.taskId, text: it.text, status: null };
+    if (it.deadline) moved.deadline = { ...it.deadline };
+    state.schedule[nextDateKey].push(moved);
   });
   saveState();
   renderWeek();
