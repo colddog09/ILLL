@@ -60,11 +60,14 @@ body {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1.5px solid var(--border);
-  padding: 18px 28px 14px;
+  padding:
+    calc(18px + env(safe-area-inset-top, 0px))
+    calc(28px + env(safe-area-inset-right, 0px))
+    14px
+    calc(28px + env(safe-area-inset-left, 0px));
   /* iOS PWA 상태바 영역 확보 */
-  padding-top: calc(18px + env(safe-area-inset-top, 0px));
   box-shadow: 0 2px 16px rgba(108,99,255,0.07);
-  overflow: hidden;                 /* 내부 요소 가로 넘침 방지 */
+  overflow: visible;
   width: 100%;
   box-sizing: border-box;
 }
@@ -73,7 +76,7 @@ body {
   max-width: 760px;
   width: 100%;
   margin: 0 auto;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .top-header-row {
@@ -201,6 +204,7 @@ body {
   margin-bottom: 14px;
   align-items: flex-start;
   position: relative;
+  overflow: visible;
 }
 
 .task-input-wrap input {
@@ -273,6 +277,7 @@ body {
   box-shadow: var(--shadow-lg);
   z-index: 200;
   min-width: 220px;
+  max-width: min(320px, calc(100vw - 24px));
 }
 .deadline-popup__title {
   font-size: 0.85rem;
@@ -390,9 +395,11 @@ body {
   gap: 8px;
   min-height: 36px;
   border-radius: var(--radius-sm);
-  padding: 6px 28px;
-  margin-left: -28px;
-  margin-right: -28px;
+  width: 100%;
+  max-width: 100%;
+  padding: 6px 0;
+  margin-left: 0;
+  margin-right: 0;
   transition: background 0.2s, border-color 0.2s;
 }
 .task-pool.drag-over-pool {
@@ -434,7 +441,11 @@ body {
   max-width: 1100px;
   width: 100%;
   margin: 0 auto;
-  padding: 28px 20px calc(60px + env(safe-area-inset-bottom, 0px));
+  padding:
+    28px
+    calc(20px + env(safe-area-inset-right, 0px))
+    calc(60px + env(safe-area-inset-bottom, 0px))
+    calc(20px + env(safe-area-inset-left, 0px));
   overflow-x: hidden;                  /* 가로 넘침 방지 */
   overflow-y: auto;                    /* 스케줄 영역만 스크롤 */
   -webkit-overflow-scrolling: touch;   /* iOS 부드러운 스크롤 */
@@ -678,6 +689,10 @@ body {
   max-width: 860px;
   margin: 0 auto;
   width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding-inline: 4px;
+  overflow: visible;
 }
 
 .category-sidebar { display: none; }
@@ -688,6 +703,9 @@ body {
   gap: 10px;
   flex: 1;
   min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: visible;
 }
 
 /* ============================
@@ -698,6 +716,8 @@ body {
   background: var(--surface);
   border: 1.5px solid var(--border);
   border-radius: var(--radius);
+  width: 100%;
+  min-width: 0;
   padding: 24px 22px;
   min-height: 260px;
   display: flex;
@@ -723,12 +743,15 @@ body {
   display: flex;
   align-items: baseline;
   gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 .day-card__date {
   font-size: 1.6rem;
   font-weight: 800;
   line-height: 1;
   color: var(--text);
+  flex-shrink: 0;
 }
 .day-card.today .day-card__date {
   background: linear-gradient(90deg, var(--accent), var(--accent2));
@@ -740,6 +763,7 @@ body {
   font-size: 0.8rem;
   color: var(--text-sub);
   font-weight: 600;
+  flex-shrink: 0;
 }
 .today-badge {
   font-size: 0.7rem;
@@ -750,10 +774,12 @@ body {
   color: #fff;
   letter-spacing: 0.5px;
   box-shadow: 0 2px 10px rgba(108,99,255,0.3);
+  flex-shrink: 0;
 }
 
 .defer-btn {
   margin-left: auto;
+  flex-shrink: 0;
   font-size: 0.75rem;
   font-weight: 700;
   padding: 5px 12px;
@@ -1182,8 +1208,11 @@ body {
 
   /* ── 상단 바 ── */
   .top-bar {
-    padding: 10px 14px 8px;
-    padding-top: calc(10px + env(safe-area-inset-top, 0px));
+    padding:
+      calc(10px + env(safe-area-inset-top, 0px))
+      calc(14px + env(safe-area-inset-right, 0px))
+      8px
+      calc(14px + env(safe-area-inset-left, 0px));
   }
   .top-bar__inner { gap: 6px; }
 
@@ -1272,9 +1301,9 @@ body {
 
   /* ── 할일 풀: 모바일 패딩(14px)에 맞게 네거티브 마진 조정 ── */
   .task-pool {
-    margin-left: -14px;
-    margin-right: -14px;
-    padding: 4px 14px;
+    margin-left: 0;
+    margin-right: 0;
+    padding: 4px 0;
   }
 
   /* ── 풀 카드 ── */
@@ -1286,7 +1315,9 @@ body {
 
   /* ── 할일 풀: 모바일에서만 가로 스크롤 ── */
   .task-pool {
-    padding: 4px 2px;
+    width: 100%;
+    max-width: 100%;
+    padding: 4px 0;
     gap: 6px;
     flex-wrap: nowrap;
     overflow-x: auto;
@@ -1300,7 +1331,15 @@ body {
 
   /* ── 일정 영역 ── */
   .schedule-area {
-    padding: 14px 10px 80px; /* 하단 홈바 여백 */
+    padding:
+      14px
+      calc(10px + env(safe-area-inset-right, 0px))
+      calc(80px + env(safe-area-inset-bottom, 0px))
+      calc(10px + env(safe-area-inset-left, 0px));
+  }
+
+  .schedule-layout {
+    padding-inline: 2px;
   }
 
   .schedule-area__header {
@@ -1330,10 +1369,16 @@ body {
   /* ── 날짜 카드 ── */
   .day-card {
     width: 100%;
+    min-width: 0;
     min-height: auto;
     padding: 14px 12px;
     border-radius: 14px;
     gap: 8px;
+  }
+
+  .day-card__header {
+    align-items: center;
+    row-gap: 6px;
   }
 
   .day-card__date { font-size: 1.25rem; }
@@ -1361,12 +1406,18 @@ body {
     padding: 11px 10px;
     font-size: 0.85rem;
     border-radius: 10px;
-    gap: 8px;
+    gap: 6px;
   }
 
   .sched-item__text {
     font-size: 0.85rem;
     line-height: 1.4;
+    min-width: 0; /* 중요: flex 수축이 제대로 동작하도록 */
+  }
+
+  .sched-item__deadline {
+    font-size: 0.65rem;
+    padding: 2px 6px;
   }
 
   .sched-item__handle {

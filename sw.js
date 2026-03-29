@@ -1,8 +1,8 @@
-const CACHE_NAME = 'illl-v5';
+const CACHE_NAME = 'illl-v6';
 const CORE_FILES = [
   '/',
   '/index.html',
-  '/style.css?v=12',
+  '/style.css?v=13',
   '/utils.js?v=1',
   '/script.js?v=14',
   '/render.js?v=1',
