@@ -36,6 +36,7 @@ let db                   = null;
 let unsubscribeSnapshot  = null;
 let firebaseReady        = false;
 let memoSaveTimer        = null;
+let saveDebounceTimer    = null; // saveState 디바운스용
 
 const REDIRECT_AUTH_CODES = new Set([
   'auth/popup-blocked',
@@ -215,9 +216,16 @@ function loadState() {
         if (!activeElement || !activeElement.classList.contains('day-card__memo')) renderApp();
         if (typeof updateSurveyVisibility === 'function') updateSurveyVisibility();
       }, err => {
-        // alert 대신 상태바 표시 + 콘솔 로그
         console.error('Firestore 실시간 수신 에러:', err);
-        setSyncStatus('❌ 동기화 오류 — 새로고침 해주세요');
+        if (err.code === 'resource-exhausted') {
+          // 할당량 초과 시 로컬 데이터로 폴백
+          const localState = readLocalState();
+          if (hasLocalState(localState)) applyPersistedState(localState);
+          renderApp();
+          setSyncStatus('⚠️ 일일 한도 초과 — 로컬 데이터 표시 중');
+        } else {
+          setSyncStatus('❌ 동기화 오류 — 새로고침 해주세요');
+        }
       });
   } else {
     resetScheduleState();
@@ -225,7 +233,7 @@ function loadState() {
   }
 }
 
-function saveState() {
+function _doSave() {
   if (memoSaveTimer) { clearTimeout(memoSaveTimer); memoSaveTimer = null; }
   setSyncStatus('☁️ 저장 중...');
   if (currentUser && db) {
@@ -237,11 +245,26 @@ function saveState() {
       classNum:    state.classNum,
       lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
     }).then(() => setSyncStatus('✅ 저장 완료'))
-      .catch(err => { console.error('Firestore 저장 에러:', err); setSyncStatus('❌ 저장 실패'); });
+      .catch(err => {
+        console.error('Firestore 저장 에러:', err);
+        if (err.code === 'resource-exhausted') {
+          // 할당량 초과 시 로컬스토리지에 임시 저장
+          persistLocalState();
+          setSyncStatus('⚠️ 일일 한도 초과 — 로컬 저장됨');
+        } else {
+          setSyncStatus('❌ 저장 실패');
+        }
+      });
   } else {
     persistLocalState();
     setSyncStatus('💾 로컬 저장됨');
   }
+}
+
+function saveState() {
+  // 300ms 디바운스: 연속 동작 시 마지막 1번만 실제 저장
+  if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
+  saveDebounceTimer = setTimeout(() => { saveDebounceTimer = null; _doSave(); }, 300);
 }
 
 // ──────────────────────────────────────────────
