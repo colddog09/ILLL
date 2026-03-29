@@ -466,10 +466,20 @@ dayGrid.addEventListener('click', e => {
 });
 
 // 더블클릭 → 풀로 반환
-dayGrid.addEventListener('dblclick', e => {
+let _clickCountEl = null, _clickCount = 0, _clickTimer = null;
+dayGrid.addEventListener('click', e => {
   const item = e.target.closest('.sched-item');
   if (!item || e.target.closest('.sched-item__ox')) return;
-  returnSchedItemToPool(item.dataset.dateKey, item.dataset.itemId, item.dataset.taskId, item.dataset.text);
+  if (_clickCountEl !== item) { _clickCountEl = item; _clickCount = 0; }
+  _clickCount++;
+  clearTimeout(_clickTimer);
+  _clickTimer = setTimeout(() => {
+    const cnt = _clickCount;
+    _clickCount = 0; _clickCountEl = null;
+    if (cnt === 2) {
+      returnSchedItemToPool(item.dataset.dateKey, item.dataset.itemId, item.dataset.taskId, item.dataset.text);
+    }
+  }, 300);
 });
 
 dayGrid.addEventListener('input', e => {

@@ -58,7 +58,6 @@ function createPoolCard(task) {
   const card = document.createElement('div');
   card.className = 'pool-card';
   card.dataset.taskId = task.id;
-  card.dataset.text = task.text;
   card.draggable = !!currentUser;
 
   const textSpan = document.createElement('span');
@@ -91,7 +90,8 @@ function createPoolCard(task) {
 
 function getPoolCardText(card) {
   if (!card) return '';
-  return card.dataset.text || card.querySelector('span')?.textContent?.trim() || '';
+  const span = card.querySelector('span:first-child');
+  return span ? span.textContent.trim() : card.firstChild?.textContent?.trim() || '';
 }
 
 function handlePoolCardActivate(card) {
