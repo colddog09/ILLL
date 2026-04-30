@@ -134,10 +134,6 @@
                 <option value="3">3반</option>
                 <option value="4">4반</option>
                 <option value="5">5반</option>
-                <option value="6">6반</option>
-                <option value="7">7반</option>
-                <option value="8">8반</option>
-                <option value="9">9반</option>
               </select>
             </label>
           </div>
@@ -146,14 +142,6 @@
             <span id="surveyVisibilityBadge" class="settings-badge">질문노트 링크 숨김</span>
             <p class="settings-note__text">2학년을 선택하면 질문노트 설문 링크가 홈 화면과 정보 모달에 표시됩니다.</p>
           </div>
-        </section>
-
-        <section class="settings-card" style="margin-top:0">
-          <div class="settings-card__eyebrow">NOTIFICATION</div>
-          <h3 class="settings-card__title">기한 알림 설정</h3>
-          <p class="settings-card__desc">할일 기한 24시간 전에 푸시 알림을 받을 수 있어요.</p>
-          <button id="notifyPermBtn" class="auth-btn" style="width:100%;margin-top:8px;">🔔 알림 권한 요청</button>
-          <p id="notifyStatus" style="font-size:0.78rem;color:var(--text-sub);margin-top:6px;text-align:center;"></p>
         </section>
 
         <div class="settings-actions">
@@ -203,36 +191,28 @@
       </div>
       <div class="modal-body help-content">
         <section>
-          <h3>1. 구글 로그인</h3>
-          <p>우측 상단의 Google 로그인 버튼으로 로그인하세요. 로그인해야 일정을 추가하고, 모든 기기에서 동기화할 수 있습니다.</p>
+          <h3>로그인</h3>
+          <p>Google 로그인하면 모든 기기에서 일정이 자동으로 동기화돼요.</p>
         </section>
         <section>
-          <h3>2. 할일 추가</h3>
-          <p>상단 입력창에 할일을 입력하고 엔터를 누르면 '할일 풀'에 추가됩니다. 모바일에서는 가로 스크롤, 태블릿/PC에서는 자동 줄바꿈으로 표시됩니다.</p>
+          <h3>할일 추가</h3>
+          <p>상단 입력창에 입력 후 엔터 → 위 목록에 추가됩니다.</p>
         </section>
         <section>
-          <h3>3. 일정에 배치하기</h3>
-          <p>할일 카드를 날짜 영역으로 <b>드래그</b>하거나, <b>더블클릭 / 더블탭</b>하면 오늘 날짜에 바로 추가됩니다.</p>
+          <h3>날짜에 배치</h3>
+          <p>할일을 날짜 칸으로 <b>드래그</b>하거나, <b>더블탭/더블클릭</b>하면 오늘에 바로 추가돼요.</p>
         </section>
         <section>
-          <h3>4. 일정 되돌리기 & 완전 삭제</h3>
-          <p>배치된 일정을 <b>더블클릭 / 더블탭</b>하면 할일 풀로 돌아갑니다.<br><b>세번 클릭 / 세번 탭</b>하면 일정이 완전히 삭제됩니다.</p>
+          <h3>되돌리기 / 삭제</h3>
+          <p>배치된 일정을 <b>더블탭</b>하면 목록으로 돌아가고, <b>세 번 탭</b>하면 완전 삭제됩니다.</p>
         </section>
         <section>
-          <h3>5. 순서 변경</h3>
-          <p><b>⠿ 핸들</b>을 드래그하면 같은 날 일정의 순서를 바꿀 수 있습니다. 모바일에서는 탭으로 선택 후 손가락을 움직이면 됩니다.</p>
+          <h3>완료 체크</h3>
+          <p><b>O</b> 버튼을 누르면 완료, 다시 누르면 미완료로 전환됩니다.</p>
         </section>
         <section>
-          <h3>6. 완료 처리</h3>
-          <p>일정의 <b>O</b> 버튼을 누르면 완료 처리됩니다. 다시 누르면 미완료로 돌아갑니다.</p>
-        </section>
-        <section>
-          <h3>7. 뒤로 미루기 & 자동 반환</h3>
-          <p>미완료 일정이 있는 날에는 <b>⏳ 뒤로 미루기</b> 버튼이 표시됩니다. 새벽 5시가 지나면 전날 미완료 일정이 자동으로 할일 풀에 돌아옵니다.</p>
-        </section>
-        <section>
-          <h3>8. 설정</h3>
-          <p>⚙️ 버튼에서 학년·반을 설정하면 앱이 나에게 맞게 표시됩니다.</p>
+          <h3>미루기</h3>
+          <p>미완료 일정이 있는 날 <b>⏳ 뒤로 미루기</b>를 누르면 내일로 넘어가요. 매일 새벽 5시에 전날 미완료 일정은 자동으로 목록에 돌아옵니다.</p>
         </section>
       </div>
     </div>
@@ -248,7 +228,6 @@
   <script src="render.js?v=1"></script>
   <script src="drag.js?v=1"></script>
   <script src="deadline.js?v=1"></script>
-  <script src="push.js?v=1"></script>
   <script src="events.js?v=1"></script>
   <script>
     if ('serviceWorker' in navigator) {

@@ -1,7 +1,7 @@
 /* ============================================================
    script.js — 상태(state) 및 Firebase 코어
    (유틸: utils.js / 렌더링: render.js / 드래그: drag.js
-    기한UI: deadline.js / 푸시: push.js / 이벤트: events.js)
+    기한UI: deadline.js / 이벤트: events.js)
    ============================================================ */
 
 'use strict';
@@ -291,8 +291,4 @@ function updateAuthUi(user) {
   updateStandaloneAuthHint(user);
   loadState();
 
-  // 로그인 시 push 구독 요청 (push.js가 로드된 후 사용 가능)
-  if (user && typeof requestPushPermission === 'function') {
-    requestPushPermission(user.uid);
-  }
 }
