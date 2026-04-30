@@ -146,8 +146,6 @@ function renderWeek() {
     ? `<button class="defer-btn" data-date="${key}" title="미완료 할일을 내일로 미룹니다">⏳ 뒤로 미루기</button>`
     : '';
 
-  const memoText = state.dayMemo[key] || '';
-
   const card = document.createElement('div');
   card.className = 'day-card day-card--single' + (isToday ? ' today' : '');
   card.dataset.date = key;
@@ -157,9 +155,6 @@ function renderWeek() {
       <span class="day-card__weekday" ${wdColor}>${DAYS_KO[dow]}</span>
       ${isToday ? '<span class="today-badge">오늘</span>' : ''}
       ${deferBtnHtml}
-    </div>
-    <div class="day-card__memo-wrap">
-      <textarea class="day-card__memo" data-date="${key}" ${!currentUser ? 'disabled' : ''} placeholder="오늘의 메모나 자유로운 글을 남겨보세요...">${escHtml(memoText)}</textarea>
     </div>
     <div class="day-card__tasks" id="tasks_${key}"></div>
     <div class="day-card__progress">

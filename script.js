@@ -12,14 +12,12 @@
 const STORAGE_KEYS = {
   pool:     'taskPool_v2',
   schedule: 'taskSchedule_v2',
-  dayMemo:  'dayMemo_v1',
   grade:    'grade_v1',
   classNum: 'classNum_v1'
 };
 const DEFAULT_STATE = {
   pool:     [],
   schedule: {},
-  dayMemo:  {},
   dayOffset: 0,
   grade:    '2',
   classNum: '2'
@@ -35,7 +33,6 @@ let currentUser          = null;
 let db                   = null;
 let unsubscribeSnapshot  = null;
 let firebaseReady        = false;
-let memoSaveTimer        = null;
 let saveDebounceTimer    = null;
 let lastSavedSnapshot    = null; // 마지막 저장 상태 (변경 감지용)
 
@@ -161,14 +158,12 @@ const taskInput = document.getElementById('taskInput');
 function resetScheduleState() {
   state.pool     = [];
   state.schedule = {};
-  state.dayMemo  = {};
   state.grade    = DEFAULT_STATE.grade;
   state.classNum = DEFAULT_STATE.classNum;
 }
 function applyPersistedState(data = {}) {
   state.pool     = data.pool     || [];
   state.schedule = data.schedule || {};
-  state.dayMemo  = data.dayMemo  || {};
   state.grade    = data.grade    || DEFAULT_STATE.grade;
   state.classNum = data.classNum || DEFAULT_STATE.classNum;
 }
@@ -176,29 +171,23 @@ function readLocalState() {
   return {
     pool:     JSON.parse(localStorage.getItem(STORAGE_KEYS.pool)),
     schedule: JSON.parse(localStorage.getItem(STORAGE_KEYS.schedule)),
-    dayMemo:  JSON.parse(localStorage.getItem(STORAGE_KEYS.dayMemo)),
     grade:    localStorage.getItem(STORAGE_KEYS.grade),
     classNum: localStorage.getItem(STORAGE_KEYS.classNum)
   };
 }
 function hasLocalState(data) {
-  return !!(data.pool || data.schedule || data.dayMemo || data.grade || data.classNum);
+  return !!(data.pool || data.schedule || data.grade || data.classNum);
 }
 function persistLocalState() {
   localStorage.setItem(STORAGE_KEYS.pool,     JSON.stringify(state.pool));
   localStorage.setItem(STORAGE_KEYS.schedule, JSON.stringify(state.schedule));
-  localStorage.setItem(STORAGE_KEYS.dayMemo,  JSON.stringify(state.dayMemo));
   localStorage.setItem(STORAGE_KEYS.grade,    state.grade);
   localStorage.setItem(STORAGE_KEYS.classNum, state.classNum);
-}
-function queueMemoSave() {
-  if (memoSaveTimer) clearTimeout(memoSaveTimer);
-  memoSaveTimer = setTimeout(() => { memoSaveTimer = null; saveState(); }, 250);
 }
 
 // 현재 state를 문자열로 직렬화 (변경 감지용)
 function stateSnapshot() {
-  return JSON.stringify({ pool: state.pool, schedule: state.schedule, dayMemo: state.dayMemo, grade: state.grade, classNum: state.classNum });
+  return JSON.stringify({ pool: state.pool, schedule: state.schedule, grade: state.grade, classNum: state.classNum });
 }
 
 function loadState() {
@@ -228,7 +217,7 @@ function loadState() {
         lastSavedSnapshot = stateSnapshot();
         autoReturnExpiredTasks();
         const activeElement = document.activeElement;
-        if (!activeElement || !activeElement.classList.contains('day-card__memo')) renderApp();
+        renderApp();
         if (typeof updateSurveyVisibility === 'function') updateSurveyVisibility();
         setSyncStatus('');
       }, err => {
@@ -242,7 +231,6 @@ function loadState() {
 }
 
 function _doSave() {
-  if (memoSaveTimer) { clearTimeout(memoSaveTimer); memoSaveTimer = null; }
   persistLocalState(); // 항상 로컬에 즉시 저장
 
   if (!currentUser || !db) { setSyncStatus('💾 로컬 저장됨'); return; }
@@ -255,7 +243,6 @@ function _doSave() {
   db.collection('users').doc(currentUser.uid).set({
     pool:        state.pool,
     schedule:    state.schedule,
-    dayMemo:     state.dayMemo,
     grade:       state.grade,
     classNum:    state.classNum,
     lastUpdated: firebase.firestore.FieldValue.serverTimestamp()

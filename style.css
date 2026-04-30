@@ -798,29 +798,6 @@ body {
   box-shadow: var(--shadow-lg);
 }
 
-.day-card__memo-wrap {
-  width: 100%;
-}
-.day-card__memo {
-  width: 100%;
-  min-height: 56px;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font);
-  font-size: 0.85rem;
-  padding: 10px 12px;
-  resize: vertical;
-  outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-.day-card__memo::placeholder { color: var(--text-sub); }
-.day-card__memo:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(108,99,255,0.15);
-}
-
 .day-card__tasks {
   display: flex;
   flex-direction: column;
@@ -1142,6 +1119,48 @@ body {
   gap: 12px;
 }
 
+.history-search-wrap { padding: 0 0 4px; }
+.history-search {
+  width: 100%;
+  padding: 9px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.87rem;
+  font-family: inherit;
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
+  box-sizing: border-box;
+}
+.history-search:focus { border-color: var(--accent); }
+
+.history-body { display: flex; flex-direction: column; gap: 10px; }
+
+.history-month {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.history-month__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--surface);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+.history-month__header:hover { background: var(--surface-hover); }
+.history-month__title { font-size: 0.9rem; font-weight: 700; color: var(--accent); flex: 1; }
+.history-month__summary { font-size: 0.75rem; color: var(--text-sub); font-weight: 500; }
+.history-month__chevron { font-size: 0.65rem; color: var(--text-sub); transition: transform 0.2s; }
+.history-month.open .history-month__chevron { transform: rotate(180deg); }
+.history-month__body { display: none; flex-direction: column; border-top: 1.5px solid var(--border); }
+.history-month.open .history-month__body { display: flex; }
+.history-month__body .history-day { border: none; border-bottom: 1.5px solid var(--border); border-radius: 0; }
+.history-month__body .history-day:last-child { border-bottom: none; }
+
 .history-empty {
   text-align: center;
   color: var(--text-sub);
@@ -1393,12 +1412,6 @@ body {
     font-size: 0.7rem;
     padding: 4px 9px;
     border-radius: 6px;
-  }
-
-  .day-card__memo {
-    font-size: 0.82rem;
-    min-height: 44px;
-    padding: 8px 10px;
   }
 
   /* ── 일정 아이템 ── */
