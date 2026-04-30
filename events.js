@@ -338,7 +338,7 @@ document.addEventListener('touchend', e => {
 // 시험 D-day 표시
 // ──────────────────────────────────────────────
 function updateDday() {
-  const exam         = new Date('2026-04-20T00:00:00');
+  const exam         = new Date('2026-06-22T00:00:00');
   const now          = new Date();
   const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const diff         = Math.round((exam - todayMidnight) / (1000 * 60 * 60 * 24));
