@@ -173,7 +173,7 @@ poolEl.addEventListener('touchend', e => {
 }, { passive: false });
 
 // ──────────────────────────────────────────────
-// 이벤트 위임 – O 토글, 미루기, 메모
+// 이벤트 위임 – O 토글, 미루기
 // ──────────────────────────────────────────────
 dayGrid.addEventListener('click', e => {
   const btnO    = e.target.closest('.btn-o');
@@ -186,15 +186,6 @@ dayGrid.addEventListener('dblclick', e => {
   const item = e.target.closest('.sched-item');
   if (!item || e.target.closest('.sched-item__ox')) return;
   returnSchedItemToPool(item.dataset.dateKey, item.dataset.itemId, item.dataset.taskId, item.dataset.text);
-});
-
-dayGrid.addEventListener('input', e => {
-  if (!currentUser) return;
-  if (e.target.classList.contains('day-card__memo')) {
-    const key = e.target.dataset.date;
-    state.dayMemo[key] = e.target.value;
-    queueMemoSave();
-  }
 });
 
 // ──────────────────────────────────────────────
@@ -265,6 +256,7 @@ nextWeekBtn.addEventListener('click', () => { state.dayOffset++; renderWeek(); }
 // ──────────────────────────────────────────────
 function openHistory() {
   historyList.innerHTML = '';
+
   const allKeys = Object.keys(state.schedule)
     .filter(k => state.schedule[k]?.length > 0)
     .sort((a, b) => b.localeCompare(a));
@@ -275,42 +267,108 @@ function openHistory() {
     return;
   }
 
-  const fragment = document.createDocumentFragment();
-  allKeys.forEach((key, idx) => {
-    const items = state.schedule[key];
-    const d     = new Date(key);
-    const dow   = d.getDay();
-    const done  = items.filter(it => it.status === 'O').length;
-    const dayEl = document.createElement('div');
-    dayEl.className = 'history-day' + (idx === 0 ? ' open' : '');
-    let titleColor = '';
-    if (dow === 0) titleColor = 'style="color:#dc2626"';
-    if (dow === 6) titleColor = 'style="color:#2563eb"';
-    dayEl.innerHTML = `
-      <div class="history-day__header">
-        <span class="history-day__title" ${titleColor}>${formatHistoryDateLabel(d)}</span>
-        <span class="history-day__summary">${done}/${items.length} 완료</span>
-        <span class="history-day__chevron">▼</span>
-      </div>
-      <div class="history-day__tasks">
-        ${items.map(it => `
-          <div class="history-task status-${it.status||'none'}">
-            <span class="history-task__text">${escHtml(it.text)}</span>
-            <span class="history-badge ${it.status||'none'}">${
-              it.status === 'O' ? '✓ 완료' : it.status === 'X' ? '✕ 미완료' : '— 미기록'
-            }</span>
-          </div>`).join('')}
-      </div>`;
-    fragment.appendChild(dayEl);
+  const searchWrap = document.createElement('div');
+  searchWrap.className = 'history-search-wrap';
+  searchWrap.innerHTML = '<input type="text" id="historySearch" class="history-search" placeholder="🔍 할일 검색…" autocomplete="off">';
+  historyList.appendChild(searchWrap);
+
+  const listBody = document.createElement('div');
+  listBody.className = 'history-body';
+  historyList.appendChild(listBody);
+
+  function renderHistoryBody(query) {
+    listBody.innerHTML = '';
+    const q = (query || '').trim().toLowerCase();
+
+    const months = {};
+    allKeys.forEach(key => {
+      const mk = key.slice(0, 7);
+      (months[mk] = months[mk] || []).push(key);
+    });
+
+    const monthKeys = Object.keys(months).sort((a, b) => b.localeCompare(a));
+    const frag = document.createDocumentFragment();
+    let firstMonth = true;
+
+    monthKeys.forEach(mk => {
+      const days = q
+        ? months[mk].filter(k => state.schedule[k].some(it => it.text.toLowerCase().includes(q)))
+        : months[mk];
+      if (!days.length) return;
+
+      const [y, m] = mk.split('-');
+      const totalTasks = days.reduce((s, k) => s + state.schedule[k].length, 0);
+      const doneTasks  = days.reduce((s, k) => s + state.schedule[k].filter(it => it.status === 'O').length, 0);
+
+      const monthEl = document.createElement('div');
+      monthEl.className = 'history-month' + (firstMonth ? ' open' : '');
+      monthEl.innerHTML = `
+        <div class="history-month__header">
+          <span class="history-month__title">${y}년 ${parseInt(m)}월</span>
+          <span class="history-month__summary">${doneTasks}/${totalTasks} 완료</span>
+          <span class="history-month__chevron">▼</span>
+        </div>
+        <div class="history-month__body"></div>`;
+
+      const monthBody = monthEl.querySelector('.history-month__body');
+      days.forEach((key, idx) => {
+        const rawItems = state.schedule[key];
+        const items = q ? rawItems.filter(it => it.text.toLowerCase().includes(q)) : rawItems;
+        const d   = new Date(key);
+        const dow = d.getDay();
+        const done = items.filter(it => it.status === 'O').length;
+        const dayEl = document.createElement('div');
+        dayEl.className = 'history-day' + (firstMonth && idx === 0 ? ' open' : '');
+        let titleColor = '';
+        if (dow === 0) titleColor = 'style="color:#dc2626"';
+        if (dow === 6) titleColor = 'style="color:#2563eb"';
+        dayEl.innerHTML = `
+          <div class="history-day__header">
+            <span class="history-day__title" ${titleColor}>${formatHistoryDateLabel(d)}</span>
+            <span class="history-day__summary">${done}/${items.length} 완료</span>
+            <span class="history-day__chevron">▼</span>
+          </div>
+          <div class="history-day__tasks">
+            ${items.map(it => `
+              <div class="history-task status-${it.status||'none'}">
+                <span class="history-task__text">${escHtml(it.text)}</span>
+                <span class="history-badge ${it.status||'none'}">${
+                  it.status === 'O' ? '✓ 완료' : it.status === 'X' ? '✕ 미완료' : '— 미기록'
+                }</span>
+              </div>`).join('')}
+          </div>`;
+        monthBody.appendChild(dayEl);
+      });
+
+      frag.appendChild(monthEl);
+      firstMonth = false;
+    });
+
+    if (!frag.childNodes.length) {
+      const empty = document.createElement('p');
+      empty.className = 'history-empty';
+      empty.textContent = '검색 결과가 없어요.';
+      listBody.appendChild(empty);
+    } else {
+      listBody.appendChild(frag);
+    }
+  }
+
+  renderHistoryBody('');
+
+  searchWrap.querySelector('#historySearch').addEventListener('input', e => {
+    renderHistoryBody(e.target.value);
   });
-  historyList.appendChild(fragment);
+
   setModalOpen(historyModal, true);
+  setTimeout(() => searchWrap.querySelector('#historySearch')?.focus(), 150);
 }
 
 historyList.addEventListener('click', e => {
-  const header = e.target.closest('.history-day__header');
-  if (!header) return;
-  header.parentElement.classList.toggle('open');
+  const dayHeader = e.target.closest('.history-day__header');
+  if (dayHeader) { dayHeader.parentElement.classList.toggle('open'); return; }
+  const monthHeader = e.target.closest('.history-month__header');
+  if (monthHeader) { monthHeader.parentElement.classList.toggle('open'); }
 });
 
 bindModal(null, historyModal, historyCloseBtn);

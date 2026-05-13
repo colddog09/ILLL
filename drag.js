@@ -26,27 +26,62 @@ function endDrag() {
   trashZone.classList.remove('danger');
 }
 
-// ── 날짜 카드를 드롭존으로 ── (pool → day: 일정 추가)
+// ── 날짜 카드를 드롭존으로 ── (pool → day, day → day)
 function setupDayDropZone(card, key) {
   card.addEventListener('dragover', e => {
-    if (dragInfo?.type !== 'pool') return;
-    e.preventDefault();
-    card.classList.add('drag-over');
+    if (!dragInfo) return;
+    if (dragInfo.type === 'pool' || (dragInfo.type === 'day' && dragInfo.dateKey !== key)) {
+      e.preventDefault();
+      card.classList.add('drag-over');
+    }
   });
   card.addEventListener('dragleave', e => {
     if (!card.contains(e.relatedTarget)) card.classList.remove('drag-over');
   });
   card.addEventListener('drop', e => {
     card.classList.remove('drag-over');
-    if (dragInfo?.type !== 'pool') return;
+    if (!dragInfo) return;
     e.preventDefault();
 
-    const { taskId, text } = dragInfo;
-    if (!schedulePoolTask(key, taskId, text)) return;
-    saveState();
-    endDrag();
-    refreshPoolAndDay(key);
+    if (dragInfo.type === 'pool') {
+      const { taskId, text } = dragInfo;
+      if (!schedulePoolTask(key, taskId, text)) return;
+      saveState();
+      endDrag();
+      refreshPoolAndDay(key);
+    } else if (dragInfo.type === 'day' && dragInfo.dateKey !== key) {
+      moveSchedItemToDay(dragInfo.dateKey, dragInfo.itemId, key);
+      endDrag();
+    }
   });
+}
+
+// 스케줄 아이템을 다른 날짜로 이동
+function moveSchedItemToDay(fromKey, itemId, toKey) {
+  const fromArr = state.schedule[fromKey] || [];
+  const idx = fromArr.findIndex(it => it.id === itemId);
+  if (idx === -1) return;
+  const [moved] = fromArr.splice(idx, 1);
+  state.schedule[fromKey] = fromArr;
+  if (!state.schedule[toKey]) state.schedule[toKey] = [];
+  state.schedule[toKey].push(moved);
+  saveState();
+  renderDayTasks(fromKey);
+  renderDayTasks(toKey);
+}
+
+// 좌표에서 가장 가까운 날짜 카드의 key 반환
+function findNearestDayKey(x, y) {
+  let nearest = null;
+  let minDist = Infinity;
+  document.querySelectorAll('.day-card[data-date]').forEach(card => {
+    const r = card.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+    const dist = Math.hypot(x - cx, y - cy);
+    if (dist < minDist) { minDist = dist; nearest = card.dataset.date; }
+  });
+  return nearest;
 }
 
 // ──────────────────────────────────────────────
@@ -100,14 +135,23 @@ function onTouchReorderMove(e) {
   document.querySelectorAll('.sched-item.reorder-over').forEach(el => el.classList.remove('reorder-over'));
 
   const targetItem = below?.closest('.sched-item');
-  if (targetItem && targetItem !== touchReorder.el && targetItem.dataset.dateKey === touchReorder.key) {
+  const targetCard = below?.closest('.day-card[data-date]');
+
+  if (targetItem && targetItem !== touchReorder.el) {
     const tRect = targetItem.getBoundingClientRect();
     touchReorder.insertBefore = touch.clientY < (tRect.top + tRect.height / 2);
     targetItem.classList.add('reorder-over');
-    touchReorder.targetId = targetItem.dataset.itemId;
+    touchReorder.targetId  = targetItem.dataset.itemId;
+    touchReorder.targetKey = targetItem.dataset.dateKey;
+  } else if (targetCard) {
+    touchReorder.targetId  = null;
+    touchReorder.targetKey = targetCard.dataset.date;
   } else {
-    touchReorder.targetId = null;
+    touchReorder.targetId  = null;
+    touchReorder.targetKey = null;
   }
+  touchReorder.lastX = touch.clientX;
+  touchReorder.lastY = touch.clientY;
 }
 
 function onTouchReorderEnd() {
@@ -116,12 +160,19 @@ function onTouchReorderEnd() {
   document.removeEventListener('touchend',    onTouchReorderEnd);
   document.removeEventListener('touchcancel', onTouchReorderEnd);
 
-  const { el, key, itemId, clone, targetId, insertBefore } = touchReorder;
+  const { el, key, itemId, clone, targetId, targetKey, insertBefore, lastX, lastY } = touchReorder;
   clone.remove();
   el.style.opacity = '';
   document.querySelectorAll('.sched-item.reorder-over').forEach(el => el.classList.remove('reorder-over'));
+  touchReorder = null;
 
-  if (targetId && targetId !== itemId) {
+  const resolvedKey = targetKey || findNearestDayKey(lastX ?? 0, lastY ?? 0);
+
+  if (resolvedKey && resolvedKey !== key) {
+    // 다른 날짜로 이동 (cross-day 또는 snap-to-nearest)
+    moveSchedItemToDay(key, itemId, resolvedKey);
+  } else if (targetId && targetId !== itemId) {
+    // 같은 날짜 내 순서 변경
     const arr = state.schedule[key] || [];
     const fromIdx = arr.findIndex(it => it.id === itemId);
     if (fromIdx !== -1) {
@@ -137,7 +188,6 @@ function onTouchReorderEnd() {
       }
     }
   }
-  touchReorder = null;
 }
 
 // ──────────────────────────────────────────────
@@ -195,6 +245,13 @@ function initDrag() {
   dayGrid.addEventListener('dragend', e => {
     const item = e.target.closest('.sched-item');
     if (item) item.classList.remove('dragging');
+    // drop이 유효한 드롭존에서 처리되지 않은 경우 → 가장 가까운 날짜로 스냅
+    if (dragInfo?.type === 'day') {
+      const nearestKey = findNearestDayKey(e.clientX, e.clientY);
+      if (nearestKey && nearestKey !== dragInfo.dateKey) {
+        moveSchedItemToDay(dragInfo.dateKey, dragInfo.itemId, nearestKey);
+      }
+    }
     endDrag();
   });
 
