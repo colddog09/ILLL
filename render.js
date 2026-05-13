@@ -108,14 +108,38 @@ function returnSchedItemToPool(key, itemId, taskId, text) {
 }
 
 
+const POOL_THRESHOLD = 5;
+let poolExpanded = false;
+
 function renderPool() {
   poolEl.innerHTML = '';
   if (state.pool.length === 0) {
+    poolExpanded = false;
     renderEmptyPool();
     return;
   }
+
+  const showAll = poolExpanded || state.pool.length <= POOL_THRESHOLD;
+  const visible  = showAll ? state.pool : state.pool.slice(0, POOL_THRESHOLD);
+  const hiddenCount = state.pool.length - POOL_THRESHOLD;
+
   const fragment = document.createDocumentFragment();
-  state.pool.forEach(task => fragment.appendChild(createPoolCard(task)));
+  visible.forEach(task => fragment.appendChild(createPoolCard(task)));
+
+  if (!showAll && hiddenCount > 0) {
+    const btn = document.createElement('button');
+    btn.className = 'pool-expand-btn';
+    btn.textContent = `+ ${hiddenCount}개 더 보기`;
+    btn.addEventListener('click', () => { poolExpanded = true; renderPool(); });
+    fragment.appendChild(btn);
+  } else if (poolExpanded && state.pool.length > POOL_THRESHOLD) {
+    const btn = document.createElement('button');
+    btn.className = 'pool-expand-btn pool-expand-btn--collapse';
+    btn.textContent = '접기';
+    btn.addEventListener('click', () => { poolExpanded = false; renderPool(); });
+    fragment.appendChild(btn);
+  }
+
   poolEl.appendChild(fragment);
 }
 

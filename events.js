@@ -267,6 +267,23 @@ function openHistory() {
     return;
   }
 
+  // 전체 통계
+  const totalAll = allKeys.reduce((s, k) => s + state.schedule[k].length, 0);
+  const doneAll  = allKeys.reduce((s, k) => s + state.schedule[k].filter(it => it.status === 'O').length, 0);
+  const pctAll   = totalAll ? Math.round(doneAll / totalAll * 100) : 0;
+
+  const statsEl = document.createElement('div');
+  statsEl.className = 'history-stats';
+  statsEl.innerHTML = `
+    <div class="history-stats__row">
+      <span class="history-stats__label">📅 ${allKeys.length}일 기록</span>
+      <span class="history-stats__label">✅ ${doneAll}/${totalAll} 완료 (${pctAll}%)</span>
+    </div>
+    <div class="history-stats__bar-wrap">
+      <div class="history-stats__bar" style="width:${pctAll}%"></div>
+    </div>`;
+  historyList.appendChild(statsEl);
+
   const searchWrap = document.createElement('div');
   searchWrap.className = 'history-search-wrap';
   searchWrap.innerHTML = '<input type="text" id="historySearch" class="history-search" placeholder="🔍 할일 검색…" autocomplete="off">';
@@ -299,14 +316,21 @@ function openHistory() {
       const [y, m] = mk.split('-');
       const totalTasks = days.reduce((s, k) => s + state.schedule[k].length, 0);
       const doneTasks  = days.reduce((s, k) => s + state.schedule[k].filter(it => it.status === 'O').length, 0);
+      const pct = totalTasks ? Math.round(doneTasks / totalTasks * 100) : 0;
+      const pctColor = pct >= 80 ? 'var(--success)' : pct >= 50 ? '#f59e0b' : 'var(--danger)';
 
       const monthEl = document.createElement('div');
       monthEl.className = 'history-month' + (firstMonth ? ' open' : '');
       monthEl.innerHTML = `
         <div class="history-month__header">
-          <span class="history-month__title">${y}년 ${parseInt(m)}월</span>
-          <span class="history-month__summary">${doneTasks}/${totalTasks} 완료</span>
-          <span class="history-month__chevron">▼</span>
+          <div class="history-month__header-top">
+            <span class="history-month__title">${y}년 ${parseInt(m)}월</span>
+            <span class="history-month__summary">${doneTasks}/${totalTasks} · ${pct}%</span>
+            <span class="history-month__chevron">▼</span>
+          </div>
+          <div class="history-month__pbar-wrap">
+            <div class="history-month__pbar" style="width:${pct}%;background:${pctColor}"></div>
+          </div>
         </div>
         <div class="history-month__body"></div>`;
 
@@ -317,6 +341,7 @@ function openHistory() {
         const d   = new Date(key);
         const dow = d.getDay();
         const done = items.filter(it => it.status === 'O').length;
+        const dayPct = items.length ? Math.round(done / items.length * 100) : 0;
         const dayEl = document.createElement('div');
         dayEl.className = 'history-day' + (firstMonth && idx === 0 ? ' open' : '');
         let titleColor = '';
@@ -325,16 +350,15 @@ function openHistory() {
         dayEl.innerHTML = `
           <div class="history-day__header">
             <span class="history-day__title" ${titleColor}>${formatHistoryDateLabel(d)}</span>
-            <span class="history-day__summary">${done}/${items.length} 완료</span>
+            <span class="history-day__summary">${done}/${items.length}</span>
+            <span class="history-day__pct" style="color:${dayPct===100?'var(--success)':dayPct>=50?'#f59e0b':'var(--text-sub)'}">${dayPct}%</span>
             <span class="history-day__chevron">▼</span>
           </div>
           <div class="history-day__tasks">
             ${items.map(it => `
               <div class="history-task status-${it.status||'none'}">
+                <span class="history-task__icon">${it.status==='O'?'✓':it.status==='X'?'✕':'·'}</span>
                 <span class="history-task__text">${escHtml(it.text)}</span>
-                <span class="history-badge ${it.status||'none'}">${
-                  it.status === 'O' ? '✓ 완료' : it.status === 'X' ? '✕ 미완료' : '— 미기록'
-                }</span>
               </div>`).join('')}
           </div>`;
         monthBody.appendChild(dayEl);
@@ -396,7 +420,7 @@ document.addEventListener('touchend', e => {
 // 시험 D-day 표시
 // ──────────────────────────────────────────────
 function updateDday() {
-  const exam         = new Date('2026-04-20T00:00:00');
+  const exam         = new Date('2026-06-22T00:00:00');
   const now          = new Date();
   const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const diff         = Math.round((exam - todayMidnight) / (1000 * 60 * 60 * 24));
