@@ -188,6 +188,9 @@ function renderWeek() {
   dayGrid.appendChild(card);
   renderDayTasks(key);
   setupDayDropZone(card, key);
+
+  // 캘린더 이벤트 비동기 가져오기
+  if (typeof gcalImportEvents === 'function') gcalImportCurrentDate();
 }
 
 function renderDayTasks(key) {
@@ -331,6 +334,26 @@ function renderDayTasks(key) {
   });
 
   container.appendChild(fragment);
+
+  // ── 캘린더에서 가져온 이벤트 표시 ──
+  const calEvs = (typeof gcalEvents !== 'undefined' ? gcalEvents[key] : null) || [];
+  if (calEvs.length > 0) {
+    const sep = document.createElement('div');
+    sep.className = 'gcal-section-sep';
+    sep.textContent = '📅 구글 캘린더';
+    container.appendChild(sep);
+
+    calEvs.forEach(ev => {
+      const el = document.createElement('div');
+      el.className = 'sched-item sched-item--gcal' + (ev.done ? ' done' : '');
+      el.innerHTML = `
+        <span class="sched-item__text">${escHtml(ev.summary)}</span>
+        ${ev.timeLabel ? `<span class="sched-item__gcal-time">${escHtml(ev.timeLabel)}</span>` : ''}
+        <span class="sched-item__gcal-badge">캘린더</span>`;
+      container.appendChild(el);
+    });
+  }
+
   updateProgress(key);
 }
 

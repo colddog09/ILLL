@@ -34,7 +34,8 @@
               <span id="userName" class="user-name"></span>
               <button id="helpBtn" class="icon-btn" aria-label="도움말" title="사용법">ℹ️</button>
               <button id="settingsBtn" class="icon-btn" aria-label="내 정보 수정" title="내 정보 수정">⚙️</button>
-              <button id="logoutBtn" class="auth-btn auth-btn--outline" aria-label="로그아웃">로그아웃</button>
+              <button id="gcalReconnectBtn" class="gcal-reconnect-btn" title="캘린더 재연결" hidden>🗓️ 재연결</button>
+        <button id="logoutBtn" class="auth-btn auth-btn--outline" aria-label="로그아웃">로그아웃</button>
             </div>
           </div>
         </div>
@@ -147,6 +148,24 @@
         <div class="settings-actions">
           <button id="settingsSaveBtn" class="auth-btn settings-save-btn">변경사항 저장</button>
         </div>
+
+        <section class="settings-card">
+          <div class="settings-card__eyebrow">GOOGLE CALENDAR</div>
+          <h3 class="settings-card__title">캘린더 연동</h3>
+          <p class="settings-card__desc">일정을 구글 캘린더에 동기화합니다.</p>
+
+          <div class="gcal-status-row">
+            <span id="gcalStatusDot" class="gcal-dot gcal-dot--off"></span>
+            <span id="gcalStatusText" class="gcal-status-text">연결되지 않음</span>
+          </div>
+
+          <div class="gcal-btn-row">
+            <button id="gcalConnectBtn" class="auth-btn gcal-connect-btn">🗓️ 캘린더 연결</button>
+            <button id="gcalSyncBtn" class="auth-btn gcal-sync-btn" hidden>☁️ 전체 동기화</button>
+            <button id="gcalDisconnectBtn" class="auth-btn auth-btn--outline gcal-disconnect-btn" hidden>연결 해제</button>
+          </div>
+          <p id="gcalSyncResult" class="gcal-sync-result" hidden></p>
+        </section>
       </div>
     </div>
   </div>
@@ -228,6 +247,7 @@
   <script src="render.js?v=1"></script>
   <script src="drag.js?v=1"></script>
   <script src="deadline.js?v=1"></script>
+  <script src="gcal.js?v=1"></script>
   <script src="events.js?v=1"></script>
   <script>
     if ('serviceWorker' in navigator) {

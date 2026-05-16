@@ -121,6 +121,7 @@ bindModal(settingsBtn, settingsModal, settingsCloseBtn, () => {
   if (gradeSelect) gradeSelect.value = state.grade;
   if (classSelect) classSelect.value = state.classNum;
   updateSettingsPreview();
+  if (typeof updateGcalUI === 'function') updateGcalUI();
 });
 
 if (settingsSaveBtn) {
@@ -199,6 +200,14 @@ function toggleStatus(date, id) {
   item.status = item.status === 'O' ? null : 'O';
   saveState();
   renderDayTasks(date);
+
+  // 캘린더 이벤트가 연결된 경우 완료 상태 동기화
+  if (item.gcalEventId && typeof gcalTokenValid === 'function' && gcalTokenValid()) {
+    const fn = item.status === 'O' ? gcalMarkEventDone : gcalMarkEventUndone;
+    fn(item.gcalEventId, item.text).catch(err => {
+      console.warn('캘린더 완료 동기화 실패:', err.message);
+    });
+  }
 }
 
 function deferTasks(targetDateKey) {
@@ -409,6 +418,96 @@ if (infoHistoryBtn) infoHistoryBtn.addEventListener('click', () => {
   setModalOpen(infoModal, false);
   openHistory();
 });
+
+// ──────────────────────────────────────────────
+// 구글 캘린더 연동
+// ──────────────────────────────────────────────
+const gcalReconnectBtn  = document.getElementById('gcalReconnectBtn');
+const gcalConnectBtn    = document.getElementById('gcalConnectBtn');
+const gcalSyncBtn       = document.getElementById('gcalSyncBtn');
+const gcalDisconnectBtn = document.getElementById('gcalDisconnectBtn');
+const gcalSyncResult    = document.getElementById('gcalSyncResult');
+
+function showGcalResult(msg, isError = false) {
+  if (!gcalSyncResult) return;
+  gcalSyncResult.textContent = msg;
+  gcalSyncResult.className = 'gcal-sync-result' + (isError ? ' gcal-sync-result--error' : '');
+  gcalSyncResult.hidden = false;
+  setTimeout(() => { gcalSyncResult.hidden = true; }, 4000);
+}
+
+if (gcalConnectBtn) {
+  gcalConnectBtn.addEventListener('click', async () => {
+    gcalConnectBtn.disabled = true;
+    gcalConnectBtn.textContent = '연결 중...';
+    try {
+      await gcalConnect();
+      updateGcalUI();
+      showGcalResult('✅ 구글 캘린더가 연결되었습니다.');
+      // 연결 즉시 현재 날짜 이벤트 가져오기 + 폴링 시작
+      gcalImportCurrentDate();
+      gcalStartPolling();
+    } catch (err) {
+      console.error('gcal connect error:', err);
+      showGcalResult('❌ 연결 실패: ' + (err.message || '다시 시도해주세요.'), true);
+      gcalConnectBtn.disabled = false;
+      gcalConnectBtn.textContent = '🗓️ 캘린더 연결';
+    }
+  });
+}
+
+if (gcalSyncBtn) {
+  gcalSyncBtn.addEventListener('click', async () => {
+    gcalSyncBtn.disabled = true;
+    gcalSyncBtn.textContent = '동기화 중...';
+    try {
+      const { created, failed } = await gcalSyncAll();
+      const msg = created > 0
+        ? `✅ ${created}개 일정이 캘린더에 추가되었습니다.${failed > 0 ? ` (${failed}개 실패)` : ''}`
+        : failed > 0 ? `❌ 동기화 실패 (${failed}개)` : '이미 모든 일정이 동기화되어 있습니다.';
+      showGcalResult(msg, failed > 0 && created === 0);
+    } catch (err) {
+      console.error('gcal sync error:', err);
+      showGcalResult('❌ ' + (err.message || '동기화 중 오류가 발생했습니다.'), true);
+      updateGcalUI();
+    } finally {
+      gcalSyncBtn.disabled = false;
+      gcalSyncBtn.textContent = '☁️ 전체 동기화';
+    }
+  });
+}
+
+// 헤더 재연결 버튼 (silent 복원 실패 시 표시)
+if (gcalReconnectBtn) {
+  gcalReconnectBtn.addEventListener('click', async () => {
+    gcalReconnectBtn.disabled = true;
+    gcalReconnectBtn.textContent = '연결 중...';
+    try {
+      await gcalConnect();
+      gcalReconnectBtn.hidden = true;
+      gcalReconnectBtn.disabled = false;
+      gcalReconnectBtn.textContent = '🗓️ 재연결';
+      updateGcalUI();
+      gcalImportCurrentDate();
+      gcalStartPolling();
+    } catch (err) {
+      gcalReconnectBtn.disabled = false;
+      gcalReconnectBtn.textContent = '🗓️ 재연결';
+      alert('재연결 실패: ' + (err.message || '다시 시도해주세요.'));
+    }
+  });
+}
+
+if (gcalDisconnectBtn) {
+  gcalDisconnectBtn.addEventListener('click', () => {
+    gcalClearToken();
+    gcalStopPolling();
+    gcalEvents = {};
+    updateGcalUI();
+    renderWeek(); // 캘린더 이벤트 화면에서 제거
+    showGcalResult('캘린더 연결이 해제되었습니다.');
+  });
+}
 
 // ── 빈 곳 탭 → 선택 해제 ──
 document.addEventListener('touchend', e => {
