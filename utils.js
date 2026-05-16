@@ -59,7 +59,7 @@ function escHtml(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function renderApp() { renderPool(); renderWeek(); }
+function renderApp() { renderPool(); renderWeek(); renderGcalSidePanel(); }
 
 function requireLogin(message = '로그인 후 이용 가능합니다.') {
   if (currentUser) return true;

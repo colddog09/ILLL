@@ -1179,6 +1179,13 @@ body {
   padding: 0;
 }
 
+.gcal-side-empty {
+  color: var(--text-sub);
+  font-size: 0.78rem;
+  padding: 8px 4px;
+  text-align: center;
+}
+
 .category-sidebar { display: none; }
 
 .day-grid {

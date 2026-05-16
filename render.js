@@ -28,6 +28,8 @@ function scheduleGcalEventToDay(ev, gcalDateKey, targetKey) {
     status: null,
     gcalEventId: ev.id,
     fromGcal: true,
+    gcalDate: gcalDateKey,
+    timeLabel: ev.timeLabel || null,
   });
   // 사이드 패널에서 제거
   if (gcalDateKey && gcalEvents[gcalDateKey]) {
@@ -133,6 +135,20 @@ function handlePoolCardActivate(card) {
 function returnSchedItemToPool(key, itemId, taskId, text) {
   const item = (state.schedule[key] || []).find(it => it.id === itemId);
   removeScheduleItem(key, itemId);
+
+  if (item?.fromGcal) {
+    // gcal 항목은 사이드 패널로 복원
+    const gcalDate = item.gcalDate || key;
+    if (!gcalEvents[gcalDate]) gcalEvents[gcalDate] = [];
+    if (!gcalEvents[gcalDate].find(e => e.id === item.gcalEventId)) {
+      gcalEvents[gcalDate].push({ id: item.gcalEventId, summary: item.text, timeLabel: item.timeLabel || null, done: false });
+    }
+    saveState();
+    renderDayTasks(key);
+    renderGcalSidePanel();
+    return;
+  }
+
   restoreTaskToPool(taskId, text, item?.deadline, item?.gcalEventId, item?.fromGcal);
   saveState();
   refreshPoolAndDay(key);
@@ -186,11 +202,6 @@ function renderGcalSidePanel() {
     .filter(dk => dk >= today && (gcalEvents[dk] || []).length > 0)
     .sort();
 
-  if (allDates.length === 0) {
-    panel.hidden = true;
-    return;
-  }
-
   panel.hidden = false;
   panel.innerHTML = '';
 
@@ -198,6 +209,14 @@ function renderGcalSidePanel() {
   header.className = 'gcal-side-header';
   header.textContent = '📅 캘린더';
   panel.appendChild(header);
+
+  if (allDates.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'gcal-side-empty';
+    empty.textContent = '예정된 일정이 없어요';
+    panel.appendChild(empty);
+    return;
+  }
 
   allDates.forEach(dk => {
     const [y, m, d] = dk.split('-').map(Number);
@@ -223,6 +242,15 @@ function renderGcalSidePanel() {
         ${timeLabel}
         <span class="gcal-side-event__text">${escHtml(ev.summary)}</span>
         <button class="btn-gcal-done btn-o${ev.done ? ' active' : ''}" data-gcal-id="${ev.id}" data-date="${dk}" title="완료">O</button>`;
+
+      // 데스크톱 더블클릭 → 현재 날짜에 추가
+      if (currentUser) {
+        el.addEventListener('dblclick', e => {
+          if (e.target.closest('.btn-gcal-done')) return;
+          const key = dateKey(currentDay());
+          scheduleGcalEventToDay(ev, dk, key);
+        });
+      }
 
       // 데스크톱 드래그
       if (currentUser) {
