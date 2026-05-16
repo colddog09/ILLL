@@ -1201,11 +1201,51 @@ body {
   box-shadow: var(--shadow-lg);
 }
 
+/* 날짜 카드 본문 — 2열 레이아웃 */
+.day-card__body {
+  display: flex;
+  flex: 1;
+  gap: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.day-card__gcal-col {
+  flex: 0 0 25%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 14px;
+  margin-right: 0;
+  border-right: 1.5px solid rgba(66,133,244,0.18);
+  overflow-y: auto;
+}
+
+.day-gcal-col__header {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #4285f4;
+  letter-spacing: 0.05em;
+  padding-bottom: 4px;
+  flex-shrink: 0;
+}
+
+.day-gcal-col__empty {
+  font-size: 0.8rem;
+  color: var(--text-sub);
+  text-align: center;
+  padding: 20px 8px;
+  opacity: 0.6;
+}
+
 .day-card__tasks {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 7px;
-  flex: 1;
+  flex: 0 0 50%;
+  min-width: 0;
+  padding: 0 14px;
 }
 
 /* Drop hint (empty state) */
@@ -1848,6 +1888,24 @@ body {
     padding: 14px 12px;
     border-radius: 14px;
     gap: 8px;
+  }
+
+  .day-card__body {
+    flex-direction: column;
+  }
+
+  .day-card__gcal-col {
+    flex: 0 0 100%;
+    padding-right: 0;
+    border-right: none;
+    border-bottom: 1.5px solid rgba(66,133,244,0.18);
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+  }
+
+  .day-card__tasks {
+    flex: 0 0 100%;
+    padding: 0;
   }
 
   .day-card__header {

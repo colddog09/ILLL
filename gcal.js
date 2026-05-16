@@ -320,7 +320,7 @@ async function gcalImportEvents(dk) {
     }
 
     gcalEvents[dk] = evs;
-    if (typeof renderDayTasks === 'function') renderDayTasks(dk);
+    if (typeof renderDayGcal === 'function') renderDayGcal(dk);
   } catch (err) {
     if (err.message?.includes('재연결') || err.message?.includes('만료')) {
       updateGcalUI();
@@ -446,8 +446,8 @@ async function gcalFetchRangeEvents(startKey, endKey) {
     Object.assign(gcalEvents, byDate);
 
     // 현재 보고 있는 날짜 카드 업데이트
-    if (typeof renderDayTasks === 'function' && typeof currentDay === 'function') {
-      renderDayTasks(dateKey(currentDay()));
+    if (typeof renderDayGcal === 'function' && typeof currentDay === 'function') {
+      renderDayGcal(dateKey(currentDay()));
     }
 
     return byDate;
