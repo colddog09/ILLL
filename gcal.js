@@ -304,32 +304,23 @@ function _syncedGcalIds() {
 async function gcalImportEvents(dk) {
   if (!gcalTokenValid()) return;
   try {
-    const resp    = await _gcalFetchEventsForDate(dk);
-    const knownIds = _allGcalIds();
-    let poolChanged = false;
+    const resp = await _gcalFetchEventsForDate(dk);
+    const evs  = [];
 
     for (const ev of (resp.items || [])) {
-      if (ev.status === 'cancelled') {
-        // 캘린더에서 삭제된 이벤트 → 풀에서 제거
-        const idx = (state.pool || []).findIndex(t => t.gcalEventId === ev.id);
-        if (idx !== -1) { state.pool.splice(idx, 1); poolChanged = true; }
-        continue;
-      }
-
-      // 이미 풀/일정에 있으면 스킵
-      if (knownIds.has(ev.id)) continue;
-
-      // 새 이벤트 → 풀에 추가 (📅 표시)
+      if (ev.status === 'cancelled') continue;
       const done = /^✅/.test(ev.summary || '');
-      const text = (ev.summary || '(제목 없음)').replace(/^✅\s*/, '');
-      state.pool.push({ id: uid(), text, gcalEventId: ev.id, fromGcal: true });
-      poolChanged = true;
+      const allDay = !!ev.start?.date && !ev.start?.dateTime;
+      let timeLabel = '';
+      if (!allDay && ev.start?.dateTime) {
+        const t = new Date(ev.start.dateTime);
+        timeLabel = `${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}`;
+      }
+      evs.push({ id: ev.id, summary: (ev.summary || '(제목 없음)').replace(/^✅\s*/, ''), done, allDay, timeLabel });
     }
 
-    if (poolChanged) {
-      saveState();
-      if (typeof renderPool === 'function') renderPool();
-    }
+    gcalEvents[dk] = evs;
+    if (typeof renderDayTasks === 'function') renderDayTasks(dk);
   } catch (err) {
     if (err.message?.includes('재연결') || err.message?.includes('만료')) {
       updateGcalUI();
@@ -454,23 +445,9 @@ async function gcalFetchRangeEvents(startKey, endKey) {
 
     Object.assign(gcalEvents, byDate);
 
-    // pool 업데이트: 새 이벤트 추가, 취소된 이벤트 제거
-    const knownIds = _allGcalIds();
-    let poolChanged = false;
-    for (const ev of (resp.items || [])) {
-      if (ev.status === 'cancelled') {
-        const idx = (state.pool || []).findIndex(t => t.gcalEventId === ev.id);
-        if (idx !== -1) { state.pool.splice(idx, 1); poolChanged = true; }
-        continue;
-      }
-      if (knownIds.has(ev.id)) continue;
-      const text = (ev.summary || '(제목 없음)').replace(/^✅\s*/, '');
-      state.pool.push({ id: uid(), text, gcalEventId: ev.id, fromGcal: true });
-      poolChanged = true;
-    }
-    if (poolChanged) {
-      saveState();
-      if (typeof renderPool === 'function') renderPool();
+    // 현재 보고 있는 날짜 카드 업데이트
+    if (typeof renderDayTasks === 'function' && typeof currentDay === 'function') {
+      renderDayTasks(dateKey(currentDay()));
     }
 
     return byDate;

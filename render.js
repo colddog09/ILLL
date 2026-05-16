@@ -125,53 +125,33 @@ let poolExpanded = false;
 function renderPool() {
   poolEl.innerHTML = '';
 
-  const regularTasks = (state.pool || []).filter(t => !t.fromGcal);
-  const gcalTasks    = (state.pool || []).filter(t =>  t.fromGcal);
+  const tasks = (state.pool || []).filter(t => !t.fromGcal);
 
-  if (regularTasks.length === 0 && gcalTasks.length === 0) {
+  if (tasks.length === 0) {
     poolExpanded = false;
     renderEmptyPool();
     return;
   }
 
+  const showAll     = poolExpanded || tasks.length <= POOL_THRESHOLD;
+  const visible     = showAll ? tasks : tasks.slice(0, POOL_THRESHOLD);
+  const hiddenCount = tasks.length - POOL_THRESHOLD;
+
   const fragment = document.createDocumentFragment();
+  visible.forEach(task => fragment.appendChild(createPoolCard(task)));
 
-  // ── 일반 할일 ──
-  if (regularTasks.length === 0) {
-    const empty = document.createElement('span');
-    empty.className = 'pool-empty-hint';
-    empty.textContent = '할일을 추가해보세요!';
-    fragment.appendChild(empty);
-  } else {
-    const showAll     = poolExpanded || regularTasks.length <= POOL_THRESHOLD;
-    const visible     = showAll ? regularTasks : regularTasks.slice(0, POOL_THRESHOLD);
-    const hiddenCount = regularTasks.length - POOL_THRESHOLD;
-
-    visible.forEach(task => fragment.appendChild(createPoolCard(task)));
-
-    if (!showAll && hiddenCount > 0) {
-      const btn = document.createElement('button');
-      btn.className = 'pool-expand-btn';
-      btn.textContent = `+ ${hiddenCount}개 더 보기`;
-      btn.addEventListener('click', () => { poolExpanded = true; renderPool(); });
-      fragment.appendChild(btn);
-    } else if (poolExpanded && regularTasks.length > POOL_THRESHOLD) {
-      const btn = document.createElement('button');
-      btn.className = 'pool-expand-btn pool-expand-btn--collapse';
-      btn.textContent = '접기';
-      btn.addEventListener('click', () => { poolExpanded = false; renderPool(); });
-      fragment.appendChild(btn);
-    }
-  }
-
-  // ── 캘린더 일정 구분선 + 목록 ──
-  if (gcalTasks.length > 0) {
-    const sep = document.createElement('div');
-    sep.className = 'pool-gcal-sep';
-    sep.innerHTML = '<span>📅 캘린더</span>';
-    fragment.appendChild(sep);
-
-    gcalTasks.forEach(task => fragment.appendChild(createPoolCard(task)));
+  if (!showAll && hiddenCount > 0) {
+    const btn = document.createElement('button');
+    btn.className = 'pool-expand-btn';
+    btn.textContent = `+ ${hiddenCount}개 더 보기`;
+    btn.addEventListener('click', () => { poolExpanded = true; renderPool(); });
+    fragment.appendChild(btn);
+  } else if (poolExpanded && tasks.length > POOL_THRESHOLD) {
+    const btn = document.createElement('button');
+    btn.className = 'pool-expand-btn pool-expand-btn--collapse';
+    btn.textContent = '접기';
+    btn.addEventListener('click', () => { poolExpanded = false; renderPool(); });
+    fragment.appendChild(btn);
   }
 
   poolEl.appendChild(fragment);
@@ -229,9 +209,10 @@ function renderDayTasks(key) {
   const container = document.getElementById(`tasks_${key}`);
   if (!container) return;
   container.innerHTML = '';
-  const items = state.schedule[key] || [];
+  const items      = state.schedule[key] || [];
+  const gcalItems  = (typeof gcalEvents !== 'undefined') ? (gcalEvents[key] || []) : [];
 
-  if (items.length === 0) {
+  if (items.length === 0 && gcalItems.length === 0) {
     const isMobile = window.matchMedia('(max-width:600px)').matches;
     container.innerHTML = `<div class="drop-hint">${isMobile ? '📌 할일을 두 번 탭해서 추가' : '📌 여기에 할일을 드래그해서 추가'}</div>`;
     updateProgress(key);
@@ -239,6 +220,14 @@ function renderDayTasks(key) {
   }
 
   const fragment = document.createDocumentFragment();
+
+  if (items.length === 0 && gcalItems.length > 0) {
+    const isMobile = window.matchMedia('(max-width:600px)').matches;
+    const hint = document.createElement('div');
+    hint.className = 'drop-hint';
+    hint.textContent = isMobile ? '📌 할일을 두 번 탭해서 추가' : '📌 여기에 할일을 드래그해서 추가';
+    fragment.appendChild(hint);
+  }
 
   items.forEach(item => {
     const el = document.createElement('div');
@@ -367,9 +356,31 @@ function renderDayTasks(key) {
     }
   });
 
+  // ── 구글 캘린더 일정 섹션 ──
+  if (gcalItems.length > 0) {
+    const sep = document.createElement('div');
+    sep.className = 'day-gcal-sep';
+    sep.innerHTML = '<span>📅 캘린더</span>';
+    fragment.appendChild(sep);
+
+    gcalItems.forEach(ev => {
+      const el = document.createElement('div');
+      el.className = 'sched-item sched-item--gcal' + (ev.done ? ' done' : '');
+      const timeLabel = ev.timeLabel
+        ? `<span class="sched-item__gcal-time">${ev.timeLabel}</span>`
+        : '';
+      el.innerHTML = `
+        <span class="sched-item__gcal-badge">📅</span>
+        <span class="sched-item__text">${escHtml(ev.summary)}</span>
+        ${timeLabel}
+        <div class="sched-item__ox">
+          <button class="btn-gcal-done btn-o${ev.done ? ' active' : ''}" data-gcal-id="${ev.id}" data-date="${key}" title="완료(O)">O</button>
+        </div>`;
+      fragment.appendChild(el);
+    });
+  }
+
   container.appendChild(fragment);
-
-
   updateProgress(key);
 }
 

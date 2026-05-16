@@ -877,6 +877,28 @@ body {
   line-height: 1;
 }
 
+/* 날짜 카드 내 캘린더 구분선 */
+.day-gcal-sep {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0 4px;
+}
+.day-gcal-sep::before,
+.day-gcal-sep::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(66,133,244,0.25);
+}
+.day-gcal-sep span {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #4285f4;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
 .sched-item__gcal-time {
   font-size: 0.75rem;
   color: #4285f4;
