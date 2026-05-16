@@ -29,8 +29,13 @@ function scheduleGcalEventToDay(ev, gcalDateKey, targetKey) {
     gcalEventId: ev.id,
     fromGcal: true,
   });
+  // 사이드 패널에서 제거
+  if (gcalDateKey && gcalEvents[gcalDateKey]) {
+    gcalEvents[gcalDateKey] = gcalEvents[gcalDateKey].filter(e => e.id !== ev.id);
+  }
   saveState();
   renderDayTasks(targetKey);
+  renderGcalSidePanel();
   return true;
 }
 
