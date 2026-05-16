@@ -99,13 +99,8 @@ function autoReturnExpiredTasks() {
     if (pending.length === 0) return;
 
     pending.forEach(it => {
-      if (it.fromGcal && it.gcalEventId) {
-        // gcal 항목은 원래 날짜(gcalDate)의 사이드 패널로 복원
-        const gcalDate = it.gcalDate || key;
-        if (!gcalEvents[gcalDate]) gcalEvents[gcalDate] = [];
-        if (!gcalEvents[gcalDate].find(e => e.id === it.gcalEventId)) {
-          gcalEvents[gcalDate].push({ id: it.gcalEventId, summary: it.text, timeLabel: it.timeLabel || null, done: false });
-        }
+      if (it.fromGcal) {
+        // 날짜 지난 gcal 항목은 그냥 제거
       } else {
         const restoredTaskId = it.taskId || it.id;
         if (!state.pool.find(t => t.id === restoredTaskId)) {

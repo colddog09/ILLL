@@ -137,11 +137,13 @@ function returnSchedItemToPool(key, itemId, taskId, text) {
   removeScheduleItem(key, itemId);
 
   if (item?.fromGcal) {
-    // gcal 항목은 사이드 패널로 복원
+    // 날짜 지난 gcal 항목은 그냥 제거, 오늘 이후만 사이드 패널로 복원
     const gcalDate = item.gcalDate || key;
-    if (!gcalEvents[gcalDate]) gcalEvents[gcalDate] = [];
-    if (!gcalEvents[gcalDate].find(e => e.id === item.gcalEventId)) {
-      gcalEvents[gcalDate].push({ id: item.gcalEventId, summary: item.text, timeLabel: item.timeLabel || null, done: false });
+    if (gcalDate >= todayKey()) {
+      if (!gcalEvents[gcalDate]) gcalEvents[gcalDate] = [];
+      if (!gcalEvents[gcalDate].find(e => e.id === item.gcalEventId)) {
+        gcalEvents[gcalDate].push({ id: item.gcalEventId, summary: item.text, timeLabel: item.timeLabel || null, done: false });
+      }
     }
     saveState();
     renderDayTasks(key);
