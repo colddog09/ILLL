@@ -320,7 +320,17 @@ async function gcalImportEvents(dk) {
     }
 
     gcalEvents[dk] = evs;
-    if (typeof renderDayGcal === 'function') renderDayGcal(dk);
+    const knownIds = _allGcalIds();
+    let poolChanged = false;
+    for (const ev of evs) {
+      if (knownIds.has(ev.id)) continue;
+      state.pool.push({ id: uid(), text: ev.summary, gcalEventId: ev.id, fromGcal: true });
+      poolChanged = true;
+    }
+    if (poolChanged) {
+      saveState();
+      if (typeof renderPool === 'function') renderPool();
+    }
   } catch (err) {
     if (err.message?.includes('재연결') || err.message?.includes('만료')) {
       updateGcalUI();
@@ -445,9 +455,23 @@ async function gcalFetchRangeEvents(startKey, endKey) {
 
     Object.assign(gcalEvents, byDate);
 
-    // 현재 보고 있는 날짜 카드 업데이트
-    if (typeof renderDayGcal === 'function' && typeof currentDay === 'function') {
-      renderDayGcal(dateKey(currentDay()));
+    // pool 업데이트: 새 이벤트 추가, 취소된 이벤트 제거
+    const knownIds = _allGcalIds();
+    let poolChanged = false;
+    for (const ev of (resp.items || [])) {
+      if (ev.status === 'cancelled') {
+        const idx = (state.pool || []).findIndex(t => t.gcalEventId === ev.id);
+        if (idx !== -1) { state.pool.splice(idx, 1); poolChanged = true; }
+        continue;
+      }
+      if (knownIds.has(ev.id)) continue;
+      const text = (ev.summary || '(제목 없음)').replace(/^✅\s*/, '');
+      state.pool.push({ id: uid(), text, gcalEventId: ev.id, fromGcal: true });
+      poolChanged = true;
+    }
+    if (poolChanged) {
+      saveState();
+      if (typeof renderPool === 'function') renderPool();
     }
 
     return byDate;

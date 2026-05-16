@@ -125,33 +125,50 @@ let poolExpanded = false;
 function renderPool() {
   poolEl.innerHTML = '';
 
-  const tasks = (state.pool || []).filter(t => !t.fromGcal);
+  const regularTasks = (state.pool || []).filter(t => !t.fromGcal);
+  const gcalTasks    = (state.pool || []).filter(t =>  t.fromGcal);
 
-  if (tasks.length === 0) {
+  if (regularTasks.length === 0 && gcalTasks.length === 0) {
     poolExpanded = false;
     renderEmptyPool();
     return;
   }
 
-  const showAll     = poolExpanded || tasks.length <= POOL_THRESHOLD;
-  const visible     = showAll ? tasks : tasks.slice(0, POOL_THRESHOLD);
-  const hiddenCount = tasks.length - POOL_THRESHOLD;
-
   const fragment = document.createDocumentFragment();
-  visible.forEach(task => fragment.appendChild(createPoolCard(task)));
 
-  if (!showAll && hiddenCount > 0) {
-    const btn = document.createElement('button');
-    btn.className = 'pool-expand-btn';
-    btn.textContent = `+ ${hiddenCount}개 더 보기`;
-    btn.addEventListener('click', () => { poolExpanded = true; renderPool(); });
-    fragment.appendChild(btn);
-  } else if (poolExpanded && tasks.length > POOL_THRESHOLD) {
-    const btn = document.createElement('button');
-    btn.className = 'pool-expand-btn pool-expand-btn--collapse';
-    btn.textContent = '접기';
-    btn.addEventListener('click', () => { poolExpanded = false; renderPool(); });
-    fragment.appendChild(btn);
+  if (regularTasks.length === 0) {
+    const empty = document.createElement('span');
+    empty.className = 'pool-empty-hint';
+    empty.textContent = '할일을 추가해보세요!';
+    fragment.appendChild(empty);
+  } else {
+    const showAll     = poolExpanded || regularTasks.length <= POOL_THRESHOLD;
+    const visible     = showAll ? regularTasks : regularTasks.slice(0, POOL_THRESHOLD);
+    const hiddenCount = regularTasks.length - POOL_THRESHOLD;
+
+    visible.forEach(task => fragment.appendChild(createPoolCard(task)));
+
+    if (!showAll && hiddenCount > 0) {
+      const btn = document.createElement('button');
+      btn.className = 'pool-expand-btn';
+      btn.textContent = `+ ${hiddenCount}개 더 보기`;
+      btn.addEventListener('click', () => { poolExpanded = true; renderPool(); });
+      fragment.appendChild(btn);
+    } else if (poolExpanded && regularTasks.length > POOL_THRESHOLD) {
+      const btn = document.createElement('button');
+      btn.className = 'pool-expand-btn pool-expand-btn--collapse';
+      btn.textContent = '접기';
+      btn.addEventListener('click', () => { poolExpanded = false; renderPool(); });
+      fragment.appendChild(btn);
+    }
+  }
+
+  if (gcalTasks.length > 0) {
+    const sep = document.createElement('div');
+    sep.className = 'pool-gcal-sep';
+    sep.innerHTML = '<span>📅 캘린더</span>';
+    fragment.appendChild(sep);
+    gcalTasks.forEach(task => fragment.appendChild(createPoolCard(task)));
   }
 
   poolEl.appendChild(fragment);
@@ -194,16 +211,12 @@ function renderWeek() {
       ${isToday ? '<span class="today-badge">오늘</span>' : ''}
       ${deferBtnHtml}
     </div>
-    <div class="day-card__body">
-      <div class="day-card__gcal-col" id="gcal_${key}"></div>
-      <div class="day-card__tasks" id="tasks_${key}"></div>
-    </div>
+    <div class="day-card__tasks" id="tasks_${key}"></div>
     <div class="day-card__progress">
       <div class="day-card__progress-bar" style="width:${pct}%"></div>
     </div>`;
 
   dayGrid.appendChild(card);
-  renderDayGcal(key);
   renderDayTasks(key);
   setupDayDropZone(card, key);
 
@@ -353,42 +366,6 @@ function renderDayTasks(key) {
 
   container.appendChild(fragment);
   updateProgress(key);
-}
-
-function renderDayGcal(key) {
-  const container = document.getElementById(`gcal_${key}`);
-  if (!container) return;
-  container.innerHTML = '';
-
-  const header = document.createElement('div');
-  header.className = 'day-gcal-col__header';
-  header.textContent = '📅 캘린더';
-  container.appendChild(header);
-
-  const items = (typeof gcalEvents !== 'undefined') ? (gcalEvents[key] || []) : [];
-
-  if (items.length === 0) {
-    const empty = document.createElement('div');
-    empty.className = 'day-gcal-col__empty';
-    empty.textContent = '일정 없음';
-    container.appendChild(empty);
-    return;
-  }
-
-  items.forEach(ev => {
-    const el = document.createElement('div');
-    el.className = 'sched-item sched-item--gcal' + (ev.done ? ' done' : '');
-    const timeLabel = ev.timeLabel
-      ? `<span class="sched-item__gcal-time">${ev.timeLabel}</span>`
-      : '';
-    el.innerHTML = `
-      <span class="sched-item__text">${escHtml(ev.summary)}</span>
-      ${timeLabel}
-      <div class="sched-item__ox">
-        <button class="btn-gcal-done btn-o${ev.done ? ' active' : ''}" data-gcal-id="${ev.id}" data-date="${key}" title="완료(O)">O</button>
-      </div>`;
-    container.appendChild(el);
-  });
 }
 
 function updateProgress(key) {
