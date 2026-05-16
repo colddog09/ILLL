@@ -99,11 +99,20 @@ function autoReturnExpiredTasks() {
     if (pending.length === 0) return;
 
     pending.forEach(it => {
-      const restoredTaskId = it.taskId || it.id;
-      if (!state.pool.find(t => t.id === restoredTaskId)) {
-        const task = { id: restoredTaskId, text: it.text };
-        if (it.deadline) task.deadline = it.deadline; // deadline 보존
-        state.pool.push(task);
+      if (it.fromGcal && it.gcalEventId) {
+        // gcal 항목은 원래 날짜(gcalDate)의 사이드 패널로 복원
+        const gcalDate = it.gcalDate || key;
+        if (!gcalEvents[gcalDate]) gcalEvents[gcalDate] = [];
+        if (!gcalEvents[gcalDate].find(e => e.id === it.gcalEventId)) {
+          gcalEvents[gcalDate].push({ id: it.gcalEventId, summary: it.text, timeLabel: it.timeLabel || null, done: false });
+        }
+      } else {
+        const restoredTaskId = it.taskId || it.id;
+        if (!state.pool.find(t => t.id === restoredTaskId)) {
+          const task = { id: restoredTaskId, text: it.text };
+          if (it.deadline) task.deadline = it.deadline;
+          state.pool.push(task);
+        }
       }
     });
 
@@ -115,5 +124,6 @@ function autoReturnExpiredTasks() {
     saveState();
     renderPool();
     renderWeek();
+    renderGcalSidePanel();
   }
 }
