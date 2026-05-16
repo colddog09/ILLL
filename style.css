@@ -460,6 +460,36 @@ body {
   border-style: solid;
 }
 
+.pool-empty-hint {
+  color: var(--text-sub);
+  font-size: 0.82rem;
+  padding: 4px 2px;
+  flex-shrink: 0;
+}
+
+.pool-gcal-sep {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 0 2px;
+}
+.pool-gcal-sep::before {
+  content: '';
+  display: block;
+  width: 1px;
+  height: 18px;
+  background: rgba(66,133,244,0.35);
+  flex-shrink: 0;
+}
+.pool-gcal-sep span {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #4285f4;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
 /* ============================
    SCHEDULE AREA
    ============================ */
@@ -834,6 +864,17 @@ body {
 .sched-item--gcal.done .sched-item__text {
   text-decoration: line-through;
   color: var(--text-sub);
+}
+
+.sched-item--from-gcal {
+  background: rgba(66, 133, 244, 0.05);
+  border-color: rgba(66, 133, 244, 0.3);
+}
+.sched-item__gcal-badge {
+  font-size: 0.82rem;
+  flex-shrink: 0;
+  opacity: 0.85;
+  line-height: 1;
 }
 
 .sched-item__gcal-time {

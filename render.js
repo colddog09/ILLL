@@ -26,14 +26,17 @@ function schedulePoolTask(key, taskId, text) {
   const item = { id: uid(), taskId, text, status: null };
   if (poolTask?.deadline)    item.deadline    = poolTask.deadline;
   if (poolTask?.gcalEventId) item.gcalEventId = poolTask.gcalEventId;
+  if (poolTask?.fromGcal)    item.fromGcal    = true;
   state.schedule[key].push(item);
   return true;
 }
 
-function restoreTaskToPool(taskId, text, deadline) {
+function restoreTaskToPool(taskId, text, deadline, gcalEventId, fromGcal) {
   if (!state.pool.find(t => t.id === taskId)) {
     const task = { id: taskId, text };
-    if (deadline) task.deadline = deadline;
+    if (deadline)    task.deadline    = deadline;
+    if (gcalEventId) task.gcalEventId = gcalEventId;
+    if (fromGcal)    task.fromGcal    = true;
     state.pool.push(task);
   }
 }
@@ -110,7 +113,7 @@ function handlePoolCardActivate(card) {
 function returnSchedItemToPool(key, itemId, taskId, text) {
   const item = (state.schedule[key] || []).find(it => it.id === itemId);
   removeScheduleItem(key, itemId);
-  restoreTaskToPool(taskId, text, item?.deadline);
+  restoreTaskToPool(taskId, text, item?.deadline, item?.gcalEventId, item?.fromGcal);
   saveState();
   refreshPoolAndDay(key);
 }
@@ -121,31 +124,54 @@ let poolExpanded = false;
 
 function renderPool() {
   poolEl.innerHTML = '';
-  if (state.pool.length === 0) {
+
+  const regularTasks = (state.pool || []).filter(t => !t.fromGcal);
+  const gcalTasks    = (state.pool || []).filter(t =>  t.fromGcal);
+
+  if (regularTasks.length === 0 && gcalTasks.length === 0) {
     poolExpanded = false;
     renderEmptyPool();
     return;
   }
 
-  const showAll = poolExpanded || state.pool.length <= POOL_THRESHOLD;
-  const visible  = showAll ? state.pool : state.pool.slice(0, POOL_THRESHOLD);
-  const hiddenCount = state.pool.length - POOL_THRESHOLD;
-
   const fragment = document.createDocumentFragment();
-  visible.forEach(task => fragment.appendChild(createPoolCard(task)));
 
-  if (!showAll && hiddenCount > 0) {
-    const btn = document.createElement('button');
-    btn.className = 'pool-expand-btn';
-    btn.textContent = `+ ${hiddenCount}개 더 보기`;
-    btn.addEventListener('click', () => { poolExpanded = true; renderPool(); });
-    fragment.appendChild(btn);
-  } else if (poolExpanded && state.pool.length > POOL_THRESHOLD) {
-    const btn = document.createElement('button');
-    btn.className = 'pool-expand-btn pool-expand-btn--collapse';
-    btn.textContent = '접기';
-    btn.addEventListener('click', () => { poolExpanded = false; renderPool(); });
-    fragment.appendChild(btn);
+  // ── 일반 할일 ──
+  if (regularTasks.length === 0) {
+    const empty = document.createElement('span');
+    empty.className = 'pool-empty-hint';
+    empty.textContent = '할일을 추가해보세요!';
+    fragment.appendChild(empty);
+  } else {
+    const showAll     = poolExpanded || regularTasks.length <= POOL_THRESHOLD;
+    const visible     = showAll ? regularTasks : regularTasks.slice(0, POOL_THRESHOLD);
+    const hiddenCount = regularTasks.length - POOL_THRESHOLD;
+
+    visible.forEach(task => fragment.appendChild(createPoolCard(task)));
+
+    if (!showAll && hiddenCount > 0) {
+      const btn = document.createElement('button');
+      btn.className = 'pool-expand-btn';
+      btn.textContent = `+ ${hiddenCount}개 더 보기`;
+      btn.addEventListener('click', () => { poolExpanded = true; renderPool(); });
+      fragment.appendChild(btn);
+    } else if (poolExpanded && regularTasks.length > POOL_THRESHOLD) {
+      const btn = document.createElement('button');
+      btn.className = 'pool-expand-btn pool-expand-btn--collapse';
+      btn.textContent = '접기';
+      btn.addEventListener('click', () => { poolExpanded = false; renderPool(); });
+      fragment.appendChild(btn);
+    }
+  }
+
+  // ── 캘린더 일정 구분선 + 목록 ──
+  if (gcalTasks.length > 0) {
+    const sep = document.createElement('div');
+    sep.className = 'pool-gcal-sep';
+    sep.innerHTML = '<span>📅 캘린더</span>';
+    fragment.appendChild(sep);
+
+    gcalTasks.forEach(task => fragment.appendChild(createPoolCard(task)));
   }
 
   poolEl.appendChild(fragment);
@@ -216,7 +242,7 @@ function renderDayTasks(key) {
 
   items.forEach(item => {
     const el = document.createElement('div');
-    el.className = 'sched-item' + (item.status === 'O' ? ' done' : '');
+    el.className = 'sched-item' + (item.status === 'O' ? ' done' : '') + (item.fromGcal ? ' sched-item--from-gcal' : '');
     el.dataset.itemId = item.id;
     el.dataset.dateKey = key;
     el.dataset.taskId = item.taskId;
@@ -225,8 +251,10 @@ function renderDayTasks(key) {
     const deadlineBadge = item.deadline
       ? `<span class="sched-item__deadline${isDeadlineUrgent(item.deadline) ? ' sched-item__deadline--urgent' : ''}" title="${escHtml(formatDeadlineText(item.deadline))}">⏰ ${escHtml(formatDeadlineText(item.deadline))}</span>`
       : '';
+    const gcalBadge = item.fromGcal ? '<span class="sched-item__gcal-badge" title="구글 캘린더 일정">📅</span>' : '';
     el.innerHTML = `
       <span class="sched-item__handle" title="드래그로 순서 변경">⠿</span>
+      ${gcalBadge}
       <span class="sched-item__text" title="${escHtml(item.text)}">${escHtml(item.text)}</span>
       ${deadlineBadge}
       <div class="sched-item__ox">

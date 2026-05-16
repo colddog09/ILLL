@@ -279,7 +279,7 @@ function initDrag() {
     const { taskId, itemId, dateKey: key, text } = dragInfo;
     const item = (state.schedule[key] || []).find(it => it.id === itemId);
     removeScheduleItem(key, itemId);
-    restoreTaskToPool(taskId, text, item?.deadline);
+    restoreTaskToPool(taskId, text, item?.deadline, item?.gcalEventId, item?.fromGcal);
     saveState();
     endDrag();
     refreshPoolAndDay(key);
