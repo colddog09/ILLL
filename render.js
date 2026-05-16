@@ -247,10 +247,18 @@ function renderGcalSidePanel() {
 
       // 데스크톱 더블클릭 → 현재 날짜에 추가
       if (currentUser) {
-        el.addEventListener('dblclick', e => {
+        let clickTimer = null;
+        el.addEventListener('click', e => {
           if (e.target.closest('.btn-gcal-done')) return;
-          const key = dateKey(currentDay());
-          scheduleGcalEventToDay(ev, dk, key);
+          if (clickTimer) {
+            clearTimeout(clickTimer);
+            clickTimer = null;
+            e.preventDefault();
+            const key = dateKey(currentDay());
+            scheduleGcalEventToDay(ev, dk, key);
+          } else {
+            clickTimer = setTimeout(() => { clickTimer = null; }, 350);
+          }
         });
       }
 
