@@ -23,10 +23,9 @@ const DEFAULT_STATE = {
   classNum: '2'
 };
 
-let state           = { ...DEFAULT_STATE };
-let dragInfo        = null;
-let gcalEvents      = {}; // 캘린더에서 가져온 이벤트 (Firestore 저장 안 함)
-let _gcalRestoring  = false; // signInWithPopup 루프 방지
+let state      = { ...DEFAULT_STATE };
+let dragInfo   = null;
+let gcalEvents = {}; // 캘린더에서 가져온 이벤트 (Firestore 저장 안 함)
 
 // ──────────────────────────────────────────────
 // Firebase
@@ -293,17 +292,13 @@ function updateAuthUi(user) {
   updateStandaloneAuthHint(user);
   loadState();
 
-  // 캘린더 연동 자동 복원
-  if (user && !_gcalRestoring && typeof gcalTryRestore === 'function' && typeof isGcalConnected === 'function' && isGcalConnected()) {
-    _gcalRestoring = true;
-    gcalTryRestore()
-      .then(restored => {
-        if (typeof updateGcalUI === 'function') updateGcalUI();
-        if (restored) {
-          if (typeof gcalImportCurrentDate === 'function') gcalImportCurrentDate();
-          if (typeof gcalStartPolling === 'function') gcalStartPolling();
-        }
-      })
-      .finally(() => { _gcalRestoring = false; });
+  // 캘린더 토큰 복원 (sessionStorage — 동기, 팝업 없음)
+  if (user && typeof gcalLoadStoredToken === 'function') {
+    const restored = gcalLoadStoredToken();
+    if (typeof updateGcalUI === 'function') updateGcalUI();
+    if (restored) {
+      if (typeof gcalImportCurrentDate === 'function') gcalImportCurrentDate();
+      if (typeof gcalStartPolling === 'function') gcalStartPolling();
+    }
   }
 }

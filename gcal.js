@@ -4,12 +4,15 @@
 
 'use strict';
 
-const GCAL_BASE = 'https://www.googleapis.com/calendar/v3';
-const GCAL_SCOPE = 'https://www.googleapis.com/auth/calendar';
+const GCAL_BASE     = 'https://www.googleapis.com/calendar/v3';
+const GCAL_SCOPE    = 'https://www.googleapis.com/auth/calendar';
 const GCAL_FLAG_KEY = 'gcal_connected';
+const GCAL_SS_KEY   = 'gcal_token_v1';   // sessionStorage 키 (탭 내 새로고침 유지)
+const GCAL_TARGET   = '일정';            // 연동할 캘린더 이름
 
-let _gcalToken = null;
+let _gcalToken       = null;
 let _gcalTokenExpiry = 0;
+let _gcalCalendarId  = null;
 
 // ──────────────────────────────────────────────
 // 토큰 관리
@@ -18,63 +21,58 @@ function gcalTokenValid() {
   return !!_gcalToken && Date.now() < _gcalTokenExpiry - 60000;
 }
 
-function _gcalSetToken(token) {
-  _gcalToken = token;
-  _gcalTokenExpiry = Date.now() + 3500 * 1000; // ~58분
+function _gcalSetToken(token, expiry) {
+  _gcalToken       = token;
+  _gcalTokenExpiry = expiry || (Date.now() + 3500 * 1000);
+  try {
+    sessionStorage.setItem(GCAL_SS_KEY, JSON.stringify({ token: _gcalToken, expiry: _gcalTokenExpiry }));
+  } catch (e) { /* private mode 등 */ }
 }
 
 function gcalClearToken() {
-  _gcalToken = null;
+  _gcalToken       = null;
   _gcalTokenExpiry = 0;
+  _gcalCalendarId  = null;
   localStorage.removeItem(GCAL_FLAG_KEY);
+  try { sessionStorage.removeItem(GCAL_SS_KEY); } catch (e) {}
 }
 
 function isGcalConnected() {
   return localStorage.getItem(GCAL_FLAG_KEY) === '1';
 }
 
+// 페이지 로드 시 sessionStorage에서 토큰 복원 (동기, 팝업 없음)
+function gcalLoadStoredToken() {
+  if (!isGcalConnected()) return false;
+  try {
+    const stored = JSON.parse(sessionStorage.getItem(GCAL_SS_KEY));
+    if (stored?.token && stored.expiry > Date.now() + 60000) {
+      _gcalToken       = stored.token;
+      _gcalTokenExpiry = stored.expiry;
+      return true;
+    }
+  } catch (e) {}
+  return false;
+}
+
 // ──────────────────────────────────────────────
-// 연결 (OAuth 동의 팝업)
+// 연결 (OAuth 동의 팝업 — 최초 1회 또는 만료 시)
 // ──────────────────────────────────────────────
 async function gcalConnect() {
   if (!currentUser) throw new Error('로그인이 필요합니다.');
 
   const provider = new firebase.auth.GoogleAuthProvider();
   provider.addScope(GCAL_SCOPE);
-  provider.setCustomParameters({
-    prompt: 'consent',
-    login_hint: currentUser.email
-  });
+  provider.setCustomParameters({ prompt: 'consent', login_hint: currentUser.email });
 
-  const result = await firebase.auth().signInWithPopup(provider);
+  const result     = await firebase.auth().signInWithPopup(provider);
   const credential = firebase.auth.GoogleAuthProvider.credentialFromResult(result);
-  if (!credential?.accessToken) throw new Error('액세스 토큰을 받지 못했습니다.');
+  if (!credential?.accessToken) {
+    throw new Error('액세스 토큰을 받지 못했습니다. 잠시 후 다시 시도해주세요.');
+  }
 
   _gcalSetToken(credential.accessToken);
   localStorage.setItem(GCAL_FLAG_KEY, '1');
-}
-
-// 페이지 로드 시 저장된 연결 자동 복원 (silent OAuth — 사용자 개입 없음)
-async function gcalTryRestore() {
-  if (!isGcalConnected() || !currentUser) return false;
-  try {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    provider.addScope(GCAL_SCOPE);
-    // prompt:'none' → Google이 이미 로그인·동의된 경우 팝업을 즉시 닫음
-    provider.setCustomParameters({ prompt: 'none', login_hint: currentUser.email });
-    const result = await firebase.auth().signInWithPopup(provider);
-    const credential = firebase.auth.GoogleAuthProvider.credentialFromResult(result);
-    if (credential?.accessToken) {
-      _gcalSetToken(credential.accessToken);
-      return true;
-    }
-  } catch (err) {
-    // 팝업 차단·취소·ITP 등 → 조용히 실패, UI에서 재연결 안내
-    const ignored = new Set(['auth/cancelled-popup-request','auth/popup-closed-by-user',
-      'auth/popup-blocked','auth/operation-not-supported-in-this-environment']);
-    if (!ignored.has(err?.code)) console.warn('gcal restore:', err?.code, err?.message);
-  }
-  return false;
 }
 
 // ──────────────────────────────────────────────
@@ -83,50 +81,44 @@ async function gcalTryRestore() {
 async function _gcalFetch(method, path, body) {
   if (!gcalTokenValid()) throw new Error('캘린더 재연결이 필요합니다.');
 
-  const res = await fetch(`${GCAL_BASE}${path}`, {
+  const options = {
     method,
-    headers: {
-      Authorization: `Bearer ${_gcalToken}`,
-      'Content-Type': 'application/json'
-    },
-    body: body ? JSON.stringify(body) : undefined
-  });
+    headers: { Authorization: `Bearer ${_gcalToken}` }
+  };
+  if (body !== undefined) {
+    options.headers['Content-Type'] = 'application/json';
+    options.body = JSON.stringify(body);
+  }
+
+  const res = await fetch(`${GCAL_BASE}${path}`, options);
 
   if (res.status === 401) {
     gcalClearToken();
-    throw new Error('캘린더 인증이 만료되었습니다. 다시 연결해주세요.');
+    throw new Error('캘린더 인증이 만료되었습니다. 재연결 버튼을 눌러주세요.');
   }
-  if (res.status === 404 && method === 'DELETE') return null; // 이미 삭제됨
+  if (res.status === 204 || (res.status === 404 && method === 'DELETE')) return null;
   if (!res.ok) {
     const errText = await res.text().catch(() => '');
-    throw new Error(`Calendar API 오류 (${res.status}): ${errText.slice(0, 100)}`);
+    throw new Error(`Calendar API 오류 (${res.status}): ${errText.slice(0, 120)}`);
   }
-  return method === 'DELETE' ? null : res.json();
+  return res.json();
 }
 
 // ──────────────────────────────────────────────
 // "일정" 캘린더 ID 조회 (세션 내 캐시)
 // ──────────────────────────────────────────────
-const GCAL_TARGET_NAME = '일정';
-let _gcalCalendarId = null; // 세션 내 캐시
-
 async function _getCalendarId() {
   if (_gcalCalendarId) return _gcalCalendarId;
 
-  const resp = await _gcalFetch('GET', '/users/me/calendarList?maxResults=250');
-  const match = (resp.items || []).find(c => c.summary === GCAL_TARGET_NAME);
-  if (!match) throw new Error(`'${GCAL_TARGET_NAME}' 캘린더를 찾을 수 없습니다.\n구글 캘린더에 '일정' 캘린더가 있는지 확인해주세요.`);
+  const resp  = await _gcalFetch('GET', '/users/me/calendarList?maxResults=250');
+  const match = (resp.items || []).find(c => c.summary === GCAL_TARGET);
+  if (!match) {
+    throw new Error(`구글 캘린더에 '${GCAL_TARGET}' 캘린더가 없습니다.\n구글 캘린더에서 '일정' 캘린더를 만들어주세요.`);
+  }
 
   _gcalCalendarId = match.id;
   return _gcalCalendarId;
 }
-
-// 토큰 초기화 시 캐시도 함께 지움
-const _origGcalClearToken = gcalClearToken;
-gcalClearToken = function() {
-  _gcalCalendarId = null;
-  _origGcalClearToken();
-};
 
 // ──────────────────────────────────────────────
 // 날짜 유틸
@@ -144,8 +136,8 @@ async function gcalCreateEvent(text, dateKey) {
   const calId = await _getCalendarId();
   return _gcalFetch('POST', `/calendars/${encodeURIComponent(calId)}/events`, {
     summary: text,
-    start: { date: dateKey },
-    end: { date: _nextDay(dateKey) }
+    start:   { date: dateKey },
+    end:     { date: _nextDay(dateKey) }
   });
 }
 
@@ -164,14 +156,15 @@ async function gcalSyncAll() {
 
   for (const [dk, items] of Object.entries(state.schedule)) {
     for (const item of items) {
-      if (item.gcalEventId) continue; // 이미 동기화됨
+      if (item.gcalEventId) continue;
       try {
         const event = await gcalCreateEvent(item.text, dk);
         item.gcalEventId = event.id;
         created++;
       } catch (err) {
-        console.error('gcal sync error:', item.text, err);
-        if (err.message.includes('만료') || err.message.includes('재연결')) throw err;
+        const fatal = ['재연결', '만료', '찾을 수', 'API 오류'].some(s => err.message?.includes(s));
+        if (fatal) throw err;
+        console.error('gcal sync item error:', item.text, err.message);
         failed++;
       }
     }
@@ -184,37 +177,34 @@ async function gcalSyncAll() {
 // ──────────────────────────────────────────────
 // 캘린더 → 앱 가져오기
 // ──────────────────────────────────────────────
-let _gcalImportTimer = null;
+let _gcalImportTimer  = null;
 let _gcalPollInterval = null;
 
 async function _gcalFetchEventsForDate(dateKey) {
   const [y, m, d] = dateKey.split('-').map(Number);
-  const dayStart = new Date(y, m - 1, d, 0, 0, 0, 0);
-  const dayEnd   = new Date(y, m - 1, d, 23, 59, 59, 999);
+  const dayStart  = new Date(y, m - 1, d, 0, 0, 0, 0);
+  const dayEnd    = new Date(y, m - 1, d, 23, 59, 59, 999);
   const params = new URLSearchParams({
-    timeMin:       dayStart.toISOString(),
-    timeMax:       dayEnd.toISOString(),
-    singleEvents:  'true',
-    orderBy:       'startTime',
-    maxResults:    '50'
+    timeMin:      dayStart.toISOString(),
+    timeMax:      dayEnd.toISOString(),
+    singleEvents: 'true',
+    orderBy:      'startTime',
+    maxResults:   '50'
   });
   const calId = await _getCalendarId();
   return _gcalFetch('GET', `/calendars/${encodeURIComponent(calId)}/events?${params}`);
 }
 
-// 앱에서 이미 동기화된 Calendar 이벤트 ID 목록
 function _syncedGcalIds() {
   return new Set(
-    Object.values(state.schedule).flat()
-      .map(it => it.gcalEventId).filter(Boolean)
+    Object.values(state.schedule).flat().map(it => it.gcalEventId).filter(Boolean)
   );
 }
 
-// 특정 날짜의 캘린더 이벤트를 가져와 gcalEvents에 저장 후 재렌더
 async function gcalImportEvents(dateKey) {
   if (!gcalTokenValid()) return;
   try {
-    const resp = await _gcalFetchEventsForDate(dateKey);
+    const resp   = await _gcalFetchEventsForDate(dateKey);
     const synced = _syncedGcalIds();
 
     gcalEvents[dateKey] = (resp.items || [])
@@ -224,8 +214,7 @@ async function gcalImportEvents(dateKey) {
         let timeLabel = '';
         if (!allDay && ev.start?.dateTime) {
           const t = new Date(ev.start.dateTime);
-          timeLabel = t.getHours().toString().padStart(2, '0') + ':' +
-                      t.getMinutes().toString().padStart(2, '0');
+          timeLabel = `${t.getHours().toString().padStart(2, '0')}:${t.getMinutes().toString().padStart(2, '0')}`;
         }
         const done = /^✅/.test(ev.summary || '');
         return {
@@ -241,32 +230,23 @@ async function gcalImportEvents(dateKey) {
   } catch (err) {
     if (err.message?.includes('재연결') || err.message?.includes('만료')) {
       updateGcalUI();
-    } else if (err.message?.includes('찾을 수 없습니다')) {
-      console.warn('gcal:', err.message);
-    } else {
+    } else if (!err.message?.includes('찾을 수')) {
       console.warn('gcal import error:', err.message);
     }
   }
 }
 
-// 현재 보이는 날짜 가져오기 (디바운스 300ms)
 function gcalImportCurrentDate() {
   if (!gcalTokenValid()) return;
   clearTimeout(_gcalImportTimer);
-  _gcalImportTimer = setTimeout(() => {
-    gcalImportEvents(dateKey(currentDay()));
-  }, 300);
+  _gcalImportTimer = setTimeout(() => gcalImportEvents(dateKey(currentDay())), 300);
 }
 
-// 주기적 자동 가져오기 (3분)
 function gcalStartPolling() {
   if (_gcalPollInterval) return;
   _gcalPollInterval = setInterval(() => {
-    if (gcalTokenValid()) {
-      gcalImportEvents(dateKey(currentDay()));
-    } else {
-      gcalStopPolling();
-    }
+    if (gcalTokenValid()) gcalImportEvents(dateKey(currentDay()));
+    else gcalStopPolling();
   }, 3 * 60 * 1000);
 }
 
@@ -279,38 +259,34 @@ function gcalStopPolling() {
 // ──────────────────────────────────────────────
 async function gcalMarkEventDone(eventId, text) {
   const calId = await _getCalendarId();
-  const clean = text.replace(/^✅\s*/, '');
   return _gcalFetch('PATCH', `/calendars/${encodeURIComponent(calId)}/events/${eventId}`, {
-    summary: '✅ ' + clean,
-    colorId: '2'   // Sage (녹색 계열)
+    summary: '✅ ' + text.replace(/^✅\s*/, ''),
+    colorId: '2'
   });
 }
 
 async function gcalMarkEventUndone(eventId, text) {
   const calId = await _getCalendarId();
   return _gcalFetch('PATCH', `/calendars/${encodeURIComponent(calId)}/events/${eventId}`, {
-    summary: text.replace(/^✅\s*/, ''),
-    colorId: '0'   // 기본 색상으로 복원
+    summary: text.replace(/^✅\s*/, '')
   });
 }
 
 // ──────────────────────────────────────────────
-// UI 업데이트 헬퍼
+// UI 업데이트
 // ──────────────────────────────────────────────
 function updateGcalUI() {
   const connected     = gcalTokenValid();
   const everConnected = isGcalConnected();
+  const reconnectBtn  = document.getElementById('gcalReconnectBtn');
+  if (reconnectBtn) reconnectBtn.hidden = !(everConnected && !connected);
+
   const dot           = document.getElementById('gcalStatusDot');
   const txt           = document.getElementById('gcalStatusText');
   const connectBtn    = document.getElementById('gcalConnectBtn');
   const syncBtn       = document.getElementById('gcalSyncBtn');
   const disconnectBtn = document.getElementById('gcalDisconnectBtn');
-  const reconnectBtn  = document.getElementById('gcalReconnectBtn'); // 헤더 버튼
-
-  // 헤더 재연결 버튼: 한번 연동했는데 토큰이 없을 때만 표시
-  if (reconnectBtn) reconnectBtn.hidden = !(everConnected && !connected);
-
-  if (!dot) return; // 설정 모달이 아직 열리지 않은 경우
+  if (!dot) return;
 
   if (connected) {
     dot.className        = 'gcal-dot gcal-dot--on';
