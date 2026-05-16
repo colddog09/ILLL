@@ -122,6 +122,7 @@ async function bootstrapFirebase() {
     const response = await fetch('/api/config');
     if (!response.ok) throw new Error('config fetch failed: ' + response.status);
     const cfg = await response.json();
+    if (cfg.googleClientId) window.__GCAL_CLIENT_ID__ = cfg.googleClientId;
     await initializeFirebase(cfg);
   } catch (err) {
     console.error('Firebase 초기화 실패:', err);

@@ -65,14 +65,44 @@ async function gcalConnect() {
   provider.addScope(GCAL_SCOPE);
   provider.setCustomParameters({ prompt: 'consent', login_hint: currentUser.email });
 
-  const result     = await firebase.auth().signInWithPopup(provider);
-  const credential = firebase.auth.GoogleAuthProvider.credentialFromResult(result);
-  if (!credential?.accessToken) {
-    throw new Error('액세스 토큰을 받지 못했습니다. 잠시 후 다시 시도해주세요.');
+  const result = await firebase.auth().signInWithPopup(provider);
+
+  // Firebase credentialFromResult가 null을 반환하는 경우 내부 응답 필드 fallback
+  const credential  = firebase.auth.GoogleAuthProvider.credentialFromResult(result);
+  const accessToken = credential?.accessToken || result._tokenResponse?.oauthAccessToken;
+
+  if (!accessToken) {
+    // GIS 방식으로 재시도 (client ID가 로드된 경우)
+    const gisToken = await _gcalConnectViaGIS().catch(() => null);
+    if (!gisToken) throw new Error('액세스 토큰을 받지 못했습니다.\nGoogle Cloud Console에서 Calendar API가 활성화되어 있는지 확인해주세요.');
+    _gcalSetToken(gisToken);
+    localStorage.setItem(GCAL_FLAG_KEY, '1');
+    return;
   }
 
-  _gcalSetToken(credential.accessToken);
+  _gcalSetToken(accessToken);
   localStorage.setItem(GCAL_FLAG_KEY, '1');
+}
+
+// GIS Token Client (Firebase fallback)
+// googleClientId가 window.__GCAL_CLIENT_ID__에 주입된 경우에만 동작
+function _gcalConnectViaGIS() {
+  return new Promise((resolve, reject) => {
+    const clientId = window.__GCAL_CLIENT_ID__;
+    if (!clientId || typeof google === 'undefined' || !google.accounts?.oauth2) {
+      return reject(new Error('GIS not available'));
+    }
+    const client = google.accounts.oauth2.initTokenClient({
+      client_id: clientId,
+      scope:     GCAL_SCOPE,
+      prompt:    'consent',
+      callback:  (resp) => {
+        if (resp.error) return reject(new Error(resp.error));
+        resolve(resp.access_token);
+      }
+    });
+    client.requestAccessToken({ prompt: 'consent' });
+  });
 }
 
 // ──────────────────────────────────────────────
