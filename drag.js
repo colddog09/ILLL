@@ -201,7 +201,8 @@ function initDrag() {
     if (!card) return;
     // 드래그 시작 시 열려 있는 기한 툴팁 닫기
     card.querySelectorAll('.pool-card__clock-tooltip.visible').forEach(t => t.classList.remove('visible'));
-    dragInfo = { type: 'pool', taskId: card.dataset.taskId, text: getPoolCardText(card) };
+    const poolTask = (state.pool || []).find(t => t.id === card.dataset.taskId);
+    dragInfo = { type: 'pool', taskId: card.dataset.taskId, text: getPoolCardText(card), fromGcal: !!poolTask?.fromGcal };
     e.dataTransfer.setData('text/plain', dragInfo.taskId);
     e.dataTransfer.effectAllowed = 'move';
     setTimeout(() => card.classList.add('dragging'), 0);
@@ -285,21 +286,33 @@ function initDrag() {
   });
 
   // ── 휴지통 드롭존 ──
+  const trashLabel = trashZone.querySelector('.trash-zone__label');
+
   trashZone.addEventListener('dragover', e => {
     if (!dragInfo) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    trashZone.classList.add('danger');
+    if (dragInfo.fromGcal) {
+      trashZone.classList.add('gcal-warn');
+      if (trashLabel) trashLabel.textContent = '캘린더에서 제거해주세요';
+    } else {
+      trashZone.classList.add('danger');
+    }
   });
   trashZone.addEventListener('dragleave', e => {
-    if (!trashZone.contains(e.relatedTarget)) trashZone.classList.remove('danger');
+    if (!trashZone.contains(e.relatedTarget)) {
+      trashZone.classList.remove('danger', 'gcal-warn');
+      if (trashLabel) trashLabel.textContent = '여기에 놓으면 삭제';
+    }
   });
   trashZone.addEventListener('drop', e => {
     e.preventDefault();
-    trashZone.classList.remove('danger');
+    trashZone.classList.remove('danger', 'gcal-warn');
+    if (trashLabel) trashLabel.textContent = '여기에 놓으면 삭제';
     if (!dragInfo) return;
 
     if (dragInfo.type === 'pool') {
+      if (dragInfo.fromGcal) { endDrag(); return; } // 캘린더 일정은 앱에서 삭제 불가
       removeTaskFromPool(dragInfo.taskId);
       saveState();
       endDrag();

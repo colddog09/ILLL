@@ -325,13 +325,22 @@ function updateAuthUi(user) {
   updateStandaloneAuthHint(user);
   loadState();
 
-  // 캘린더 토큰 복원 (sessionStorage — 동기, 팝업 없음)
+  // 캘린더 토큰 복원
   if (user && typeof gcalLoadStoredToken === 'function') {
     const restored = gcalLoadStoredToken();
     if (typeof updateGcalUI === 'function') updateGcalUI();
     if (restored) {
       if (typeof gcalImportCurrentDate === 'function') gcalImportCurrentDate();
       if (typeof gcalStartPolling === 'function') gcalStartPolling();
+    } else if (typeof isGcalConnected === 'function' && isGcalConnected()) {
+      // 세션 만료됐지만 이전에 연결했음 → 조용히 자동 재연결
+      gcalSilentConnect().then(ok => {
+        if (typeof updateGcalUI === 'function') updateGcalUI();
+        if (ok) {
+          if (typeof gcalImportCurrentDate === 'function') gcalImportCurrentDate();
+          if (typeof gcalStartPolling === 'function') gcalStartPolling();
+        }
+      });
     }
   }
 }

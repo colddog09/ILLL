@@ -102,6 +102,46 @@ async function gcalConnect() {
   localStorage.setItem(GCAL_FLAG_KEY, '1');
 }
 
+// 리소스가 준비될 때까지 대기
+function _waitForResource(getter, timeout = 6000) {
+  return new Promise(resolve => {
+    const val = getter();
+    if (val) return resolve(val);
+    const start = Date.now();
+    const t = setInterval(() => {
+      const v = getter();
+      if (v) { clearInterval(t); resolve(v); }
+      else if (Date.now() - start > timeout) { clearInterval(t); resolve(null); }
+    }, 250);
+  });
+}
+
+// 팝업 없이 조용한 자동 재연결 (이전에 권한 허락한 경우만 성공)
+async function gcalSilentConnect() {
+  const clientId = await _waitForResource(() => window.__GCAL_CLIENT_ID__);
+  if (!clientId) return false;
+  const oauth2 = await _waitForResource(() => window.google?.accounts?.oauth2);
+  if (!oauth2) return false;
+
+  return new Promise(resolve => {
+    try {
+      const client = google.accounts.oauth2.initTokenClient({
+        client_id:      clientId,
+        scope:          GCAL_SCOPE,
+        hint:           currentUser?.email || '',
+        callback:       resp => {
+          if (resp.error || !resp.access_token) { resolve(false); return; }
+          _gcalSetToken(resp.access_token);
+          localStorage.setItem(GCAL_FLAG_KEY, '1');
+          resolve(true);
+        },
+        error_callback: () => resolve(false)
+      });
+      client.requestAccessToken({ prompt: '' }); // 무UI 재발급
+    } catch (_) { resolve(false); }
+  });
+}
+
 // GIS Token Client (Firebase fallback)
 // googleClientId가 window.__GCAL_CLIENT_ID__에 주입된 경우에만 동작
 function _gcalConnectViaGIS() {
@@ -247,38 +287,49 @@ async function _gcalFetchEventsForDate(dateKey) {
   return _gcalFetch('GET', `/calendars/${encodeURIComponent(calId)}/events?${params}`);
 }
 
+// pool + schedule 에 있는 모든 gcal 이벤트 ID
+function _allGcalIds() {
+  const ids = new Set();
+  (state.pool || []).forEach(t => { if (t.gcalEventId) ids.add(t.gcalEventId); });
+  Object.values(state.schedule || {}).flat().forEach(it => { if (it.gcalEventId) ids.add(it.gcalEventId); });
+  return ids;
+}
+
 function _syncedGcalIds() {
   return new Set(
     Object.values(state.schedule).flat().map(it => it.gcalEventId).filter(Boolean)
   );
 }
 
-async function gcalImportEvents(dateKey) {
+async function gcalImportEvents(dk) {
   if (!gcalTokenValid()) return;
   try {
-    const resp = await _gcalFetchEventsForDate(dateKey);
-    const synced = _syncedGcalIds();
+    const resp    = await _gcalFetchEventsForDate(dk);
+    const knownIds = _allGcalIds();
+    let poolChanged = false;
 
-    gcalEvents[dateKey] = (resp.items || [])
-      .filter(ev => ev.status !== 'cancelled' && !synced.has(ev.id))
-      .map(ev => {
-        const allDay = !!ev.start?.date && !ev.start?.dateTime;
-        let timeLabel = '';
-        if (!allDay && ev.start?.dateTime) {
-          const t = new Date(ev.start.dateTime);
-          timeLabel = `${t.getHours().toString().padStart(2, '0')}:${t.getMinutes().toString().padStart(2, '0')}`;
-        }
-        const done = /^✅/.test(ev.summary || '');
-        return {
-          id: ev.id,
-          summary: (ev.summary || '(제목 없음)').replace(/^✅\s*/, ''),
-          done,
-          allDay,
-          timeLabel
-        };
-      });
+    for (const ev of (resp.items || [])) {
+      if (ev.status === 'cancelled') {
+        // 캘린더에서 삭제된 이벤트 → 풀에서 제거
+        const idx = (state.pool || []).findIndex(t => t.gcalEventId === ev.id);
+        if (idx !== -1) { state.pool.splice(idx, 1); poolChanged = true; }
+        continue;
+      }
 
-    if (typeof renderDayTasks === 'function') renderDayTasks(dateKey);
+      // 이미 풀/일정에 있으면 스킵
+      if (knownIds.has(ev.id)) continue;
+
+      // 새 이벤트 → 풀에 추가 (📅 표시)
+      const done = /^✅/.test(ev.summary || '');
+      const text = (ev.summary || '(제목 없음)').replace(/^✅\s*/, '');
+      state.pool.push({ id: uid(), text, gcalEventId: ev.id, fromGcal: true });
+      poolChanged = true;
+    }
+
+    if (poolChanged) {
+      saveState();
+      if (typeof renderPool === 'function') renderPool();
+    }
   } catch (err) {
     if (err.message?.includes('재연결') || err.message?.includes('만료')) {
       updateGcalUI();
@@ -372,7 +423,6 @@ async function gcalFetchRangeEvents(startKey, endKey) {
     });
     const calId = await _getCalendarId();
     const resp = await _gcalFetch('GET', `/calendars/${encodeURIComponent(calId)}/events?${params}`);
-    const synced = _syncedGcalIds();
     const byDate = {};
 
     for (const ev of (resp.items || [])) {
@@ -380,7 +430,6 @@ async function gcalFetchRangeEvents(startKey, endKey) {
       const dk = ev.start?.date || ev.start?.dateTime?.slice(0, 10);
       if (!dk) continue;
       if (!byDate[dk]) byDate[dk] = [];
-      if (synced.has(ev.id)) continue;
       const allDay = !!ev.start?.date && !ev.start?.dateTime;
       let timeLabel = '';
       if (!allDay && ev.start?.dateTime) {

@@ -432,6 +432,8 @@ body {
 }
 .pool-card:active { cursor: grabbing; }
 .pool-card.dragging { opacity: 0.28; pointer-events: none; }
+.pool-card--gcal { border-color: rgba(66,133,244,0.4); background: rgba(66,133,244,0.06); }
+.pool-card__gcal-icon { font-size: 0.78rem; margin-right: 4px; flex-shrink: 0; }
 
 .pool-expand-btn {
   display: flex;
@@ -1248,6 +1250,15 @@ body {
 }
 .trash-zone__icon { font-size: 1.1rem; }
 .trash-zone__label { font-size: 0.82rem; }
+.trash-zone.gcal-warn {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  border-style: solid;
+  transform: scale(1.04);
+  box-shadow: 0 4px 20px rgba(59,130,246,0.2);
+}
+.trash-zone.gcal-warn .trash-zone__icon { content: '📅'; }
+.trash-zone.gcal-warn .trash-zone__label { color: #1d4ed8; font-weight: 600; }
 
 /* ============================
    MODAL

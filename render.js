@@ -24,7 +24,8 @@ function schedulePoolTask(key, taskId, text) {
   state.pool = state.pool.filter(t => t.id !== taskId);
   if (!state.schedule[key]) state.schedule[key] = [];
   const item = { id: uid(), taskId, text, status: null };
-  if (poolTask?.deadline) item.deadline = poolTask.deadline;
+  if (poolTask?.deadline)    item.deadline    = poolTask.deadline;
+  if (poolTask?.gcalEventId) item.gcalEventId = poolTask.gcalEventId;
   state.schedule[key].push(item);
   return true;
 }
@@ -56,10 +57,17 @@ function renderEmptyPool() {
 
 function createPoolCard(task) {
   const card = document.createElement('div');
-  card.className = 'pool-card';
+  card.className = 'pool-card' + (task.fromGcal ? ' pool-card--gcal' : '');
   card.dataset.taskId = task.id;
   card.dataset.text = task.text;
   card.draggable = !!currentUser;
+
+  if (task.fromGcal) {
+    const icon = document.createElement('span');
+    icon.className = 'pool-card__gcal-icon';
+    icon.textContent = '📅';
+    card.appendChild(icon);
+  }
 
   const textSpan = document.createElement('span');
   textSpan.textContent = task.text;
@@ -189,8 +197,6 @@ function renderWeek() {
   renderDayTasks(key);
   setupDayDropZone(card, key);
 
-  // 캘린더 이벤트 비동기 가져오기
-  if (typeof gcalImportEvents === 'function') gcalImportCurrentDate();
 }
 
 function renderDayTasks(key) {
@@ -202,23 +208,6 @@ function renderDayTasks(key) {
   if (items.length === 0) {
     const isMobile = window.matchMedia('(max-width:600px)').matches;
     container.innerHTML = `<div class="drop-hint">${isMobile ? '📌 할일을 두 번 탭해서 추가' : '📌 여기에 할일을 드래그해서 추가'}</div>`;
-    // 앱 할일이 없어도 캘린더 이벤트는 표시
-    const calEvsEmpty = (typeof gcalEvents !== 'undefined' ? gcalEvents[key] : null) || [];
-    calEvsEmpty.forEach(ev => {
-      const el = document.createElement('div');
-      el.className = 'sched-item sched-item--gcal' + (ev.done ? ' done' : '');
-      el.dataset.gcalId   = ev.id;
-      el.dataset.gcalDone = ev.done ? '1' : '0';
-      el.dataset.dateKey  = key;
-      el.innerHTML = `
-        <span class="sched-item__gcal-icon">📅</span>
-        <span class="sched-item__text">${escHtml(ev.summary)}</span>
-        ${ev.timeLabel ? `<span class="sched-item__gcal-time">${escHtml(ev.timeLabel)}</span>` : ''}
-        <div class="sched-item__ox">
-          <button class="btn-o btn-gcal-done${ev.done ? ' active' : ''}" data-gcal-id="${escHtml(ev.id)}" data-date="${key}" title="완료">O</button>
-        </div>`;
-      container.appendChild(el);
-    });
     updateProgress(key);
     return;
   }
@@ -352,25 +341,6 @@ function renderDayTasks(key) {
 
   container.appendChild(fragment);
 
-  // ── 캘린더에서 가져온 이벤트 표시 ──
-  const calEvs = (typeof gcalEvents !== 'undefined' ? gcalEvents[key] : null) || [];
-  if (calEvs.length > 0) {
-    calEvs.forEach(ev => {
-      const el = document.createElement('div');
-      el.className = 'sched-item sched-item--gcal' + (ev.done ? ' done' : '');
-      el.dataset.gcalId   = ev.id;
-      el.dataset.gcalDone = ev.done ? '1' : '0';
-      el.dataset.dateKey  = key;
-      el.innerHTML = `
-        <span class="sched-item__gcal-icon">📅</span>
-        <span class="sched-item__text">${escHtml(ev.summary)}</span>
-        ${ev.timeLabel ? `<span class="sched-item__gcal-time">${escHtml(ev.timeLabel)}</span>` : ''}
-        <div class="sched-item__ox">
-          <button class="btn-o btn-gcal-done${ev.done ? ' active' : ''}" data-gcal-id="${escHtml(ev.id)}" data-date="${key}" title="완료">O</button>
-        </div>`;
-      container.appendChild(el);
-    });
-  }
 
   updateProgress(key);
 }
