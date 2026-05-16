@@ -117,6 +117,31 @@ function initializeFirebase(cfg) {
   firebase.initializeApp(cfg);
   return finishFirebaseSetup();
 }
+
+// Firebase auth 페이지에서 Google OAuth client ID를 브라우저 측에서 직접 추출
+async function _detectOAuthClientId(authDomain) {
+  const urls = [
+    `https://${authDomain}/__/auth/iframe`,
+    `https://${authDomain}/__/auth/handler`
+  ];
+  const patterns = [
+    /"([^"]{20,}\.apps\.googleusercontent\.com)"/,
+    /'([^']{20,}\.apps\.googleusercontent\.com)'/,
+    /([\w-]{20,}\.apps\.googleusercontent\.com)/
+  ];
+  for (const url of urls) {
+    try {
+      const r = await fetch(url, { signal: AbortSignal.timeout(5000) });
+      const text = await r.text();
+      for (const pat of patterns) {
+        const m = text.match(pat);
+        if (m) return m[1];
+      }
+    } catch (_) { /* continue */ }
+  }
+  return null;
+}
+
 async function bootstrapFirebase() {
   try {
     const response = await fetch('/api/config');
@@ -124,12 +149,11 @@ async function bootstrapFirebase() {
     const cfg = await response.json();
     if (cfg.googleClientId) {
       window.__GCAL_CLIENT_ID__ = cfg.googleClientId;
-    } else {
-      // Auto-detect OAuth client ID from Firebase auth pages
-      fetch('/api/gcal-client-id')
-        .then(r => r.ok ? r.json() : null)
-        .then(data => { if (data?.clientId) window.__GCAL_CLIENT_ID__ = data.clientId; })
-        .catch(() => {});
+    } else if (cfg.authDomain) {
+      // Firebase auth 페이지에서 OAuth client ID 자동 감지 (브라우저 직접 fetch)
+      _detectOAuthClientId(cfg.authDomain).then(id => {
+        if (id) window.__GCAL_CLIENT_ID__ = id;
+      });
     }
     await initializeFirebase(cfg);
   } catch (err) {
