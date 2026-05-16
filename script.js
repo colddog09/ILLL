@@ -12,15 +12,13 @@
 const STORAGE_KEYS = {
   pool:     'taskPool_v2',
   schedule: 'taskSchedule_v2',
-  grade:    'grade_v1',
-  classNum: 'classNum_v1'
+  links:    'userLinks_v1'
 };
 const DEFAULT_STATE = {
   pool:     [],
   schedule: {},
   dayOffset: 0,
-  grade:    '2',
-  classNum: '2'
+  links:    []
 };
 
 let state      = { ...DEFAULT_STATE };
@@ -192,36 +190,32 @@ const taskInput = document.getElementById('taskInput');
 function resetScheduleState() {
   state.pool     = [];
   state.schedule = {};
-  state.grade    = DEFAULT_STATE.grade;
-  state.classNum = DEFAULT_STATE.classNum;
+  state.links    = [];
 }
 function applyPersistedState(data = {}) {
   state.pool     = data.pool     || [];
   state.schedule = data.schedule || {};
-  state.grade    = data.grade    || DEFAULT_STATE.grade;
-  state.classNum = data.classNum || DEFAULT_STATE.classNum;
+  state.links    = data.links    || [];
 }
 function readLocalState() {
   return {
     pool:     JSON.parse(localStorage.getItem(STORAGE_KEYS.pool)),
     schedule: JSON.parse(localStorage.getItem(STORAGE_KEYS.schedule)),
-    grade:    localStorage.getItem(STORAGE_KEYS.grade),
-    classNum: localStorage.getItem(STORAGE_KEYS.classNum)
+    links:    JSON.parse(localStorage.getItem(STORAGE_KEYS.links))
   };
 }
 function hasLocalState(data) {
-  return !!(data.pool || data.schedule || data.grade || data.classNum);
+  return !!(data.pool || data.schedule || data.links);
 }
 function persistLocalState() {
   localStorage.setItem(STORAGE_KEYS.pool,     JSON.stringify(state.pool));
   localStorage.setItem(STORAGE_KEYS.schedule, JSON.stringify(state.schedule));
-  localStorage.setItem(STORAGE_KEYS.grade,    state.grade);
-  localStorage.setItem(STORAGE_KEYS.classNum, state.classNum);
+  localStorage.setItem(STORAGE_KEYS.links,    JSON.stringify(state.links));
 }
 
 // 현재 state를 문자열로 직렬화 (변경 감지용)
 function stateSnapshot() {
-  return JSON.stringify({ pool: state.pool, schedule: state.schedule, grade: state.grade, classNum: state.classNum });
+  return JSON.stringify({ pool: state.pool, schedule: state.schedule, links: state.links });
 }
 
 function loadState() {
@@ -233,7 +227,6 @@ function loadState() {
     if (hasLocalState(localState)) {
       applyPersistedState(localState);
       renderApp();
-      if (typeof updateSurveyVisibility === 'function') updateSurveyVisibility();
     }
 
     // 2) 실시간 리스너 — 여러 기기 동기화 + 최신 데이터 수신
@@ -252,8 +245,7 @@ function loadState() {
         autoReturnExpiredTasks();
         const activeElement = document.activeElement;
         renderApp();
-        if (typeof updateSurveyVisibility === 'function') updateSurveyVisibility();
-        setSyncStatus('');
+          setSyncStatus('');
       }, err => {
         console.error('Firestore 수신 에러:', err);
         setSyncStatus('❌ 동기화 오류 — 새로고침 해주세요');
@@ -277,8 +269,7 @@ function _doSave() {
   db.collection('users').doc(currentUser.uid).set({
     pool:        state.pool,
     schedule:    state.schedule,
-    grade:       state.grade,
-    classNum:    state.classNum,
+    links:       state.links || [],
     lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
   }).then(() => {
     lastSavedSnapshot = snap;

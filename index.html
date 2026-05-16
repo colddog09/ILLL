@@ -13,7 +13,7 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
   <meta name="theme-color" content="#6c63ff">
-  <link rel="stylesheet" href="style.css?v=16" />
+  <link rel="stylesheet" href="style.css?v=17" />
 </head>
 <body>
 
@@ -114,43 +114,6 @@
       </div>
       <div class="modal-body settings-body">
         <section class="settings-card">
-          <div class="settings-card__eyebrow">MY CLASS</div>
-          <h3 class="settings-card__title">내 소속 설정</h3>
-          <p class="settings-card__desc">학년과 반을 고르면 앱이 더 나에게 맞게 보여져요.</p>
-
-          <div class="settings-grid">
-            <label class="settings-field">
-              <span class="settings-field__label">학년</span>
-              <select id="gradeSelect" class="form-select">
-                <option value="1">1학년</option>
-                <option value="2">2학년</option>
-                <option value="3">3학년</option>
-              </select>
-            </label>
-
-            <label class="settings-field">
-              <span class="settings-field__label">반</span>
-              <select id="classSelect" class="form-select">
-                <option value="1">1반</option>
-                <option value="2">2반</option>
-                <option value="3">3반</option>
-                <option value="4">4반</option>
-                <option value="5">5반</option>
-              </select>
-            </label>
-          </div>
-
-          <div class="settings-note">
-            <span id="surveyVisibilityBadge" class="settings-badge">질문노트 링크 숨김</span>
-            <p class="settings-note__text">2학년을 선택하면 질문노트 설문 링크가 홈 화면과 정보 모달에 표시됩니다.</p>
-          </div>
-        </section>
-
-        <div class="settings-actions">
-          <button id="settingsSaveBtn" class="auth-btn settings-save-btn">변경사항 저장</button>
-        </div>
-
-        <section class="settings-card">
           <div class="settings-card__eyebrow">GOOGLE CALENDAR</div>
           <h3 class="settings-card__title">캘린더 연동</h3>
           <p class="settings-card__desc">일정을 구글 캘린더에 동기화합니다.</p>
@@ -188,11 +151,22 @@
 
         <hr style="border:none;border-top:1px solid var(--border);margin:0;">
 
-        <!-- 질문노트 링크 (2학년만) -->
-        <div id="surveyLinksMobile" hidden>
-          <p style="font-size:0.8rem;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">📋 질문노트</p>
-          <a href="https://forms.gle/rUwhENomLZjW7b2r6" target="_blank" rel="noopener noreferrer" class="info-link" style="display:block;margin-bottom:8px;">이다현 선생님</a>
-          <a href="https://forms.gle/La8gfRFc9KaGGN7z5" target="_blank" rel="noopener noreferrer" class="info-link" style="display:block;">백민준 선생님</a>
+        <!-- 사용자 링크 -->
+        <div id="userLinksSection">
+          <p style="font-size:0.8rem;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">🔗 빠른 링크</p>
+          <div id="userLinksList"></div>
+          <div id="addLinkForm" class="add-link-form" hidden>
+            <div class="add-link-form__row">
+              <input id="linkIconInput" type="text" placeholder="🔗" maxlength="4" class="link-icon-input" />
+              <input id="linkNameInput" type="text" placeholder="링크 이름" class="link-name-input" />
+            </div>
+            <input id="linkUrlInput" type="text" placeholder="https://..." class="link-url-input" />
+            <div class="add-link-form__actions">
+              <button id="linkCancelBtn" class="link-action-btn link-action-btn--cancel">취소</button>
+              <button id="linkConfirmBtn" class="link-action-btn link-action-btn--confirm">추가</button>
+            </div>
+          </div>
+          <button id="addLinkToggleBtn" class="add-link-toggle-btn">+ 링크 추가</button>
           <hr style="border:none;border-top:1px solid var(--border);margin:12px 0 0;">
         </div>
 
@@ -264,8 +238,8 @@
   <script src="render.js?v=6"></script>
   <script src="drag.js?v=4"></script>
   <script src="deadline.js?v=1"></script>
-  <script src="gcal.js?v=8"></script>
-  <script src="events.js?v=5"></script>
+  <script src="gcal.js?v=9"></script>
+  <script src="events.js?v=6"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').then(reg => {

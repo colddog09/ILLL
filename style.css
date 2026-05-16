@@ -552,8 +552,10 @@ body {
 
 /* 정보 모달 링크 */
 .info-link {
-  display: block;
-  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 16px;
   background: rgba(108,99,255,0.07);
   border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
@@ -561,10 +563,122 @@ body {
   font-size: 0.9rem;
   font-weight: 700;
   text-decoration: none;
-  text-align: center;
   transition: background 0.2s, color 0.2s;
+  flex: 1;
+  min-width: 0;
 }
 .info-link:hover { background: var(--accent); color: #fff; }
+.user-link-icon { font-size: 1.1rem; flex-shrink: 0; }
+
+/* 사용자 링크 목록 */
+.user-link-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.user-link-a { flex: 1; min-width: 0; }
+.user-link-a span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.user-link-delete {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(220,38,38,0.1);
+  color: var(--danger);
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.user-link-delete:hover { background: var(--danger); color: #fff; }
+
+/* 링크 추가 폼 */
+.add-link-toggle-btn {
+  width: 100%;
+  padding: 9px;
+  margin-top: 2px;
+  border: 1.5px dashed var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: var(--font);
+}
+.add-link-toggle-btn:hover { background: rgba(108,99,255,0.08); }
+
+.add-link-form {
+  margin-top: 8px;
+  padding: 14px;
+  background: rgba(108,99,255,0.05);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.add-link-form__row {
+  display: flex;
+  gap: 8px;
+}
+.link-icon-input {
+  width: 54px;
+  flex-shrink: 0;
+  padding: 9px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 1.1rem;
+  text-align: center;
+  background: #fff;
+  font-family: var(--font);
+}
+.link-name-input, .link-url-input {
+  flex: 1;
+  padding: 9px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.88rem;
+  background: #fff;
+  font-family: var(--font);
+  color: var(--text);
+  width: 100%;
+}
+.link-icon-input:focus, .link-name-input:focus, .link-url-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(108,99,255,0.12);
+}
+.add-link-form__actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.link-action-btn {
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: opacity 0.15s;
+}
+.link-action-btn--cancel {
+  background: rgba(107,114,128,0.12);
+  color: var(--text-sub);
+}
+.link-action-btn--confirm {
+  background: var(--accent);
+  color: #fff;
+}
+.link-action-btn:hover { opacity: 0.85; }
 
 .settings-body {
   display: flex;

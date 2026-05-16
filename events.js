@@ -34,11 +34,6 @@ const dom = {
   settingsBtn:          document.getElementById('settingsBtn'),
   settingsModal:        document.getElementById('settingsModal'),
   settingsCloseBtn:     document.getElementById('settingsCloseBtn'),
-  settingsSaveBtn:      document.getElementById('settingsSaveBtn'),
-  classSelect:          document.getElementById('classSelect'),
-  gradeSelect:          document.getElementById('gradeSelect'),
-  surveyVisibilityBadge:document.getElementById('surveyVisibilityBadge'),
-  surveyLinksMobile:    document.getElementById('surveyLinksMobile'),
   prevWeekBtn:          document.getElementById('prevWeekBtn'),
   nextWeekBtn:          document.getElementById('nextWeekBtn')
 };
@@ -49,8 +44,7 @@ const {
   historyModal, historyList, historyCloseBtn,
   infoModal, infoBtn, infoCloseBtn, infoHistoryBtn,
   fbLoginBtn, fbLogoutBtn,
-  settingsBtn, settingsModal, settingsCloseBtn, settingsSaveBtn,
-  classSelect, gradeSelect,
+  settingsBtn, settingsModal, settingsCloseBtn,
   prevWeekBtn, nextWeekBtn
 } = dom;
 
@@ -65,21 +59,6 @@ function bindModal(openBtn, modal, closeBtn, beforeOpen) {
   if (openBtn) openBtn.addEventListener('click', () => { if (beforeOpen) beforeOpen(); setModalOpen(modal, true); });
   if (closeBtn) closeBtn.addEventListener('click', () => setModalOpen(modal, false));
   if (modal) modal.addEventListener('click', e => { if (e.target === modal) setModalOpen(modal, false); });
-}
-
-// ──────────────────────────────────────────────
-// 설정 모달
-// ──────────────────────────────────────────────
-function updateSurveyVisibility() {
-  const isGrade2 = state.grade === '2';
-  if (dom.surveyLinksMobile) dom.surveyLinksMobile.hidden = !isGrade2;
-}
-
-function updateSettingsPreview() {
-  if (!dom.surveyVisibilityBadge) return;
-  const visible = (gradeSelect ? gradeSelect.value : state.grade) === '2';
-  dom.surveyVisibilityBadge.dataset.active = visible ? 'true' : 'false';
-  dom.surveyVisibilityBadge.textContent    = visible ? '질문노트 링크 표시' : '질문노트 링크 숨김';
 }
 
 bindModal(helpBtn, helpModal, helpCloseBtn);
@@ -116,25 +95,89 @@ function renderDeadlineList() {
   });
 }
 
-bindModal(infoBtn, infoModal, infoCloseBtn, renderDeadlineList);
-bindModal(settingsBtn, settingsModal, settingsCloseBtn, () => {
-  if (gradeSelect) gradeSelect.value = state.grade;
-  if (classSelect) classSelect.value = state.classNum;
-  updateSettingsPreview();
-  if (typeof updateGcalUI === 'function') updateGcalUI();
-});
-
-if (settingsSaveBtn) {
-  settingsSaveBtn.addEventListener('click', () => {
-    if (gradeSelect) state.grade    = gradeSelect.value;
-    if (classSelect) state.classNum = classSelect.value;
-    saveState();
-    updateSurveyVisibility();
-    setModalOpen(settingsModal, false);
+// ──────────────────────────────────────────────
+// 사용자 링크 관리
+// ──────────────────────────────────────────────
+function renderInfoLinks() {
+  const listEl = document.getElementById('userLinksList');
+  if (!listEl) return;
+  const links = state.links || [];
+  listEl.innerHTML = '';
+  if (links.length === 0) {
+    listEl.innerHTML = '<p style="font-size:0.82rem;color:var(--text-sub);margin-bottom:8px;">등록된 링크가 없어요.</p>';
+    return;
+  }
+  links.forEach(link => {
+    const item = document.createElement('div');
+    item.className = 'user-link-item';
+    item.innerHTML = `
+      <a href="${escHtml(link.url)}" target="_blank" rel="noopener noreferrer" class="info-link user-link-a">
+        <span class="user-link-icon">${escHtml(link.icon || '🔗')}</span>
+        <span>${escHtml(link.name)}</span>
+      </a>
+      <button class="user-link-delete" data-link-id="${link.id}" aria-label="삭제">✕</button>
+    `;
+    listEl.appendChild(item);
   });
 }
 
-if (gradeSelect) gradeSelect.addEventListener('change', updateSettingsPreview);
+(function initLinkManagement() {
+  const addLinkToggleBtn = document.getElementById('addLinkToggleBtn');
+  const addLinkForm      = document.getElementById('addLinkForm');
+  const linkIconInput    = document.getElementById('linkIconInput');
+  const linkNameInput    = document.getElementById('linkNameInput');
+  const linkUrlInput     = document.getElementById('linkUrlInput');
+  const linkCancelBtn    = document.getElementById('linkCancelBtn');
+  const linkConfirmBtn   = document.getElementById('linkConfirmBtn');
+  const userLinksList    = document.getElementById('userLinksList');
+
+  function clearLinkForm() {
+    if (linkIconInput) linkIconInput.value = '';
+    if (linkNameInput) linkNameInput.value = '';
+    if (linkUrlInput)  linkUrlInput.value  = '';
+  }
+  function closeLinkForm() {
+    if (addLinkForm)      addLinkForm.hidden      = true;
+    if (addLinkToggleBtn) addLinkToggleBtn.hidden  = false;
+    clearLinkForm();
+  }
+
+  if (addLinkToggleBtn) {
+    addLinkToggleBtn.addEventListener('click', () => {
+      addLinkForm.hidden      = false;
+      addLinkToggleBtn.hidden = true;
+      linkNameInput?.focus();
+    });
+  }
+  if (linkCancelBtn) linkCancelBtn.addEventListener('click', closeLinkForm);
+  if (linkConfirmBtn) {
+    linkConfirmBtn.addEventListener('click', () => {
+      const name = linkNameInput?.value.trim();
+      const url  = linkUrlInput?.value.trim();
+      if (!name || !url) return;
+      const icon = linkIconInput?.value.trim() || '🔗';
+      if (!state.links) state.links = [];
+      state.links.push({ id: uid(), name, icon, url });
+      saveState();
+      renderInfoLinks();
+      closeLinkForm();
+    });
+  }
+  if (userLinksList) {
+    userLinksList.addEventListener('click', e => {
+      const btn = e.target.closest('.user-link-delete');
+      if (!btn) return;
+      state.links = (state.links || []).filter(l => l.id !== btn.dataset.linkId);
+      saveState();
+      renderInfoLinks();
+    });
+  }
+})();
+
+bindModal(infoBtn, infoModal, infoCloseBtn, () => { renderDeadlineList(); renderInfoLinks(); });
+bindModal(settingsBtn, settingsModal, settingsCloseBtn, () => {
+  if (typeof updateGcalUI === 'function') updateGcalUI();
+});
 
 // ──────────────────────────────────────────────
 // 로그인/로그아웃
@@ -603,4 +646,3 @@ resetScheduleState();
 renderApp();
 initDrag();
 updateDday();
-updateSettingsPreview();

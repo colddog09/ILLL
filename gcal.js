@@ -342,14 +342,22 @@ async function gcalImportEvents(dk) {
 function gcalImportCurrentDate() {
   if (!gcalTokenValid()) return;
   clearTimeout(_gcalImportTimer);
-  _gcalImportTimer = setTimeout(() => gcalImportEvents(dateKey(currentDay())), 300);
+  _gcalImportTimer = setTimeout(() => {
+    const today = new Date();
+    const endDate = new Date();
+    endDate.setDate(today.getDate() + 100);
+    gcalFetchRangeEvents(dateKey(today), dateKey(endDate));
+  }, 300);
 }
 
 function gcalStartPolling() {
   if (_gcalPollInterval) return;
   _gcalPollInterval = setInterval(() => {
-    if (gcalTokenValid()) gcalImportEvents(dateKey(currentDay()));
-    else gcalStopPolling();
+    if (!gcalTokenValid()) { gcalStopPolling(); return; }
+    const today = new Date();
+    const endDate = new Date();
+    endDate.setDate(today.getDate() + 100);
+    gcalFetchRangeEvents(dateKey(today), dateKey(endDate));
   }, 60 * 1000);
 }
 
@@ -445,6 +453,26 @@ async function gcalFetchRangeEvents(startKey, endKey) {
     }
 
     Object.assign(gcalEvents, byDate);
+
+    // pool 업데이트: 새 이벤트 추가, 취소된 이벤트 제거
+    const knownIds = _allGcalIds();
+    let poolChanged = false;
+    for (const ev of (resp.items || [])) {
+      if (ev.status === 'cancelled') {
+        const idx = (state.pool || []).findIndex(t => t.gcalEventId === ev.id);
+        if (idx !== -1) { state.pool.splice(idx, 1); poolChanged = true; }
+        continue;
+      }
+      if (knownIds.has(ev.id)) continue;
+      const text = (ev.summary || '(제목 없음)').replace(/^✅\s*/, '');
+      state.pool.push({ id: uid(), text, gcalEventId: ev.id, fromGcal: true });
+      poolChanged = true;
+    }
+    if (poolChanged) {
+      saveState();
+      if (typeof renderPool === 'function') renderPool();
+    }
+
     return byDate;
   } catch (err) {
     console.warn('gcal range fetch error:', err.message);
