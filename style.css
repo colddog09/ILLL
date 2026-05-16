@@ -1120,11 +1120,16 @@ body {
 }
 
 .gcal-side-header {
+  position: sticky;
+  top: -16px;
+  background: var(--surface);
+  z-index: 1;
   font-size: 0.72rem;
   font-weight: 800;
   color: #4285f4;
   letter-spacing: 0.06em;
   padding-bottom: 8px;
+  padding-top: 2px;
   border-bottom: 1.5px solid rgba(66,133,244,0.15);
   margin-bottom: 4px;
   flex-shrink: 0;
@@ -1152,6 +1157,8 @@ body {
   border: 1px solid rgba(66,133,244,0.12);
   font-size: 0.82rem;
   transition: background 0.15s;
+  cursor: pointer;
+  user-select: none;
 }
 .gcal-side-event.done .gcal-side-event__text {
   text-decoration: line-through;
