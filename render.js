@@ -18,6 +18,22 @@ function addPoolItemToCurrentDay(taskId, text) {
   }
 }
 
+function scheduleGcalEventToDay(ev, gcalDateKey, targetKey) {
+  if ((state.schedule[targetKey] || []).some(it => it.gcalEventId === ev.id)) return false;
+  if (!state.schedule[targetKey]) state.schedule[targetKey] = [];
+  state.schedule[targetKey].push({
+    id: uid(),
+    taskId: uid(),
+    text: ev.summary,
+    status: null,
+    gcalEventId: ev.id,
+    fromGcal: true,
+  });
+  saveState();
+  renderDayTasks(targetKey);
+  return true;
+}
+
 function schedulePoolTask(key, taskId, text) {
   if ((state.schedule[key] || []).some(it => it.taskId === taskId)) return false;
   const poolTask = state.pool.find(t => t.id === taskId);
@@ -32,11 +48,10 @@ function schedulePoolTask(key, taskId, text) {
 }
 
 function restoreTaskToPool(taskId, text, deadline, gcalEventId, fromGcal) {
+  if (fromGcal) return; // gcal 항목은 사이드 패널(gcalEvents)에 이미 있음
   if (!state.pool.find(t => t.id === taskId)) {
     const task = { id: taskId, text };
-    if (deadline)    task.deadline    = deadline;
-    if (gcalEventId) task.gcalEventId = gcalEventId;
-    if (fromGcal)    task.fromGcal    = true;
+    if (deadline) task.deadline = deadline;
     state.pool.push(task);
   }
 }
@@ -125,53 +140,119 @@ let poolExpanded = false;
 function renderPool() {
   poolEl.innerHTML = '';
 
-  const regularTasks = (state.pool || []).filter(t => !t.fromGcal);
-  const gcalTasks    = (state.pool || []).filter(t =>  t.fromGcal);
+  const tasks = (state.pool || []).filter(t => !t.fromGcal);
 
-  if (regularTasks.length === 0 && gcalTasks.length === 0) {
+  if (tasks.length === 0) {
     poolExpanded = false;
     renderEmptyPool();
     return;
   }
 
+  const showAll     = poolExpanded || tasks.length <= POOL_THRESHOLD;
+  const visible     = showAll ? tasks : tasks.slice(0, POOL_THRESHOLD);
+  const hiddenCount = tasks.length - POOL_THRESHOLD;
+
   const fragment = document.createDocumentFragment();
+  visible.forEach(task => fragment.appendChild(createPoolCard(task)));
 
-  if (regularTasks.length === 0) {
-    const empty = document.createElement('span');
-    empty.className = 'pool-empty-hint';
-    empty.textContent = '할일을 추가해보세요!';
-    fragment.appendChild(empty);
-  } else {
-    const showAll     = poolExpanded || regularTasks.length <= POOL_THRESHOLD;
-    const visible     = showAll ? regularTasks : regularTasks.slice(0, POOL_THRESHOLD);
-    const hiddenCount = regularTasks.length - POOL_THRESHOLD;
-
-    visible.forEach(task => fragment.appendChild(createPoolCard(task)));
-
-    if (!showAll && hiddenCount > 0) {
-      const btn = document.createElement('button');
-      btn.className = 'pool-expand-btn';
-      btn.textContent = `+ ${hiddenCount}개 더 보기`;
-      btn.addEventListener('click', () => { poolExpanded = true; renderPool(); });
-      fragment.appendChild(btn);
-    } else if (poolExpanded && regularTasks.length > POOL_THRESHOLD) {
-      const btn = document.createElement('button');
-      btn.className = 'pool-expand-btn pool-expand-btn--collapse';
-      btn.textContent = '접기';
-      btn.addEventListener('click', () => { poolExpanded = false; renderPool(); });
-      fragment.appendChild(btn);
-    }
-  }
-
-  if (gcalTasks.length > 0) {
-    const sep = document.createElement('div');
-    sep.className = 'pool-gcal-sep';
-    sep.innerHTML = '<span>📅 캘린더</span>';
-    fragment.appendChild(sep);
-    gcalTasks.forEach(task => fragment.appendChild(createPoolCard(task)));
+  if (!showAll && hiddenCount > 0) {
+    const btn = document.createElement('button');
+    btn.className = 'pool-expand-btn';
+    btn.textContent = `+ ${hiddenCount}개 더 보기`;
+    btn.addEventListener('click', () => { poolExpanded = true; renderPool(); });
+    fragment.appendChild(btn);
+  } else if (poolExpanded && tasks.length > POOL_THRESHOLD) {
+    const btn = document.createElement('button');
+    btn.className = 'pool-expand-btn pool-expand-btn--collapse';
+    btn.textContent = '접기';
+    btn.addEventListener('click', () => { poolExpanded = false; renderPool(); });
+    fragment.appendChild(btn);
   }
 
   poolEl.appendChild(fragment);
+}
+
+function renderGcalSidePanel() {
+  const panel = document.getElementById('gcalSidePanel');
+  if (!panel) return;
+
+  const today = dateKey(new Date());
+  const allDates = Object.keys(gcalEvents || {})
+    .filter(dk => dk >= today && (gcalEvents[dk] || []).length > 0)
+    .sort();
+
+  if (allDates.length === 0) {
+    panel.hidden = true;
+    return;
+  }
+
+  panel.hidden = false;
+  panel.innerHTML = '';
+
+  const header = document.createElement('div');
+  header.className = 'gcal-side-header';
+  header.textContent = '📅 캘린더';
+  panel.appendChild(header);
+
+  allDates.forEach(dk => {
+    const [y, m, d] = dk.split('-').map(Number);
+    const date = new Date(y, m - 1, d);
+    const dow  = date.getDay();
+    const dowKo = ['일', '월', '화', '수', '목', '금', '토'][dow];
+    const dateLabel = `${m}/${d} (${dowKo})`;
+
+    const dateEl = document.createElement('div');
+    dateEl.className = 'gcal-side-date' + (dk === today ? ' gcal-side-date--today' : '');
+    dateEl.textContent = dateLabel;
+    panel.appendChild(dateEl);
+
+    (gcalEvents[dk] || []).forEach(ev => {
+      const el = document.createElement('div');
+      el.className = 'gcal-side-event' + (ev.done ? ' done' : '');
+      el.draggable = !!currentUser;
+      el.dataset.gcalId = ev.id;
+      el.dataset.gcalDate = dk;
+      el.dataset.gcalText = ev.summary;
+      const timeLabel = ev.timeLabel ? `<span class="gcal-side-event__time">${ev.timeLabel}</span>` : '';
+      el.innerHTML = `
+        ${timeLabel}
+        <span class="gcal-side-event__text">${escHtml(ev.summary)}</span>
+        <button class="btn-gcal-done btn-o${ev.done ? ' active' : ''}" data-gcal-id="${ev.id}" data-date="${dk}" title="완료">O</button>`;
+
+      // 데스크톱 드래그
+      if (currentUser) {
+        el.addEventListener('dragstart', e => {
+          dragInfo = { type: 'gcal-side', gcalId: ev.id, text: ev.summary, dateKey: dk };
+          e.dataTransfer.setData('text/plain', ev.id);
+          e.dataTransfer.effectAllowed = 'move';
+          setTimeout(() => el.classList.add('dragging'), 0);
+          showGhost(ev.summary);
+          hideDefaultImage(e);
+        });
+        el.addEventListener('dragend', () => {
+          el.classList.remove('dragging');
+          endDrag();
+        });
+      }
+
+      // 모바일 더블탭 → 오늘 날짜에 추가
+      if (currentUser) {
+        let lastTap = 0;
+        el.addEventListener('touchend', e => {
+          if (e.target.closest('.btn-gcal-done')) return;
+          const now = Date.now();
+          if (now - lastTap < 400) {
+            e.preventDefault();
+            const key = dateKey(currentDay());
+            scheduleGcalEventToDay(ev, dk, key);
+          }
+          lastTap = now;
+        }, { passive: false });
+      }
+
+      panel.appendChild(el);
+    });
+  });
 }
 
 // ──────────────────────────────────────────────

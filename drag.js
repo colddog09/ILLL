@@ -30,7 +30,7 @@ function endDrag() {
 function setupDayDropZone(card, key) {
   card.addEventListener('dragover', e => {
     if (!dragInfo) return;
-    if (dragInfo.type === 'pool' || (dragInfo.type === 'day' && dragInfo.dateKey !== key)) {
+    if (dragInfo.type === 'pool' || dragInfo.type === 'gcal-side' || (dragInfo.type === 'day' && dragInfo.dateKey !== key)) {
       e.preventDefault();
       card.classList.add('drag-over');
     }
@@ -49,6 +49,10 @@ function setupDayDropZone(card, key) {
       saveState();
       endDrag();
       refreshPoolAndDay(key);
+    } else if (dragInfo.type === 'gcal-side') {
+      const ev = { id: dragInfo.gcalId, summary: dragInfo.text };
+      scheduleGcalEventToDay(ev, dragInfo.dateKey, key);
+      endDrag();
     } else if (dragInfo.type === 'day' && dragInfo.dateKey !== key) {
       moveSchedItemToDay(dragInfo.dateKey, dragInfo.itemId, key);
       endDrag();

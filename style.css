@@ -1096,6 +1096,87 @@ body {
   box-sizing: border-box;
   padding-inline: 4px;
   overflow: visible;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+/* 캘린더 사이드 패널 */
+.gcal-side-panel {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border: 1.5px solid rgba(66,133,244,0.2);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+  position: sticky;
+  top: 0;
+}
+
+.gcal-side-header {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #4285f4;
+  letter-spacing: 0.06em;
+  padding-bottom: 8px;
+  border-bottom: 1.5px solid rgba(66,133,244,0.15);
+  margin-bottom: 4px;
+  flex-shrink: 0;
+}
+
+.gcal-side-date {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-sub);
+  margin-top: 10px;
+  margin-bottom: 2px;
+  padding: 2px 4px;
+}
+.gcal-side-date--today {
+  color: var(--accent);
+}
+
+.gcal-side-event {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(66,133,244,0.05);
+  border: 1px solid rgba(66,133,244,0.12);
+  font-size: 0.82rem;
+  transition: background 0.15s;
+}
+.gcal-side-event.done .gcal-side-event__text {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+.gcal-side-event__text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+}
+.gcal-side-event__time {
+  font-size: 0.7rem;
+  color: #4285f4;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.gcal-side-event .btn-o {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  font-size: 0.72rem;
+  padding: 0;
 }
 
 .category-sidebar { display: none; }
@@ -1772,6 +1853,8 @@ body {
     padding: 8px 10px;
     font-size: 0.8rem;
   }
+
+  .gcal-side-panel { display: none !important; }
 
   /* ── 할일 풀: 모바일 패딩(14px)에 맞게 네거티브 마진 조정 ── */
   .task-pool {
