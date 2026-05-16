@@ -177,6 +177,12 @@ poolEl.addEventListener('touchend', e => {
 // 이벤트 위임 – O 토글, 미루기
 // ──────────────────────────────────────────────
 dayGrid.addEventListener('click', e => {
+  // 캘린더 이벤트 완료 버튼
+  const gcalBtn = e.target.closest('.btn-gcal-done');
+  if (gcalBtn) {
+    toggleGcalStatus(gcalBtn.dataset.gcalId, gcalBtn.dataset.date);
+    return;
+  }
   const btnO    = e.target.closest('.btn-o');
   if (btnO) { toggleStatus(btnO.dataset.date, btnO.dataset.id); return; }
   const deferBtn = e.target.closest('.defer-btn');
@@ -208,6 +214,24 @@ function toggleStatus(date, id) {
       console.warn('캘린더 완료 동기화 실패:', err.message);
     });
   }
+}
+
+function toggleGcalStatus(gcalId, dateKey) {
+  if (!gcalId || !gcalTokenValid()) return;
+  const evs = (gcalEvents[dateKey] || []);
+  const ev  = evs.find(e => e.id === gcalId);
+  if (!ev) return;
+
+  ev.done = !ev.done;
+  renderDayTasks(dateKey);
+
+  const fn = ev.done ? gcalMarkEventDone : gcalMarkEventUndone;
+  fn(gcalId, ev.summary).catch(err => {
+    // 실패 시 롤백
+    ev.done = !ev.done;
+    renderDayTasks(dateKey);
+    console.warn('캘린더 완료 동기화 실패:', err.message);
+  });
 }
 
 function deferTasks(targetDateKey) {
@@ -506,6 +530,50 @@ if (gcalDisconnectBtn) {
     updateGcalUI();
     renderWeek(); // 캘린더 이벤트 화면에서 제거
     showGcalResult('캘린더 연결이 해제되었습니다.');
+  });
+}
+
+// ── 캘린더 뷰 모달 ──
+const gcalViewBtn      = document.getElementById('gcalViewBtn');
+const gcalViewModal    = document.getElementById('gcalViewModal');
+const gcalViewCloseBtn = document.getElementById('gcalViewCloseBtn');
+const gcalCalGrid      = document.getElementById('gcalCalGrid');
+
+if (gcalViewBtn) {
+  gcalViewBtn.addEventListener('click', () => {
+    gcalViewModal.hidden = false;
+    renderGcalCalendar();
+  });
+}
+if (gcalViewCloseBtn) {
+  gcalViewCloseBtn.addEventListener('click', () => { gcalViewModal.hidden = true; });
+}
+if (gcalViewModal) {
+  gcalViewModal.addEventListener('click', e => {
+    if (e.target === gcalViewModal) gcalViewModal.hidden = true;
+  });
+}
+
+// 달력 뷰 내 이벤트 완료 토글
+if (gcalCalGrid) {
+  gcalCalGrid.addEventListener('click', e => {
+    const chip = e.target.closest('.gcal-cal-event');
+    if (!chip) return;
+    const gcalId  = chip.dataset.gcalId;
+    const dk      = chip.dataset.dateKey;
+    const evs     = gcalEvents[dk] || [];
+    const ev      = evs.find(ev => ev.id === gcalId);
+    if (!ev || !gcalTokenValid()) return;
+    ev.done = !ev.done;
+    chip.className = 'gcal-cal-event' + (ev.done ? ' done' : '');
+    const fn = ev.done ? gcalMarkEventDone : gcalMarkEventUndone;
+    fn(gcalId, ev.summary).catch(err => {
+      ev.done = !ev.done;
+      chip.className = 'gcal-cal-event' + (ev.done ? ' done' : '');
+      console.warn('캘린더 완료 동기화 실패:', err.message);
+    });
+    // 메인 화면도 업데이트
+    if (typeof renderDayTasks === 'function') renderDayTasks(dk);
   });
 }
 

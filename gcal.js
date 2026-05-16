@@ -160,11 +160,15 @@ async function _getCalendarId() {
 
   const resp  = await _gcalFetch('GET', '/users/me/calendarList?maxResults=250');
   const match = (resp.items || []).find(c => c.summary === GCAL_TARGET);
-  if (!match) {
-    throw new Error(`구글 캘린더에 '${GCAL_TARGET}' 캘린더가 없습니다.\n구글 캘린더에서 '일정' 캘린더를 만들어주세요.`);
+
+  if (match) {
+    _gcalCalendarId = match.id;
+    return _gcalCalendarId;
   }
 
-  _gcalCalendarId = match.id;
+  // '일정' 캘린더가 없으면 자동 생성
+  const created = await _gcalFetch('POST', '/calendars', { summary: GCAL_TARGET });
+  _gcalCalendarId = created.id;
   return _gcalCalendarId;
 }
 
@@ -295,7 +299,7 @@ function gcalStartPolling() {
   _gcalPollInterval = setInterval(() => {
     if (gcalTokenValid()) gcalImportEvents(dateKey(currentDay()));
     else gcalStopPolling();
-  }, 3 * 60 * 1000);
+  }, 60 * 1000);
 }
 
 function gcalStopPolling() {
@@ -329,6 +333,9 @@ function updateGcalUI() {
   const reconnectBtn  = document.getElementById('gcalReconnectBtn');
   if (reconnectBtn) reconnectBtn.hidden = !(everConnected && !connected);
 
+  const viewBtn = document.getElementById('gcalViewBtn');
+  if (viewBtn) viewBtn.hidden = !connected;
+
   const dot           = document.getElementById('gcalStatusDot');
   const txt           = document.getElementById('gcalStatusText');
   const connectBtn    = document.getElementById('gcalConnectBtn');
@@ -349,4 +356,141 @@ function updateGcalUI() {
     syncBtn.hidden       = true;
     disconnectBtn.hidden = !everConnected;
   }
+}
+
+// ──────────────────────────────────────────────
+// 범위 이벤트 fetch (달력 뷰용)
+// ──────────────────────────────────────────────
+async function gcalFetchRangeEvents(startKey, endKey) {
+  if (!gcalTokenValid()) return {};
+  try {
+    const [sy, sm, sd] = startKey.split('-').map(Number);
+    const [ey, em, ed] = endKey.split('-').map(Number);
+    const timeMin = new Date(sy, sm - 1, sd, 0, 0, 0, 0).toISOString();
+    const timeMax = new Date(ey, em - 1, ed, 23, 59, 59, 999).toISOString();
+    const params = new URLSearchParams({
+      timeMin, timeMax, singleEvents: 'true', orderBy: 'startTime', maxResults: '250'
+    });
+    const calId = await _getCalendarId();
+    const resp  = await _gcalFetch('GET', `/calendars/${encodeURIComponent(calId)}/events?${params}`);
+    const synced = _syncedGcalIds();
+    const byDate = {};
+
+    for (const ev of (resp.items || [])) {
+      if (ev.status === 'cancelled') continue;
+      const dk = ev.start?.date || ev.start?.dateTime?.slice(0, 10);
+      if (!dk) continue;
+      if (!byDate[dk]) byDate[dk] = [];
+      if (synced.has(ev.id)) continue;
+      const allDay = !!ev.start?.date && !ev.start?.dateTime;
+      let timeLabel = '';
+      if (!allDay && ev.start?.dateTime) {
+        const t = new Date(ev.start.dateTime);
+        timeLabel = `${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}`;
+      }
+      const done = /^✅/.test(ev.summary || '');
+      byDate[dk].push({
+        id: ev.id,
+        summary: (ev.summary || '(제목 없음)').replace(/^✅\s*/, ''),
+        done, allDay, timeLabel
+      });
+    }
+
+    Object.assign(gcalEvents, byDate);
+    return byDate;
+  } catch (err) {
+    console.warn('gcal range fetch error:', err.message);
+    return {};
+  }
+}
+
+// ──────────────────────────────────────────────
+// 달력 뷰 렌더
+// ──────────────────────────────────────────────
+function renderGcalCalendar() {
+  const grid = document.getElementById('gcalCalGrid');
+  if (!grid) return;
+
+  if (!gcalTokenValid()) {
+    grid.innerHTML = '<p style="text-align:center;color:var(--text-sub);padding:24px;">캘린더 연결이 필요합니다.</p>';
+    return;
+  }
+
+  grid.innerHTML = '<p style="text-align:center;color:var(--text-sub);padding:24px;">불러오는 중...</p>';
+
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const todayStr = dateKey(now);
+
+  // 시작: (오늘 - 7일)이 포함된 주의 월요일
+  const start = new Date(now);
+  start.setDate(now.getDate() - 7);
+  const sdow = start.getDay();
+  start.setDate(start.getDate() - (sdow === 0 ? 6 : sdow - 1));
+
+  // 끝: (오늘 + 14일)이 포함된 주의 일요일
+  const end = new Date(now);
+  end.setDate(now.getDate() + 14);
+  const edow = end.getDay();
+  end.setDate(end.getDate() + (edow === 0 ? 0 : 7 - edow));
+
+  const startKey = dateKey(start);
+  const endKey   = dateKey(end);
+
+  gcalFetchRangeEvents(startKey, endKey).then(() => {
+    grid.innerHTML = '';
+
+    const DAYS_HEADER = ['월', '화', '수', '목', '금', '토', '일'];
+    const headerRow = document.createElement('div');
+    headerRow.className = 'gcal-cal-header';
+    DAYS_HEADER.forEach((d, i) => {
+      const cell = document.createElement('div');
+      cell.className = 'gcal-cal-header-cell';
+      if (i === 5) cell.style.color = '#2563eb';
+      if (i === 6) cell.style.color = '#dc2626';
+      cell.textContent = d;
+      headerRow.appendChild(cell);
+    });
+    grid.appendChild(headerRow);
+
+    const cur = new Date(start);
+    while (cur <= end) {
+      const weekEl = document.createElement('div');
+      weekEl.className = 'gcal-cal-week';
+
+      for (let i = 0; i < 7; i++) {
+        const dk  = dateKey(cur);
+        const dow = cur.getDay(); // 0=일, 6=토
+        const cell = document.createElement('div');
+        cell.className = 'gcal-cal-cell'
+          + (dk === todayStr ? ' gcal-cal-cell--today' : '')
+          + (cur < now ? ' gcal-cal-cell--past' : '');
+
+        const dateEl = document.createElement('span');
+        dateEl.className = 'gcal-cal-date';
+        if (dow === 0) dateEl.style.color = '#dc2626';
+        if (dow === 6) dateEl.style.color = '#2563eb';
+        dateEl.textContent = cur.getDate();
+        cell.appendChild(dateEl);
+
+        const evs = gcalEvents[dk] || [];
+        evs.forEach(ev => {
+          const chip = document.createElement('div');
+          chip.className = 'gcal-cal-event' + (ev.done ? ' done' : '');
+          chip.title = ev.summary;
+          chip.dataset.gcalId  = ev.id;
+          chip.dataset.dateKey = dk;
+          chip.textContent = (ev.timeLabel ? ev.timeLabel + ' ' : '') + ev.summary;
+          cell.appendChild(chip);
+        });
+
+        weekEl.appendChild(cell);
+        cur.setDate(cur.getDate() + 1);
+      }
+
+      grid.appendChild(weekEl);
+    }
+  }).catch(() => {
+    grid.innerHTML = '<p style="text-align:center;color:var(--danger);padding:24px;">불러오기 실패</p>';
+  });
 }

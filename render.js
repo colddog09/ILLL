@@ -202,6 +202,23 @@ function renderDayTasks(key) {
   if (items.length === 0) {
     const isMobile = window.matchMedia('(max-width:600px)').matches;
     container.innerHTML = `<div class="drop-hint">${isMobile ? '📌 할일을 두 번 탭해서 추가' : '📌 여기에 할일을 드래그해서 추가'}</div>`;
+    // 앱 할일이 없어도 캘린더 이벤트는 표시
+    const calEvsEmpty = (typeof gcalEvents !== 'undefined' ? gcalEvents[key] : null) || [];
+    calEvsEmpty.forEach(ev => {
+      const el = document.createElement('div');
+      el.className = 'sched-item sched-item--gcal' + (ev.done ? ' done' : '');
+      el.dataset.gcalId   = ev.id;
+      el.dataset.gcalDone = ev.done ? '1' : '0';
+      el.dataset.dateKey  = key;
+      el.innerHTML = `
+        <span class="sched-item__gcal-icon">📅</span>
+        <span class="sched-item__text">${escHtml(ev.summary)}</span>
+        ${ev.timeLabel ? `<span class="sched-item__gcal-time">${escHtml(ev.timeLabel)}</span>` : ''}
+        <div class="sched-item__ox">
+          <button class="btn-o btn-gcal-done${ev.done ? ' active' : ''}" data-gcal-id="${escHtml(ev.id)}" data-date="${key}" title="완료">O</button>
+        </div>`;
+      container.appendChild(el);
+    });
     updateProgress(key);
     return;
   }
@@ -338,18 +355,19 @@ function renderDayTasks(key) {
   // ── 캘린더에서 가져온 이벤트 표시 ──
   const calEvs = (typeof gcalEvents !== 'undefined' ? gcalEvents[key] : null) || [];
   if (calEvs.length > 0) {
-    const sep = document.createElement('div');
-    sep.className = 'gcal-section-sep';
-    sep.textContent = '📅 구글 캘린더';
-    container.appendChild(sep);
-
     calEvs.forEach(ev => {
       const el = document.createElement('div');
       el.className = 'sched-item sched-item--gcal' + (ev.done ? ' done' : '');
+      el.dataset.gcalId   = ev.id;
+      el.dataset.gcalDone = ev.done ? '1' : '0';
+      el.dataset.dateKey  = key;
       el.innerHTML = `
+        <span class="sched-item__gcal-icon">📅</span>
         <span class="sched-item__text">${escHtml(ev.summary)}</span>
         ${ev.timeLabel ? `<span class="sched-item__gcal-time">${escHtml(ev.timeLabel)}</span>` : ''}
-        <span class="sched-item__gcal-badge">캘린더</span>`;
+        <div class="sched-item__ox">
+          <button class="btn-o btn-gcal-done${ev.done ? ' active' : ''}" data-gcal-id="${escHtml(ev.id)}" data-date="${key}" title="완료">O</button>
+        </div>`;
       container.appendChild(el);
     });
   }

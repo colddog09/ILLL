@@ -13,7 +13,7 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
   <meta name="theme-color" content="#6c63ff">
-  <link rel="stylesheet" href="style.css?v=13" />
+  <link rel="stylesheet" href="style.css?v=14" />
 </head>
 <body>
 
@@ -81,6 +81,7 @@
         <span id="weekLabel" class="week-label"></span>
         <button id="nextWeekBtn" class="week-nav-btn" aria-label="다음 날">▶</button>
         <button id="infoBtn" class="icon-btn" aria-label="정보" title="정보/링크">📌</button>
+        <button id="gcalViewBtn" class="icon-btn" aria-label="구글 캘린더 보기" title="구글 캘린더 보기" hidden>📅</button>
       </div>
     </div>
 
@@ -237,6 +238,19 @@
     </div>
   </div>
 
+  <!-- ─── 구글 캘린더 뷰 모달 ─── -->
+  <div id="gcalViewModal" class="modal-overlay" hidden>
+    <div class="modal-box modal-box--wide">
+      <div class="modal-header">
+        <h2>📅 구글 캘린더 — 일정</h2>
+        <button id="gcalViewCloseBtn" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body" style="padding:0 16px 20px;">
+        <div id="gcalCalGrid" class="gcal-cal-grid"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- ─── Google Identity Services (Calendar OAuth fallback) ─── -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
@@ -247,11 +261,11 @@
 
   <script src="utils.js?v=1"></script>
   <script src="script.js?v=16"></script>
-  <script src="render.js?v=1"></script>
-  <script src="drag.js?v=1"></script>
+  <script src="render.js?v=5"></script>
+  <script src="drag.js?v=3"></script>
   <script src="deadline.js?v=1"></script>
-  <script src="gcal.js?v=2"></script>
-  <script src="events.js?v=1"></script>
+  <script src="gcal.js?v=6"></script>
+  <script src="events.js?v=5"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').then(reg => {
