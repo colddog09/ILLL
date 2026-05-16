@@ -61,23 +61,25 @@ function gcalLoadStoredToken() {
 async function gcalConnect() {
   if (!currentUser) throw new Error('로그인이 필요합니다.');
 
+  // GIS를 우선 시도 (이미 로그인된 사용자는 Firebase popup이 새 토큰을 주지 않음)
+  const gisToken = await _gcalConnectViaGIS().catch(() => null);
+  if (gisToken) {
+    _gcalSetToken(gisToken);
+    localStorage.setItem(GCAL_FLAG_KEY, '1');
+    return;
+  }
+
+  // GIS 불가능 시 Firebase signInWithPopup 시도
   const provider = new firebase.auth.GoogleAuthProvider();
   provider.addScope(GCAL_SCOPE);
   provider.setCustomParameters({ prompt: 'consent', login_hint: currentUser.email });
 
   const result = await firebase.auth().signInWithPopup(provider);
-
-  // Firebase credentialFromResult가 null을 반환하는 경우 내부 응답 필드 fallback
   const credential  = firebase.auth.GoogleAuthProvider.credentialFromResult(result);
   const accessToken = credential?.accessToken || result._tokenResponse?.oauthAccessToken;
 
   if (!accessToken) {
-    // GIS 방식으로 재시도 (client ID가 로드된 경우)
-    const gisToken = await _gcalConnectViaGIS().catch(() => null);
-    if (!gisToken) throw new Error('액세스 토큰을 받지 못했습니다.\nGoogle Cloud Console에서 Calendar API가 활성화되어 있는지 확인해주세요.');
-    _gcalSetToken(gisToken);
-    localStorage.setItem(GCAL_FLAG_KEY, '1');
-    return;
+    throw new Error('액세스 토큰을 받지 못했습니다.\n설정에서 GOOGLE_OAUTH_CLIENT_ID 환경변수를 추가하거나, Google Cloud Console에서 Calendar API가 활성화되어 있는지 확인해주세요.');
   }
 
   _gcalSetToken(accessToken);

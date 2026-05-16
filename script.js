@@ -122,7 +122,15 @@ async function bootstrapFirebase() {
     const response = await fetch('/api/config');
     if (!response.ok) throw new Error('config fetch failed: ' + response.status);
     const cfg = await response.json();
-    if (cfg.googleClientId) window.__GCAL_CLIENT_ID__ = cfg.googleClientId;
+    if (cfg.googleClientId) {
+      window.__GCAL_CLIENT_ID__ = cfg.googleClientId;
+    } else {
+      // Auto-detect OAuth client ID from Firebase auth pages
+      fetch('/api/gcal-client-id')
+        .then(r => r.ok ? r.json() : null)
+        .then(data => { if (data?.clientId) window.__GCAL_CLIENT_ID__ = data.clientId; })
+        .catch(() => {});
+    }
     await initializeFirebase(cfg);
   } catch (err) {
     console.error('Firebase 초기화 실패:', err);
