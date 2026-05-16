@@ -4,15 +4,15 @@
 
 'use strict';
 
-const GCAL_BASE     = 'https://www.googleapis.com/calendar/v3';
-const GCAL_SCOPE    = 'https://www.googleapis.com/auth/calendar';
+const GCAL_BASE = 'https://www.googleapis.com/calendar/v3';
+const GCAL_SCOPE = 'https://www.googleapis.com/auth/calendar';
 const GCAL_FLAG_KEY = 'gcal_connected';
-const GCAL_SS_KEY   = 'gcal_token_v1';   // sessionStorage 키 (탭 내 새로고침 유지)
-const GCAL_TARGET   = '일정';            // 연동할 캘린더 이름
+const GCAL_SS_KEY = 'gcal_token_v1';   // sessionStorage 키 (탭 내 새로고침 유지)
+const GCAL_TARGET = '일정';            // 연동할 캘린더 이름
 
-let _gcalToken       = null;
+let _gcalToken = null;
 let _gcalTokenExpiry = 0;
-let _gcalCalendarId  = null;
+let _gcalCalendarId = null;
 
 // ──────────────────────────────────────────────
 // 토큰 관리
@@ -22,7 +22,7 @@ function gcalTokenValid() {
 }
 
 function _gcalSetToken(token, expiry) {
-  _gcalToken       = token;
+  _gcalToken = token;
   _gcalTokenExpiry = expiry || (Date.now() + 3500 * 1000);
   try {
     sessionStorage.setItem(GCAL_SS_KEY, JSON.stringify({ token: _gcalToken, expiry: _gcalTokenExpiry }));
@@ -30,11 +30,11 @@ function _gcalSetToken(token, expiry) {
 }
 
 function gcalClearToken() {
-  _gcalToken       = null;
+  _gcalToken = null;
   _gcalTokenExpiry = 0;
-  _gcalCalendarId  = null;
+  _gcalCalendarId = null;
   localStorage.removeItem(GCAL_FLAG_KEY);
-  try { sessionStorage.removeItem(GCAL_SS_KEY); } catch (e) {}
+  try { sessionStorage.removeItem(GCAL_SS_KEY); } catch (e) { }
 }
 
 function isGcalConnected() {
@@ -47,11 +47,11 @@ function gcalLoadStoredToken() {
   try {
     const stored = JSON.parse(sessionStorage.getItem(GCAL_SS_KEY));
     if (stored?.token && stored.expiry > Date.now() + 60000) {
-      _gcalToken       = stored.token;
+      _gcalToken = stored.token;
       _gcalTokenExpiry = stored.expiry;
       return true;
     }
-  } catch (e) {}
+  } catch (e) { }
   return false;
 }
 
@@ -82,7 +82,7 @@ async function gcalConnect() {
     result = await firebase.auth().signInWithPopup(provider);
   }
 
-  const credential  = firebase.auth.GoogleAuthProvider.credentialFromResult(result);
+  const credential = firebase.auth.GoogleAuthProvider.credentialFromResult(result);
   const accessToken = credential?.accessToken
     || result?._tokenResponse?.oauthAccessToken
     || result?.credential?.accessToken;
@@ -112,9 +112,9 @@ function _gcalConnectViaGIS() {
     }
     const client = google.accounts.oauth2.initTokenClient({
       client_id: clientId,
-      scope:     GCAL_SCOPE,
-      prompt:    'consent',
-      callback:  (resp) => {
+      scope: GCAL_SCOPE,
+      prompt: 'consent',
+      callback: (resp) => {
         if (resp.error) return reject(new Error(resp.error));
         resolve(resp.access_token);
       }
@@ -158,7 +158,7 @@ async function _gcalFetch(method, path, body) {
 async function _getCalendarId() {
   if (_gcalCalendarId) return _gcalCalendarId;
 
-  const resp  = await _gcalFetch('GET', '/users/me/calendarList?maxResults=250');
+  const resp = await _gcalFetch('GET', '/users/me/calendarList?maxResults=250');
   const match = (resp.items || []).find(c => c.summary === GCAL_TARGET);
 
   if (match) {
@@ -188,8 +188,8 @@ async function gcalCreateEvent(text, dateKey) {
   const calId = await _getCalendarId();
   return _gcalFetch('POST', `/calendars/${encodeURIComponent(calId)}/events`, {
     summary: text,
-    start:   { date: dateKey },
-    end:     { date: _nextDay(dateKey) }
+    start: { date: dateKey },
+    end: { date: _nextDay(dateKey) }
   });
 }
 
@@ -229,19 +229,19 @@ async function gcalSyncAll() {
 // ──────────────────────────────────────────────
 // 캘린더 → 앱 가져오기
 // ──────────────────────────────────────────────
-let _gcalImportTimer  = null;
+let _gcalImportTimer = null;
 let _gcalPollInterval = null;
 
 async function _gcalFetchEventsForDate(dateKey) {
   const [y, m, d] = dateKey.split('-').map(Number);
-  const dayStart  = new Date(y, m - 1, d, 0, 0, 0, 0);
-  const dayEnd    = new Date(y, m - 1, d, 23, 59, 59, 999);
+  const dayStart = new Date(y, m - 1, d, 0, 0, 0, 0);
+  const dayEnd = new Date(y, m - 1, d, 23, 59, 59, 999);
   const params = new URLSearchParams({
-    timeMin:      dayStart.toISOString(),
-    timeMax:      dayEnd.toISOString(),
+    timeMin: dayStart.toISOString(),
+    timeMax: dayEnd.toISOString(),
     singleEvents: 'true',
-    orderBy:      'startTime',
-    maxResults:   '50'
+    orderBy: 'startTime',
+    maxResults: '50'
   });
   const calId = await _getCalendarId();
   return _gcalFetch('GET', `/calendars/${encodeURIComponent(calId)}/events?${params}`);
@@ -256,7 +256,7 @@ function _syncedGcalIds() {
 async function gcalImportEvents(dateKey) {
   if (!gcalTokenValid()) return;
   try {
-    const resp   = await _gcalFetchEventsForDate(dateKey);
+    const resp = await _gcalFetchEventsForDate(dateKey);
     const synced = _syncedGcalIds();
 
     gcalEvents[dateKey] = (resp.items || [])
@@ -270,8 +270,8 @@ async function gcalImportEvents(dateKey) {
         }
         const done = /^✅/.test(ev.summary || '');
         return {
-          id:        ev.id,
-          summary:   (ev.summary || '(제목 없음)').replace(/^✅\s*/, ''),
+          id: ev.id,
+          summary: (ev.summary || '(제목 없음)').replace(/^✅\s*/, ''),
           done,
           allDay,
           timeLabel
@@ -312,8 +312,7 @@ function gcalStopPolling() {
 async function gcalMarkEventDone(eventId, text) {
   const calId = await _getCalendarId();
   return _gcalFetch('PATCH', `/calendars/${encodeURIComponent(calId)}/events/${eventId}`, {
-    summary: '✅ ' + text.replace(/^✅\s*/, ''),
-    colorId: '2'
+    summary: '✅ ' + text.replace(/^✅\s*/, '')
   });
 }
 
@@ -328,32 +327,32 @@ async function gcalMarkEventUndone(eventId, text) {
 // UI 업데이트
 // ──────────────────────────────────────────────
 function updateGcalUI() {
-  const connected     = gcalTokenValid();
+  const connected = gcalTokenValid();
   const everConnected = isGcalConnected();
-  const reconnectBtn  = document.getElementById('gcalReconnectBtn');
+  const reconnectBtn = document.getElementById('gcalReconnectBtn');
   if (reconnectBtn) reconnectBtn.hidden = !(everConnected && !connected);
 
   const viewBtn = document.getElementById('gcalViewBtn');
   if (viewBtn) viewBtn.hidden = !connected;
 
-  const dot           = document.getElementById('gcalStatusDot');
-  const txt           = document.getElementById('gcalStatusText');
-  const connectBtn    = document.getElementById('gcalConnectBtn');
-  const syncBtn       = document.getElementById('gcalSyncBtn');
+  const dot = document.getElementById('gcalStatusDot');
+  const txt = document.getElementById('gcalStatusText');
+  const connectBtn = document.getElementById('gcalConnectBtn');
+  const syncBtn = document.getElementById('gcalSyncBtn');
   const disconnectBtn = document.getElementById('gcalDisconnectBtn');
   if (!dot) return;
 
   if (connected) {
-    dot.className        = 'gcal-dot gcal-dot--on';
-    txt.textContent      = '연결됨';
-    connectBtn.hidden    = true;
-    syncBtn.hidden       = false;
+    dot.className = 'gcal-dot gcal-dot--on';
+    txt.textContent = '연결됨';
+    connectBtn.hidden = true;
+    syncBtn.hidden = false;
     disconnectBtn.hidden = false;
   } else {
-    dot.className        = 'gcal-dot gcal-dot--off';
-    txt.textContent      = everConnected ? '재연결 필요' : '연결되지 않음';
-    connectBtn.hidden    = false;
-    syncBtn.hidden       = true;
+    dot.className = 'gcal-dot gcal-dot--off';
+    txt.textContent = everConnected ? '재연결 필요' : '연결되지 않음';
+    connectBtn.hidden = false;
+    syncBtn.hidden = true;
     disconnectBtn.hidden = !everConnected;
   }
 }
@@ -372,7 +371,7 @@ async function gcalFetchRangeEvents(startKey, endKey) {
       timeMin, timeMax, singleEvents: 'true', orderBy: 'startTime', maxResults: '250'
     });
     const calId = await _getCalendarId();
-    const resp  = await _gcalFetch('GET', `/calendars/${encodeURIComponent(calId)}/events?${params}`);
+    const resp = await _gcalFetch('GET', `/calendars/${encodeURIComponent(calId)}/events?${params}`);
     const synced = _syncedGcalIds();
     const byDate = {};
 
@@ -435,7 +434,7 @@ function renderGcalCalendar() {
   end.setDate(end.getDate() + (edow === 0 ? 0 : 7 - edow));
 
   const startKey = dateKey(start);
-  const endKey   = dateKey(end);
+  const endKey = dateKey(end);
 
   gcalFetchRangeEvents(startKey, endKey).then(() => {
     grid.innerHTML = '';
@@ -459,7 +458,7 @@ function renderGcalCalendar() {
       weekEl.className = 'gcal-cal-week';
 
       for (let i = 0; i < 7; i++) {
-        const dk  = dateKey(cur);
+        const dk = dateKey(cur);
         const dow = cur.getDay(); // 0=일, 6=토
         const cell = document.createElement('div');
         cell.className = 'gcal-cal-cell'
@@ -478,7 +477,7 @@ function renderGcalCalendar() {
           const chip = document.createElement('div');
           chip.className = 'gcal-cal-event' + (ev.done ? ' done' : '');
           chip.title = ev.summary;
-          chip.dataset.gcalId  = ev.id;
+          chip.dataset.gcalId = ev.id;
           chip.dataset.dateKey = dk;
           chip.textContent = (ev.timeLabel ? ev.timeLabel + ' ' : '') + ev.summary;
           cell.appendChild(chip);
