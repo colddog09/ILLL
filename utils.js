@@ -59,7 +59,7 @@ function escHtml(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function renderApp() { renderPool(); renderWeek(); }
+function renderApp() { renderPool(); renderWeek(); renderGcalSidePanel(); }
 
 function requireLogin(message = '로그인 후 이용 가능합니다.') {
   if (currentUser) return true;
@@ -99,11 +99,15 @@ function autoReturnExpiredTasks() {
     if (pending.length === 0) return;
 
     pending.forEach(it => {
-      const restoredTaskId = it.taskId || it.id;
-      if (!state.pool.find(t => t.id === restoredTaskId)) {
-        const task = { id: restoredTaskId, text: it.text };
-        if (it.deadline) task.deadline = it.deadline; // deadline 보존
-        state.pool.push(task);
+      if (it.fromGcal) {
+        // 날짜 지난 gcal 항목은 그냥 제거
+      } else {
+        const restoredTaskId = it.taskId || it.id;
+        if (!state.pool.find(t => t.id === restoredTaskId)) {
+          const task = { id: restoredTaskId, text: it.text };
+          if (it.deadline) task.deadline = it.deadline;
+          state.pool.push(task);
+        }
       }
     });
 
@@ -115,5 +119,6 @@ function autoReturnExpiredTasks() {
     saveState();
     renderPool();
     renderWeek();
+    renderGcalSidePanel();
   }
 }

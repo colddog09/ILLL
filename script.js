@@ -1,7 +1,7 @@
 /* ============================================================
    script.js — 상태(state) 및 Firebase 코어
    (유틸: utils.js / 렌더링: render.js / 드래그: drag.js
-    기한UI: deadline.js / 푸시: push.js / 이벤트: events.js)
+    기한UI: deadline.js / 이벤트: events.js)
    ============================================================ */
 
 'use strict';
@@ -12,32 +12,26 @@
 const STORAGE_KEYS = {
   pool:     'taskPool_v2',
   schedule: 'taskSchedule_v2',
-  dayMemo:  'dayMemo_v1',
-  grade:    'grade_v1',
-  classNum: 'classNum_v1'
+  links:    'userLinks_v1'
 };
 const DEFAULT_STATE = {
   pool:     [],
   schedule: {},
-  dayMemo:  {},
   dayOffset: 0,
-  grade:    '2',
-  classNum: '2'
+  links:    []
 };
 
-let state    = { ...DEFAULT_STATE };
-let dragInfo = null;
+let state      = { ...DEFAULT_STATE };
+let dragInfo   = null;
+let gcalEvents = {}; // 캘린더에서 가져온 이벤트 (Firestore 저장 안 함)
 
 // ──────────────────────────────────────────────
 // Firebase
 // ──────────────────────────────────────────────
 let currentUser          = null;
 let db                   = null;
-let unsubscribeSnapshot  = null;
 let firebaseReady        = false;
-let memoSaveTimer        = null;
-let saveDebounceTimer    = null;
-let lastSavedSnapshot    = null; // 마지막 저장 상태 (변경 감지용)
+let lastSavedSnapshot    = null; // 마지막 Firestore 저장 상태 (변경 감지용)
 
 const REDIRECT_AUTH_CODES = new Set([
   'auth/popup-blocked',
@@ -119,11 +113,44 @@ function initializeFirebase(cfg) {
   firebase.initializeApp(cfg);
   return finishFirebaseSetup();
 }
+
+// Firebase auth 페이지에서 Google OAuth client ID를 브라우저 측에서 직접 추출
+async function _detectOAuthClientId(authDomain) {
+  const urls = [
+    `https://${authDomain}/__/auth/iframe`,
+    `https://${authDomain}/__/auth/handler`
+  ];
+  const patterns = [
+    /"([^"]{20,}\.apps\.googleusercontent\.com)"/,
+    /'([^']{20,}\.apps\.googleusercontent\.com)'/,
+    /([\w-]{20,}\.apps\.googleusercontent\.com)/
+  ];
+  for (const url of urls) {
+    try {
+      const r = await fetch(url, { signal: AbortSignal.timeout(5000) });
+      const text = await r.text();
+      for (const pat of patterns) {
+        const m = text.match(pat);
+        if (m) return m[1];
+      }
+    } catch (_) { /* continue */ }
+  }
+  return null;
+}
+
 async function bootstrapFirebase() {
   try {
     const response = await fetch('/api/config');
     if (!response.ok) throw new Error('config fetch failed: ' + response.status);
     const cfg = await response.json();
+    if (cfg.googleClientId) {
+      window.__GCAL_CLIENT_ID__ = cfg.googleClientId;
+    } else if (cfg.authDomain) {
+      // Firebase auth 페이지에서 OAuth client ID 자동 감지 (브라우저 직접 fetch)
+      _detectOAuthClientId(cfg.authDomain).then(id => {
+        if (id) window.__GCAL_CLIENT_ID__ = id;
+      });
+    }
     await initializeFirebase(cfg);
   } catch (err) {
     console.error('Firebase 초기화 실패:', err);
@@ -161,122 +188,134 @@ const taskInput = document.getElementById('taskInput');
 function resetScheduleState() {
   state.pool     = [];
   state.schedule = {};
-  state.dayMemo  = {};
-  state.grade    = DEFAULT_STATE.grade;
-  state.classNum = DEFAULT_STATE.classNum;
+  state.links    = [];
 }
 function applyPersistedState(data = {}) {
   state.pool     = data.pool     || [];
   state.schedule = data.schedule || {};
-  state.dayMemo  = data.dayMemo  || {};
-  state.grade    = data.grade    || DEFAULT_STATE.grade;
-  state.classNum = data.classNum || DEFAULT_STATE.classNum;
+  state.links    = data.links    || [];
 }
 function readLocalState() {
   return {
     pool:     JSON.parse(localStorage.getItem(STORAGE_KEYS.pool)),
     schedule: JSON.parse(localStorage.getItem(STORAGE_KEYS.schedule)),
-    dayMemo:  JSON.parse(localStorage.getItem(STORAGE_KEYS.dayMemo)),
-    grade:    localStorage.getItem(STORAGE_KEYS.grade),
-    classNum: localStorage.getItem(STORAGE_KEYS.classNum)
+    links:    JSON.parse(localStorage.getItem(STORAGE_KEYS.links))
   };
 }
 function hasLocalState(data) {
-  return !!(data.pool || data.schedule || data.dayMemo || data.grade || data.classNum);
+  return !!(data.pool || data.schedule || data.links);
 }
 function persistLocalState() {
   localStorage.setItem(STORAGE_KEYS.pool,     JSON.stringify(state.pool));
   localStorage.setItem(STORAGE_KEYS.schedule, JSON.stringify(state.schedule));
-  localStorage.setItem(STORAGE_KEYS.dayMemo,  JSON.stringify(state.dayMemo));
-  localStorage.setItem(STORAGE_KEYS.grade,    state.grade);
-  localStorage.setItem(STORAGE_KEYS.classNum, state.classNum);
-}
-function queueMemoSave() {
-  if (memoSaveTimer) clearTimeout(memoSaveTimer);
-  memoSaveTimer = setTimeout(() => { memoSaveTimer = null; saveState(); }, 250);
+  localStorage.setItem(STORAGE_KEYS.links,    JSON.stringify(state.links));
 }
 
 // 현재 state를 문자열로 직렬화 (변경 감지용)
 function stateSnapshot() {
-  return JSON.stringify({ pool: state.pool, schedule: state.schedule, dayMemo: state.dayMemo, grade: state.grade, classNum: state.classNum });
+  return JSON.stringify({ pool: state.pool, schedule: state.schedule, links: state.links });
 }
 
 function loadState() {
-  if (unsubscribeSnapshot) { unsubscribeSnapshot(); unsubscribeSnapshot = null; }
-
-  if (currentUser && db) {
-    // 1) 로컬 데이터 먼저 즉시 표시 (빠른 초기 렌더)
-    const localState = readLocalState();
-    if (hasLocalState(localState)) {
-      applyPersistedState(localState);
-      renderApp();
-      if (typeof updateSurveyVisibility === 'function') updateSurveyVisibility();
-    }
-
-    // 2) 실시간 리스너 — 여러 기기 동기화 + 최신 데이터 수신
-    unsubscribeSnapshot = db.collection('users').doc(currentUser.uid)
-      .onSnapshot(doc => {
-        if (doc.metadata.hasPendingWrites) return; // 로컬 쓰기 반응 무시
-
-        if (doc.exists) {
-          applyPersistedState(doc.data());
-          persistLocalState();
-        } else {
-          if (hasLocalState(localState)) { applyPersistedState(localState); _doSave(); }
-          else resetScheduleState();
-        }
-        lastSavedSnapshot = stateSnapshot();
-        autoReturnExpiredTasks();
-        const activeElement = document.activeElement;
-        if (!activeElement || !activeElement.classList.contains('day-card__memo')) renderApp();
-        if (typeof updateSurveyVisibility === 'function') updateSurveyVisibility();
-        setSyncStatus('');
-      }, err => {
-        console.error('Firestore 수신 에러:', err);
-        setSyncStatus('❌ 동기화 오류 — 새로고침 해주세요');
-      });
-  } else {
+  if (!currentUser || !db) {
     resetScheduleState();
     renderApp();
+    return;
   }
+
+  // 1) 로컬 데이터 먼저 즉시 표시
+  const localState = readLocalState();
+  if (hasLocalState(localState)) {
+    applyPersistedState(localState);
+    autoReturnExpiredTasks();
+    renderApp();
+  }
+
+  // 2) Firestore에서 한 번만 읽어 최신 데이터로 덮어씀
+  setSyncStatus('☁️ 불러오는 중...');
+  db.collection('users').doc(currentUser.uid).get()
+    .then(doc => {
+      if (doc.exists) {
+        const remote = doc.data();
+        // 로컬이 더 최신이면 유지, 아니면 서버 데이터 사용
+        const remoteTime = remote.lastUpdated?.toMillis?.() || 0;
+        const localTime  = parseInt(localStorage.getItem('lastSavedTime') || '0');
+        if (remoteTime > localTime) {
+          applyPersistedState(remote);
+          persistLocalState();
+          lastSavedSnapshot = stateSnapshot();
+        } else {
+          lastSavedSnapshot = stateSnapshot();
+        }
+      } else {
+        // 서버에 없으면 로컬 데이터를 서버에 저장
+        _doSave();
+      }
+      autoReturnExpiredTasks();
+      renderApp();
+      setSyncStatus('');
+    })
+    .catch(err => {
+      console.error('Firestore 읽기 에러:', err);
+      setSyncStatus('❌ 불러오기 실패 — 로컬 데이터 사용 중');
+      renderApp();
+    });
 }
 
 function _doSave() {
-  if (memoSaveTimer) { clearTimeout(memoSaveTimer); memoSaveTimer = null; }
-  persistLocalState(); // 항상 로컬에 즉시 저장
+  persistLocalState();
+  localStorage.setItem('lastSavedTime', Date.now().toString());
 
   if (!currentUser || !db) { setSyncStatus('💾 로컬 저장됨'); return; }
 
-  // 변경된 내용이 없으면 Firestore 쓰기 스킵
   const snap = stateSnapshot();
-  if (snap === lastSavedSnapshot) { setSyncStatus('✅ 저장 완료'); return; }
+  if (snap === lastSavedSnapshot) return;
 
-  setSyncStatus('☁️ 저장 중...');
   db.collection('users').doc(currentUser.uid).set({
     pool:        state.pool,
     schedule:    state.schedule,
-    dayMemo:     state.dayMemo,
-    grade:       state.grade,
-    classNum:    state.classNum,
+    links:       state.links || [],
     lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
   }).then(() => {
     lastSavedSnapshot = snap;
-    setSyncStatus('✅ 저장 완료');
   }).catch(err => {
     console.error('Firestore 저장 에러:', err);
-    if (err.code === 'resource-exhausted') {
-      setSyncStatus('⚠️ 일일 한도 초과 — 로컬 저장됨');
-    } else {
-      setSyncStatus('❌ 저장 실패');
-    }
   });
 }
 
+// saveState = 즉시 로컬 저장만, Firestore는 앱 종료 시 처리
 function saveState() {
-  // 1초 디바운스: 연속 동작 시 마지막 1번만 Firestore에 저장
-  if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
-  saveDebounceTimer = setTimeout(() => { saveDebounceTimer = null; _doSave(); }, 1000);
+  persistLocalState();
+  localStorage.setItem('lastSavedTime', Date.now().toString());
 }
+
+// 앱 종료/백그라운드 전환 시 Firestore에 저장
+function flushToFirestore() {
+  if (!currentUser || !db) return;
+  const snap = stateSnapshot();
+  if (snap === lastSavedSnapshot) return;
+  const data = {
+    pool:        state.pool,
+    schedule:    state.schedule,
+    links:       state.links || [],
+    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  // sendBeacon 방식으로 페이지 언로드에도 전송 시도
+  try {
+    db.collection('users').doc(currentUser.uid).set(data);
+    lastSavedSnapshot = snap;
+  } catch (e) {
+    console.error('flushToFirestore 실패:', e);
+  }
+}
+
+window.addEventListener('beforeunload', flushToFirestore);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') flushToFirestore();
+});
+
+// 10분마다 자동 Firestore 업로드
+setInterval(flushToFirestore, 10 * 60 * 1000);
 
 // ──────────────────────────────────────────────
 // 인증 UI
@@ -304,8 +343,22 @@ function updateAuthUi(user) {
   updateStandaloneAuthHint(user);
   loadState();
 
-  // 로그인 시 push 구독 요청 (push.js가 로드된 후 사용 가능)
-  if (user && typeof requestPushPermission === 'function') {
-    requestPushPermission(user.uid);
+  // 캘린더 토큰 복원
+  if (user && typeof gcalLoadStoredToken === 'function') {
+    const restored = gcalLoadStoredToken();
+    if (typeof updateGcalUI === 'function') updateGcalUI();
+    if (restored) {
+      if (typeof gcalImportCurrentDate === 'function') gcalImportCurrentDate();
+      if (typeof gcalStartPolling === 'function') gcalStartPolling();
+    } else if (typeof isGcalConnected === 'function' && isGcalConnected()) {
+      // 세션 만료됐지만 이전에 연결했음 → 조용히 자동 재연결
+      gcalSilentConnect().then(ok => {
+        if (typeof updateGcalUI === 'function') updateGcalUI();
+        if (ok) {
+          if (typeof gcalImportCurrentDate === 'function') gcalImportCurrentDate();
+          if (typeof gcalStartPolling === 'function') gcalStartPolling();
+        }
+      });
+    }
   }
 }

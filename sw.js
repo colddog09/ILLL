@@ -1,15 +1,16 @@
-const CACHE_NAME = 'illl-v5';
+const CACHE_NAME = 'illl-v20';
 const CORE_FILES = [
   '/',
   '/index.html',
-  '/style.css?v=12',
+  '/style.css?v=18',
   '/utils.js?v=1',
-  '/script.js?v=14',
-  '/render.js?v=1',
-  '/drag.js?v=1',
+  '/script.js?v=17',
+  '/render.js?v=12',
+  '/drag.js?v=6',
   '/deadline.js?v=1',
   '/push.js?v=1',
-  '/events.js?v=1',
+  '/gcal.js?v=9',
+  '/events.js?v=6',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
