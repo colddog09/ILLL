@@ -878,7 +878,7 @@ header h1 {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 1px;
+    gap: 4px;
     padding: 8px 10px;
     background: rgba(255, 59, 48, 0.07);
     border: 1.5px solid rgba(255, 59, 48, 0.22);
@@ -888,6 +888,7 @@ header h1 {
     flex: 0 0 calc(25% - 5px);
     min-width: 0;
     font-family: inherit;
+    text-align: left;
 }
 
 .urgent-chip:hover {
@@ -901,20 +902,42 @@ header h1 {
     transform: scale(0.96);
 }
 
+.urgent-chip__top {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    min-width: 0;
+}
+
 .urgent-chip__name {
     font-size: 11px;
     font-weight: 700;
     color: #1D1D1F;
-    width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    flex: 1;
+    min-width: 0;
 }
 
 .urgent-chip__date {
     font-size: 10px;
     font-weight: 600;
     color: #FF3B30;
+    flex-shrink: 0;
+}
+
+.urgent-chip__desc {
+    font-size: 10px;
+    font-weight: 400;
+    color: #6e6e73;
+    line-height: 1.4;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    width: 100%;
 }
 
 /* ── Icon-only Round Button ── */

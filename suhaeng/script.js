@@ -292,12 +292,18 @@ function renderUrgentList(events) {
   listEl.innerHTML = `
     <div class="urgent-list__header">⚠️ 마감 임박</div>
     <div class="urgent-chips">
-      ${urgentItems.map(({ ev, i }) => `
-        <button class="urgent-chip" data-index="${i}">
-          <span class="urgent-chip__name">${escapeHtml(ev.summary || '제목 없음')}</span>
-          <span class="urgent-chip__date">${formatEventDate(ev)}</span>
-        </button>
-      `).join('')}
+      ${urgentItems.map(({ ev, i }) => {
+        const desc = (ev.description || '').replace(/<[^>]*>/g, '').trim();
+        return `
+          <button class="urgent-chip" data-index="${i}">
+            <div class="urgent-chip__top">
+              <span class="urgent-chip__name">${escapeHtml(ev.summary || '제목 없음')}</span>
+              <span class="urgent-chip__date">${formatEventDate(ev)}</span>
+            </div>
+            ${desc ? `<span class="urgent-chip__desc">${escapeHtml(desc)}</span>` : ''}
+          </button>
+        `;
+      }).join('')}
     </div>
   `;
 
