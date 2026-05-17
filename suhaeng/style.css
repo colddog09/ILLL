@@ -940,6 +940,40 @@ header h1 {
     width: 100%;
 }
 
+.urgent-chip__footer {
+    margin-top: 5px;
+    width: 100%;
+}
+
+.urgent-chip__link {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 0.15s ease;
+}
+
+.urgent-chip__link--on {
+    background: rgba(0, 122, 255, 0.1);
+    color: #007AFF;
+    border: 1px solid rgba(0, 122, 255, 0.25);
+}
+
+.urgent-chip__link--on:hover {
+    background: #007AFF;
+    color: white;
+    border-color: #007AFF;
+}
+
+.urgent-chip__link--off {
+    background: rgba(0, 0, 0, 0.04);
+    color: #bbb;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    cursor: default;
+}
+
 /* ── Icon-only Round Button ── */
 .btn-icon-round {
     width: 36px;

@@ -293,22 +293,39 @@ function renderUrgentList(events) {
     <div class="urgent-list__header">⚠️ 마감 임박</div>
     <div class="urgent-chips">
       ${urgentItems.map(({ ev, i }) => {
-        const desc = (ev.description || '').replace(/<[^>]*>/g, '').trim();
+        const rawDesc = ev.description || '';
+        const desc = rawDesc.replace(/<[^>]*>/g, '').trim();
+        // description의 HTML href 또는 평문 URL에서 첫 번째 링크 추출
+        const hrefMatch = rawDesc.match(/href=["']([^"']+)["']/i);
+        const plainMatch = desc.match(/https?:\/\/[^\s]+/);
+        const link = hrefMatch ? hrefMatch[1] : (plainMatch ? plainMatch[0] : null);
+        // 링크를 제거한 순수 텍스트
+        const descClean = desc.replace(/https?:\/\/[^\s]+/g, '').trim();
+        const linkBtn = link
+          ? `<a class="urgent-chip__link urgent-chip__link--on" href="${escapeHtml(link)}" target="_blank" rel="noopener" data-stop>바로가기 →</a>`
+          : `<span class="urgent-chip__link urgent-chip__link--off">바로가기 X</span>`;
         return `
-          <button class="urgent-chip" data-index="${i}">
+          <div class="urgent-chip" data-index="${i}">
             <div class="urgent-chip__top">
               <span class="urgent-chip__name">${escapeHtml(ev.summary || '제목 없음')}</span>
               <span class="urgent-chip__date">${formatEventDate(ev)}</span>
             </div>
-            ${desc ? `<span class="urgent-chip__desc">${escapeHtml(desc)}</span>` : ''}
-          </button>
+            ${descClean ? `<span class="urgent-chip__desc">${escapeHtml(descClean)}</span>` : ''}
+            <div class="urgent-chip__footer">
+              ${linkBtn}
+            </div>
+          </div>
         `;
       }).join('')}
     </div>
   `;
 
   listEl.querySelectorAll('.urgent-chip').forEach(chip => {
-    chip.addEventListener('click', () => scrollToCard(parseInt(chip.dataset.index, 10)));
+    chip.addEventListener('click', e => {
+      // 바로가기 링크 클릭은 카드 이동 안 함
+      if (e.target.closest('[data-stop]')) return;
+      scrollToCard(parseInt(chip.dataset.index, 10));
+    });
   });
 }
 
