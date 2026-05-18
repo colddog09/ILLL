@@ -974,6 +974,40 @@ header h1 {
     cursor: default;
 }
 
+/* ── 카드 뒷면 바로가기 버튼 ── */
+.card-link-btn {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 8px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.18s ease;
+    align-self: flex-start;
+}
+
+.card-link-btn--on {
+    background: rgba(0, 122, 255, 0.1);
+    color: #007AFF;
+    border: 1.5px solid rgba(0, 122, 255, 0.3);
+}
+
+.card-link-btn--on:hover {
+    background: #007AFF;
+    color: white;
+    border-color: #007AFF;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+}
+
+.card-link-btn--off {
+    background: rgba(0, 0, 0, 0.04);
+    color: #bbb;
+    border: 1.5px solid rgba(0, 0, 0, 0.08);
+    cursor: default;
+}
+
 /* ── Icon-only Round Button ── */
 .btn-icon-round {
     width: 36px;

@@ -127,6 +127,24 @@ function getEventUrgency(event) {
   return { urgent: diff >= 0 && diff <= 1, overdue: diff < 0 };
 }
 
+// ── URL 추출 유틸 ──
+function extractLink(rawDesc) {
+  if (!rawDesc) return null;
+  // 1) HTML href 속성에서 추출 (Google Calendar 링크 등)
+  const hrefMatch = rawDesc.match(/href=["']([^"']+)["']/i);
+  if (hrefMatch) return hrefMatch[1];
+  // 2) HTML 제거 후 평문 URL 추출
+  const plain = rawDesc.replace(/<[^>]*>/g, '');
+  const urlMatch = plain.match(/https?:\/\/\S+/);
+  if (urlMatch) return urlMatch[0].replace(/[.,;!?]$/, ''); // 말미 구두점 제거
+  return null;
+}
+
+function stripLink(text) {
+  // 설명에서 URL만 제거해 순수 텍스트 반환
+  return text.replace(/https?:\/\/\S+/g, '').replace(/\s{2,}/g, ' ').trim();
+}
+
 // ── 카드 렌더링 ──
 function escapeHtml(text) {
   if (!text) return '';
@@ -154,7 +172,10 @@ function getSubjectEmoji(subject) {
 function createEventCardHTML(event, index) {
   const title    = event.summary || '제목 없음';
   const dateStr  = formatEventDate(event);
-  const desc     = (event.description || '').replace(/<[^>]*>/g, '').trim();
+  const rawDesc  = event.description || '';
+  const link     = extractLink(rawDesc);
+  const descFull = rawDesc.replace(/<[^>]*>/g, '').trim();
+  const desc     = stripLink(descFull);   // URL 제거한 순수 텍스트
   const location = event.location || '';
   const { urgent, overdue } = getEventUrgency(event);
   const emoji    = getSubjectEmoji(title);
@@ -171,6 +192,9 @@ function createEventCardHTML(event, index) {
 
   const descRow    = desc     ? `<div class="info-row"><div class="info-label">내용</div><div class="info-value">${escapeHtml(desc)}</div></div>` : '';
   const locationRow = location ? `<div class="info-row"><div class="info-label">장소</div><div class="info-value">${escapeHtml(location)}</div></div>` : '';
+  const linkRow = link
+    ? `<a class="card-link-btn card-link-btn--on" href="${escapeHtml(link)}" target="_blank" rel="noopener">바로가기 →</a>`
+    : `<span class="card-link-btn card-link-btn--off">바로가기 X</span>`;
 
   return `
     <div class="info-card${cardClass}" id="card-${index}">
@@ -194,6 +218,7 @@ function createEventCardHTML(event, index) {
             </div>
             ${descRow}
             ${locationRow}
+            ${linkRow}
           </div>
         </div>
       </div>
@@ -294,13 +319,8 @@ function renderUrgentList(events) {
     <div class="urgent-chips">
       ${urgentItems.map(({ ev, i }) => {
         const rawDesc = ev.description || '';
-        const desc = rawDesc.replace(/<[^>]*>/g, '').trim();
-        // description의 HTML href 또는 평문 URL에서 첫 번째 링크 추출
-        const hrefMatch = rawDesc.match(/href=["']([^"']+)["']/i);
-        const plainMatch = desc.match(/https?:\/\/[^\s]+/);
-        const link = hrefMatch ? hrefMatch[1] : (plainMatch ? plainMatch[0] : null);
-        // 링크를 제거한 순수 텍스트
-        const descClean = desc.replace(/https?:\/\/[^\s]+/g, '').trim();
+        const link = extractLink(rawDesc);
+        const descClean = stripLink(rawDesc.replace(/<[^>]*>/g, '').trim());
         const linkBtn = link
           ? `<a class="urgent-chip__link urgent-chip__link--on" href="${escapeHtml(link)}" target="_blank" rel="noopener" data-stop>바로가기 →</a>`
           : `<span class="urgent-chip__link urgent-chip__link--off">바로가기 X</span>`;
