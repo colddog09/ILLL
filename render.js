@@ -218,6 +218,15 @@ function renderGcalSidePanel() {
   header.textContent = '📅 캘린더';
   panel.appendChild(header);
 
+  // 캘린더 미연결 상태
+  if (typeof gcalTokenValid === 'function' && !gcalTokenValid()) {
+    const notConn = document.createElement('div');
+    notConn.className = 'gcal-side-empty gcal-side-empty--disconnected';
+    notConn.textContent = '연결 안됨';
+    panel.appendChild(notConn);
+    return;
+  }
+
   const list = document.createElement('div');
   list.className = 'gcal-side-list';
   panel.appendChild(list);

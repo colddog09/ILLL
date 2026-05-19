@@ -1198,6 +1198,12 @@ body {
   text-align: center;
 }
 
+.gcal-side-empty--disconnected {
+  color: #aaa;
+  font-size: 0.75rem;
+  padding: 10px 4px;
+}
+
 .category-sidebar { display: none; }
 
 /* ── 수행평가 오버레이 ── */
