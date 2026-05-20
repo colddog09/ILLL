@@ -339,6 +339,14 @@ h1 {
     /* Ensure long text wraps */
 }
 
+/* Done (Completed) State */
+.info-card.highlight-done .card-front,
+.info-card.highlight-done .card-back {
+    background-color: #E8F8EE !important;
+    border-color: #34C759 !important;
+    transition: background-color 0.5s ease;
+}
+
 /* Urgent Highlight State */
 .info-card.highlight-urgent .card-front,
 .info-card.highlight-urgent .card-back {

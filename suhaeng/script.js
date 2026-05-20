@@ -170,7 +170,9 @@ function getSubjectEmoji(subject) {
 }
 
 function createEventCardHTML(event, index) {
-  const title    = event.summary || '제목 없음';
+  const rawTitle = event.summary || '제목 없음';
+  const done     = /^✅/.test(rawTitle);
+  const title    = rawTitle.replace(/^✅\s*/, '');
   const dateStr  = formatEventDate(event);
   const rawDesc  = event.description || '';
   const link     = extractLink(rawDesc);
@@ -181,10 +183,13 @@ function createEventCardHTML(event, index) {
   const emoji    = getSubjectEmoji(title);
 
   let cardClass = '';
-  if (overdue)     cardClass = ' highlight-overdue';
-  else if (urgent) cardClass = ' highlight-urgent';
+  if (done)            cardClass = ' highlight-done';
+  else if (overdue)    cardClass = ' highlight-overdue';
+  else if (urgent)     cardClass = ' highlight-urgent';
 
-  const urgencyBadge = overdue
+  const urgencyBadge = done
+    ? '<div style="margin-top:8px;font-size:14px;color:#34C759;font-weight:700;">✅ 완료</div>'
+    : overdue
     ? '<div style="margin-top:8px;font-size:14px;color:#888;font-weight:700;">💀 기한 지남</div>'
     : urgent
     ? '<div style="margin-top:8px;font-size:14px;color:#FF3B30;font-weight:700;">⚠️ 마감 임박</div>'
@@ -201,7 +206,7 @@ function createEventCardHTML(event, index) {
       <div class="card-inner">
         <div class="card-front">
           <div class="card-bg-title">${escapeHtml(title.length > 2 ? '과제' : title)}</div>
-          <div class="card-bg-emoji">${overdue ? '💀' : emoji}</div>
+          <div class="card-bg-emoji">${done ? '✅' : overdue ? '💀' : emoji}</div>
           <div class="card-content" style="justify-content:center;align-items:center;text-align:center;">
             <div style="font-size:32px;font-weight:800;margin-bottom:10px;">${escapeHtml(title)}</div>
             <div style="font-size:18px;color:#666;font-weight:600;">${dateStr}</div>
@@ -305,7 +310,8 @@ function renderUrgentList(events) {
     .map((ev, i) => ({ ev, i }))
     .filter(({ ev }) => {
       const { urgent, overdue } = getEventUrgency(ev);
-      return urgent && !overdue;
+      const isDone = /^✅/.test(ev.summary || '');
+      return urgent && !overdue && !isDone;
     });
 
   if (urgentItems.length === 0) {
