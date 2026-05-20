@@ -98,16 +98,33 @@ function renderDeadlineList() {
 // ──────────────────────────────────────────────
 // 사용자 링크 관리
 // ──────────────────────────────────────────────
+
+// 모든 사용자에게 공통으로 표시되는 기본 링크 (삭제 불가)
+const DEFAULT_LINKS = [
+  { id: '__classcord__', icon: '💬', name: '클래스코드', url: 'https://classcord-ten.vercel.app/' },
+];
+
 function renderInfoLinks() {
   const listEl = document.getElementById('userLinksList');
   if (!listEl) return;
-  const links = state.links || [];
+  const userLinks = state.links || [];
   listEl.innerHTML = '';
-  if (links.length === 0) {
-    listEl.innerHTML = '<p style="font-size:0.82rem;color:var(--text-sub);margin-bottom:8px;">등록된 링크가 없어요.</p>';
-    return;
-  }
-  links.forEach(link => {
+
+  // 기본 링크 (항상 상단 표시, 삭제 버튼 없음)
+  DEFAULT_LINKS.forEach(link => {
+    const item = document.createElement('div');
+    item.className = 'user-link-item user-link-item--default';
+    item.innerHTML = `
+      <a href="${escHtml(link.url)}" target="_blank" rel="noopener noreferrer" class="info-link user-link-a">
+        <span class="user-link-icon">${escHtml(link.icon || '🔗')}</span>
+        <span>${escHtml(link.name)}</span>
+      </a>
+    `;
+    listEl.appendChild(item);
+  });
+
+  if (userLinks.length === 0) return;
+  userLinks.forEach(link => {
     const item = document.createElement('div');
     item.className = 'user-link-item';
     item.innerHTML = `
