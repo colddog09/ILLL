@@ -15,7 +15,6 @@ const dom = {
   trashZone,
   taskInput,
   syncStatus:           document.getElementById('syncStatus'),
-  helpBtn:              document.getElementById('helpBtn'),
   helpModal:            document.getElementById('helpModal'),
   helpCloseBtn:         document.getElementById('helpCloseBtn'),
   historyModal:         document.getElementById('historyModal'),
@@ -40,7 +39,7 @@ const dom = {
 
 // poolEl, dayGrid, weekLabel, ghost, trashZone, taskInput 은 script.js 전역 변수 사용
 const {
-  helpBtn, helpModal, helpCloseBtn,
+  helpModal, helpCloseBtn,
   historyModal, historyList, historyCloseBtn,
   infoModal, infoBtn, infoCloseBtn, infoHistoryBtn,
   fbLoginBtn, fbLogoutBtn,
@@ -61,7 +60,6 @@ function bindModal(openBtn, modal, closeBtn, beforeOpen) {
   if (modal) modal.addEventListener('click', e => { if (e.target === modal) setModalOpen(modal, false); });
 }
 
-bindModal(helpBtn, helpModal, helpCloseBtn);
 
 function renderDeadlineList() {
   const listEl = document.getElementById('deadlineList');
