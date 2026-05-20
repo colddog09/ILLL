@@ -100,6 +100,15 @@ function startGoogleLogin() {
 function finishFirebaseSetup() {
   const auth = getAuth();
   db = firebase.firestore();
+
+  // Firestore 오프라인 퍼시스턴스 — IndexedDB에 캐시해서 다음 로드 즉시 표시
+  db.enablePersistence({ synchronizeTabs: true })
+    .catch(err => {
+      if (err.code !== 'failed-precondition' && err.code !== 'unimplemented') {
+        console.warn('Firestore persistence 설정 실패:', err);
+      }
+    });
+
   return auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
     .catch(err => { console.warn('Auth persistence 설정 실패:', err); })
     .then(() => {
@@ -138,15 +147,46 @@ async function _detectOAuthClientId(authDomain) {
   return null;
 }
 
+const _CFG_CACHE_KEY = 'app_config_cache_v1';
+const _CFG_CACHE_TTL = 24 * 60 * 60 * 1000; // 24시간
+
+function _loadCachedConfig() {
+  try {
+    const raw = localStorage.getItem(_CFG_CACHE_KEY);
+    if (!raw) return null;
+    const { cfg, ts } = JSON.parse(raw);
+    if (Date.now() - ts > _CFG_CACHE_TTL) return null;
+    return cfg;
+  } catch (_) { return null; }
+}
+
+function _saveCachedConfig(cfg) {
+  try { localStorage.setItem(_CFG_CACHE_KEY, JSON.stringify({ cfg, ts: Date.now() })); } catch (_) {}
+}
+
 async function bootstrapFirebase() {
   try {
+    // 1) 캐시된 config로 즉시 초기화 (빠른 로드)
+    const cached = _loadCachedConfig();
+    if (cached) {
+      if (cached.googleClientId) window.__GCAL_CLIENT_ID__ = cached.googleClientId;
+      await initializeFirebase(cached);
+      // 백그라운드에서 최신 config 갱신
+      fetch('/api/config').then(r => r.json()).then(fresh => {
+        _saveCachedConfig(fresh);
+        if (fresh.googleClientId) window.__GCAL_CLIENT_ID__ = fresh.googleClientId;
+      }).catch(() => {});
+      return;
+    }
+
+    // 2) 캐시 없으면 네트워크 요청
     const response = await fetch('/api/config');
     if (!response.ok) throw new Error('config fetch failed: ' + response.status);
     const cfg = await response.json();
+    _saveCachedConfig(cfg);
     if (cfg.googleClientId) {
       window.__GCAL_CLIENT_ID__ = cfg.googleClientId;
     } else if (cfg.authDomain) {
-      // Firebase auth 페이지에서 OAuth client ID 자동 감지 (브라우저 직접 fetch)
       _detectOAuthClientId(cfg.authDomain).then(id => {
         if (id) window.__GCAL_CLIENT_ID__ = id;
       });
