@@ -682,3 +682,90 @@ resetScheduleState();
 renderApp();
 initDrag();
 updateDday();
+
+// ──────────────────────────────────────────────
+// 🔍 데모 모달
+// ──────────────────────────────────────────────
+(function initDemo() {
+  const demoBtn   = document.getElementById('demoBtn');
+  const demoModal = document.getElementById('demoModal');
+  const closeBtn  = document.getElementById('demoCloseBtn');
+  const prevBtn   = document.getElementById('demoPrevBtn');
+  const nextBtn   = document.getElementById('demoNextBtn');
+  const slides    = document.querySelectorAll('.demo-slide');
+  const dots      = document.querySelectorAll('.demo-dot');
+  if (!demoBtn || !demoModal) return;
+
+  let current = 0;
+  const total = slides.length;
+
+  // 타이핑 애니메이션 (슬라이드 1)
+  let typingTimer = null;
+  function startTyping() {
+    const el = document.getElementById('demoTypingText');
+    if (!el) return;
+    const words = ['수학 숙제', ''];
+    let wi = 0, ci = 0, deleting = false;
+    clearInterval(typingTimer);
+    typingTimer = setInterval(() => {
+      const word = words[wi];
+      if (!deleting) {
+        el.textContent = word.slice(0, ++ci);
+        if (ci === word.length) { deleting = true; setTimeout(() => {}, 800); }
+      } else {
+        el.textContent = word.slice(0, --ci);
+        if (ci === 0) { deleting = false; wi = (wi + 1) % words.length; }
+      }
+    }, 120);
+  }
+  function stopTyping() {
+    clearInterval(typingTimer);
+    const el = document.getElementById('demoTypingText');
+    if (el) el.textContent = '';
+  }
+
+  function goTo(idx) {
+    slides[current].classList.remove('active');
+    slides[current].classList.add('exit-left');
+    setTimeout(() => slides[current < idx ? current : idx]?.classList.remove('exit-left'), 300);
+
+    current = idx;
+    slides[current].classList.add('active');
+
+    dots.forEach((d, i) => d.classList.toggle('demo-dot--active', i === current));
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === total - 1;
+    nextBtn.textContent = current === total - 1 ? '✓' : '▶';
+
+    // 슬라이드별 애니메이션
+    stopTyping();
+    if (current === 0) setTimeout(startTyping, 400);
+  }
+
+  function openDemo() {
+    demoModal.hidden = false;
+    current = -1;
+    goTo(0);
+  }
+  function closeDemo() {
+    demoModal.hidden = true;
+    stopTyping();
+  }
+
+  demoBtn.addEventListener('click', openDemo);
+  closeBtn.addEventListener('click', closeDemo);
+  demoModal.addEventListener('click', e => { if (e.target === demoModal) closeDemo(); });
+  prevBtn.addEventListener('click', () => { if (current > 0) goTo(current - 1); });
+  nextBtn.addEventListener('click', () => {
+    if (current < total - 1) goTo(current + 1);
+    else closeDemo();
+  });
+
+  // 키보드 방향키
+  document.addEventListener('keydown', e => {
+    if (demoModal.hidden) return;
+    if (e.key === 'ArrowRight' && current < total - 1) goTo(current + 1);
+    if (e.key === 'ArrowLeft'  && current > 0)         goTo(current - 1);
+    if (e.key === 'Escape') closeDemo();
+  });
+})();

@@ -2112,3 +2112,402 @@ body {
     padding: 10px 18px 28px;
   }
 }
+
+/* ════════════════════════════════════════
+   🔍 데모 모달
+════════════════════════════════════════ */
+.demo-modal-box {
+  max-width: 480px;
+  width: 95%;
+  padding: 0;
+  overflow: hidden;
+}
+.demo-modal-box .modal-header {
+  padding: 16px 20px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.demo-body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 슬라이드 컨테이너 */
+.demo-slides {
+  position: relative;
+  overflow: hidden;
+  height: 340px;
+}
+.demo-slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 20px 0;
+  opacity: 0;
+  transform: translateX(40px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+}
+.demo-slide.active {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+.demo-slide.exit-left {
+  opacity: 0;
+  transform: translateX(-40px);
+}
+
+/* 데모 화면 영역 */
+.demo-screen {
+  width: 100%;
+  background: #f8f9fb;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 14px;
+  min-height: 130px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+.demo-topbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-main);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+  margin-bottom: 2px;
+}
+.demo-logo { font-size: 0.82rem; }
+
+/* 슬라이드1 - 입력 */
+.demo-input-area {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.demo-input-box {
+  flex: 1;
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.82rem;
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+}
+.demo-cursor {
+  animation: demo-blink 0.8s step-end infinite;
+  color: var(--accent);
+  font-weight: 300;
+}
+@keyframes demo-blink { 0%,100%{opacity:1} 50%{opacity:0} }
+.demo-add-btn {
+  width: 28px; height: 28px;
+  background: var(--accent);
+  color: white;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; font-weight: 700;
+  flex-shrink: 0;
+}
+.demo-pool { display: flex; flex-direction: column; gap: 4px; }
+.demo-task {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 0.78rem;
+  color: var(--text-main);
+}
+.demo-task--appear {
+  animation: demo-appear 0.4s ease 0.6s both;
+}
+.demo-task--delay {
+  animation-delay: 1s;
+}
+@keyframes demo-appear {
+  from { opacity:0; transform:translateY(-6px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* 슬라이드2 - 드래그 */
+.demo-calendar-row {
+  display: flex;
+  gap: 6px;
+}
+.demo-cal-cell {
+  flex: 1;
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 6px;
+  min-height: 70px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.demo-cal-cell--target {
+  border-color: var(--accent);
+  background: rgba(108,99,255,0.05);
+}
+.demo-cal-date {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-sub);
+}
+.demo-dropped-task {
+  font-size: 0.72rem;
+  background: var(--accent);
+  color: white;
+  border-radius: 6px;
+  padding: 3px 6px;
+  animation: demo-drop 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.4s both;
+}
+@keyframes demo-drop {
+  from { opacity:0; transform:scale(0.7); }
+  to   { opacity:1; transform:scale(1); }
+}
+.demo-drag-task {
+  position: absolute;
+  bottom: 14px; right: 16px;
+  font-size: 0.72rem;
+  background: white;
+  border: 1.5px dashed var(--accent);
+  border-radius: 8px;
+  padding: 4px 8px;
+  color: var(--text-main);
+  animation: demo-float 2s ease-in-out infinite;
+  box-shadow: 0 4px 12px rgba(108,99,255,0.2);
+}
+@keyframes demo-float {
+  0%,100% { transform:translateY(0) rotate(-1deg); }
+  50%      { transform:translateY(-6px) rotate(1deg); }
+}
+
+/* 슬라이드3 - 완료 */
+.demo-task-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+.demo-task-item--done {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+.demo-done-btn {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: white;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-sub);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.demo-done-btn--checked {
+  background: #22c55e;
+  border-color: #22c55e;
+  color: white;
+}
+.demo-task-label { font-size: 0.8rem; flex: 1; }
+.demo-task-label--done {
+  text-decoration: line-through;
+  color: var(--text-sub);
+}
+.demo-tap-hint {
+  font-size: 0.65rem;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.demo-tap-hint--sub { color: var(--text-sub); }
+
+/* 슬라이드4 - 기한 */
+.demo-deadline-area {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.demo-deadline-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+}
+.demo-deadline-badge {
+  margin-left: auto;
+  background: var(--accent);
+  color: white;
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+.demo-deadline-popup {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  animation: demo-appear 0.3s ease both;
+}
+.demo-popup-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 0.78rem;
+}
+.demo-popup-select {
+  background: #f1f3f5;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+.demo-popup-time {
+  background: #f1f3f5;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-family: monospace;
+}
+.demo-popup-confirm {
+  align-self: flex-end;
+  background: var(--accent);
+  color: white;
+  font-size: 0.72rem;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-weight: 700;
+}
+.demo-task-with-deadline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+}
+.demo-deadline-chip {
+  margin-left: auto;
+  font-size: 0.7rem;
+  color: #ef4444;
+  font-weight: 700;
+}
+
+/* 슬라이드5 - 기능 그리드 */
+.demo-feature-grid {
+  display: flex;
+  gap: 8px;
+}
+.demo-feature-card {
+  flex: 1;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+  animation: demo-appear 0.4s ease both;
+}
+.demo-feature-card:nth-child(2) { animation-delay: 0.15s; }
+.demo-feature-card:nth-child(3) { animation-delay: 0.3s; }
+.demo-feature-icon { font-size: 1.4rem; }
+.demo-feature-name { font-size: 0.72rem; font-weight: 700; color: var(--text-main); }
+.demo-feature-desc { font-size: 0.65rem; color: var(--text-sub); line-height: 1.4; }
+
+/* 설명 영역 */
+.demo-desc {
+  width: 100%;
+  padding: 12px 4px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.demo-step-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.demo-desc-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+.demo-desc-text {
+  font-size: 0.82rem;
+  color: var(--text-sub);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* 네비게이션 */
+.demo-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px 20px;
+  border-top: 1px solid var(--border);
+}
+.demo-nav-btn {
+  background: none;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  width: 36px; height: 36px;
+  font-size: 0.8rem;
+  color: var(--text-sub);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex; align-items: center; justify-content: center;
+}
+.demo-nav-btn:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+.demo-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.demo-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.demo-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: all 0.2s ease;
+}
+.demo-dot--active {
+  background: var(--accent);
+  transform: scale(1.3);
+}

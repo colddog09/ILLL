@@ -13,7 +13,7 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
   <meta name="theme-color" content="#6c63ff">
-  <link rel="stylesheet" href="style.css?v=19" />
+  <link rel="stylesheet" href="style.css?v=20" />
 </head>
 <body>
 
@@ -83,6 +83,7 @@
         <button id="infoBtn" class="icon-btn" aria-label="정보" title="정보/링크">📌</button>
         <button id="suhaengBtn" class="icon-btn" aria-label="수행평가 일정" title="수행평가 일정">📋</button>
         <button id="gcalViewBtn" class="icon-btn" aria-label="구글 캘린더 보기" title="구글 캘린더 보기" hidden>📅</button>
+        <button id="demoBtn" class="icon-btn" aria-label="사용법 보기" title="사용법 데모">🔍</button>
       </div>
     </div>
 
@@ -234,6 +235,164 @@
     </div>
   </div>
 
+  <!-- ─── 사용법 데모 모달 ─── -->
+  <div id="demoModal" class="modal-overlay" hidden>
+    <div class="modal-box demo-modal-box">
+      <div class="modal-header">
+        <h2 id="demoTitle">🔍 사용법</h2>
+        <button id="demoCloseBtn" class="modal-close">&times;</button>
+      </div>
+      <div class="demo-body">
+        <!-- 슬라이드 영역 -->
+        <div class="demo-slides" id="demoSlides">
+
+          <!-- 슬라이드 1: 할일 추가 -->
+          <div class="demo-slide active" data-step="0">
+            <div class="demo-screen">
+              <div class="demo-topbar">
+                <span class="demo-logo">📋 일정 관리</span>
+              </div>
+              <div class="demo-input-area">
+                <div class="demo-input-box">
+                  <span class="demo-input-text" id="demoTypingText"></span><span class="demo-cursor">|</span>
+                </div>
+                <div class="demo-add-btn">+</div>
+              </div>
+              <div class="demo-pool">
+                <div class="demo-task demo-task--appear" id="demoTask1">📝 수학 숙제</div>
+                <div class="demo-task demo-task--appear demo-task--delay" id="demoTask2">📝 영어 단어 암기</div>
+              </div>
+            </div>
+            <div class="demo-desc">
+              <div class="demo-step-badge">1 / 5</div>
+              <p class="demo-desc-title">할일 추가</p>
+              <p class="demo-desc-text">상단 입력창에 할일을 입력하고 <strong>+</strong> 버튼이나 <strong>엔터</strong>를 누르면 목록에 추가돼요.</p>
+            </div>
+          </div>
+
+          <!-- 슬라이드 2: 날짜 배치 -->
+          <div class="demo-slide" data-step="1">
+            <div class="demo-screen">
+              <div class="demo-calendar-row">
+                <div class="demo-cal-cell">
+                  <span class="demo-cal-date">월</span>
+                </div>
+                <div class="demo-cal-cell demo-cal-cell--target" id="demoDropTarget">
+                  <span class="demo-cal-date">화</span>
+                  <div class="demo-dropped-task" id="demoDroppedTask">📝 수학 숙제</div>
+                </div>
+                <div class="demo-cal-cell">
+                  <span class="demo-cal-date">수</span>
+                </div>
+              </div>
+              <div class="demo-drag-task" id="demoDragTask">📝 수학 숙제</div>
+            </div>
+            <div class="demo-desc">
+              <div class="demo-step-badge">2 / 5</div>
+              <p class="demo-desc-title">날짜에 배치</p>
+              <p class="demo-desc-text">할일을 <strong>드래그</strong>해서 날짜 칸에 놓거나, <strong>더블탭</strong>하면 오늘 날짜에 바로 추가돼요.</p>
+            </div>
+          </div>
+
+          <!-- 슬라이드 3: 완료 & 삭제 -->
+          <div class="demo-slide" data-step="2">
+            <div class="demo-screen">
+              <div class="demo-task-item">
+                <button class="demo-done-btn" id="demoDoneBtn">O</button>
+                <span class="demo-task-label" id="demoTaskLabel">수학 숙제</span>
+                <span class="demo-tap-hint">← 한 번 탭: 완료</span>
+              </div>
+              <div class="demo-task-item demo-task-item--done">
+                <button class="demo-done-btn demo-done-btn--checked">✓</button>
+                <span class="demo-task-label demo-task-label--done">영어 단어 암기</span>
+                <span class="demo-tap-hint demo-tap-hint--sub">더블탭: 목록으로 / 세 번 탭: 삭제</span>
+              </div>
+            </div>
+            <div class="demo-desc">
+              <div class="demo-step-badge">3 / 5</div>
+              <p class="demo-desc-title">완료 & 삭제</p>
+              <p class="demo-desc-text"><strong>O 버튼</strong>으로 완료 체크, <strong>더블탭</strong>하면 목록으로 복귀, <strong>세 번 탭</strong>하면 완전 삭제예요.</p>
+            </div>
+          </div>
+
+          <!-- 슬라이드 4: 기한 설정 -->
+          <div class="demo-slide" data-step="3">
+            <div class="demo-screen">
+              <div class="demo-deadline-area">
+                <div class="demo-deadline-input">
+                  <span>과학 보고서</span>
+                  <div class="demo-deadline-badge">기한</div>
+                </div>
+                <div class="demo-deadline-popup">
+                  <div class="demo-popup-row">
+                    <span class="demo-popup-select">5월</span>
+                    <span class="demo-popup-select">31일</span>
+                  </div>
+                  <div class="demo-popup-row">
+                    <span class="demo-popup-time">23:59</span>
+                    <span>까지</span>
+                  </div>
+                  <div class="demo-popup-confirm">확인</div>
+                </div>
+                <div class="demo-task-with-deadline">
+                  <span>과학 보고서</span>
+                  <span class="demo-deadline-chip">⏰ 5/31</span>
+                </div>
+              </div>
+            </div>
+            <div class="demo-desc">
+              <div class="demo-step-badge">4 / 5</div>
+              <p class="demo-desc-title">기한 설정</p>
+              <p class="demo-desc-text"><strong>기한</strong> 버튼으로 마감일을 설정하면 📌 버튼의 마감 임박 목록에 자동으로 표시돼요.</p>
+            </div>
+          </div>
+
+          <!-- 슬라이드 5: 수행평가 & 캘린더 -->
+          <div class="demo-slide" data-step="4">
+            <div class="demo-screen">
+              <div class="demo-feature-grid">
+                <div class="demo-feature-card">
+                  <span class="demo-feature-icon">📋</span>
+                  <span class="demo-feature-name">수행평가 일정</span>
+                  <span class="demo-feature-desc">구글 캘린더의 수행평가를 카드로 확인</span>
+                </div>
+                <div class="demo-feature-card">
+                  <span class="demo-feature-icon">📅</span>
+                  <span class="demo-feature-name">캘린더 연동</span>
+                  <span class="demo-feature-desc">할일을 구글 캘린더에 자동 동기화</span>
+                </div>
+                <div class="demo-feature-card">
+                  <span class="demo-feature-icon">☁️</span>
+                  <span class="demo-feature-name">실시간 동기화</span>
+                  <span class="demo-feature-desc">모든 기기에서 자동으로 동기화</span>
+                </div>
+              </div>
+            </div>
+            <div class="demo-desc">
+              <div class="demo-step-badge">5 / 5</div>
+              <p class="demo-desc-title">더 많은 기능</p>
+              <p class="demo-desc-text">📋 수행평가 일정 확인, ⚙️ 구글 캘린더 연동, ☁️ 전기기 실시간 동기화까지 지원해요.</p>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 하단 네비게이션 -->
+        <div class="demo-nav">
+          <button class="demo-nav-btn" id="demoPrevBtn">◀</button>
+          <div class="demo-dots" id="demoDots">
+            <span class="demo-dot demo-dot--active"></span>
+            <span class="demo-dot"></span>
+            <span class="demo-dot"></span>
+            <span class="demo-dot"></span>
+            <span class="demo-dot"></span>
+          </div>
+          <button class="demo-nav-btn" id="demoNextBtn">▶</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ─── Google Identity Services (Calendar OAuth fallback) ─── -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
@@ -248,7 +407,7 @@
   <script src="drag.js?v=6"></script>
   <script src="deadline.js?v=1"></script>
   <script src="gcal.js?v=9"></script>
-  <script src="events.js?v=6"></script>
+  <script src="events.js?v=7"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').then(reg => {
