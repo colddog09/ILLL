@@ -769,3 +769,23 @@ updateDday();
     if (e.key === 'Escape') closeDemo();
   });
 })();
+
+// ──────────────────────────────────────────────
+// 📶 오프라인 감지 배너
+// ──────────────────────────────────────────────
+(function initOfflineBanner() {
+  const banner = document.getElementById('offlineBanner');
+  if (!banner) return;
+
+  function update() {
+    if (navigator.onLine) {
+      banner.classList.remove('offline-banner--show');
+    } else {
+      banner.classList.add('offline-banner--show');
+    }
+  }
+
+  window.addEventListener('online',  update);
+  window.addEventListener('offline', update);
+  update(); // 초기 상태 확인
+})();

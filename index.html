@@ -101,6 +101,11 @@
     <iframe id="suhaengFrame" src="" class="suhaeng-frame" title="수행평가 일정"></iframe>
   </div>
 
+  <!-- ─── 오프라인 배너 ─── -->
+  <div id="offlineBanner" class="offline-banner" aria-live="polite">
+    <span>📶 인터넷 연결을 확인해주세요</span>
+  </div>
+
   <!-- ─── 드래그 고스트 ─── -->
   <div id="dragGhost" class="drag-ghost" aria-hidden="true"></div>
 
@@ -407,7 +412,7 @@
   <script src="drag.js?v=6"></script>
   <script src="deadline.js?v=1"></script>
   <script src="gcal.js?v=9"></script>
-  <script src="events.js?v=7"></script>
+  <script src="events.js?v=8"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').then(reg => {
