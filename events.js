@@ -723,19 +723,22 @@ updateDday();
   }
 
   function goTo(idx) {
-    slides[current].classList.remove('active');
-    slides[current].classList.add('exit-left');
-    setTimeout(() => slides[current < idx ? current : idx]?.classList.remove('exit-left'), 300);
+    const prev = current;
+    // 이전 슬라이드 숨기기 (유효한 경우만)
+    if (prev >= 0 && slides[prev]) {
+      slides[prev].classList.remove('active');
+      slides[prev].classList.add('exit-left');
+      setTimeout(() => { if (slides[prev]) slides[prev].classList.remove('exit-left'); }, 300);
+    }
 
     current = idx;
     slides[current].classList.add('active');
 
     dots.forEach((d, i) => d.classList.toggle('demo-dot--active', i === current));
     prevBtn.disabled = current === 0;
-    nextBtn.disabled = current === total - 1;
+    nextBtn.disabled = false;
     nextBtn.textContent = current === total - 1 ? '✓' : '▶';
 
-    // 슬라이드별 애니메이션
     stopTyping();
     if (current === 0) setTimeout(startTyping, 400);
   }
