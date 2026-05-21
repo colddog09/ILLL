@@ -214,6 +214,17 @@ async function bootstrapFirebase() {
 
 bootstrapFirebase();
 
+// Firebase 응답 없을 때 fallback: 5초 후에도 auth가 안 오면 로컬 데이터로 렌더
+setTimeout(() => {
+  if (!currentUser && !firebaseReady) {
+    // Firebase 자체가 초기화 안 된 경우 → 로그인 화면 표시
+    showLoginScreen();
+    return;
+  }
+  if (currentUser) return; // 이미 처리됨
+  // Firebase는 됐는데 auth가 null인 경우 → loadState()에서 처리됨
+}, 5000);
+
 // ──────────────────────────────────────────────
 // 공유 DOM 레퍼런스 (render.js / drag.js가 로드 전 참조)
 // ──────────────────────────────────────────────
@@ -490,11 +501,22 @@ function showLoginScreen() {
 
 // 이전에 로그인했던 적 있으면 로그인 화면 바로 숨김 (Firebase 복원 대기)
 (function preHideLoginScreen() {
-  if (localStorage.getItem('wasLoggedIn')) {
-    const screen = document.getElementById('loginScreen');
-    if (screen) { screen.classList.add('hidden'); screen.style.display = 'none'; }
-  }
+  if (!localStorage.getItem('wasLoggedIn')) return;
+  const screen = document.getElementById('loginScreen');
+  if (screen) { screen.classList.add('hidden'); screen.style.display = 'none'; }
 })();
+
+// 모든 스크립트 로드 후 로컬 데이터 즉시 렌더 (renderApp은 render.js에서 정의)
+setTimeout(() => {
+  if (!localStorage.getItem('wasLoggedIn')) return;
+  if (currentUser) return; // auth 이미 복원됨, loadState()가 처리
+  const localState = readLocalState();
+  if (hasLocalState(localState)) {
+    applyPersistedState(localState);
+    if (typeof autoReturnExpiredTasks === 'function') autoReturnExpiredTasks();
+    if (typeof renderApp === 'function') renderApp();
+  }
+}, 0);
 
 // 첫 방문자 감지: localStorage에 'seenDemo' 없으면 신규 사용자
 function checkFirstVisit() {
