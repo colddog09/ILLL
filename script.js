@@ -488,6 +488,14 @@ function showLoginScreen() {
   requestAnimationFrame(() => screen.classList.remove('hidden'));
 }
 
+// 이전에 로그인했던 적 있으면 로그인 화면 바로 숨김 (Firebase 복원 대기)
+(function preHideLoginScreen() {
+  if (localStorage.getItem('wasLoggedIn')) {
+    const screen = document.getElementById('loginScreen');
+    if (screen) { screen.classList.add('hidden'); screen.style.display = 'none'; }
+  }
+})();
+
 // 첫 방문자 감지: localStorage에 'seenDemo' 없으면 신규 사용자
 function checkFirstVisit() {
   if (!localStorage.getItem('seenDemo')) {
@@ -509,8 +517,10 @@ function updateAuthUi(user) {
   const userName   = document.getElementById('userName');
 
   if (user) {
+    localStorage.setItem('wasLoggedIn', '1');
     hideLoginScreen();
   } else {
+    localStorage.removeItem('wasLoggedIn');
     showLoginScreen();
   }
 
