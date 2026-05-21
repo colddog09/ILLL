@@ -353,6 +353,7 @@ function loadState() {
       autoReturnExpiredTasks();
       renderApp();
       showLastSavedTime();
+      checkFirstVisit();
     })
     .catch(err => {
       loadInProgress = false;
@@ -473,6 +474,32 @@ function updateStandaloneAuthHint(user = currentUser) {
   authHint.hidden = !!user || !isStandaloneApp();
 }
 
+function hideLoginScreen() {
+  const screen = document.getElementById('loginScreen');
+  if (!screen) return;
+  screen.classList.add('hidden');
+  setTimeout(() => { screen.style.display = 'none'; }, 400);
+}
+
+function showLoginScreen() {
+  const screen = document.getElementById('loginScreen');
+  if (!screen) return;
+  screen.style.display = 'flex';
+  requestAnimationFrame(() => screen.classList.remove('hidden'));
+}
+
+// 첫 방문자 감지: localStorage에 'seenDemo' 없으면 신규 사용자
+function checkFirstVisit() {
+  if (!localStorage.getItem('seenDemo')) {
+    localStorage.setItem('seenDemo', '1');
+    // 앱 렌더 후 데모 자동 실행
+    setTimeout(() => {
+      const demoBtn = document.getElementById('demoBtn');
+      if (demoBtn) demoBtn.click();
+    }, 800);
+  }
+}
+
 function updateAuthUi(user) {
   currentUser = user || null;
 
@@ -480,6 +507,12 @@ function updateAuthUi(user) {
   const userInfo   = document.getElementById('userInfo');
   const userPhoto  = document.getElementById('userPhoto');
   const userName   = document.getElementById('userName');
+
+  if (user) {
+    hideLoginScreen();
+  } else {
+    showLoginScreen();
+  }
 
   if (fbLoginBtn) fbLoginBtn.hidden = !!user;
   if (userInfo)   userInfo.hidden   = !user;

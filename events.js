@@ -213,6 +213,8 @@ bindModal(settingsBtn, settingsModal, settingsCloseBtn, () => {
 // 로그인/로그아웃
 // ──────────────────────────────────────────────
 if (fbLoginBtn) fbLoginBtn.addEventListener('click', () => startGoogleLogin().catch(handleGoogleAuthError));
+const loginScreenBtn = document.getElementById('loginScreenBtn');
+if (loginScreenBtn) loginScreenBtn.addEventListener('click', () => startGoogleLogin().catch(handleGoogleAuthError));
 if (fbLogoutBtn) {
   fbLogoutBtn.addEventListener('click', () => {
     if (typeof firebase !== 'undefined' && firebase.auth) {
