@@ -32,6 +32,8 @@ let currentUser          = null;
 let db                   = null;
 let firebaseReady        = false;
 let lastSavedSnapshot    = null; // 마지막 Firestore 저장 상태 (변경 감지용)
+let dataLoaded           = false; // Firestore에서 최소 한 번 읽은 뒤 true (저장 잠금용)
+let loadInProgress       = false; // 중복 loadState() 방지
 
 const REDIRECT_AUTH_CODES = new Set([
   'auth/popup-blocked',
@@ -260,12 +262,50 @@ function stateSnapshot() {
   return JSON.stringify({ pool: state.pool, schedule: state.schedule, links: state.links });
 }
 
+// 실제 할일 데이터가 있는지 확인 (빈 state 저장 방지용)
+function hasAnyTaskData() {
+  if (state.pool && state.pool.length > 0) return true;
+  if (state.schedule) {
+    for (const k of Object.keys(state.schedule)) {
+      if (Array.isArray(state.schedule[k]) && state.schedule[k].length > 0) return true;
+    }
+  }
+  return false;
+}
+
+// localStorage 백업 저장 (데이터 유실 복구용)
+const BACKUP_KEY = 'taskBackup_v1';
+function saveBackup() {
+  if (!hasAnyTaskData()) return;
+  try {
+    localStorage.setItem(BACKUP_KEY, JSON.stringify({
+      pool: state.pool,
+      schedule: state.schedule,
+      links: state.links,
+      ts: Date.now()
+    }));
+  } catch (_) {}
+}
+function loadBackup() {
+  try {
+    const raw = localStorage.getItem(BACKUP_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (_) { return null; }
+}
+
 function loadState() {
   if (!currentUser || !db) {
     resetScheduleState();
+    dataLoaded = false;
     renderApp();
     return;
   }
+
+  // 중복 호출 방지 (auth 이벤트가 여러 번 올 수 있음)
+  if (loadInProgress) return;
+  loadInProgress = true;
+  dataLoaded = false; // 로드 시작 → 저장 잠금
 
   // 1) 로컬 데이터 먼저 즉시 표시
   const localState = readLocalState();
@@ -279,6 +319,7 @@ function loadState() {
   setSyncStatus('☁️ 불러오는 중...');
   db.collection('users').doc(currentUser.uid).get()
     .then(doc => {
+      loadInProgress = false;
       if (doc.exists) {
         const remote = doc.data();
         // 로컬이 더 최신이면 유지, 아니면 서버 데이터 사용
@@ -291,15 +332,32 @@ function loadState() {
         } else {
           lastSavedSnapshot = stateSnapshot();
         }
+        // 실제 데이터가 있으면 백업 저장
+        if (hasAnyTaskData()) saveBackup();
       } else {
         // 서버에 없으면 로컬 데이터를 서버에 저장 (로컬에 실제 데이터 있을 때만)
-        if (hasLocalState(readLocalState())) _doSave();
+        const local = readLocalState();
+        if (hasLocalState(local)) {
+          _doSave();
+        } else {
+          // 로컬도 없으면 백업에서 복구 시도
+          const backup = loadBackup();
+          if (backup && (backup.pool?.length > 0 || Object.keys(backup.schedule || {}).length > 0)) {
+            console.warn('⚠️ 백업 데이터로 복구합니다', backup.ts);
+            applyPersistedState(backup);
+            persistLocalState();
+            _doSave();
+          }
+        }
       }
+      dataLoaded = true; // ✅ 여기서부터 저장 허용
       autoReturnExpiredTasks();
       renderApp();
       showLastSavedTime();
     })
     .catch(err => {
+      loadInProgress = false;
+      dataLoaded = true; // 에러여도 로컬 기준으로 저장은 허용
       console.error('Firestore 읽기 에러:', err);
       setSyncStatus('❌ 불러오기 실패 — 로컬 데이터 사용 중');
       renderApp();
@@ -309,11 +367,18 @@ function loadState() {
 function _doSave() {
   persistLocalState();
   localStorage.setItem('lastSavedTime', Date.now().toString());
+  if (hasAnyTaskData()) saveBackup(); // 실제 데이터 있을 때만 백업
 
   if (!currentUser || !db) { setSyncStatus('💾 로컬 저장됨'); return; }
 
   const snap = stateSnapshot();
   if (snap === lastSavedSnapshot) return;
+
+  // 빈 데이터로 Firestore 덮어쓰기 방지
+  if (!hasAnyTaskData() && !hasLocalState(readLocalState())) {
+    console.warn('⚠️ 빈 state 감지 — Firestore 저장 건너뜀');
+    return;
+  }
 
   db.collection('users').doc(currentUser.uid).set({
     pool:        state.pool,
@@ -337,15 +402,23 @@ function saveState() {
 // 앱 종료/백그라운드 전환 시 Firestore에 저장
 function flushToFirestore() {
   if (!currentUser || !db) return;
+  if (!dataLoaded) return; // ❌ 데이터 로드 완료 전엔 절대 저장 안 함 (race condition 방지)
+
   const snap = stateSnapshot();
   if (snap === lastSavedSnapshot) return;
+
+  // 빈 데이터로 Firestore 덮어쓰기 방지
+  if (!hasAnyTaskData() && !hasLocalState(readLocalState())) {
+    console.warn('⚠️ 빈 state 감지 — flushToFirestore 건너뜀');
+    return;
+  }
+
   const data = {
     pool:        state.pool,
     schedule:    state.schedule,
     links:       state.links || [],
     lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
   };
-  // sendBeacon 방식으로 페이지 언로드에도 전송 시도
   try {
     db.collection('users').doc(currentUser.uid).set(data)
       .then(() => { lastSavedSnapshot = snap; setSyncSaved(); })
