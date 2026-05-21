@@ -2957,3 +2957,114 @@ body {
   padding: 2px 6px;
   flex-shrink: 0;
 }
+
+/* ── 스타레일 암호 다이얼로그 ── */
+.sr-pw-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  animation: srFadeIn 0.2s ease;
+}
+@keyframes srFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.sr-pw-box {
+  background: #0c1628;
+  border: 1.5px solid rgba(137,196,255,0.25);
+  border-radius: 24px;
+  padding: 36px 32px 28px;
+  width: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.6), 0 0 40px rgba(137,196,255,0.1);
+  animation: srSlideUp 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes srSlideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.sr-pw-logo {
+  font-size: 2rem;
+  color: #89c4ff;
+  animation: starRailGlow 2s ease-in-out infinite alternate;
+}
+.sr-pw-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #c8dfff;
+  margin: 0;
+}
+.sr-pw-desc {
+  font-size: 0.85rem;
+  color: #7a9cbd;
+  margin: 0;
+}
+.sr-pw-input {
+  width: 100%;
+  padding: 10px 14px;
+  background: #07101e;
+  border: 1.5px solid rgba(137,196,255,0.2);
+  border-radius: 12px;
+  color: #c8dfff;
+  font-size: 1rem;
+  text-align: center;
+  letter-spacing: 0.2em;
+  outline: none;
+  transition: border-color 0.15s;
+  font-family: var(--font);
+}
+.sr-pw-input:focus { border-color: #89c4ff; }
+.sr-pw-btns {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  margin-top: 4px;
+}
+.sr-pw-cancel, .sr-pw-confirm {
+  flex: 1;
+  padding: 9px 0;
+  border-radius: 12px;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  font-family: var(--font);
+}
+.sr-pw-cancel {
+  background: rgba(137,196,255,0.08);
+  color: #7a9cbd;
+  border: 1.5px solid rgba(137,196,255,0.15);
+}
+.sr-pw-confirm {
+  background: linear-gradient(135deg, #1a3a6a, #2a5090);
+  color: #89c4ff;
+  border: 1.5px solid rgba(137,196,255,0.3);
+}
+.sr-pw-confirm:hover { opacity: 0.85; }
+.sr-pw-error {
+  font-size: 0.8rem;
+  color: #f87171;
+  margin: 0;
+}
+@keyframes srShake {
+  0%,100% { transform: translateX(0); }
+  20%      { transform: translateX(-6px); }
+  40%      { transform: translateX(6px); }
+  60%      { transform: translateX(-4px); }
+  80%      { transform: translateX(4px); }
+}
+.sr-pw-shake { animation: srShake 0.4s ease; }
+
+.theme-swatch--locked {
+  font-size: 0.9rem;
+  line-height: 36px;
+}

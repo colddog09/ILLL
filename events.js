@@ -822,7 +822,9 @@ updateDday();
 // 🎨 테마 설정
 // ──────────────────────────────────────────────
 (function initTheme() {
-  const THEME_KEY = 'appTheme_v1';
+  const THEME_KEY    = 'appTheme_v1';
+  const SR_UNLOCK_KEY = 'srUnlocked_v1';
+  const SR_PW        = '33550336';
 
   function applyTheme(theme) {
     if (theme === 'purple' || !theme) {
@@ -833,17 +835,87 @@ updateDday();
     document.querySelectorAll('.theme-swatch').forEach(sw => {
       sw.classList.toggle('theme-swatch--active', sw.dataset.theme === (theme || 'purple'));
     });
+    if (typeof renderWeek === 'function') renderWeek();
+  }
+
+  // 잠금 해제된 상태면 자물쇠 아이콘 제거
+  function updateSwatchLock() {
+    const sw = document.querySelector('.theme-swatch[data-theme="starrail"]');
+    if (!sw) return;
+    if (isStarRailUnlocked()) {
+      sw.textContent = '';
+      sw.classList.remove('theme-swatch--locked');
+    }
   }
 
   // 저장된 테마 즉시 적용
   const saved = localStorage.getItem(THEME_KEY);
   applyTheme(saved || 'purple');
+  updateSwatchLock();
+
+  // 스타레일 잠금 해제 여부
+  function isStarRailUnlocked() {
+    return localStorage.getItem(SR_UNLOCK_KEY) === '1';
+  }
+
+  function promptStarRailPassword() {
+    // 커스텀 암호 입력 다이얼로그
+    const overlay = document.createElement('div');
+    overlay.className = 'sr-pw-overlay';
+    overlay.innerHTML = `
+      <div class="sr-pw-box">
+        <div class="sr-pw-logo">✦</div>
+        <p class="sr-pw-title">잠긴 테마</p>
+        <p class="sr-pw-desc">암호를 입력하세요</p>
+        <input class="sr-pw-input" type="password" maxlength="16" placeholder="••••••••" autocomplete="off" />
+        <div class="sr-pw-btns">
+          <button class="sr-pw-cancel">취소</button>
+          <button class="sr-pw-confirm">확인</button>
+        </div>
+        <p class="sr-pw-error" hidden>암호가 틀렸어요</p>
+      </div>`;
+    document.body.appendChild(overlay);
+
+    const input   = overlay.querySelector('.sr-pw-input');
+    const confirm = overlay.querySelector('.sr-pw-confirm');
+    const cancel  = overlay.querySelector('.sr-pw-cancel');
+    const errMsg  = overlay.querySelector('.sr-pw-error');
+
+    setTimeout(() => input.focus(), 50);
+
+    function close() { overlay.remove(); }
+
+    function tryUnlock() {
+      if (input.value === SR_PW) {
+        localStorage.setItem(SR_UNLOCK_KEY, '1');
+        updateSwatchLock();
+        close();
+        localStorage.setItem(THEME_KEY, 'starrail');
+        applyTheme('starrail');
+      } else {
+        errMsg.hidden = false;
+        input.value = '';
+        input.focus();
+        input.classList.add('sr-pw-shake');
+        setTimeout(() => input.classList.remove('sr-pw-shake'), 500);
+      }
+    }
+
+    confirm.addEventListener('click', tryUnlock);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock(); });
+    cancel.addEventListener('click', close);
+    overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+  }
 
   // 스와치 클릭
   document.addEventListener('click', e => {
     const sw = e.target.closest('.theme-swatch');
     if (!sw) return;
     const theme = sw.dataset.theme;
+    if (theme === 'starrail' && !isStarRailUnlocked()) {
+      promptStarRailPassword();
+      return;
+    }
     localStorage.setItem(THEME_KEY, theme);
     applyTheme(theme);
   });
