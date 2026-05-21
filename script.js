@@ -329,7 +329,7 @@ function saveState() {
   localStorage.setItem('lastSavedTime', Date.now().toString());
 }
 
-// 앱 종료/백그라운드 전환 시 Firestore에 저장
+// 앱 종료/백그라운드 전환 시 Firestore에 저장 (동기 호환)
 function flushToFirestore() {
   if (!currentUser || !db) return;
   const snap = stateSnapshot();
@@ -340,7 +340,6 @@ function flushToFirestore() {
     links:       state.links || [],
     lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
   };
-  // sendBeacon 방식으로 페이지 언로드에도 전송 시도
   try {
     db.collection('users').doc(currentUser.uid).set(data);
     lastSavedSnapshot = snap;
@@ -349,13 +348,41 @@ function flushToFirestore() {
   }
 }
 
+// 10분 자동 백업 — 상태 표시 포함
+async function autoBackup() {
+  if (!currentUser || !db) return;
+  const snap = stateSnapshot();
+  if (snap === lastSavedSnapshot) return;
+
+  setSyncStatus('☁️ 백업 중...');
+  try {
+    await db.collection('users').doc(currentUser.uid).set({
+      pool:        state.pool,
+      schedule:    state.schedule,
+      links:       state.links || [],
+      lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    lastSavedSnapshot = snap;
+    persistLocalState();
+    localStorage.setItem('lastSavedTime', Date.now().toString());
+    const now = new Date();
+    const hhmm = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    setSyncStatus(`✅ 백업 완료 ${hhmm}`);
+    setTimeout(() => setSyncStatus(''), 3000);
+  } catch (err) {
+    console.error('자동 백업 실패:', err);
+    setSyncStatus('❌ 백업 실패');
+    setTimeout(() => setSyncStatus(''), 4000);
+  }
+}
+
 window.addEventListener('beforeunload', flushToFirestore);
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') flushToFirestore();
 });
 
-// 10분마다 자동 Firestore 업로드
-setInterval(flushToFirestore, 10 * 60 * 1000);
+// 10분마다 자동 백업
+setInterval(autoBackup, 10 * 60 * 1000);
 
 // ──────────────────────────────────────────────
 // 인증 UI
