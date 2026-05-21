@@ -113,14 +113,6 @@ function finishFirebaseSetup() {
   const auth = getAuth();
   db = firebase.firestore();
 
-  // Firestore 오프라인 퍼시스턴스 — IndexedDB에 캐시해서 다음 로드 즉시 표시
-  db.enablePersistence({ synchronizeTabs: true })
-    .catch(err => {
-      if (err.code !== 'failed-precondition' && err.code !== 'unimplemented') {
-        console.warn('Firestore persistence 설정 실패:', err);
-      }
-    });
-
   return auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
     .catch(err => { console.warn('Auth persistence 설정 실패:', err); })
     .then(() => {
@@ -300,8 +292,8 @@ function loadState() {
           lastSavedSnapshot = stateSnapshot();
         }
       } else {
-        // 서버에 없으면 로컬 데이터를 서버에 저장
-        _doSave();
+        // 서버에 없으면 로컬 데이터를 서버에 저장 (로컬에 실제 데이터 있을 때만)
+        if (hasLocalState(readLocalState())) _doSave();
       }
       autoReturnExpiredTasks();
       renderApp();
