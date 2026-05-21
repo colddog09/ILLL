@@ -322,10 +322,13 @@ function loadState() {
       loadInProgress = false;
       if (doc.exists) {
         const remote = doc.data();
-        // 로컬이 더 최신이면 유지, 아니면 서버 데이터 사용
         const remoteTime = remote.lastUpdated?.toMillis?.() || 0;
         const localTime  = parseInt(localStorage.getItem('lastSavedTime') || '0');
-        if (remoteTime > localTime) {
+        const remoteHasData = (remote.pool?.length > 0) ||
+          Object.values(remote.schedule || {}).some(v => Array.isArray(v) && v.length > 0);
+
+        // 로컬이 비어있으면 타임스탬프 무시하고 무조건 서버 데이터 사용
+        if (remoteTime > localTime || (!hasAnyTaskData() && remoteHasData)) {
           applyPersistedState(remote);
           persistLocalState();
           lastSavedSnapshot = stateSnapshot();
