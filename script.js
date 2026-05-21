@@ -68,7 +68,13 @@ function setSyncSaved() {
   const now = new Date();
   const h = String(now.getHours()).padStart(2, '0');
   const m = String(now.getMinutes()).padStart(2, '0');
-  setSyncStatus(`☁️ ${h}:${m} 저장됨`);
+  const label = `${h}:${m}`;
+  localStorage.setItem('lastSavedLabel', label);
+  setSyncStatus(`☁️ ${label} 저장됨`);
+}
+function showLastSavedTime() {
+  const label = localStorage.getItem('lastSavedLabel');
+  if (label) setSyncStatus(`☁️ ${label} 저장됨`);
 }
 function handleGoogleAuthError(err) {
   if (!err) return;
@@ -299,7 +305,7 @@ function loadState() {
       }
       autoReturnExpiredTasks();
       renderApp();
-      setSyncStatus('');
+      showLastSavedTime();
     })
     .catch(err => {
       console.error('Firestore 읽기 에러:', err);
