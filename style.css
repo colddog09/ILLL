@@ -2841,6 +2841,8 @@ body {
   box-shadow: 0 4px 20px rgba(137,196,255,0.2);
 }
 [data-theme="starrail"] .login-screen__note { color: #3a5070; }
+[data-theme="starrail"] .login-screen__icon { display: none; }
+[data-theme="starrail"] .login-screen__title { display: none; }
 [data-theme="starrail"] .dday-badge {
   background: linear-gradient(135deg, #1a3a6a, #2a5090);
   color: #89c4ff;
@@ -2902,3 +2904,21 @@ body {
 }
 .dday-input:focus { border-color: var(--accent); }
 .dday-input--date { flex: 1; min-width: 140px; }
+
+/* ── 스타레일 로고 ── */
+.login-screen__starrail-logo {
+  display: none;
+  width: 260px;
+  max-width: 80%;
+  object-fit: contain;
+  margin-bottom: 4px;
+  filter: drop-shadow(0 0 24px rgba(137,196,255,0.35));
+  animation: starRailGlow 3s ease-in-out infinite alternate;
+}
+[data-theme="starrail"] .login-screen__starrail-logo {
+  display: block;
+}
+@keyframes starRailGlow {
+  from { filter: drop-shadow(0 0 16px rgba(137,196,255,0.25)); }
+  to   { filter: drop-shadow(0 0 32px rgba(137,196,255,0.55)); }
+}
