@@ -565,36 +565,6 @@ body {
   white-space: nowrap;
 }
 
-.sync-area {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 6px;
-}
-
-.sync-upload-btn {
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 20px;
-  border: 1.5px solid #a78bfa;
-  background: #f5f3ff;
-  color: #6d28d9;
-  cursor: pointer;
-  transition: background 0.15s, transform 0.1s;
-  white-space: nowrap;
-}
-.sync-upload-btn:hover {
-  background: #ede9fe;
-}
-.sync-upload-btn:active {
-  transform: scale(0.96);
-}
-.sync-upload-btn:disabled {
-  opacity: 0.5;
-  cursor: default;
-  transform: none;
-}
 
 .week-nav-btn {
   background: var(--surface);
@@ -1890,7 +1860,6 @@ body {
 
   /* 모바일에서 sync 상태 메시지 숨김 (공간 절약) */
   .sync-status { font-size: 0.65rem; }
-  .sync-upload-btn { font-size: 0.7rem; padding: 3px 8px; }
 
   .header-right {
     flex-direction: row;

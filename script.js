@@ -392,11 +392,34 @@ function _doSave() {
   });
 }
 
-// saveState = 즉시 로컬 저장만, Firestore는 앱 종료 시 처리
+// saveState = 로컬 즉시 저장 + Firestore debounce 자동 업로드 (1.5초)
+let _saveTimer = null;
 function saveState() {
   persistLocalState();
   localStorage.setItem('lastSavedTime', Date.now().toString());
-  setSyncStatus('📝 업로드 대기 중...');
+  if (hasAnyTaskData()) saveBackup();
+  setSyncStatus('📝 저장 중...');
+
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(() => {
+    if (!currentUser || !db || !dataLoaded) return;
+    const snap = stateSnapshot();
+    if (snap === lastSavedSnapshot) { showLastSavedTime(); return; }
+    if (!hasAnyTaskData()) return;
+
+    db.collection('users').doc(currentUser.uid).set({
+      pool:        state.pool,
+      schedule:    state.schedule,
+      links:       state.links || [],
+      lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+      lastSavedSnapshot = snap;
+      setSyncSaved();
+    }).catch(err => {
+      console.error('saveState Firestore 오류:', err);
+      setSyncStatus('❌ 저장 실패');
+    });
+  }, 1500);
 }
 
 // 앱 종료/백그라운드 전환 시 Firestore에 저장
@@ -440,51 +463,6 @@ document.addEventListener('visibilitychange', () => {
 // 10분마다 자동 Firestore 업로드
 setInterval(flushToFirestore, 10 * 60 * 1000);
 
-// 수동 업로드 버튼
-(function initManualSync() {
-  const btn = document.getElementById('manualSyncBtn');
-  if (!btn) return;
-  btn.addEventListener('click', () => {
-    if (!currentUser || !db) {
-      setSyncStatus('❌ 로그인 필요');
-      return;
-    }
-    if (!dataLoaded) {
-      setSyncStatus('⏳ 데이터 로딩 중...');
-      return;
-    }
-    btn.disabled = true;
-    btn.textContent = '⏳ 업로드 중...';
-    setSyncStatus('☁️ 업로드 중...');
-
-    const snap = stateSnapshot();
-    const data = {
-      pool:        state.pool,
-      schedule:    state.schedule,
-      links:       state.links || [],
-      lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-    };
-    db.collection('users').doc(currentUser.uid).set(data)
-      .then(() => {
-        lastSavedSnapshot = snap;
-        persistLocalState();
-        localStorage.setItem('lastSavedTime', Date.now().toString());
-        if (hasAnyTaskData()) saveBackup();
-        setSyncSaved();
-        btn.textContent = '✅ 완료';
-        setTimeout(() => {
-          btn.textContent = '☁️ 업로드';
-          btn.disabled = false;
-        }, 2000);
-      })
-      .catch(err => {
-        console.error('수동 업로드 실패:', err);
-        setSyncStatus('❌ 업로드 실패');
-        btn.textContent = '☁️ 업로드';
-        btn.disabled = false;
-      });
-  });
-})();
 
 // ──────────────────────────────────────────────
 // 인증 UI
