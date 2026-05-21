@@ -192,10 +192,6 @@ async function bootstrapFirebase() {
     _saveCachedConfig(cfg);
     if (cfg.googleClientId) {
       window.__GCAL_CLIENT_ID__ = cfg.googleClientId;
-    } else if (cfg.authDomain) {
-      _detectOAuthClientId(cfg.authDomain).then(id => {
-        if (id) window.__GCAL_CLIENT_ID__ = id;
-      });
     }
     await initializeFirebase(cfg);
   } catch (err) {
