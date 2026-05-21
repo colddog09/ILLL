@@ -566,6 +566,13 @@ body {
   vertical-align: middle;
 }
 
+.last-backup-time {
+  font-size: 0.65rem;
+  color: var(--text-sub);
+  opacity: 0.55;
+  margin-top: 2px;
+}
+
 .week-nav-btn {
   background: var(--surface);
   border: 1.5px solid var(--border);

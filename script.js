@@ -348,6 +348,16 @@ function flushToFirestore() {
   }
 }
 
+function setLastBackupDisplay(ts) {
+  const el = document.getElementById('lastBackupTime');
+  if (!el) return;
+  if (!ts) { el.hidden = true; return; }
+  const d = new Date(ts);
+  const hhmm = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  el.textContent = `마지막 백업 ${hhmm}`;
+  el.hidden = false;
+}
+
 // 10분 자동 백업 — 상태 표시 포함
 async function autoBackup() {
   if (!currentUser || !db) return;
@@ -364,11 +374,11 @@ async function autoBackup() {
     });
     lastSavedSnapshot = snap;
     persistLocalState();
-    localStorage.setItem('lastSavedTime', Date.now().toString());
-    const now = new Date();
-    const hhmm = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-    setSyncStatus(`✅ 백업 완료 ${hhmm}`);
-    setTimeout(() => setSyncStatus(''), 3000);
+    const now = Date.now();
+    localStorage.setItem('lastSavedTime', now.toString());
+    setLastBackupDisplay(now);
+    setSyncStatus('✅ 백업 완료');
+    setTimeout(() => setSyncStatus(''), 2500);
   } catch (err) {
     console.error('자동 백업 실패:', err);
     setSyncStatus('❌ 백업 실패');
@@ -383,6 +393,12 @@ document.addEventListener('visibilitychange', () => {
 
 // 10분마다 자동 백업
 setInterval(autoBackup, 10 * 60 * 1000);
+
+// 페이지 로드 시 마지막 백업 시간 복원
+(function () {
+  const ts = parseInt(localStorage.getItem('lastSavedTime') || '0');
+  if (ts) setLastBackupDisplay(ts);
+})();
 
 // ──────────────────────────────────────────────
 // 인증 UI
