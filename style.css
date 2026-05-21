@@ -75,21 +75,21 @@
 
 /* ── 테마: 붕괴 스타레일 ── */
 [data-theme="starrail"] {
-  --bg: #070e1c;
-  --surface: #0c1628;
-  --surface-hover: #132036;
-  --border: rgba(137,196,255,0.18);
-  --border-strong: rgba(137,196,255,0.4);
+  --bg: #0e1d35;
+  --surface: #162a48;
+  --surface-hover: #1e3a60;
+  --border: rgba(137,196,255,0.22);
+  --border-strong: rgba(137,196,255,0.45);
   --accent: #89c4ff;
   --accent2: #c8dff8;
-  --text: #ddeeff;
-  --text-sub: #7a9cbd;
+  --text: #e8f4ff;
+  --text-sub: #8ab0d0;
   --success: #5de0b0;
   --danger: #f87171;
-  --shadow: 0 4px 20px rgba(0,0,0,0.55);
-  --shadow-lg: 0 12px 48px rgba(0,0,0,0.65);
-  --bg-grad1: rgba(137,196,255,0.07);
-  --bg-grad2: rgba(200,223,248,0.04);
+  --shadow: 0 4px 20px rgba(0,0,0,0.4);
+  --shadow-lg: 0 12px 48px rgba(0,0,0,0.5);
+  --bg-grad1: rgba(137,196,255,0.1);
+  --bg-grad2: rgba(200,223,248,0.07);
 }
 
 html { scroll-behavior: smooth; overflow-x: hidden; }
@@ -2780,19 +2780,19 @@ body {
 
 /* ── 스타레일 오버라이드 ── */
 [data-theme="starrail"] .top-bar {
-  background: rgba(7,14,28,0.95);
-  border-bottom-color: rgba(137,196,255,0.12);
+  background: rgba(14,29,53,0.96);
+  border-bottom-color: rgba(137,196,255,0.18);
 }
 [data-theme="starrail"] .modal-box {
-  background: #0c1628;
-  border-color: rgba(137,196,255,0.15);
+  background: #162a48;
+  border-color: rgba(137,196,255,0.2);
 }
 [data-theme="starrail"] .settings-card {
-  background: linear-gradient(180deg, #0f1e38 0%, #0a1428 100%);
-  border-color: rgba(137,196,255,0.12);
+  background: linear-gradient(180deg, #1b3254 0%, #152844 100%);
+  border-color: rgba(137,196,255,0.16);
 }
 [data-theme="starrail"] .settings-card--danger {
-  background: linear-gradient(180deg, #1a1030 0%, #120c22 100%);
+  background: linear-gradient(180deg, #2a1a40 0%, #1e1234 100%);
 }
 [data-theme="starrail"] .task-input-wrap input,
 [data-theme="starrail"] .task-pool,
@@ -2802,51 +2802,51 @@ body {
 }
 [data-theme="starrail"] .pool-item,
 [data-theme="starrail"] .sched-item {
-  background: #0f1e38;
-  border-color: rgba(137,196,255,0.13);
+  background: #1a3050;
+  border-color: rgba(137,196,255,0.18);
   color: var(--text);
 }
 [data-theme="starrail"] .sched-item.done { opacity: 0.45; }
 [data-theme="starrail"] body {
   background-image:
-    radial-gradient(ellipse at 20% 10%, rgba(137,196,255,0.07) 0%, transparent 55%),
-    radial-gradient(ellipse at 80% 85%, rgba(200,223,248,0.05) 0%, transparent 50%),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='500'%3E%3Ccircle cx='60' cy='90' r='1' fill='%23c8dfff' opacity='0.45'/%3E%3Ccircle cx='180' cy='40' r='0.7' fill='%23ffffff' opacity='0.35'/%3E%3Ccircle cx='300' cy='130' r='1.2' fill='%2389c4ff' opacity='0.4'/%3E%3Ccircle cx='420' cy='70' r='0.8' fill='%23ffffff' opacity='0.3'/%3E%3Ccircle cx='100' cy='220' r='0.9' fill='%23c8dfff' opacity='0.35'/%3E%3Ccircle cx='240' cy='300' r='1' fill='%23ffffff' opacity='0.25'/%3E%3Ccircle cx='460' cy='340' r='0.7' fill='%2389c4ff' opacity='0.3'/%3E%3Ccircle cx='40' cy='400' r='1.1' fill='%23ffffff' opacity='0.3'/%3E%3Ccircle cx='380' cy='450' r='0.8' fill='%23c8dfff' opacity='0.35'/%3E%3Ccircle cx='140' cy='470' r='1' fill='%2389c4ff' opacity='0.25'/%3E%3C/svg%3E");
+    radial-gradient(ellipse at 20% 10%, rgba(137,196,255,0.12) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 85%, rgba(200,223,248,0.09) 0%, transparent 50%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='500'%3E%3Ccircle cx='60' cy='90' r='1' fill='%23c8dfff' opacity='0.55'/%3E%3Ccircle cx='180' cy='40' r='0.7' fill='%23ffffff' opacity='0.45'/%3E%3Ccircle cx='300' cy='130' r='1.2' fill='%2389c4ff' opacity='0.5'/%3E%3Ccircle cx='420' cy='70' r='0.8' fill='%23ffffff' opacity='0.4'/%3E%3Ccircle cx='100' cy='220' r='0.9' fill='%23c8dfff' opacity='0.45'/%3E%3Ccircle cx='240' cy='300' r='1' fill='%23ffffff' opacity='0.35'/%3E%3Ccircle cx='460' cy='340' r='0.7' fill='%2389c4ff' opacity='0.4'/%3E%3Ccircle cx='40' cy='400' r='1.1' fill='%23ffffff' opacity='0.4'/%3E%3Ccircle cx='380' cy='450' r='0.8' fill='%23c8dfff' opacity='0.45'/%3E%3Ccircle cx='140' cy='470' r='1' fill='%2389c4ff' opacity='0.35'/%3E%3C/svg%3E");
 }
 [data-theme="starrail"] .login-screen {
-  background: linear-gradient(160deg, #07111f 0%, #050d1a 55%, #080614 100%);
+  background: linear-gradient(160deg, #0e1d35 0%, #0a1828 55%, #0d1230 100%);
 }
 [data-theme="starrail"] .login-screen__card {
-  background: rgba(12,22,40,0.92);
-  border-color: rgba(137,196,255,0.22);
-  box-shadow: 0 24px 64px rgba(0,0,0,0.6), 0 0 48px rgba(137,196,255,0.07);
+  background: rgba(18,34,60,0.93);
+  border-color: rgba(137,196,255,0.28);
+  box-shadow: 0 24px 64px rgba(0,0,0,0.45), 0 0 48px rgba(137,196,255,0.1);
 }
 [data-theme="starrail"] .login-screen__icon {
-  background: linear-gradient(135deg, #0f2040 0%, #091530 100%);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.5), 0 0 24px rgba(137,196,255,0.18);
-  border: 1.5px solid rgba(137,196,255,0.25);
+  background: linear-gradient(135deg, #1a3358 0%, #122540 100%);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 0 24px rgba(137,196,255,0.22);
+  border: 1.5px solid rgba(137,196,255,0.3);
 }
 [data-theme="starrail"] .login-screen__title {
-  color: #ddeeff;
-  text-shadow: 0 0 20px rgba(137,196,255,0.3);
+  color: #e8f4ff;
+  text-shadow: 0 0 20px rgba(137,196,255,0.35);
 }
-[data-theme="starrail"] .login-screen__subtitle { color: #7a9cbd; }
+[data-theme="starrail"] .login-screen__subtitle { color: #8ab0d0; }
 [data-theme="starrail"] .login-screen__btn {
-  background: #0f1e38;
-  border-color: rgba(137,196,255,0.25);
+  background: #1a3050;
+  border-color: rgba(137,196,255,0.3);
   color: #c8dfff;
 }
 [data-theme="starrail"] .login-screen__btn:hover {
   border-color: #89c4ff;
-  box-shadow: 0 4px 20px rgba(137,196,255,0.2);
+  box-shadow: 0 4px 20px rgba(137,196,255,0.25);
 }
-[data-theme="starrail"] .login-screen__note { color: #3a5070; }
+[data-theme="starrail"] .login-screen__note { color: #4a6888; }
 [data-theme="starrail"] .login-screen__icon { display: none; }
 [data-theme="starrail"] .login-screen__title { display: none; }
 [data-theme="starrail"] .dday-badge {
-  background: linear-gradient(135deg, #1a3a6a, #2a5090);
+  background: linear-gradient(135deg, #1e4a80, #2e60a8);
   color: #89c4ff;
-  border: 1px solid rgba(137,196,255,0.3);
+  border: 1px solid rgba(137,196,255,0.35);
 }
 
 /* ============================
