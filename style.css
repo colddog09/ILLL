@@ -858,7 +858,10 @@ body {
 .settings-body {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
+  overflow-y: auto;
+  max-height: calc(85vh - 80px);
+  padding-bottom: 8px;
 }
 
 .settings-card {
@@ -903,6 +906,27 @@ body {
 .settings-card--danger .settings-card__eyebrow {
   background: rgba(220,53,69,0.09);
   color: #dc3545;
+}
+.settings-logout-row {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0 2px;
+}
+.settings-logout-btn {
+  background: none;
+  border: none;
+  color: #dc2626;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 14px;
+  border-radius: 8px;
+  opacity: 0.75;
+  transition: opacity 0.15s, background 0.15s;
+}
+.settings-logout-btn:hover {
+  opacity: 1;
+  background: rgba(220,38,38,0.07);
 }
 
 .settings-grid {
