@@ -396,6 +396,7 @@ function _doSave() {
 function saveState() {
   persistLocalState();
   localStorage.setItem('lastSavedTime', Date.now().toString());
+  setSyncStatus('📝 업로드 대기 중...');
 }
 
 // 앱 종료/백그라운드 전환 시 Firestore에 저장
@@ -418,14 +419,17 @@ function flushToFirestore() {
     links:       state.links || [],
     lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
   };
-  try {
-    db.collection('users').doc(currentUser.uid).set(data)
-      .then(() => { lastSavedSnapshot = snap; setSyncSaved(); })
-      .catch(() => {});
-    lastSavedSnapshot = snap;
-  } catch (e) {
-    console.error('flushToFirestore 실패:', e);
-  }
+  db.collection('users').doc(currentUser.uid).set(data)
+    .then(() => {
+      lastSavedSnapshot = snap;
+      persistLocalState();
+      localStorage.setItem('lastSavedTime', Date.now().toString());
+      setSyncSaved();
+    })
+    .catch(err => {
+      console.error('flushToFirestore 실패:', err);
+      setSyncStatus('❌ 저장 실패');
+    });
 }
 
 window.addEventListener('beforeunload', flushToFirestore);
