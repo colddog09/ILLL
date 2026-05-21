@@ -427,9 +427,6 @@ function openHistory() {
 
       const [y, m] = mk.split('-');
       const totalTasks = days.reduce((s, k) => s + state.schedule[k].length, 0);
-      const doneTasks  = days.reduce((s, k) => s + state.schedule[k].filter(it => it.status === 'O').length, 0);
-      const pct = totalTasks ? Math.round(doneTasks / totalTasks * 100) : 0;
-      const pctColor = pct >= 80 ? 'var(--success)' : pct >= 50 ? '#f59e0b' : 'var(--danger)';
 
       const monthEl = document.createElement('div');
       monthEl.className = 'history-month' + (firstMonth ? ' open' : '');
@@ -437,11 +434,8 @@ function openHistory() {
         <div class="history-month__header">
           <div class="history-month__header-top">
             <span class="history-month__title">${y}년 ${parseInt(m)}월</span>
-            <span class="history-month__summary">${doneTasks}/${totalTasks} · ${pct}%</span>
+            <span class="history-month__summary">${totalTasks}개</span>
             <span class="history-month__chevron">▼</span>
-          </div>
-          <div class="history-month__pbar-wrap">
-            <div class="history-month__pbar" style="width:${pct}%;background:${pctColor}"></div>
           </div>
         </div>
         <div class="history-month__body"></div>`;
@@ -452,8 +446,6 @@ function openHistory() {
         const items = q ? rawItems.filter(it => it.text.toLowerCase().includes(q)) : rawItems;
         const d   = new Date(key);
         const dow = d.getDay();
-        const done = items.filter(it => it.status === 'O').length;
-        const dayPct = items.length ? Math.round(done / items.length * 100) : 0;
         const dayEl = document.createElement('div');
         dayEl.className = 'history-day' + (firstMonth && idx === 0 ? ' open' : '');
         let titleColor = '';
@@ -462,14 +454,12 @@ function openHistory() {
         dayEl.innerHTML = `
           <div class="history-day__header">
             <span class="history-day__title" ${titleColor}>${formatHistoryDateLabel(d)}</span>
-            <span class="history-day__summary">${done}/${items.length}</span>
-            <span class="history-day__pct" style="color:${dayPct===100?'var(--success)':dayPct>=50?'#f59e0b':'var(--text-sub)'}">${dayPct}%</span>
+            <span class="history-day__summary">${items.length}개</span>
             <span class="history-day__chevron">▼</span>
           </div>
           <div class="history-day__tasks">
             ${items.map(it => `
-              <div class="history-task status-${it.status||'none'}">
-                <span class="history-task__icon">${it.status==='O'?'✓':it.status==='X'?'✕':'·'}</span>
+              <div class="history-task">
                 <span class="history-task__text">${escHtml(it.text)}</span>
               </div>`).join('')}
           </div>`;
