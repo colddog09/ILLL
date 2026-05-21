@@ -834,6 +834,16 @@ body {
   font-size: 0.88rem;
   line-height: 1.55;
   color: var(--text-sub);
+  margin-bottom: 14px;
+}
+
+.settings-card--danger {
+  border-color: rgba(220, 53, 69, 0.15);
+  background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(255,245,245,0.98) 100%);
+}
+.settings-card--danger .settings-card__eyebrow {
+  background: rgba(220,53,69,0.09);
+  color: #dc3545;
 }
 
 .settings-grid {
