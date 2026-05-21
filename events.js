@@ -782,3 +782,34 @@ updateDday();
   window.addEventListener('offline', update);
   update(); // 초기 상태 확인
 })();
+
+// ──────────────────────────────────────────────
+// 🎨 테마 설정
+// ──────────────────────────────────────────────
+(function initTheme() {
+  const THEME_KEY = 'appTheme_v1';
+
+  function applyTheme(theme) {
+    if (theme === 'purple' || !theme) {
+      document.documentElement.removeAttribute('data-theme');
+    } else {
+      document.documentElement.setAttribute('data-theme', theme);
+    }
+    document.querySelectorAll('.theme-swatch').forEach(sw => {
+      sw.classList.toggle('theme-swatch--active', sw.dataset.theme === (theme || 'purple'));
+    });
+  }
+
+  // 저장된 테마 즉시 적용
+  const saved = localStorage.getItem(THEME_KEY);
+  applyTheme(saved || 'purple');
+
+  // 스와치 클릭
+  document.addEventListener('click', e => {
+    const sw = e.target.closest('.theme-swatch');
+    if (!sw) return;
+    const theme = sw.dataset.theme;
+    localStorage.setItem(THEME_KEY, theme);
+    applyTheme(theme);
+  });
+})();

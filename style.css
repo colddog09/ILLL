@@ -20,6 +20,57 @@
   --shadow: 0 4px 20px rgba(108,99,255,0.10);
   --shadow-lg: 0 12px 40px rgba(108,99,255,0.18);
   --font: 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+  --bg-grad1: rgba(108,99,255,0.08);
+  --bg-grad2: rgba(167,139,250,0.07);
+}
+
+/* ── 테마: 블루 ── */
+[data-theme="blue"] {
+  --bg: #f0f7ff;
+  --surface: #ffffff;
+  --surface-hover: #e0f0ff;
+  --border: rgba(37,99,235,0.15);
+  --border-strong: rgba(37,99,235,0.35);
+  --accent: #2563eb;
+  --accent2: #60a5fa;
+  --text: #1e3a5f;
+  --shadow: 0 4px 20px rgba(37,99,235,0.10);
+  --shadow-lg: 0 12px 40px rgba(37,99,235,0.18);
+  --bg-grad1: rgba(37,99,235,0.08);
+  --bg-grad2: rgba(96,165,250,0.07);
+}
+
+/* ── 테마: 그린 ── */
+[data-theme="green"] {
+  --bg: #f0faf4;
+  --surface: #ffffff;
+  --surface-hover: #dcfce7;
+  --border: rgba(22,163,74,0.15);
+  --border-strong: rgba(22,163,74,0.35);
+  --accent: #16a34a;
+  --accent2: #4ade80;
+  --text: #14532d;
+  --shadow: 0 4px 20px rgba(22,163,74,0.10);
+  --shadow-lg: 0 12px 40px rgba(22,163,74,0.18);
+  --bg-grad1: rgba(22,163,74,0.08);
+  --bg-grad2: rgba(74,222,128,0.07);
+}
+
+/* ── 테마: 다크 ── */
+[data-theme="dark"] {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --surface-hover: #2d3f55;
+  --border: rgba(148,163,184,0.12);
+  --border-strong: rgba(148,163,184,0.28);
+  --accent: #818cf8;
+  --accent2: #a5b4fc;
+  --text: #e2e8f0;
+  --text-sub: #94a3b8;
+  --shadow: 0 4px 20px rgba(0,0,0,0.3);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.4);
+  --bg-grad1: rgba(129,140,248,0.06);
+  --bg-grad2: rgba(165,180,252,0.04);
 }
 
 html { scroll-behavior: smooth; overflow-x: hidden; }
@@ -35,8 +86,8 @@ body {
   font-family: var(--font);
   background: var(--bg);
   background-image:
-    radial-gradient(ellipse at 15% 5%, rgba(108,99,255,0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 85% 90%, rgba(167,139,250,0.07) 0%, transparent 50%);
+    radial-gradient(ellipse at 15% 5%, var(--bg-grad1) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 90%, var(--bg-grad2) 0%, transparent 50%);
   background-attachment: fixed;
   color: var(--text);
   overflow-x: hidden;               /* 가로 스크롤 방지 */
@@ -2637,3 +2688,78 @@ body {
 .offline-banner--show {
   bottom: 28px;
 }
+
+/* ============================
+   DARK THEME OVERRIDES
+   ============================ */
+[data-theme="dark"] .top-bar {
+  background: rgba(15,23,42,0.92);
+}
+[data-theme="dark"] .modal-box,
+[data-theme="dark"] .settings-card {
+  background: #1e293b;
+}
+[data-theme="dark"] .settings-card {
+  background: linear-gradient(180deg, #1e293b 0%, #172033 100%);
+  border-color: rgba(148,163,184,0.1);
+}
+[data-theme="dark"] .settings-card--danger {
+  background: linear-gradient(180deg, #2a1f2e 0%, #1e1826 100%);
+}
+[data-theme="dark"] .task-input-wrap input,
+[data-theme="dark"] .task-pool,
+[data-theme="dark"] .day-col {
+  background: var(--surface);
+  color: var(--text);
+}
+[data-theme="dark"] .pool-item,
+[data-theme="dark"] .sched-item {
+  background: #2d3748;
+  border-color: rgba(148,163,184,0.15);
+  color: var(--text);
+}
+[data-theme="dark"] .login-screen {
+  background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+}
+[data-theme="dark"] .login-screen__card {
+  background: rgba(30,41,59,0.85);
+  border-color: rgba(148,163,184,0.12);
+}
+[data-theme="dark"] .login-screen__title { color: #e2e8f0; }
+[data-theme="dark"] .login-screen__btn {
+  background: #2d3748;
+  border-color: rgba(148,163,184,0.2);
+  color: #e2e8f0;
+}
+[data-theme="dark"] .login-screen__btn:hover {
+  border-color: var(--accent);
+}
+
+/* ============================
+   THEME PICKER
+   ============================ */
+.theme-picker {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+.theme-swatch {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+  outline: none;
+  position: relative;
+}
+.theme-swatch:hover { transform: scale(1.12); }
+.theme-swatch--active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px white, 0 0 0 4px var(--accent);
+}
+.theme-swatch[data-theme="purple"] { background: linear-gradient(135deg,#6c63ff,#a78bfa); }
+.theme-swatch[data-theme="blue"]   { background: linear-gradient(135deg,#2563eb,#60a5fa); }
+.theme-swatch[data-theme="green"]  { background: linear-gradient(135deg,#16a34a,#4ade80); }
+.theme-swatch[data-theme="dark"]   { background: linear-gradient(135deg,#1e293b,#475569); }
