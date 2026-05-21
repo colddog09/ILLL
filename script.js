@@ -436,6 +436,52 @@ document.addEventListener('visibilitychange', () => {
 // 10분마다 자동 Firestore 업로드
 setInterval(flushToFirestore, 10 * 60 * 1000);
 
+// 수동 업로드 버튼
+(function initManualSync() {
+  const btn = document.getElementById('manualSyncBtn');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    if (!currentUser || !db) {
+      setSyncStatus('❌ 로그인 필요');
+      return;
+    }
+    if (!dataLoaded) {
+      setSyncStatus('⏳ 데이터 로딩 중...');
+      return;
+    }
+    btn.disabled = true;
+    btn.textContent = '⏳ 업로드 중...';
+    setSyncStatus('☁️ 업로드 중...');
+
+    const snap = stateSnapshot();
+    const data = {
+      pool:        state.pool,
+      schedule:    state.schedule,
+      links:       state.links || [],
+      lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    db.collection('users').doc(currentUser.uid).set(data)
+      .then(() => {
+        lastSavedSnapshot = snap;
+        persistLocalState();
+        localStorage.setItem('lastSavedTime', Date.now().toString());
+        if (hasAnyTaskData()) saveBackup();
+        setSyncSaved();
+        btn.textContent = '✅ 완료';
+        setTimeout(() => {
+          btn.textContent = '☁️ 업로드';
+          btn.disabled = false;
+        }, 2000);
+      })
+      .catch(err => {
+        console.error('수동 업로드 실패:', err);
+        setSyncStatus('❌ 업로드 실패');
+        btn.textContent = '☁️ 업로드';
+        btn.disabled = false;
+      });
+  });
+})();
+
 // ──────────────────────────────────────────────
 // 인증 UI
 // ──────────────────────────────────────────────
