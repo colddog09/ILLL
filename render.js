@@ -374,6 +374,15 @@ function renderDayTasks(key) {
   if (items.length === 0) {
     const isMobile = window.matchMedia('(max-width:600px)').matches;
     container.innerHTML = `<div class="drop-hint">${isMobile ? '📌 할일을 두 번 탭해서 추가' : '📌 여기에 할일을 드래그해서 추가'}</div>`;
+    if (document.documentElement.getAttribute('data-theme') === 'starrail') {
+      const daily = document.createElement('div');
+      daily.className = 'sched-item starrail-daily';
+      daily.innerHTML = `
+        <span class="starrail-daily__icon">✦</span>
+        <span class="sched-item__text">붕괴: 스타레일 일쾌</span>
+        <span class="starrail-daily__badge">DAILY</span>`;
+      container.appendChild(daily);
+    }
     updateProgress(key);
     return;
   }
@@ -508,6 +517,18 @@ function renderDayTasks(key) {
   });
 
   container.appendChild(fragment);
+
+  // 스타레일 테마: 매일 일쾌 고정 아이템
+  if (document.documentElement.getAttribute('data-theme') === 'starrail') {
+    const daily = document.createElement('div');
+    daily.className = 'sched-item starrail-daily';
+    daily.innerHTML = `
+      <span class="starrail-daily__icon">✦</span>
+      <span class="sched-item__text">붕괴: 스타레일 일쾌</span>
+      <span class="starrail-daily__badge">DAILY</span>`;
+    container.appendChild(daily);
+  }
+
   updateProgress(key);
 }
 

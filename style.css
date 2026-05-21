@@ -2922,3 +2922,38 @@ body {
   from { filter: drop-shadow(0 0 16px rgba(137,196,255,0.25)); }
   to   { filter: drop-shadow(0 0 32px rgba(137,196,255,0.55)); }
 }
+
+/* ── 스타레일 일쾌 아이템 ── */
+.starrail-daily {
+  background: linear-gradient(90deg, #0a1628 0%, #0f2040 100%) !important;
+  border-color: rgba(137,196,255,0.3) !important;
+  cursor: default !important;
+  opacity: 0.92;
+  gap: 6px;
+}
+.starrail-daily:hover {
+  border-color: rgba(137,196,255,0.55) !important;
+  box-shadow: 0 0 12px rgba(137,196,255,0.15);
+}
+.starrail-daily__icon {
+  color: #89c4ff;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  animation: starRailGlow 2s ease-in-out infinite alternate;
+}
+.starrail-daily .sched-item__text {
+  color: #c8dfff;
+  font-weight: 600;
+  flex: 1;
+}
+.starrail-daily__badge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #89c4ff;
+  background: rgba(137,196,255,0.1);
+  border: 1px solid rgba(137,196,255,0.25);
+  border-radius: 6px;
+  padding: 2px 6px;
+  flex-shrink: 0;
+}
