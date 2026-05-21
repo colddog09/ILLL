@@ -64,6 +64,12 @@ function setSyncStatus(message) {
   const el = document.getElementById('syncStatus');
   if (el) el.textContent = message;
 }
+function setSyncSaved() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2, '0');
+  const m = String(now.getMinutes()).padStart(2, '0');
+  setSyncStatus(`☁️ ${h}:${m} 저장됨`);
+}
 function handleGoogleAuthError(err) {
   if (!err) return;
   console.error('Google 로그인 오류:', err);
@@ -318,6 +324,7 @@ function _doSave() {
     lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
   }).then(() => {
     lastSavedSnapshot = snap;
+    setSyncSaved();
   }).catch(err => {
     console.error('Firestore 저장 에러:', err);
   });
@@ -342,7 +349,9 @@ function flushToFirestore() {
   };
   // sendBeacon 방식으로 페이지 언로드에도 전송 시도
   try {
-    db.collection('users').doc(currentUser.uid).set(data);
+    db.collection('users').doc(currentUser.uid).set(data)
+      .then(() => { lastSavedSnapshot = snap; setSyncSaved(); })
+      .catch(() => {});
     lastSavedSnapshot = snap;
   } catch (e) {
     console.error('flushToFirestore 실패:', e);
