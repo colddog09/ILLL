@@ -214,15 +214,10 @@ async function bootstrapFirebase() {
 
 bootstrapFirebase();
 
-// Firebase 응답 없을 때 fallback: 5초 후에도 auth가 안 오면 로컬 데이터로 렌더
+// Firebase 5초 이내 응답 없으면 로그인 화면 표시 (네트워크 불량 대비)
 setTimeout(() => {
-  if (!currentUser && !firebaseReady) {
-    // Firebase 자체가 초기화 안 된 경우 → 로그인 화면 표시
-    showLoginScreen();
-    return;
-  }
-  if (currentUser) return; // 이미 처리됨
-  // Firebase는 됐는데 auth가 null인 경우 → loadState()에서 처리됨
+  if (currentUser) return;
+  showLoginScreen();
 }, 5000);
 
 // ──────────────────────────────────────────────
@@ -499,16 +494,8 @@ function showLoginScreen() {
   requestAnimationFrame(() => screen.classList.remove('hidden'));
 }
 
-// 이전에 로그인했던 적 있으면 로그인 화면 바로 숨김 (Firebase 복원 대기)
-(function preHideLoginScreen() {
-  if (!localStorage.getItem('wasLoggedIn')) return;
-  const screen = document.getElementById('loginScreen');
-  if (screen) { screen.classList.add('hidden'); screen.style.display = 'none'; }
-})();
-
 // 모든 스크립트 로드 후 로컬 데이터 즉시 렌더 (renderApp은 render.js에서 정의)
 setTimeout(() => {
-  if (!localStorage.getItem('wasLoggedIn')) return;
   if (currentUser) return; // auth 이미 복원됨, loadState()가 처리
   const localState = readLocalState();
   if (hasLocalState(localState)) {
@@ -539,10 +526,8 @@ function updateAuthUi(user) {
   const userName   = document.getElementById('userName');
 
   if (user) {
-    localStorage.setItem('wasLoggedIn', '1');
     hideLoginScreen();
   } else {
-    localStorage.removeItem('wasLoggedIn');
     showLoginScreen();
   }
 

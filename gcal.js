@@ -13,6 +13,7 @@ const GCAL_TARGET = '일정';            // 연동할 캘린더 이름
 let _gcalToken = null;
 let _gcalTokenExpiry = 0;
 let _gcalCalendarId = null;
+let _gcalRefreshTimer = null;
 
 // ──────────────────────────────────────────────
 // 토큰 관리
@@ -29,6 +30,7 @@ function _gcalSetToken(token, expiry) {
     sessionStorage.setItem(GCAL_SS_KEY, stored);
     localStorage.setItem('gcal_token_shared', stored); // 수행평가 사이트 공유용
   } catch (e) { /* private mode 등 */ }
+  _scheduleTokenRefresh(); // 토큰 갱신 자동 예약
 }
 
 function gcalClearToken() {
@@ -344,8 +346,26 @@ function gcalImportCurrentDate() {
   }, 300);
 }
 
+// 토큰 만료 5분 전 자동 재발급 예약
+function _scheduleTokenRefresh() {
+  clearTimeout(_gcalRefreshTimer);
+  const remaining = _gcalTokenExpiry - Date.now() - 5 * 60 * 1000; // 만료 5분 전
+  if (remaining <= 0) return;
+  _gcalRefreshTimer = setTimeout(async () => {
+    if (!isGcalConnected()) return;
+    const ok = await gcalSilentConnect().catch(() => false);
+    if (ok) {
+      _scheduleTokenRefresh(); // 갱신 성공 → 다음 갱신 예약
+      if (typeof updateGcalUI === 'function') updateGcalUI();
+    } else {
+      if (typeof updateGcalUI === 'function') updateGcalUI(); // 재연결 필요 표시
+    }
+  }, remaining);
+}
+
 function gcalStartPolling() {
   if (_gcalPollInterval) return;
+  _scheduleTokenRefresh(); // 토큰 자동 갱신 예약
   _gcalPollInterval = setInterval(() => {
     if (!gcalTokenValid()) { gcalStopPolling(); return; }
     const today = new Date();
