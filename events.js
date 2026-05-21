@@ -207,6 +207,24 @@ if (suhaengClose) suhaengClose.addEventListener('click', () => {
 });
 bindModal(settingsBtn, settingsModal, settingsCloseBtn, () => {
   if (typeof updateGcalUI === 'function') updateGcalUI();
+  // D-Day 현재 값 채우기
+  const cfg = getDdayConfig();
+  const labelEl = document.getElementById('ddayLabelInput');
+  const dateEl  = document.getElementById('ddayDateInput');
+  if (labelEl) labelEl.value = cfg.label || '';
+  if (dateEl)  dateEl.value  = cfg.date  || '';
+});
+
+// D-Day 저장
+document.getElementById('ddaySaveBtn')?.addEventListener('click', () => {
+  const label = document.getElementById('ddayLabelInput')?.value.trim();
+  const date  = document.getElementById('ddayDateInput')?.value;
+  if (!date) { alert('날짜를 선택해주세요.'); return; }
+  saveDdayConfig(label || 'D-Day', date);
+  updateDday();
+  const btn = document.getElementById('ddaySaveBtn');
+  btn.textContent = '✅ 저장됨';
+  setTimeout(() => { btn.textContent = '저장'; }, 1500);
 });
 
 // ──────────────────────────────────────────────
@@ -655,14 +673,31 @@ document.addEventListener('touchend', e => {
 // ──────────────────────────────────────────────
 // 시험 D-day 표시
 // ──────────────────────────────────────────────
+const DDAY_KEY = 'ddayConfig_v1';
+
+function getDdayConfig() {
+  try {
+    const raw = localStorage.getItem(DDAY_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (_) {}
+  return { label: '시험', date: '2026-06-22' };
+}
+
+function saveDdayConfig(label, date) {
+  localStorage.setItem(DDAY_KEY, JSON.stringify({ label, date }));
+}
+
 function updateDday() {
-  const exam         = new Date('2026-06-22T00:00:00');
-  const now          = new Date();
+  const cfg = getDdayConfig();
+  const exam = new Date(cfg.date + 'T00:00:00');
+  if (isNaN(exam.getTime())) return;
+  const now = new Date();
   const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const diff         = Math.round((exam - todayMidnight) / (1000 * 60 * 60 * 24));
-  const textSchedule = diff > 0 ? `🔥 시험 D-${diff}` : diff === 0 ? `🔥 시험 D-Day!` : `🔥 시험 D+${Math.abs(diff)}`;
-  const badgeSchedule = document.getElementById('ddayBadge');
-  if (badgeSchedule) badgeSchedule.textContent = textSchedule;
+  const diff = Math.round((exam - todayMidnight) / (1000 * 60 * 60 * 24));
+  const label = cfg.label || 'D-Day';
+  const text = diff > 0 ? `🔥 ${label} D-${diff}` : diff === 0 ? `🔥 ${label} D-Day!` : `🔥 ${label} D+${Math.abs(diff)}`;
+  const badge = document.getElementById('ddayBadge');
+  if (badge) badge.textContent = text;
 }
 
 // ──────────────────────────────────────────────

@@ -2763,3 +2763,26 @@ body {
 .theme-swatch[data-theme="blue"]   { background: linear-gradient(135deg,#2563eb,#60a5fa); }
 .theme-swatch[data-theme="green"]  { background: linear-gradient(135deg,#16a34a,#4ade80); }
 .theme-swatch[data-theme="dark"]   { background: linear-gradient(135deg,#1e293b,#475569); }
+
+/* ============================
+   DDAY SETTING
+   ============================ */
+.dday-setting-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+.dday-input {
+  padding: 8px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-family: var(--font);
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.dday-input:focus { border-color: var(--accent); }
+.dday-input--date { flex: 1; min-width: 140px; }
