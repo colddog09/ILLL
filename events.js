@@ -379,6 +379,15 @@ addTaskBtn.addEventListener('click', () => addTaskFromInput());
 prevWeekBtn.addEventListener('click', () => { state.dayOffset--; renderWeek(); });
 nextWeekBtn.addEventListener('click', () => { state.dayOffset++; renderWeek(); });
 
+// 뷰 모드 토글 버튼
+const viewModeBtn = document.getElementById('viewModeBtn');
+if (viewModeBtn) {
+  viewModeBtn.addEventListener('click', () => {
+    const next = (typeof scheduleViewMode !== 'undefined' && scheduleViewMode === 'list') ? 'day' : 'list';
+    setViewMode(next);
+  });
+}
+
 // ──────────────────────────────────────────────
 // 과거 내역 모달
 // ──────────────────────────────────────────────

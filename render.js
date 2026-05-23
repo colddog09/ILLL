@@ -539,3 +539,127 @@ function updateProgress(key) {
   const bar = dayGrid.querySelector(`.day-card[data-date="${key}"] .day-card__progress-bar`);
   if (bar) bar.style.width = pct + '%';
 }
+
+// ──────────────────────────────────────────────
+// 뷰 모드 (day = 기본, list = 전체 리스트)
+// ──────────────────────────────────────────────
+let scheduleViewMode = localStorage.getItem('scheduleViewMode') || 'day';
+
+function setViewMode(mode) {
+  scheduleViewMode = mode;
+  localStorage.setItem('scheduleViewMode', mode);
+  const btn = document.getElementById('viewModeBtn');
+  const prevBtn = document.getElementById('prevWeekBtn');
+  const nextBtn = document.getElementById('nextWeekBtn');
+  const weekLabelEl = document.getElementById('weekLabel');
+
+  if (mode === 'list') {
+    if (btn) btn.textContent = '📅';
+    if (btn) btn.title = '날짜 뷰로 전환';
+    if (prevBtn) prevBtn.hidden = true;
+    if (nextBtn) nextBtn.hidden = true;
+    if (weekLabelEl) weekLabelEl.textContent = '전체 일정';
+    renderListView();
+  } else {
+    if (btn) btn.textContent = '☰';
+    if (btn) btn.title = '리스트 뷰로 전환';
+    if (prevBtn) prevBtn.hidden = false;
+    if (nextBtn) nextBtn.hidden = false;
+    renderWeek();
+  }
+}
+
+function renderListView() {
+  dayGrid.innerHTML = '';
+  const today = todayKey();
+
+  // 오늘 이후 날짜만 + 일정 있는 날짜만 수집
+  const dates = Object.keys(state.schedule)
+    .filter(k => (state.schedule[k] || []).some(it => it.text && it.text !== 'undefined'))
+    .sort();
+
+  if (dates.length === 0) {
+    dayGrid.innerHTML = '<div class="list-view-empty">배치된 일정이 없어요</div>';
+    return;
+  }
+
+  const DAYS_KO = ['일', '월', '화', '수', '목', '금', '토'];
+  const fragment = document.createDocumentFragment();
+
+  dates.forEach(k => {
+    const items = (state.schedule[k] || []).filter(it => it.text && it.text !== 'undefined');
+    if (!items.length) return;
+
+    const isPast = k < today;
+    const isToday = k === today;
+
+    // 날짜 헤더
+    const [y, m, d] = k.split('-').map(Number);
+    const dateObj = new Date(y, m - 1, d);
+    const dow = dateObj.getDay();
+    const dowLabel = DAYS_KO[dow];
+    let dowColor = '';
+    if (dow === 0) dowColor = 'color:#dc2626';
+    if (dow === 6) dowColor = 'color:#2563eb';
+
+    const header = document.createElement('div');
+    header.className = 'list-view__date-header' + (isToday ? ' list-view__date-header--today' : '') + (isPast ? ' list-view__date-header--past' : '');
+    header.innerHTML = `
+      <span class="list-view__date-num">${m}/${d}</span>
+      <span class="list-view__date-dow" style="${dowColor}">${dowLabel}</span>
+      ${isToday ? '<span class="today-badge">오늘</span>' : ''}
+      <span class="list-view__progress">${items.filter(it=>it.status==='O').length}/${items.length}</span>
+    `;
+    fragment.appendChild(header);
+
+    // 일정 목록
+    const list = document.createElement('div');
+    list.className = 'list-view__items';
+
+    items.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'list-view__item' + (item.status === 'O' ? ' done' : '') + (isPast && item.status !== 'O' ? ' list-view__item--overdue' : '');
+      row.dataset.itemId = item.id;
+      row.dataset.dateKey = k;
+      row.dataset.taskId = item.taskId;
+
+      row.innerHTML = `
+        <button class="list-view__check" data-item-id="${item.id}" data-date-key="${k}" title="완료 토글">
+          ${item.status === 'O' ? '✅' : '⬜'}
+        </button>
+        <span class="list-view__item-text">${escHtml(item.text)}</span>
+        ${item.deadline ? `<span class="list-view__deadline${isDeadlineUrgent(item.deadline) ? ' urgent' : ''}">⏰ ${escHtml(formatDeadlineText(item.deadline))}</span>` : ''}
+      `;
+      list.appendChild(row);
+    });
+
+    fragment.appendChild(list);
+  });
+
+  dayGrid.appendChild(fragment);
+
+  // 완료 토글 이벤트
+  dayGrid.querySelectorAll('.list-view__check').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const itemId = btn.dataset.itemId;
+      const dateKey = btn.dataset.dateKey;
+      const items = state.schedule[dateKey] || [];
+      const item = items.find(it => it.id === itemId);
+      if (!item) return;
+      item.status = item.status === 'O' ? null : 'O';
+      saveState();
+      renderListView();
+    });
+  });
+}
+
+function renderApp() {
+  if (scheduleViewMode === 'list') {
+    renderListView();
+  } else {
+    renderWeek();
+  }
+  renderPool();
+  if (typeof renderGcalSidePanel === 'function') renderGcalSidePanel();
+  if (typeof renderLinks === 'function') renderLinks();
+}
