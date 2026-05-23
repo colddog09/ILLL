@@ -15,6 +15,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
   <meta name="theme-color" content="#6c63ff">
   <link rel="stylesheet" href="style.css?v=20" />
+  <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
 </head>
 <body>
 
@@ -478,7 +479,7 @@
           });
         });
       });
-      // SW 교체 후 페이지 새로고침
+      // SW ���체 후 페이지 새로고침
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         window.location.reload();
       });
