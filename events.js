@@ -233,6 +233,10 @@ document.getElementById('ddaySaveBtn')?.addEventListener('click', () => {
 if (fbLoginBtn) fbLoginBtn.addEventListener('click', () => startGoogleLogin().catch(handleGoogleAuthError));
 const loginScreenBtn = document.getElementById('loginScreenBtn');
 if (loginScreenBtn) loginScreenBtn.addEventListener('click', () => startGoogleLogin().catch(handleGoogleAuthError));
+const kakaoLoginBtn = document.getElementById('kakaoLoginBtn');
+if (kakaoLoginBtn) kakaoLoginBtn.addEventListener('click', () => startKakaoLogin().catch(e => alert('카카오 로그인 오류: ' + e.message)));
+const naverLoginBtn = document.getElementById('naverLoginBtn');
+if (naverLoginBtn) naverLoginBtn.addEventListener('click', () => startNaverLogin().catch(e => alert('네이버 로그인 오류: ' + e.message)));
 if (fbLogoutBtn) {
   fbLogoutBtn.addEventListener('click', () => {
     if (typeof signOut === 'function') {

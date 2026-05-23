@@ -94,6 +94,32 @@ async function _storeGcalRefreshToken(refreshToken) {
   }
 }
 
+// 카카오 로그인
+async function startKakaoLogin() {
+  if (!supabaseClient || !supabaseReady) {
+    alert('서비스에 연결하는 중입니다. 잠시 후 다시 시도해주세요.');
+    return;
+  }
+  const { error } = await supabaseClient.auth.signInWithOAuth({
+    provider: 'kakao',
+    options: { redirectTo: window.location.origin }
+  });
+  if (error) alert('카카오 로그인 오류: ' + error.message);
+}
+
+// 네이버 로그인
+async function startNaverLogin() {
+  if (!supabaseClient || !supabaseReady) {
+    alert('서비스에 연결하는 중입니다. 잠시 후 다시 시도해주세요.');
+    return;
+  }
+  const { error } = await supabaseClient.auth.signInWithOAuth({
+    provider: 'naver',
+    options: { redirectTo: window.location.origin }
+  });
+  if (error) alert('네이버 로그인 오류: ' + error.message);
+}
+
 // Google 로그인 에러 핸들러 (events.js 호환용)
 function handleGoogleAuthError(err) {
   if (!err) return;

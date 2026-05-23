@@ -177,6 +177,13 @@ body {
   margin: 2px 0 12px;
   line-height: 1.5;
 }
+.login-screen__btns {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
 .login-screen__btn {
   display: flex;
   align-items: center;
@@ -195,16 +202,60 @@ body {
   transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
-.login-screen__btn:hover {
-  border-color: #6c63ff;
-  box-shadow: 0 4px 16px rgba(108,99,255,0.15);
+.login-screen__btn:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+.login-screen__btn:active { transform: scale(0.97); }
+
+/* Google */
+.login-screen__btn--google:hover { border-color: #6c63ff; box-shadow: 0 4px 16px rgba(108,99,255,0.15); }
+
+/* 카카오 */
+.login-screen__btn--kakao {
+  background: #FEE500;
+  color: #3C1E1E;
+  border-color: #FEE500;
 }
-.login-screen__btn:active {
-  transform: scale(0.97);
+.login-screen__btn--kakao:hover { background: #fdd800; border-color: #fdd800; box-shadow: 0 4px 16px rgba(254,229,0,0.4); }
+
+/* 네이버 */
+.login-screen__btn--naver {
+  background: #03C75A;
+  color: #fff;
+  border-color: #03C75A;
 }
-.google-icon {
+.login-screen__btn--naver:hover { background: #02b350; border-color: #02b350; box-shadow: 0 4px 16px rgba(3,199,90,0.35); }
+
+/* 구분선 */
+.login-screen__divider {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 260px;
+  gap: 8px;
+  color: #d1d5db;
+  font-size: 0.75rem;
+}
+.login-screen__divider::before,
+.login-screen__divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e5e7eb;
+}
+
+.login-provider-icon {
   width: 18px;
   height: 18px;
+  flex-shrink: 0;
+}
+.naver-n {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #fff;
   flex-shrink: 0;
 }
 .login-screen__note {
