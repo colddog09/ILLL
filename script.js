@@ -254,6 +254,33 @@ function stateSnapshot() {
   return JSON.stringify({ pool: state.pool, schedule: state.schedule, links: state.links });
 }
 
+// ──────────────────────────────────────────────
+// 오래된 일정 압축 (DB 저장 시에만 적용, 화면엔 영향 없음)
+// - 최근 60일: 전부 유지
+// - 60일 이전: 완료(status "O") 항목만 제거, 미완료는 유지
+// ──────────────────────────────────────────────
+const SCHEDULE_KEEP_DAYS = 60;
+function pruneScheduleForSave(schedule) {
+  if (!schedule) return schedule;
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - SCHEDULE_KEEP_DAYS);
+  const cutoffStr = cutoff.toISOString().slice(0, 10); // 'YYYY-MM-DD'
+
+  const pruned = {};
+  for (const [date, tasks] of Object.entries(schedule)) {
+    if (date >= cutoffStr) {
+      // 최근 60일: 그대로 유지
+      pruned[date] = tasks;
+    } else {
+      // 오래된 날짜: 미완료 항목만 유지
+      const incomplete = (tasks || []).filter(t => t.status !== 'O');
+      if (incomplete.length > 0) pruned[date] = incomplete;
+      // 완료된 것만 있으면 해당 날짜 자체를 제거
+    }
+  }
+  return pruned;
+}
+
 // 실제 할일 데이터가 있는지 확인 (빈 state 저장 방지용)
 function hasAnyTaskData() {
   if (state.pool && state.pool.length > 0) return true;
@@ -383,7 +410,7 @@ function _doSave() {
     .upsert({
       user_id:    currentUser.id,
       pool:       state.pool,
-      schedule:   state.schedule,
+      schedule:   pruneScheduleForSave(state.schedule),
       links:      state.links || [],
       updated_at: new Date().toISOString()
     }, { onConflict: 'user_id' })
@@ -414,7 +441,7 @@ function saveState() {
       .upsert({
         user_id:    currentUser.id,
         pool:       state.pool,
-        schedule:   state.schedule,
+        schedule:   pruneScheduleForSave(state.schedule),
         links:      state.links || [],
         updated_at: new Date().toISOString()
       }, { onConflict: 'user_id' })
@@ -444,7 +471,7 @@ function flushToSupabase() {
     .upsert({
       user_id:    currentUser.id,
       pool:       state.pool,
-      schedule:   state.schedule,
+      schedule:   pruneScheduleForSave(state.schedule),
       links:      state.links || [],
       updated_at: new Date().toISOString()
     }, { onConflict: 'user_id' })
