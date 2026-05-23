@@ -19,7 +19,7 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
   <meta name="theme-color" content="#6c63ff">
-  <link rel="stylesheet" href="style.css?v=20" />
+  <link rel="stylesheet" href="style.css?v=21" />
 </head>
 <body>
 
@@ -180,7 +180,7 @@
             <input id="ddayLabelInput" class="dday-input" type="text" placeholder="이름 (예: 시험)" maxlength="12" />
             <input id="ddayDateInput"  class="dday-input dday-input--date" type="date" />
           </div>
-          <button id="ddaySaveBtn" class="auth-btn" style="margin-top:10px;">저장</button>
+          <button id="ddaySaveBtn" class="auth-btn settings-save-btn">저장</button>
         </section>
 
         <section class="settings-card">
@@ -223,19 +223,19 @@
         <h2>📌 빠른 정보</h2>
         <button id="infoCloseBtn" class="modal-close">&times;</button>
       </div>
-      <div class="modal-body" style="display:flex;flex-direction:column;gap:12px;">
+      <div class="modal-body modal-body--col">
 
         <!-- 기한 있는 할일 -->
         <div>
-          <p style="font-size:0.8rem;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">⏰ 마감 임박</p>
+          <p class="section-eyebrow">⏰ 마감 임박</p>
           <div id="deadlineList" class="deadline-list"></div>
         </div>
 
-        <hr style="border:none;border-top:1px solid var(--border);margin:0;">
+        <hr class="modal-divider">
 
         <!-- 사용자 링크 -->
         <div id="userLinksSection">
-          <p style="font-size:0.8rem;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">🔗 빠른 링크</p>
+          <p class="section-eyebrow">🔗 빠른 링크</p>
           <div id="userLinksList"></div>
           <div id="addLinkForm" class="add-link-form" hidden>
             <div class="add-link-form__row">
@@ -249,11 +249,11 @@
             </div>
           </div>
           <button id="addLinkToggleBtn" class="add-link-toggle-btn">+ 링크 추가</button>
-          <hr style="border:none;border-top:1px solid var(--border);margin:12px 0 0;">
+          <hr class="modal-divider" style="margin:12px 0 0;">
         </div>
 
         <!-- 과거 내역 -->
-        <button id="infoHistoryBtn" class="history-btn" style="width:100%;text-align:center;padding:11px;">📂 과거 내역</button>
+        <button id="infoHistoryBtn" class="history-btn history-btn--full">📂 과거 내역</button>
       </div>
     </div>
   </div>
@@ -290,19 +290,6 @@
           <h3>📌 빠른 링크</h3>
           <p>상단 <b>📌</b> 버튼에서 자주 쓰는 링크를 추가하고 바로 열 수 있어요.</p>
         </section>
-      </div>
-    </div>
-  </div>
-
-  <!-- ─── 구글 캘린더 뷰 모달 ─── -->
-  <div id="gcalViewModal" class="modal-overlay" hidden>
-    <div class="modal-box modal-box--wide">
-      <div class="modal-header">
-        <h2>📅 구글 캘린더 — 일정</h2>
-        <button id="gcalViewCloseBtn" class="modal-close">&times;</button>
-      </div>
-      <div class="modal-body" style="padding:0 16px 20px;">
-        <div id="gcalCalGrid" class="gcal-cal-grid"></div>
       </div>
     </div>
   </div>
@@ -477,7 +464,7 @@
   <script src="render.js?v=13"></script>
   <script src="drag.js?v=6"></script>
   <script src="deadline.js?v=1"></script>
-  <script src="gcal.js?v=9"></script>
+  <script src="gcal/gcal.js?v=10"></script>
   <script src="push.js?v=1"></script>
   <script src="modals.js?v=1"></script>
   <script src="events.js?v=9"></script>

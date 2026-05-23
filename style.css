@@ -3245,3 +3245,42 @@ body {
   font-size: 0.9rem;
   line-height: 36px;
 }
+
+/* ============================
+   유틸리티 클래스
+   ============================ */
+/* 모달 내 섹션 라벨 (대문자 소형 제목) */
+.section-eyebrow {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-sub);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+/* 모달 바디: 세로 플렉스 */
+.modal-body--col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 모달 구분선 */
+.modal-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 0;
+}
+
+/* 히스토리 버튼: 전체 너비 */
+.history-btn--full {
+  width: 100%;
+  text-align: center;
+  padding: 11px;
+}
+
+/* 설정 저장 버튼 상단 여백 */
+.settings-save-btn {
+  margin-top: 10px;
+}
