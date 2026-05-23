@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://o1chu.my/sitemap.xml
