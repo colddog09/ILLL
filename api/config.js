@@ -2,6 +2,7 @@ export default function handler(req, res) {
   const origin = req.headers.origin || req.headers.referer || '';
   const host = req.headers.host || '';
   const allowed = [
+    'o1chu.my',
     'planmanager-six.vercel.app',
     'localhost',
     '127.0.0.1'

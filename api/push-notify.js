@@ -13,7 +13,7 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 
 webpush.setVapidDetails(
-  'mailto:admin@planmanager-six.vercel.app',
+  'mailto:admin@o1chu.my',
   process.env.VAPID_PUBLIC_KEY,
   process.env.VAPID_PRIVATE_KEY
 );
