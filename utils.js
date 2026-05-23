@@ -59,7 +59,7 @@ function escHtml(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function renderApp() { renderPool(); renderWeek(); renderGcalSidePanel(); }
+// renderApp() 은 render.js 에 정의됨
 
 function requireLogin(message = '로그인 후 이용 가능합니다.') {
   if (currentUser) return true;
@@ -121,4 +121,17 @@ function autoReturnExpiredTasks() {
     renderWeek();
     renderGcalSidePanel();
   }
+}
+
+// ──────────────────────────────────────────────
+// 모달 헬퍼 (events.js / modals.js 공용)
+// ──────────────────────────────────────────────
+function setModalOpen(modal, open) {
+  if (modal) modal.hidden = !open;
+}
+
+function bindModal(openBtn, modal, closeBtn, beforeOpen) {
+  if (openBtn)  openBtn.addEventListener('click', () => { beforeOpen?.(); setModalOpen(modal, true); });
+  if (closeBtn) closeBtn.addEventListener('click', () => setModalOpen(modal, false));
+  if (modal)    modal.addEventListener('click', e => { if (e.target === modal) setModalOpen(modal, false); });
 }
