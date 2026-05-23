@@ -573,13 +573,12 @@ function renderListView() {
   dayGrid.innerHTML = '';
   const today = todayKey();
 
-  // 오늘 이후 날짜만 + 일정 있는 날짜만 수집
   const dates = Object.keys(state.schedule)
     .filter(k => (state.schedule[k] || []).some(it => it.text && it.text !== 'undefined'))
     .sort();
 
   if (dates.length === 0) {
-    dayGrid.innerHTML = '<div class="list-view-empty">배치된 일정이 없어요</div>';
+    dayGrid.innerHTML = '<div class="list-view-empty">📭 배치된 일정이 없어요</div>';
     return;
   }
 
@@ -593,24 +592,37 @@ function renderListView() {
     const isPast = k < today;
     const isToday = k === today;
 
-    // 날짜 헤더
     const [y, m, d] = k.split('-').map(Number);
     const dateObj = new Date(y, m - 1, d);
     const dow = dateObj.getDay();
     const dowLabel = DAYS_KO[dow];
-    let dowColor = '';
-    if (dow === 0) dowColor = 'color:#dc2626';
-    if (dow === 6) dowColor = 'color:#2563eb';
+    const dowClass = dow === 0 ? ' list-view__date-dow--sun' : dow === 6 ? ' list-view__date-dow--sat' : '';
 
+    const doneCount = items.filter(it => it.status === 'O').length;
+    const pct = items.length ? Math.round(doneCount / items.length * 100) : 0;
+
+    // 날짜 그룹 카드
+    const group = document.createElement('div');
+    group.className = 'list-view__group'
+      + (isToday ? ' list-view__group--today' : '')
+      + (isPast ? ' list-view__group--past' : '');
+
+    // 날짜 헤더
     const header = document.createElement('div');
-    header.className = 'list-view__date-header' + (isToday ? ' list-view__date-header--today' : '') + (isPast ? ' list-view__date-header--past' : '');
+    header.className = 'list-view__date-header';
     header.innerHTML = `
       <span class="list-view__date-num">${m}/${d}</span>
-      <span class="list-view__date-dow" style="${dowColor}">${dowLabel}</span>
+      <span class="list-view__date-dow${dowClass}">${dowLabel}</span>
       ${isToday ? '<span class="today-badge">오늘</span>' : ''}
-      <span class="list-view__progress">${items.filter(it=>it.status==='O').length}/${items.length}</span>
+      <span class="list-view__progress">${doneCount}/${items.length}</span>
     `;
-    fragment.appendChild(header);
+    group.appendChild(header);
+
+    // 진행 바
+    const bar = document.createElement('div');
+    bar.className = 'list-view__progress-track';
+    bar.innerHTML = `<div class="list-view__progress-bar" style="width:${pct}%"></div>`;
+    group.appendChild(bar);
 
     // 일정 목록
     const list = document.createElement('div');
@@ -618,33 +630,34 @@ function renderListView() {
 
     items.forEach(item => {
       const row = document.createElement('div');
-      row.className = 'list-view__item' + (item.status === 'O' ? ' done' : '') + (isPast && item.status !== 'O' ? ' list-view__item--overdue' : '');
+      row.className = 'list-view__item'
+        + (item.status === 'O' ? ' done' : '')
+        + (isPast && item.status !== 'O' ? ' list-view__item--overdue' : '');
       row.dataset.itemId = item.id;
       row.dataset.dateKey = k;
-      row.dataset.taskId = item.taskId;
 
       row.innerHTML = `
         <button class="list-view__check" data-item-id="${item.id}" data-date-key="${k}" title="완료 토글">
           ${item.status === 'O' ? '✅' : '⬜'}
         </button>
         <span class="list-view__item-text">${escHtml(item.text)}</span>
-        ${item.deadline ? `<span class="list-view__deadline${isDeadlineUrgent(item.deadline) ? ' urgent' : ''}">⏰ ${escHtml(formatDeadlineText(item.deadline))}</span>` : ''}
+        ${item.deadline ? `<span class="list-view__deadline${isDeadlineUrgent(item.deadline) ? ' list-view__deadline--urgent' : ''}">⏰ ${escHtml(formatDeadlineText(item.deadline))}</span>` : ''}
       `;
       list.appendChild(row);
     });
 
-    fragment.appendChild(list);
+    group.appendChild(list);
+    fragment.appendChild(group);
   });
 
   dayGrid.appendChild(fragment);
 
   // 완료 토글 이벤트
   dayGrid.querySelectorAll('.list-view__check').forEach(btn => {
-    btn.addEventListener('click', e => {
+    btn.addEventListener('click', () => {
       const itemId = btn.dataset.itemId;
       const dateKey = btn.dataset.dateKey;
-      const items = state.schedule[dateKey] || [];
-      const item = items.find(it => it.id === itemId);
+      const item = (state.schedule[dateKey] || []).find(it => it.id === itemId);
       if (!item) return;
       item.status = item.status === 'O' ? null : 'O';
       saveState();
