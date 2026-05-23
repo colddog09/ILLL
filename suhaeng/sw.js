@@ -1,9 +1,9 @@
-const CACHE_NAME = 'pwa-cache-v30';
+const CACHE_NAME = 'pwa-cache-v31';
 const urlsToCache = [
   './',
   './index.html',
-  './style.css?v=8',
-  './script.js?v=9',
+  './style.css?v=9',
+  './script.js?v=10',
   './manifest.json'
 ];
 
