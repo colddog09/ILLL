@@ -1044,6 +1044,14 @@ header h1 {
     transform: scale(0.92) rotate(180deg);
 }
 
+/* 닫기 버튼 — 빨간 계열로 구분 */
+.btn-close { color: #ff3b30; }
+.btn-close:hover {
+    background: #ff3b30 !important;
+    color: white !important;
+    transform: scale(1.08) !important;
+}
+
 .btn-icon-round:disabled {
     opacity: 0.4;
     cursor: default;

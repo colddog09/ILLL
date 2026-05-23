@@ -151,16 +151,12 @@ bindModal(infoBtn, infoModal, infoCloseBtn, () => { renderDeadlineList(); render
 const suhaengBtn     = document.getElementById('suhaengBtn');
 const suhaengOverlay = document.getElementById('suhaengOverlay');
 const suhaengFrame   = document.getElementById('suhaengFrame');
-const suhaengClose   = document.getElementById('suhaengCloseBtn');
 
 suhaengBtn?.addEventListener('click', () => {
   if (suhaengFrame && !suhaengFrame.src.includes('suhaeng')) {
     suhaengFrame.src = './suhaeng/index.html';
   }
   if (suhaengOverlay) suhaengOverlay.hidden = false;
-});
-suhaengClose?.addEventListener('click', () => {
-  if (suhaengOverlay) suhaengOverlay.hidden = true;
 });
 
 // ──────────────────────────────────────────────

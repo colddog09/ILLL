@@ -1452,33 +1452,7 @@ body {
   flex-direction: column;
 }
 .suhaeng-overlay[hidden] { display: none; }
-.suhaeng-close-btn {
-  position: absolute;
-  top: 10px;
-  right: 14px;
-  z-index: 10;
-  background: rgba(255,255,255,0.92);
-  border: none;
-  border-radius: 50%;
-  width: 34px;
-  height: 34px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #333;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.18);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transition: background 0.15s, transform 0.15s;
-}
-.suhaeng-close-btn:hover {
-  background: #fff;
-  transform: scale(1.08);
-}
-.suhaeng-close-btn:active { transform: scale(0.93); }
+/* .suhaeng-close-btn 제거됨 — 닫기 버튼이 iframe 헤더로 이동 */
 .suhaeng-frame {
   width: 100%;
   flex: 1;
