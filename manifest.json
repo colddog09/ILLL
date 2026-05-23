@@ -1,7 +1,7 @@
 {
-  "name": "일정관리 GBS",
-  "short_name": "일정관리",
-  "description": "GBS 2학년을 위한 드래그&드롭 일정 관리 앱",
+  "name": "오일추",
+  "short_name": "오일추",
+  "description": "할일을 드래그해서 날짜에 배치하는 스마트 일정 관리 앱",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
