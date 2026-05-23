@@ -242,7 +242,8 @@ body {
   background: #e5e7eb;
 }
 
-.login-provider-icon {
+.login-provider-icon,
+.google-icon {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
