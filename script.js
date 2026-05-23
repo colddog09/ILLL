@@ -56,7 +56,7 @@ function isStandaloneApp() {
   return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 }
 
-// Google 로그인
+// Google 로그인 (캘린더 scope 포함 — refresh token 발급을 위해)
 async function startGoogleLogin() {
   if (!supabaseClient || !supabaseReady) {
     alert('서비스에 연결하는 중입니다. 잠시 후 다시 시도해주세요.');
@@ -64,11 +64,33 @@ async function startGoogleLogin() {
   }
   const { error } = await supabaseClient.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: window.location.origin }
+    options: {
+      redirectTo: window.location.origin,
+      scopes: 'https://www.googleapis.com/auth/calendar',
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'consent'   // 매번 동의화면 표시 → refresh token 재발급 보장
+      }
+    }
   });
   if (error) {
     console.error('로그인 오류:', error);
     alert('로그인 중 오류가 발생했습니다: ' + error.message);
+  }
+}
+
+// Google Calendar refresh token DB 저장
+async function _storeGcalRefreshToken(refreshToken) {
+  if (!refreshToken || !currentUser || !supabaseClient) return;
+  try {
+    await supabaseClient
+      .from('user_states')
+      .upsert({ user_id: currentUser.id, gcal_refresh_token: refreshToken },
+               { onConflict: 'user_id' });
+    localStorage.setItem('gcal_connected', '1');
+    console.log('✅ 캘린더 refresh token 저장됨 (영구 연동 활성화)');
+  } catch (e) {
+    console.warn('refresh token 저장 실패:', e);
   }
 }
 
@@ -132,8 +154,12 @@ async function bootstrapSupabase() {
     supabaseReady = true;
 
     // Auth 상태 변경 리스너
-    supabaseClient.auth.onAuthStateChange((_event, session) => {
+    supabaseClient.auth.onAuthStateChange((event, session) => {
       updateAuthUi(session?.user || null);
+      // OAuth 로그인 직후에만 provider_refresh_token 포함됨 → 즉시 저장
+      if (event === 'SIGNED_IN' && session?.provider_refresh_token) {
+        _storeGcalRefreshToken(session.provider_refresh_token);
+      }
     });
 
     // 현재 세션 확인 (리다이렉트 복귀 포함)

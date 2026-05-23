@@ -66,7 +66,11 @@ function gcalLoadStoredToken() {
 async function gcalConnect() {
   if (!currentUser) throw new Error('로그인이 필요합니다.');
 
-  // GIS를 우선 시도 (client ID가 있는 경우 가장 안정적)
+  // 1순위: 서버 refresh token으로 무팝업 연동
+  const serverOk = await gcalRefreshFromServer().catch(() => false);
+  if (serverOk) return;
+
+  // 2순위: GIS popup (refresh token 없는 경우 or 서버 오류)
   const gisToken = await _gcalConnectViaGIS().catch(() => null);
   if (gisToken) {
     _gcalSetToken(gisToken);
@@ -74,14 +78,7 @@ async function gcalConnect() {
     return;
   }
 
-  // GIS로만 캘린더 연동
-  const retryToken = await _gcalConnectViaGIS().catch(() => null);
-  if (retryToken) {
-    _gcalSetToken(retryToken);
-    localStorage.setItem(GCAL_FLAG_KEY, '1');
-    return;
-  }
-  throw new Error('캘린더 연동에 실패했습니다.\nVercel 환경변수에 GOOGLE_OAUTH_CLIENT_ID를 추가해주세요.');
+  throw new Error('캘린더 연동에 실패했습니다.\n로그아웃 후 다시 로그인하면 영구 연동됩니다.');
 }
 
 // 리소스가 준비될 때까지 대기
@@ -98,8 +95,43 @@ function _waitForResource(getter, timeout = 6000) {
   });
 }
 
-// 팝업 없이 조용한 자동 재연결 (이전에 권한 허락한 경우만 성공)
+// 서버에서 Google access token 갱신 (popup 없음, refresh token 기반)
+async function gcalRefreshFromServer() {
+  if (!supabaseClient) throw new Error('supabase not ready');
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session?.access_token) throw new Error('not logged in');
+
+  const resp = await fetch('/api/gcal-token', {
+    headers: { Authorization: `Bearer ${session.access_token}` }
+  });
+
+  if (resp.status === 404) throw new Error('no_refresh_token');
+  if (resp.status === 401) { // refresh token 만료 → 재로그인 필요
+    localStorage.removeItem(GCAL_FLAG_KEY);
+    throw new Error('refresh_token_expired');
+  }
+  if (!resp.ok) throw new Error('server_error');
+
+  const { access_token, expires_in } = await resp.json();
+  _gcalSetToken(access_token, Date.now() + expires_in * 1000);
+  localStorage.setItem(GCAL_FLAG_KEY, '1');
+  return true;
+}
+
+// 팝업 없이 조용한 자동 재연결
+// 1순위: 서버 refresh (영구 연동, popup 없음)
+// 2순위: GIS silent (이전에 권한 허락한 경우)
 async function gcalSilentConnect() {
+  // 서버 refresh 시도 (refresh token이 DB에 있는 경우)
+  try {
+    await gcalRefreshFromServer();
+    return true;
+  } catch (e) {
+    if (e.message === 'refresh_token_expired') return false; // 재로그인 필요
+    // no_refresh_token 또는 기타 → GIS로 폴백
+  }
+
+  // GIS silent (팝업 없는 재발급, 세션이 살아있을 때만 성공)
   const clientId = await _waitForResource(() => window.__GCAL_CLIENT_ID__);
   if (!clientId) return false;
   const oauth2 = await _waitForResource(() => window.google?.accounts?.oauth2);
@@ -119,7 +151,7 @@ async function gcalSilentConnect() {
         },
         error_callback: () => resolve(false)
       });
-      client.requestAccessToken({ prompt: '' }); // 무UI 재발급
+      client.requestAccessToken({ prompt: '' });
     } catch (_) { resolve(false); }
   });
 }
@@ -324,18 +356,21 @@ function gcalImportCurrentDate() {
 }
 
 // 토큰 만료 5분 전 자동 재발급 예약
+// 서버 refresh 우선 → GIS silent 폴백
 function _scheduleTokenRefresh() {
   clearTimeout(_gcalRefreshTimer);
   const remaining = _gcalTokenExpiry - Date.now() - 5 * 60 * 1000; // 만료 5분 전
   if (remaining <= 0) return;
   _gcalRefreshTimer = setTimeout(async () => {
     if (!isGcalConnected()) return;
-    const ok = await gcalSilentConnect().catch(() => false);
+    // 서버 refresh 시도 (popup 없음)
+    const ok = await gcalRefreshFromServer().catch(() => false) ||
+               await gcalSilentConnect().catch(() => false);
     if (ok) {
-      _scheduleTokenRefresh(); // 갱신 성공 → 다음 갱신 예약
+      _scheduleTokenRefresh();
       if (typeof updateGcalUI === 'function') updateGcalUI();
     } else {
-      if (typeof updateGcalUI === 'function') updateGcalUI(); // 재연결 필요 표시
+      if (typeof updateGcalUI === 'function') updateGcalUI();
     }
   }, remaining);
 }
