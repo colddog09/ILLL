@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>오일추 — 오늘의 일정 추천</title>
+  <meta name="description" content="할일을 드래그해서 날짜에 배치하는 스마트 일정 관리 앱. 구글 캘린더 연동, D-Day 카운터, PWA 지원." />
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --accent: #6c63ff;
+      --accent2: #a78bfa;
+      --bg: #f4f5fb;
+      --text: #1e1b4b;
+      --sub: #6b7280;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Pretendard', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(244,245,251,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(108,99,255,0.1);
+      padding: 0 24px;
+    }
+    .nav-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px;
+    }
+    .nav-logo { font-size: 18px; font-weight: 800; color: var(--accent); text-decoration: none; }
+    .nav-links { display: flex; gap: 8px; }
+    .nav-links a {
+      text-decoration: none; font-size: 14px; font-weight: 500;
+      color: var(--sub); padding: 8px 14px; border-radius: 8px;
+      transition: background 0.15s, color 0.15s;
+    }
+    .nav-links a:hover { background: rgba(108,99,255,0.08); color: var(--accent); }
+    .nav-cta {
+      background: var(--accent) !important;
+      color: #fff !important;
+    }
+    .nav-cta:hover { background: #5b53e8 !important; }
+
+    /* ── HERO ── */
+    .hero {
+      max-width: 1100px; margin: 0 auto;
+      padding: 100px 24px 80px;
+      display: flex; flex-direction: column;
+      align-items: center; text-align: center;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(108,99,255,0.1); color: var(--accent);
+      font-size: 13px; font-weight: 600;
+      padding: 6px 14px; border-radius: 20px;
+      margin-bottom: 28px;
+    }
+    .hero h1 {
+      font-size: clamp(36px, 6vw, 64px);
+      font-weight: 800; line-height: 1.15;
+      margin-bottom: 20px;
+    }
+    .hero h1 span {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      font-size: clamp(15px, 2vw, 18px);
+      color: var(--sub); max-width: 520px;
+      margin-bottom: 40px; line-height: 1.7;
+    }
+    .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff; text-decoration: none;
+      padding: 16px 32px; border-radius: 14px;
+      font-size: 16px; font-weight: 700;
+      transition: opacity 0.15s, transform 0.15s;
+      box-shadow: 0 8px 24px rgba(108,99,255,0.3);
+    }
+    .btn-primary:hover { opacity: 0.88; transform: translateY(-2px); }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: #fff; color: var(--accent);
+      text-decoration: none;
+      padding: 16px 32px; border-radius: 14px;
+      font-size: 16px; font-weight: 600;
+      border: 1.5px solid rgba(108,99,255,0.25);
+      transition: border-color 0.15s, transform 0.15s;
+    }
+    .btn-secondary:hover { border-color: var(--accent); transform: translateY(-2px); }
+
+    /* ── FEATURES ── */
+    .features {
+      max-width: 1100px; margin: 0 auto;
+      padding: 80px 24px;
+    }
+    .section-label {
+      text-align: center; font-size: 13px; font-weight: 600;
+      color: var(--accent); text-transform: uppercase;
+      letter-spacing: 1px; margin-bottom: 12px;
+    }
+    .section-title {
+      text-align: center; font-size: clamp(24px, 3vw, 36px);
+      font-weight: 800; margin-bottom: 56px;
+    }
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+    }
+    .feature-card {
+      background: #fff; border-radius: 18px;
+      border: 1px solid rgba(108,99,255,0.1);
+      padding: 28px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(108,99,255,0.12);
+    }
+    .feature-icon {
+      font-size: 32px; margin-bottom: 14px; display: block;
+    }
+    .feature-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+    .feature-card p { font-size: 14px; color: var(--sub); line-height: 1.6; }
+
+    /* ── HOW IT WORKS ── */
+    .how { background: #fff; padding: 80px 24px; }
+    .how-inner { max-width: 1100px; margin: 0 auto; }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 32px; margin-top: 48px;
+    }
+    .step { text-align: center; }
+    .step-num {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff; font-size: 18px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+    }
+    .step h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .step p { font-size: 14px; color: var(--sub); }
+
+    /* ── CTA ── */
+    .cta {
+      max-width: 1100px; margin: 0 auto;
+      padding: 80px 24px; text-align: center;
+    }
+    .cta-box {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 24px; padding: 60px 40px; color: #fff;
+    }
+    .cta-box h2 { font-size: clamp(24px, 3vw, 36px); font-weight: 800; margin-bottom: 14px; }
+    .cta-box p { font-size: 16px; opacity: 0.85; margin-bottom: 32px; }
+    .btn-white {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: #fff; color: var(--accent);
+      text-decoration: none; padding: 16px 32px;
+      border-radius: 14px; font-size: 16px; font-weight: 700;
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .btn-white:hover { opacity: 0.92; transform: translateY(-2px); }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid rgba(108,99,255,0.1);
+      padding: 32px 24px;
+      text-align: center;
+    }
+    .footer-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+    }
+    .footer-links { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+    .footer-links a { font-size: 13px; color: var(--sub); text-decoration: none; }
+    .footer-links a:hover { color: var(--accent); }
+    .footer-copy { font-size: 13px; color: #b0b8d0; }
+
+    @media (max-width: 600px) {
+      .hero { padding: 60px 20px 48px; }
+      .nav-links .nav-secondary { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-logo" href="/landing.html">오일추</a>
+      <div class="nav-links">
+        <a href="#features" class="nav-secondary">기능</a>
+        <a href="#how" class="nav-secondary">사용법</a>
+        <a href="/" class="nav-cta">앱 시작하기 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-badge">📋 오늘의 일정 추천</div>
+    <h1>할일을 <span>드래그</span>해서<br>날짜에 딱 맞춰요</h1>
+    <p>할일 목록을 만들고 원하는 날짜에 드래그해서 배치하세요. 구글 캘린더 연동, D-Day 카운터까지 — 공부 계획이 한눈에!</p>
+    <div class="hero-btns">
+      <a class="btn-primary" href="/">📋 지금 시작하기</a>
+      <a class="btn-secondary" href="#features">기능 살펴보기 ↓</a>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features" id="features">
+    <div class="section-label">Features</div>
+    <h2 class="section-title">필요한 건 다 있어요</h2>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <span class="feature-icon">🖱️</span>
+        <h3>드래그앤드롭</h3>
+        <p>할일을 원하는 날짜로 드래그해서 배치하세요. 더블탭하면 오늘 날짜에 바로 추가돼요.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">☁️</span>
+        <h3>클라우드 동기화</h3>
+        <p>어느 기기에서 접속해도 데이터가 자동으로 동기화돼요. 변경하면 1.5초 후 자동 저장.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📅</span>
+        <h3>Google Calendar 연동</h3>
+        <p>Google 캘린더 일정을 앱에서 바로 확인하세요. 한번 연동하면 계속 유지돼요.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">⏰</span>
+        <h3>D-Day 카운터</h3>
+        <p>시험, 마감일까지 남은 날을 한눈에 확인하세요. 설정에서 원하는 날짜로 변경 가능.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📱</span>
+        <h3>PWA 설치 지원</h3>
+        <p>홈 화면에 추가하면 앱처럼 사용할 수 있어요. iOS, Android, 데스크탑 모두 지원.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🎨</span>
+        <h3>테마 변경</h3>
+        <p>보라, 블루, 그린, 다크, 그리고 특별한 스타레일 테마까지. 취향껏 골라요.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how" id="how">
+    <div class="how-inner">
+      <div class="section-label">How it works</div>
+      <h2 class="section-title">3단계로 끝</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <h3>구글로 로그인</h3>
+          <p>Google 계정으로 1초 만에 시작하세요. 별도 회원가입 없어요.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <h3>할일 추가</h3>
+          <p>상단 입력창에 할일을 입력하면 할일 목록에 쌓여요.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <h3>날짜에 배치</h3>
+          <p>할일을 드래그해서 원하는 요일 칸에 놓으면 끝!</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <div class="cta-box">
+      <h2>지금 바로 시작해보세요</h2>
+      <p>Google 계정만 있으면 돼요. 무료입니다.</p>
+      <a class="btn-white" href="/">📋 오일추 시작하기 →</a>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+        <a href="/license.html">오픈소스 라이선스</a>
+        <a href="mailto:colddog09@gmail.com">문의하기</a>
+      </div>
+      <p class="footer-copy">© 2026 오일추. All rights reserved.</p>
+    </div>
+  </footer>
+
+</body>
+</html>

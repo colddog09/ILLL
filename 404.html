@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>404 — 오일추</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Pretendard', -apple-system, sans-serif;
+      background: #f4f5fb;
+      color: #1e1b4b;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+    }
+    .container { max-width: 420px; }
+    .emoji { font-size: 64px; margin-bottom: 24px; display: block; }
+    h1 {
+      font-size: 72px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #6c63ff, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+      margin-bottom: 16px;
+    }
+    h2 { font-size: 20px; font-weight: 600; margin-bottom: 10px; }
+    p { font-size: 15px; color: #6b7280; margin-bottom: 32px; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #6c63ff, #a78bfa);
+      color: #fff;
+      text-decoration: none;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .btn:hover { opacity: 0.88; transform: translateY(-1px); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <span class="emoji">🗺️</span>
+    <h1>404</h1>
+    <h2>페이지를 찾을 수 없어요</h2>
+    <p>주소가 잘못됐거나 삭제된 페이지예요.<br>아래 버튼으로 앱으로 돌아가세요!</p>
+    <a class="btn" href="/">
+      📋 오일추로 돌아가기
+    </a>
+  </div>
+</body>
+</html>

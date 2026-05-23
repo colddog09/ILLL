@@ -212,16 +212,22 @@ body {
   color: #9ca3af;
   margin: 6px 0 0;
 }
-.login-screen__privacy {
-  display: block;
+.login-screen__legal {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-top: 14px;
   font-size: 0.75rem;
+  color: #b0b8d0;
+}
+.login-screen__legal a {
   color: #b0b8d0;
   text-decoration: none;
   opacity: 0.7;
   transition: opacity 0.15s;
 }
-.login-screen__privacy:hover { opacity: 1; }
+.login-screen__legal a:hover { opacity: 1; }
+.login-screen__legal span { opacity: 0.4; }
 
 /* ============================
    TOP BAR
