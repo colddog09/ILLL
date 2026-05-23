@@ -1,4 +1,4 @@
-const CACHE_NAME = 'illl-v20';
+const CACHE_NAME = 'illl-v21';
 const CORE_FILES = [
   '/',
   '/index.html',

@@ -74,37 +74,14 @@ async function gcalConnect() {
     return;
   }
 
-  const provider = new firebase.auth.GoogleAuthProvider();
-  provider.addScope(GCAL_SCOPE);
-  provider.setCustomParameters({ prompt: 'consent', login_hint: currentUser.email });
-
-  // reauthenticateWithPopup: 이미 로그인된 사용자에게도 반드시 새 OAuth 동의화면을 보임
-  let result;
-  try {
-    result = await currentUser.reauthenticateWithPopup(provider);
-  } catch (reAuthErr) {
-    // reauthenticate 실패 시 signInWithPopup으로 fallback
-    result = await firebase.auth().signInWithPopup(provider);
+  // GIS 재시도 (Firebase 없이 GIS만 사용)
+  const retryToken = await _gcalConnectViaGIS().catch(() => null);
+  if (retryToken) {
+    _gcalSetToken(retryToken);
+    localStorage.setItem(GCAL_FLAG_KEY, '1');
+    return;
   }
-
-  const credential = firebase.auth.GoogleAuthProvider.credentialFromResult(result);
-  const accessToken = credential?.accessToken
-    || result?._tokenResponse?.oauthAccessToken
-    || result?.credential?.accessToken;
-
-  if (!accessToken) {
-    // 마지막 수단: client ID가 뒤늦게 로드됐을 수 있으니 GIS 재시도
-    const retryToken = await _gcalConnectViaGIS().catch(() => null);
-    if (retryToken) {
-      _gcalSetToken(retryToken);
-      localStorage.setItem(GCAL_FLAG_KEY, '1');
-      return;
-    }
-    throw new Error('액세스 토큰을 받지 못했습니다.\nVercel 환경변수에 GOOGLE_OAUTH_CLIENT_ID를 추가하면 해결됩니다.');
-  }
-
-  _gcalSetToken(accessToken);
-  localStorage.setItem(GCAL_FLAG_KEY, '1');
+  throw new Error('캘린더 연동에 실패했습니다.\nVercel 환경변수에 GOOGLE_OAUTH_CLIENT_ID를 추가해주세요.');
 }
 
 // 리소스가 준비될 때까지 대기

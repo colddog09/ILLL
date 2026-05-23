@@ -235,10 +235,8 @@ const loginScreenBtn = document.getElementById('loginScreenBtn');
 if (loginScreenBtn) loginScreenBtn.addEventListener('click', () => startGoogleLogin().catch(handleGoogleAuthError));
 if (fbLogoutBtn) {
   fbLogoutBtn.addEventListener('click', () => {
-    if (typeof firebase !== 'undefined' && firebase.auth) {
-      firebase.auth().signOut()
-        .then(() => { resetScheduleState(); renderApp(); })
-        .catch(err => { console.error(err); alert("로그아웃 중 오류가 발생했습니다: " + err.message); });
+    if (typeof signOut === 'function') {
+      signOut().catch(err => { console.error(err); alert("로그아웃 중 오류가 발생했습니다: " + err.message); });
     }
   });
 }
