@@ -74,7 +74,7 @@ async function gcalConnect() {
     return;
   }
 
-  // GIS 재시도 (Firebase 없이 GIS만 사용)
+  // GIS로만 캘린더 연동
   const retryToken = await _gcalConnectViaGIS().catch(() => null);
   if (retryToken) {
     _gcalSetToken(retryToken);
@@ -124,7 +124,7 @@ async function gcalSilentConnect() {
   });
 }
 
-// GIS Token Client (Firebase fallback)
+// GIS Token Client
 // googleClientId가 window.__GCAL_CLIENT_ID__에 주입된 경우에만 동작
 function _gcalConnectViaGIS() {
   return new Promise((resolve, reject) => {
