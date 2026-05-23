@@ -146,10 +146,6 @@ document.getElementById('addTaskBtn').addEventListener('click', addTaskFromInput
 document.getElementById('prevWeekBtn').addEventListener('click', () => { state.dayOffset--; renderWeek(); });
 document.getElementById('nextWeekBtn').addEventListener('click', () => { state.dayOffset++; renderWeek(); });
 
-document.getElementById('viewModeBtn')?.addEventListener('click', () => {
-  setViewMode(scheduleViewMode === 'list' ? 'day' : 'list');
-});
-
 // ──────────────────────────────────────────────
 // 구글 캘린더 버튼
 // ──────────────────────────────────────────────
