@@ -515,57 +515,22 @@ function renderListView(events) {
   return html;
 }
 
-// ── 뷰 모드 상태 ──
-const VIEW_MODE_KEY = 'suhaeng_view_mode';
-let viewMode = localStorage.getItem(VIEW_MODE_KEY) || 'card';
+// ── 뷰 렌더 ──
 let _cachedEvents = null;
-
-const CARD_ICON_SVG = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-  <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
-</svg>`;
-const LIST_ICON_SVG = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-  <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
-  <circle cx="3" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="3" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="3" cy="18" r="1.5" fill="currentColor" stroke="none"/>
-</svg>`;
 
 function applyViewMode(events) {
   const container = document.getElementById('scroll-container');
   const wrapper   = container?.parentElement;
-  const viewBtn   = document.getElementById('viewToggleBtn');
-
   if (!container || !events?.length) return;
 
-  if (viewMode === 'list') {
-    container.classList.add('list-mode');
-    if (wrapper) wrapper.classList.add('list-mode');
-    container.innerHTML = renderListView(events);
-    if (viewBtn) viewBtn.innerHTML = CARD_ICON_SVG;
-    if (viewBtn) viewBtn.title = '카드 뷰로 전환';
-  } else {
-    container.classList.remove('list-mode');
-    if (wrapper) wrapper.classList.remove('list-mode');
-    container.innerHTML = renderCards(events);
-    setupInfiniteScroll(container, events.length);
-    setupCardInteractions(container);
-    if (viewBtn) viewBtn.innerHTML = LIST_ICON_SVG;
-    if (viewBtn) viewBtn.title = '목록 뷰로 전환';
-  }
+  container.classList.add('list-mode');
+  if (wrapper) wrapper.classList.add('list-mode');
+  container.innerHTML = renderListView(events);
   renderUrgentList(events);
-}
-
-function toggleViewMode() {
-  if (!_cachedEvents) return;
-  viewMode = viewMode === 'card' ? 'list' : 'card';
-  localStorage.setItem(VIEW_MODE_KEY, viewMode);
-  applyViewMode(_cachedEvents);
 }
 
 // ── 초기화 ──
 window.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('viewToggleBtn')?.addEventListener('click', toggleViewMode);
-  // 초기 아이콘 설정
-  const viewBtn = document.getElementById('viewToggleBtn');
-  if (viewBtn) viewBtn.innerHTML = viewMode === 'list' ? CARD_ICON_SVG : LIST_ICON_SVG;
   loadData();
 });
 
