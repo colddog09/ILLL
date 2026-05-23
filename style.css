@@ -963,6 +963,23 @@ body {
   opacity: 1;
   background: rgba(220,38,38,0.07);
 }
+.settings-legal-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 0 4px;
+  font-size: 0.72rem;
+  color: var(--text-sub);
+}
+.settings-legal-links a {
+  color: var(--text-sub);
+  text-decoration: none;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+.settings-legal-links a:hover { opacity: 1; }
+.settings-legal-links span { opacity: 0.3; }
 
 .settings-grid {
   display: grid;
