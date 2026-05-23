@@ -416,15 +416,14 @@ async function loadData() {
     const events = await fetchCalendarEvents();
 
     if (events.length === 0) {
+      _cachedEvents = [];
       container.innerHTML = '<div class="state-container"><div class="no-data-msg">등록된 수행평가가 없습니다 🎉</div></div>';
       return;
     }
 
+    _cachedEvents = events;
     container.classList.remove('is-empty');
-    container.innerHTML = renderCards(events);
-    setupInfiniteScroll(container, events.length);
-    setupCardInteractions(container);
-    renderUrgentList(events);
+    applyViewMode(events);
 
   } catch (err) {
     console.error(err);
@@ -434,8 +433,141 @@ async function loadData() {
   }
 }
 
+// ── 목록 뷰 렌더링 ──
+function renderListView(events) {
+  if (events.length === 0) {
+    return '<div class="list-empty">등록된 수행평가가 없습니다 🎉</div>';
+  }
+
+  // 날짜별로 그룹핑
+  const groups = {};
+  events.forEach((ev, i) => {
+    const raw = ev.start?.date || ev.start?.dateTime;
+    const key = raw ? raw.slice(0, 10) : '날짜 없음';
+    (groups[key] = groups[key] || []).push({ ev, i });
+  });
+
+  const DAYS_KO = ['일', '월', '화', '수', '목', '금', '토'];
+  let html = '<div class="list-view-container">';
+
+  Object.keys(groups).sort().forEach(dateKey => {
+    const [y, m, d] = dateKey.split('-').map(Number);
+    const dateObj = new Date(y, m - 1, d);
+    const dow     = DAYS_KO[dateObj.getDay()];
+    const dowClass = dateObj.getDay() === 0 ? ' dow-sun' : dateObj.getDay() === 6 ? ' dow-sat' : '';
+
+    const today   = new Date(); today.setHours(0, 0, 0, 0);
+    const diff    = Math.round((dateObj - today) / 86400000);
+    let groupClass = '';
+    if (diff < 0) groupClass = ' list-group--past';
+    else if (diff <= 1) groupClass = ' list-group--urgent';
+
+    html += `<div class="list-group${groupClass}">`;
+    html += `<div class="list-date-header">
+      <span class="list-date-num">${m}/${d}</span>
+      <span class="list-date-dow${dowClass}">${dow}</span>
+      ${diff === 0 ? '<span class="list-today-badge">오늘</span>' : diff === 1 ? '<span class="list-tmr-badge">내일</span>' : ''}
+      <span class="list-count">${groups[dateKey].length}건</span>
+    </div>`;
+
+    groups[dateKey].forEach(({ ev, i }) => {
+      const rawTitle    = ev.summary || '제목 없음';
+      const done        = /^✅/.test(rawTitle);
+      const title       = rawTitle.replace(/^✅\s*/, '');
+      const { urgent, overdue } = getEventUrgency(ev);
+      const rawDesc     = ev.description || '';
+      const link        = extractLink(rawDesc);
+      const desc        = stripLink(rawDesc.replace(/<[^>]*>/g, '').trim());
+      const emoji       = getSubjectEmoji(title);
+
+      let itemClass = 'list-item';
+      if (done)         itemClass += ' list-item--done';
+      else if (overdue) itemClass += ' list-item--overdue';
+      else if (urgent)  itemClass += ' list-item--urgent';
+
+      const badge = done   ? '<span class="list-badge list-badge--done">✅ 완료</span>'
+                  : overdue ? '<span class="list-badge list-badge--overdue">💀 기한 지남</span>'
+                  : urgent  ? '<span class="list-badge list-badge--urgent">⚠️ 임박</span>'
+                  : '';
+
+      const linkBtn = link
+        ? `<a class="list-link-btn" href="${escapeHtml(link)}" target="_blank" rel="noopener">바로가기 →</a>`
+        : '';
+
+      html += `
+        <div class="${itemClass}">
+          <div class="list-item__emoji">${done ? '✅' : overdue ? '💀' : emoji}</div>
+          <div class="list-item__body">
+            <div class="list-item__title">${escapeHtml(title)}</div>
+            ${desc ? `<div class="list-item__desc">${escapeHtml(desc)}</div>` : ''}
+          </div>
+          <div class="list-item__right">
+            ${badge}
+            ${linkBtn}
+          </div>
+        </div>`;
+    });
+
+    html += '</div>';
+  });
+
+  html += '</div>';
+  return html;
+}
+
+// ── 뷰 모드 상태 ──
+const VIEW_MODE_KEY = 'suhaeng_view_mode';
+let viewMode = localStorage.getItem(VIEW_MODE_KEY) || 'card';
+let _cachedEvents = null;
+
+const CARD_ICON_SVG = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+</svg>`;
+const LIST_ICON_SVG = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+  <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+  <circle cx="3" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="3" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="3" cy="18" r="1.5" fill="currentColor" stroke="none"/>
+</svg>`;
+
+function applyViewMode(events) {
+  const container = document.getElementById('scroll-container');
+  const wrapper   = container?.parentElement;
+  const viewBtn   = document.getElementById('viewToggleBtn');
+
+  if (!container || !events?.length) return;
+
+  if (viewMode === 'list') {
+    container.classList.add('list-mode');
+    if (wrapper) wrapper.classList.add('list-mode');
+    container.innerHTML = renderListView(events);
+    if (viewBtn) viewBtn.innerHTML = CARD_ICON_SVG;
+    if (viewBtn) viewBtn.title = '카드 뷰로 전환';
+  } else {
+    container.classList.remove('list-mode');
+    if (wrapper) wrapper.classList.remove('list-mode');
+    container.innerHTML = renderCards(events);
+    setupInfiniteScroll(container, events.length);
+    setupCardInteractions(container);
+    if (viewBtn) viewBtn.innerHTML = LIST_ICON_SVG;
+    if (viewBtn) viewBtn.title = '목록 뷰로 전환';
+  }
+  renderUrgentList(events);
+}
+
+function toggleViewMode() {
+  if (!_cachedEvents) return;
+  viewMode = viewMode === 'card' ? 'list' : 'card';
+  localStorage.setItem(VIEW_MODE_KEY, viewMode);
+  applyViewMode(_cachedEvents);
+}
+
 // ── 초기화 ──
-window.addEventListener('DOMContentLoaded', loadData);
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('viewToggleBtn')?.addEventListener('click', toggleViewMode);
+  // 초기 아이콘 설정
+  const viewBtn = document.getElementById('viewToggleBtn');
+  if (viewBtn) viewBtn.innerHTML = viewMode === 'list' ? CARD_ICON_SVG : LIST_ICON_SVG;
+  loadData();
+});
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => {});

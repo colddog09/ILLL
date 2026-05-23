@@ -1680,3 +1680,176 @@ body {
         transform: translateY(0);
     }
 }
+
+/* ============================
+   LIST VIEW MODE
+   ============================ */
+
+/* 스크롤 컨테이너 — 목록 모드 오버라이드 */
+.scroll-container.list-mode {
+    flex-direction: column;
+    overflow-x: hidden;
+    overflow-y: auto;
+    align-items: stretch;
+    scroll-snap-type: none;
+    padding: 12px 16px 40px;
+    gap: 10px;
+    height: 100%;
+}
+.wrapper.list-mode {
+    align-items: flex-start;
+    overflow: hidden;
+}
+
+/* 빈 상태 */
+.list-empty {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    padding: 60px 0;
+}
+
+/* 날짜 그룹 카드 */
+.list-view-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.list-group {
+    background: var(--card-bg);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    border: 1px solid rgba(0,0,0,0.06);
+}
+.list-group--urgent {
+    border-left: 3px solid var(--accent-red);
+}
+.list-group--past {
+    opacity: 0.55;
+}
+
+/* 날짜 헤더 */
+.list-date-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 14px 8px;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    background: rgba(0,0,0,0.015);
+}
+.list-date-num {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.3px;
+}
+.list-date-dow {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+.list-date-dow.dow-sun { color: #FF3B30; }
+.list-date-dow.dow-sat { color: #007AFF; }
+.list-today-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    background: var(--accent-blue);
+    color: #fff;
+    border-radius: 20px;
+    padding: 2px 7px;
+}
+.list-tmr-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    background: #FF9F0A;
+    color: #fff;
+    border-radius: 20px;
+    padding: 2px 7px;
+}
+.list-count {
+    margin-left: auto;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+/* 항목 */
+.list-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 14px;
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+    transition: background 0.1s;
+}
+.list-item:last-child { border-bottom: none; }
+.list-item:active { background: rgba(0,0,0,0.03); }
+.list-item--done { opacity: 0.45; }
+.list-item--done .list-item__title { text-decoration: line-through; color: var(--text-secondary); }
+.list-item--overdue { background: rgba(0,0,0,0.02); }
+.list-item--urgent { background: var(--urgent-bg); }
+
+.list-item__emoji {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+    width: 28px;
+    text-align: center;
+    font-family: "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+}
+.list-item__body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.list-item__title {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.list-item__desc {
+    font-size: 0.76rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.list-item__right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+/* 상태 뱃지 */
+.list-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    border-radius: 20px;
+    padding: 2px 7px;
+    white-space: nowrap;
+}
+.list-badge--done    { background: rgba(52,199,89,0.12); color: #34C759; }
+.list-badge--overdue { background: rgba(0,0,0,0.06); color: #888; }
+.list-badge--urgent  { background: var(--urgent-bg); color: var(--urgent-text); }
+
+/* 바로가기 버튼 */
+.list-link-btn {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--accent-blue);
+    text-decoration: none;
+    padding: 3px 8px;
+    border: 1px solid rgba(0,122,255,0.25);
+    border-radius: 8px;
+    white-space: nowrap;
+    transition: background 0.1s;
+}
+.list-link-btn:active { background: rgba(0,122,255,0.08); }
