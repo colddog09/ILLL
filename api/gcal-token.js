@@ -7,11 +7,24 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const ALLOWED = ['o1chu.my', 'planmanager-six.vercel.app', 'localhost', '127.0.0.1'];
+const ALLOWED_ORIGINS = [
+  'https://o1chu.my',
+  'https://www.o1chu.my',
+  'https://planmanager-six.vercel.app',
+];
+
+function _isAllowedOrigin(origin) {
+  if (!origin) return true;
+  try {
+    const { hostname } = new URL(origin);
+    return ALLOWED_ORIGINS.some(a => new URL(a).hostname === hostname)
+      || hostname === 'localhost' || hostname === '127.0.0.1';
+  } catch { return false; }
+}
 
 export default async function handler(req, res) {
   const origin = req.headers.origin || '';
-  if (!origin || ALLOWED.some(d => origin.includes(d))) {
+  if (_isAllowedOrigin(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin || '*');
   }
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');

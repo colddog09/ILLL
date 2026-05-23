@@ -13,9 +13,13 @@ function urlBase64ToUint8Array(base64String) {
   return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
 }
 
-async function subscribePush(uid) {
+async function subscribePush() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  if (!supabaseClient) return;
   try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session?.access_token) return;
+
     const reg = await navigator.serviceWorker.ready;
     let sub   = await reg.pushManager.getSubscription();
     if (!sub) {
@@ -26,20 +30,23 @@ async function subscribePush(uid) {
     }
     await fetch('/api/push-subscribe', {
       method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ uid, subscription: sub.toJSON() }),
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${session.access_token}`
+      },
+      body: JSON.stringify({ subscription: sub.toJSON() }),
     });
   } catch (err) {
     console.warn('Push 구독 실패:', err);
   }
 }
 
-async function requestPushPermission(uid) {
+async function requestPushPermission() {
   if (!('Notification' in window)) return;
-  if (Notification.permission === 'granted') { subscribePush(uid); return; }
+  if (Notification.permission === 'granted') { subscribePush(); return; }
   if (Notification.permission === 'denied')  return;
   const perm = await Notification.requestPermission();
-  if (perm === 'granted') subscribePush(uid);
+  if (perm === 'granted') subscribePush();
 }
 
 // ── 알림 권한 버튼 ──
@@ -66,7 +73,7 @@ if (notifyPermBtn) {
     notifyStatus.textContent = '요청 중...';
     const perm = await Notification.requestPermission();
     if (perm === 'granted') {
-      await subscribePush(currentUser.uid);
+      await subscribePush();
       notifyStatus.textContent   = '✅ 알림이 활성화됐습니다!';
       notifyPermBtn.disabled     = true;
     } else {

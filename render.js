@@ -258,7 +258,7 @@ function renderGcalSidePanel() {
       el.dataset.gcalId = ev.id;
       el.dataset.gcalDate = dk;
       el.dataset.gcalText = ev.summary;
-      const timeLabel = ev.timeLabel ? `<span class="gcal-side-event__time">${ev.timeLabel}</span>` : '';
+      const timeLabel = ev.timeLabel ? `<span class="gcal-side-event__time">${escHtml(ev.timeLabel)}</span>` : '';
       el.innerHTML = `
         ${timeLabel}
         <span class="gcal-side-event__text">${escHtml(ev.summary)}</span>

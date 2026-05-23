@@ -113,6 +113,12 @@ function renderInfoLinks() {
     const name = linkNameInput?.value.trim();
     const url  = linkUrlInput?.value.trim();
     if (!name || !url) return;
+    // http / https 프로토콜만 허용 (javascript: 등 차단)
+    if (!/^https?:\/\//i.test(url)) {
+      alert('링크 주소는 http:// 또는 https://로 시작해야 합니다.');
+      linkUrlInput?.focus();
+      return;
+    }
     const icon = linkIconInput?.value.trim() || '🔗';
     if (!state.links) state.links = [];
     state.links.push({ id: uid(), name, icon, url });
