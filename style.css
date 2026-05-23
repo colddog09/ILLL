@@ -1019,19 +1019,27 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 12px 0 4px;
-  font-size: 0.72rem;
-  color: var(--text-sub);
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 14px 0 6px;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
 }
 .settings-legal-links a {
   color: var(--text-sub);
   text-decoration: none;
-  opacity: 0.6;
-  transition: opacity 0.15s;
+  font-size: 0.72rem;
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  transition: background 0.15s, color 0.15s;
 }
-.settings-legal-links a:hover { opacity: 1; }
-.settings-legal-links span { opacity: 0.3; }
+.settings-legal-links a:hover {
+  background: var(--surface-hover);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.settings-legal-links span { display: none; }
 
 .settings-grid {
   display: grid;

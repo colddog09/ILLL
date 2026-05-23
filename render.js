@@ -163,7 +163,7 @@ let poolExpanded = false;
 function renderPool() {
   poolEl.innerHTML = '';
 
-  const tasks = (state.pool || []).filter(t => !t.fromGcal);
+  const tasks = (state.pool || []).filter(t => !t.fromGcal && t.text && t.text !== 'undefined');
 
   if (tasks.length === 0) {
     poolExpanded = false;
@@ -369,7 +369,7 @@ function renderDayTasks(key) {
   const container = document.getElementById(`tasks_${key}`);
   if (!container) return;
   container.innerHTML = '';
-  const items = state.schedule[key] || [];
+  const items = (state.schedule[key] || []).filter(it => it.text && it.text !== 'undefined');
 
   if (items.length === 0) {
     const isMobile = window.matchMedia('(max-width:600px)').matches;
