@@ -6,14 +6,8 @@
 'use strict';
 
 // ──────────────────────────────────────────────
-// 상수 & 초기 상태
+// 초기 상태
 // ──────────────────────────────────────────────
-const STORAGE_KEYS = {
-  pool:     'taskPool_v2',
-  schedule: 'taskSchedule_v2',
-  links:    'userLinks_v1'
-};
-
 const DEFAULT_STATE = {
   pool:      [],
   schedule:  {},
@@ -36,11 +30,11 @@ const trashZone = document.getElementById('trashZone');
 const taskInput = document.getElementById('taskInput');
 
 // ──────────────────────────────────────────────
-// 저장 관련 플래그 (auth.js도 참조)
+// 저장 관련 플래그
 // ──────────────────────────────────────────────
-let dataLoaded        = false;  // DB에서 최소 한 번 읽은 뒤 true
-let loadInProgress    = false;  // 중복 loadState() 방지
-let lastSavedSnapshot = null;   // 변경 감지용
+let dataLoaded        = false;
+let loadInProgress    = false;
+let lastSavedSnapshot = null;
 
 // ──────────────────────────────────────────────
 // 상태 관리 헬퍼
@@ -55,24 +49,6 @@ function applyPersistedState(data = {}) {
   state.pool     = data.pool     || [];
   state.schedule = data.schedule || {};
   state.links    = data.links    || [];
-}
-
-function readLocalState() {
-  return {
-    pool:     JSON.parse(localStorage.getItem(STORAGE_KEYS.pool)),
-    schedule: JSON.parse(localStorage.getItem(STORAGE_KEYS.schedule)),
-    links:    JSON.parse(localStorage.getItem(STORAGE_KEYS.links))
-  };
-}
-
-function hasLocalState(data) {
-  return !!(data.pool || data.schedule || data.links);
-}
-
-function persistLocalState() {
-  localStorage.setItem(STORAGE_KEYS.pool,     JSON.stringify(state.pool));
-  localStorage.setItem(STORAGE_KEYS.schedule, JSON.stringify(state.schedule));
-  localStorage.setItem(STORAGE_KEYS.links,    JSON.stringify(state.links));
 }
 
 function stateSnapshot() {
@@ -103,7 +79,7 @@ function pruneScheduleForSave(schedule) {
 }
 
 // ──────────────────────────────────────────────
-// 데이터 유효성 + 백업
+// 데이터 유효성
 // ──────────────────────────────────────────────
 function hasAnyTaskData() {
   if (state.pool?.length > 0) return true;
@@ -113,24 +89,6 @@ function hasAnyTaskData() {
     }
   }
   return false;
-}
-
-const BACKUP_KEY = 'taskBackup_v1';
-
-function saveBackup() {
-  if (!hasAnyTaskData()) return;
-  try {
-    localStorage.setItem(BACKUP_KEY, JSON.stringify({
-      pool: state.pool, schedule: state.schedule, links: state.links, ts: Date.now()
-    }));
-  } catch (_) {}
-}
-
-function loadBackup() {
-  try {
-    const raw = localStorage.getItem(BACKUP_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch (_) { return null; }
 }
 
 // ──────────────────────────────────────────────
@@ -146,17 +104,14 @@ function _supabaseSavePayload() {
   };
 }
 
-// 즉시 저장 (loadState 내부 + flushToSupabase 등에서 직접 호출)
+// 즉시 저장 (loadState 내부에서 직접 호출)
 function _doSave() {
-  persistLocalState();
   localStorage.setItem('lastSavedTime', Date.now().toString());
-  if (hasAnyTaskData()) saveBackup();
-
-  if (!currentUser || !supabaseClient) { setSyncStatus('💾 로컬 저장됨'); return; }
+  if (!currentUser || !supabaseClient) { setSyncStatus('⚠️ 로그인 필요'); return; }
 
   const snap = stateSnapshot();
   if (snap === lastSavedSnapshot) return;
-  if (!hasAnyTaskData() && !hasLocalState(readLocalState())) {
+  if (!hasAnyTaskData()) {
     console.warn('⚠️ 빈 state 감지 — Supabase 저장 건너뜀');
     return;
   }
@@ -174,9 +129,7 @@ function _doSave() {
 // debounce 저장 (UI 변경 직후 호출)
 let _saveTimer = null;
 function saveState() {
-  persistLocalState();
   localStorage.setItem('lastSavedTime', Date.now().toString());
-  if (hasAnyTaskData()) saveBackup();
   setSyncStatus('📝 저장 중...');
 
   clearTimeout(_saveTimer);
@@ -202,7 +155,7 @@ function flushToSupabase() {
   if (!currentUser || !supabaseClient || !dataLoaded) return;
   const snap = stateSnapshot();
   if (snap === lastSavedSnapshot) return;
-  if (!hasAnyTaskData() && !hasLocalState(readLocalState())) return;
+  if (!hasAnyTaskData()) return;
 
   supabaseClient
     .from('user_states')
@@ -210,7 +163,6 @@ function flushToSupabase() {
     .then(({ error }) => {
       if (error) { setSyncStatus('❌ 저장 실패'); return; }
       lastSavedSnapshot = snap;
-      persistLocalState();
       localStorage.setItem('lastSavedTime', Date.now().toString());
       setSyncSaved();
     });
@@ -223,7 +175,7 @@ document.addEventListener('visibilitychange', () => {
 setInterval(flushToSupabase, 10 * 60 * 1000);
 
 // ──────────────────────────────────────────────
-// 데이터 불러오기
+// 데이터 불러오기 (Supabase 단독)
 // ──────────────────────────────────────────────
 function loadState() {
   if (!currentUser || !supabaseClient) {
@@ -236,16 +188,8 @@ function loadState() {
   loadInProgress = true;
   dataLoaded = false;
 
-  // 1) 로컬 데이터 즉시 표시
-  const localState = readLocalState();
-  if (hasLocalState(localState)) {
-    applyPersistedState(localState);
-    autoReturnExpiredTasks();
-    renderApp();
-  }
-
-  // 2) Supabase에서 최신 데이터로 갱신
   setSyncStatus('☁️ 불러오는 중...');
+
   supabaseClient
     .from('user_states')
     .select('pool, schedule, links, updated_at')
@@ -257,35 +201,19 @@ function loadState() {
       if (error) {
         console.error('Supabase 읽기 에러:', error);
         dataLoaded = true;
-        setSyncStatus('❌ 불러오기 실패 — 로컬 데이터 사용 중');
+        setSyncStatus('❌ 불러오기 실패');
         renderApp();
         return;
       }
 
       if (remote) {
-        // 서버 데이터가 있으면 항상 서버 우선 (기기간 동기화)
         applyPersistedState(remote);
-        persistLocalState();
         localStorage.setItem('lastSavedTime', remote.updated_at
           ? new Date(remote.updated_at).getTime().toString()
           : Date.now().toString());
         lastSavedSnapshot = stateSnapshot();
-        if (hasAnyTaskData()) saveBackup();
-      } else {
-        // 서버에 없으면 로컬 → 서버 업로드
-        const local = readLocalState();
-        if (hasLocalState(local)) {
-          _doSave();
-        } else {
-          const backup = loadBackup();
-          if (backup?.pool?.length > 0 || Object.keys(backup?.schedule || {}).length > 0) {
-            console.warn('⚠️ 백업 데이터로 복구:', backup.ts);
-            applyPersistedState(backup);
-            persistLocalState();
-            _doSave();
-          }
-        }
       }
+      // remote가 없으면 빈 state 유지 (신규 사용자)
 
       dataLoaded = true;
       autoReturnExpiredTasks();

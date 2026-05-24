@@ -214,13 +214,3 @@ function updateAuthUi(user) {
   }
 }
 
-// 로컬 데이터 즉시 렌더 (스크립트 로드 직후, 로그인 전)
-setTimeout(() => {
-  if (currentUser) return;
-  const localState = readLocalState();
-  if (hasLocalState(localState)) {
-    applyPersistedState(localState);
-    autoReturnExpiredTasks?.();
-    renderApp?.();
-  }
-}, 0);
