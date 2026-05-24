@@ -202,8 +202,10 @@ gcalReconnectBtn?.addEventListener('click', async () => {
   gcalReconnectBtn.textContent = '연결 중...';
   try {
     await gcalConnect();
-    gcalReconnectBtn.hidden    = true;
-    gcalReconnectBtn.disabled  = false;
+    // gcalConnect()가 리다이렉트하면 이 아래는 실행 안 됨
+    // 서버 refresh로 즉시 성공한 경우에만 실행됨
+    gcalReconnectBtn.hidden      = true;
+    gcalReconnectBtn.disabled    = false;
     gcalReconnectBtn.textContent = '🗓️ 재연결';
     updateGcalUI();
     gcalImportCurrentDate();
@@ -211,7 +213,7 @@ gcalReconnectBtn?.addEventListener('click', async () => {
   } catch (err) {
     gcalReconnectBtn.disabled    = false;
     gcalReconnectBtn.textContent = '🗓️ 재연결';
-    alert('재연결 실패: ' + (err.message || '다시 시도해주세요.'));
+    showGcalResult('❌ 재연결 실패: ' + (err.message || '다시 시도해주세요.'), true);
   }
 });
 
@@ -282,3 +284,55 @@ resetScheduleState();
 renderApp();
 initDrag();
 updateDday();
+
+// ──────────────────────────────────────────────
+// Google Calendar OAuth 콜백 처리
+// /api/gcal-callback 이후 /?gcal=connected 로 돌아옴
+// ──────────────────────────────────────────────
+(function handleGcalOAuthReturn() {
+  const params   = new URLSearchParams(window.location.search);
+  const gcalParam = params.get('gcal');
+  if (!gcalParam) return;
+
+  // URL 파라미터 즉시 제거 (새로고침해도 중복 실행 방지)
+  const clean = new URL(window.location.href);
+  clean.searchParams.delete('gcal');
+  clean.searchParams.delete('fresh');
+  clean.searchParams.delete('reason');
+  window.history.replaceState({}, '', clean.toString());
+
+  if (gcalParam === 'connected') {
+    localStorage.setItem('gcal_connected', '1');
+    // auth + gcal.js 로드 완료 후 토큰 발급 시도
+    const tryInit = (attempts = 0) => {
+      if (!currentUser || typeof gcalRefreshFromServer !== 'function') {
+        if (attempts < 30) setTimeout(() => tryInit(attempts + 1), 300);
+        return;
+      }
+      gcalRefreshFromServer()
+        .then(() => {
+          updateGcalUI?.();
+          gcalImportCurrentDate?.();
+          gcalStartPolling?.();
+          setTimeout(() => showGcalResult?.('✅ 구글 캘린더가 연결되었습니다.'), 500);
+        })
+        .catch(() => {
+          // 토큰 발급 실패해도 gcal_connected 플래그는 유지 (재시도 가능)
+          setTimeout(() => showGcalResult?.('⚠️ 캘린더 권한 저장됨. 잠시 후 자동 연결됩니다.'), 500);
+        });
+    };
+    tryInit();
+
+  } else if (gcalParam === 'error') {
+    const reason = params.get('reason') || 'unknown';
+    const msgMap = {
+      access_denied:       '권한이 거부되었습니다.',
+      auth_expired:        '로그인 세션이 만료되었습니다. 다시 시도해주세요.',
+      no_refresh_token:    '권한 재동의가 필요합니다. 다시 시도해주세요.',
+      db_error:            '서버 오류가 발생했습니다.',
+      invalid_auth:        '인증 정보가 올바르지 않습니다.',
+    };
+    const msg = msgMap[reason] || `연결 실패 (${reason})`;
+    setTimeout(() => showGcalResult?.('❌ 캘린더 ' + msg, true), 800);
+  }
+})();

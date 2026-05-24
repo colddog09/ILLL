@@ -83,38 +83,23 @@ function gcalLoadStoredToken() {
 }
 
 // ──────────────────────────────────────────────
-// 연결 (OAuth 동의 팝업 — 최초 1회 또는 만료 시)
+// 연결 (리다이렉트 기반 OAuth — 모바일/PC 모두 호환)
 // ──────────────────────────────────────────────
 async function gcalConnect() {
   if (!currentUser) throw new Error('로그인이 필요합니다.');
 
-  // 1순위: 서버 refresh token으로 무팝업 연동
+  // 1순위: 서버 refresh token으로 무팝업 즉시 연동
   const serverOk = await gcalRefreshFromServer().catch(() => false);
   if (serverOk) return;
 
-  // 2순위: GIS popup (refresh token 없는 경우 or 서버 오류)
-  const gisToken = await _gcalConnectViaGIS().catch(() => null);
-  if (gisToken) {
-    _gcalSetToken(gisToken);
-    localStorage.setItem(GCAL_FLAG_KEY, '1');
-    return;
-  }
+  // 2순위: 리다이렉트 기반 OAuth (팝업 없음 — 모바일/Safari 호환)
+  if (!supabaseClient) throw new Error('서비스 준비 중입니다.');
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session?.access_token) throw new Error('로그인이 필요합니다.');
 
-  throw new Error('캘린더 연동에 실패했습니다.\n로그아웃 후 다시 로그인하면 영구 연동됩니다.');
-}
-
-// 리소스가 준비될 때까지 대기
-function _waitForResource(getter, timeout = 6000) {
-  return new Promise(resolve => {
-    const val = getter();
-    if (val) return resolve(val);
-    const start = Date.now();
-    const t = setInterval(() => {
-      const v = getter();
-      if (v) { clearInterval(t); resolve(v); }
-      else if (Date.now() - start > timeout) { clearInterval(t); resolve(null); }
-    }, 250);
-  });
+  // 현재 페이지를 떠나 Google OAuth 진행
+  window.location.href = `/api/gcal-auth?jwt=${encodeURIComponent(session.access_token)}`;
+  // (이 아래는 실행되지 않음 — 페이지 이동)
 }
 
 // 서버에서 Google access token 갱신 (popup 없음, refresh token 기반)
@@ -140,63 +125,14 @@ async function gcalRefreshFromServer() {
   return true;
 }
 
-// 팝업 없이 조용한 자동 재연결
-// 1순위: 서버 refresh (영구 연동, popup 없음)
-// 2순위: GIS silent (이전에 권한 허락한 경우)
+// 팝업 없이 조용한 자동 재연결 (서버 refresh token 기반)
 async function gcalSilentConnect() {
-  // 서버 refresh 시도 (refresh token이 DB에 있는 경우)
   try {
     await gcalRefreshFromServer();
     return true;
   } catch (e) {
-    if (e.message === 'refresh_token_expired') return false; // 재로그인 필요
-    // no_refresh_token 또는 기타 → GIS로 폴백
+    return false; // refresh_token 없거나 만료 — 수동 재연결 필요
   }
-
-  // GIS silent (팝업 없는 재발급, 세션이 살아있을 때만 성공)
-  const clientId = await _waitForResource(() => window.__GCAL_CLIENT_ID__);
-  if (!clientId) return false;
-  const oauth2 = await _waitForResource(() => window.google?.accounts?.oauth2);
-  if (!oauth2) return false;
-
-  return new Promise(resolve => {
-    try {
-      const client = google.accounts.oauth2.initTokenClient({
-        client_id:      clientId,
-        scope:          GCAL_SCOPE,
-        hint:           currentUser?.email || '',
-        callback:       resp => {
-          if (resp.error || !resp.access_token) { resolve(false); return; }
-          _gcalSetToken(resp.access_token);
-          localStorage.setItem(GCAL_FLAG_KEY, '1');
-          resolve(true);
-        },
-        error_callback: () => resolve(false)
-      });
-      client.requestAccessToken({ prompt: '' });
-    } catch (_) { resolve(false); }
-  });
-}
-
-// GIS Token Client
-// googleClientId가 window.__GCAL_CLIENT_ID__에 주입된 경우에만 동작
-function _gcalConnectViaGIS() {
-  return new Promise((resolve, reject) => {
-    const clientId = window.__GCAL_CLIENT_ID__;
-    if (!clientId || typeof google === 'undefined' || !google.accounts?.oauth2) {
-      return reject(new Error('GIS not available'));
-    }
-    const client = google.accounts.oauth2.initTokenClient({
-      client_id: clientId,
-      scope: GCAL_SCOPE,
-      prompt: 'consent',
-      callback: (resp) => {
-        if (resp.error) return reject(new Error(resp.error));
-        resolve(resp.access_token);
-      }
-    });
-    client.requestAccessToken({ prompt: 'consent' });
-  });
 }
 
 // ──────────────────────────────────────────────

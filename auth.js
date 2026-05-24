@@ -48,12 +48,11 @@ async function startGoogleLogin() {
     alert('서비스에 연결하는 중입니다. 잠시 후 다시 시도해주세요.');
     return;
   }
+  // 캘린더 scope는 로그인과 분리 — 설정에서 별도 연결
   const { error } = await supabaseClient.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: window.location.origin,
-      scopes: 'https://www.googleapis.com/auth/calendar',
-      queryParams: { access_type: 'offline', prompt: 'consent' }
+      redirectTo: window.location.origin
     }
   });
   if (error) {
@@ -133,9 +132,6 @@ async function bootstrapSupabase() {
 
     supabaseClient.auth.onAuthStateChange((event, session) => {
       updateAuthUi(session?.user || null);
-      if (event === 'SIGNED_IN' && session?.provider_refresh_token) {
-        _storeGcalRefreshToken(session.provider_refresh_token);
-      }
     });
 
     const { data: { session } } = await supabaseClient.auth.getSession();
