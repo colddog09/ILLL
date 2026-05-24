@@ -263,18 +263,13 @@ function loadState() {
       }
 
       if (remote) {
-        const remoteTime    = remote.updated_at ? new Date(remote.updated_at).getTime() : 0;
-        const localTime     = parseInt(localStorage.getItem('lastSavedTime') || '0');
-        const remoteHasData = (remote.pool?.length > 0) ||
-          Object.values(remote.schedule || {}).some(v => Array.isArray(v) && v.length > 0);
-
-        if (remoteTime > localTime || (!hasAnyTaskData() && remoteHasData)) {
-          applyPersistedState(remote);
-          persistLocalState();
-          lastSavedSnapshot = stateSnapshot();
-        } else {
-          lastSavedSnapshot = stateSnapshot();
-        }
+        // 서버 데이터가 있으면 항상 서버 우선 (기기간 동기화)
+        applyPersistedState(remote);
+        persistLocalState();
+        localStorage.setItem('lastSavedTime', remote.updated_at
+          ? new Date(remote.updated_at).getTime().toString()
+          : Date.now().toString());
+        lastSavedSnapshot = stateSnapshot();
         if (hasAnyTaskData()) saveBackup();
       } else {
         // 서버에 없으면 로컬 → 서버 업로드
