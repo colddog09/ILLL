@@ -277,12 +277,14 @@ function loadState() {
     .then(doc => {
       if (doc.exists) {
         const remote = doc.data();
-        // 로컬이 더 최신이면 유지, 아니면 서버 데이터 사용
         const remoteTime = remote.lastUpdated?.toMillis?.() || 0;
         const localTime  = parseInt(localStorage.getItem('lastSavedTime') || '0');
-        if (remoteTime > localTime) {
+        // 로컬 캐시가 없거나 서버 데이터가 최신이면 Firestore 우선 적용
+        // (모바일에서 localStorage 초기화 시 로컬 캐시 없는 경우 포함)
+        if (remoteTime > localTime || !hasLocalState(localState)) {
           applyPersistedState(remote);
           persistLocalState();
+          if (remoteTime > 0) localStorage.setItem('lastSavedTime', remoteTime.toString());
           lastSavedSnapshot = stateSnapshot();
         } else {
           lastSavedSnapshot = stateSnapshot();

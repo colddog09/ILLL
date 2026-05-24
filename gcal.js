@@ -44,14 +44,18 @@ function isGcalConnected() {
   return localStorage.getItem(GCAL_FLAG_KEY) === '1';
 }
 
-// 페이지 로드 시 sessionStorage에서 토큰 복원 (동기, 팝업 없음)
+// 페이지 로드 시 토큰 복원 — sessionStorage 우선, 없으면 localStorage 시도
+// (모바일은 앱 백그라운드 전환 시 sessionStorage가 지워질 수 있음)
 function gcalLoadStoredToken() {
   if (!isGcalConnected()) return false;
   try {
-    const stored = JSON.parse(sessionStorage.getItem(GCAL_SS_KEY));
+    const raw = sessionStorage.getItem(GCAL_SS_KEY) || localStorage.getItem('gcal_token_shared');
+    const stored = JSON.parse(raw);
     if (stored?.token && stored.expiry > Date.now() + 60000) {
       _gcalToken = stored.token;
       _gcalTokenExpiry = stored.expiry;
+      // sessionStorage가 비어있었으면 복원
+      try { if (!sessionStorage.getItem(GCAL_SS_KEY)) sessionStorage.setItem(GCAL_SS_KEY, raw); } catch (_) {}
       return true;
     }
   } catch (e) { }
