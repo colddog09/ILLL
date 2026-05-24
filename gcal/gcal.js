@@ -378,6 +378,9 @@ function updateGcalUI() {
   const viewBtn = document.getElementById('gcalViewBtn');
   if (viewBtn) viewBtn.hidden = !connected;
 
+  const sheetBtn = document.getElementById('gcalSheetBtn');
+  if (sheetBtn) sheetBtn.hidden = !connected;
+
   const dot = document.getElementById('gcalStatusDot');
   const txt = document.getElementById('gcalStatusText');
   const connectBtn = document.getElementById('gcalConnectBtn');

@@ -226,7 +226,7 @@ gcalDisconnectBtn?.addEventListener('click', () => {
   showGcalResult('캘린더 연결이 해제되었습니다.');
 });
 
-// 달력 뷰 모달
+// 달력 뷰 모달 (데스크톱)
 const gcalViewBtn      = document.getElementById('gcalViewBtn');
 const gcalViewModal    = document.getElementById('gcalViewModal');
 const gcalViewCloseBtn = document.getElementById('gcalViewCloseBtn');
@@ -238,6 +238,39 @@ gcalViewBtn?.addEventListener('click', () => {
 });
 gcalViewCloseBtn?.addEventListener('click', () => { if (gcalViewModal) gcalViewModal.hidden = true; });
 gcalViewModal?.addEventListener('click', e => { if (e.target === gcalViewModal) gcalViewModal.hidden = true; });
+
+// ──────────────────────────────────────────────
+// 모바일 캘린더 바텀시트
+// ──────────────────────────────────────────────
+const gcalSheetBtn      = document.getElementById('gcalSheetBtn');
+const gcalSheet         = document.getElementById('gcalSheet');
+const gcalSheetOverlay  = document.getElementById('gcalSheetOverlay');
+const gcalSheetCloseBtn = document.getElementById('gcalSheetCloseBtn');
+
+function openGcalSheet() {
+  if (!gcalSheet || !gcalSheetOverlay) return;
+  renderGcalSheet();
+  gcalSheet.hidden = false;
+  gcalSheetOverlay.hidden = false;
+  requestAnimationFrame(() => {
+    gcalSheet.classList.add('open');
+    gcalSheetOverlay.classList.add('open');
+  });
+}
+
+function closeGcalSheet() {
+  if (!gcalSheet || !gcalSheetOverlay) return;
+  gcalSheet.classList.remove('open');
+  gcalSheetOverlay.classList.remove('open');
+  setTimeout(() => {
+    gcalSheet.hidden = true;
+    gcalSheetOverlay.hidden = true;
+  }, 300);
+}
+
+gcalSheetBtn?.addEventListener('click', openGcalSheet);
+gcalSheetCloseBtn?.addEventListener('click', closeGcalSheet);
+gcalSheetOverlay?.addEventListener('click', closeGcalSheet);
 
 gcalCalGrid?.addEventListener('click', e => {
   const chip = e.target.closest('.gcal-cal-event');

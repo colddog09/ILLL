@@ -318,6 +318,72 @@ function renderGcalSidePanel() {
 }
 
 // ──────────────────────────────────────────────
+// 모바일 캘린더 바텀시트 렌더
+// ──────────────────────────────────────────────
+function renderGcalSheet() {
+  const body = document.getElementById('gcalSheetBody');
+  if (!body) return;
+
+  const today = dateKey(new Date());
+  const scheduledGcalIds = new Set(
+    Object.values(state.schedule || {}).flat().filter(it => it.gcalEventId).map(it => it.gcalEventId)
+  );
+  const allDates = Object.keys(gcalEvents || {})
+    .filter(dk => dk >= today && (gcalEvents[dk] || []).some(ev => !scheduledGcalIds.has(ev.id)))
+    .sort();
+
+  body.innerHTML = '';
+
+  if (typeof gcalTokenValid === 'function' && !gcalTokenValid()) {
+    body.innerHTML = '<div class="gcal-sheet__empty">캘린더가 연결되지 않았습니다.<br>설정에서 연결해주세요.</div>';
+    return;
+  }
+  if (allDates.length === 0) {
+    body.innerHTML = '<div class="gcal-sheet__empty">추가할 예정 일정이 없어요 ✅</div>';
+    return;
+  }
+
+  allDates.forEach(dk => {
+    const [y, m, d] = dk.split('-').map(Number);
+    const dow    = new Date(y, m - 1, d).getDay();
+    const dowKo  = ['일','월','화','수','목','금','토'][dow];
+    const dateEl = document.createElement('div');
+    dateEl.className = 'gcal-sheet__date' + (dk === today ? ' gcal-sheet__date--today' : '');
+    dateEl.textContent = `${m}/${d} (${dowKo})`;
+    body.appendChild(dateEl);
+
+    (gcalEvents[dk] || []).filter(ev => !scheduledGcalIds.has(ev.id)).forEach(ev => {
+      const row = document.createElement('div');
+      row.className = 'gcal-sheet__event';
+      row.innerHTML = `
+        ${ev.timeLabel ? `<span class="gcal-sheet__event__time">${escHtml(ev.timeLabel)}</span>` : ''}
+        <span class="gcal-sheet__event__text">${escHtml(ev.summary)}</span>
+        <button class="gcal-sheet__event__add" data-gcal-id="${ev.id}" data-gcal-date="${dk}" data-gcal-text="${escHtml(ev.summary)}">+ 오늘</button>
+      `;
+      body.appendChild(row);
+    });
+  });
+
+  // + 오늘 버튼 이벤트
+  body.querySelectorAll('.gcal-sheet__event__add').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (!currentUser) return;
+      const gcalId   = btn.dataset.gcalId;
+      const gcalDate = btn.dataset.gcalDate;
+      const text     = btn.dataset.gcalText;
+      const ev       = (gcalEvents[gcalDate] || []).find(e => e.id === gcalId);
+      if (!ev) return;
+      const targetKey = dateKey(currentDay());
+      scheduleGcalEventToDay(ev, gcalDate, targetKey);
+      // 버튼 비활성화 (추가됨 표시)
+      btn.textContent = '✓';
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+    });
+  });
+}
+
+// ──────────────────────────────────────────────
 // 날짜 카드 렌더링
 // ──────────────────────────────────────────────
 function renderWeek() {
