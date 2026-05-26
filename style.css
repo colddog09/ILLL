@@ -193,24 +193,46 @@
 }
 
 /* 할일 풀 카드 — 나무 블록 (2D flat) */
+/* 풀 카드 — 큰 벽걸이 표지판 */
 [data-theme="minecraft"] .pool-card {
-  background-image: url('/mc_log.png') !important;
+  background-image: url('/mc_oak_planks.png') !important;
   background-size: 32px 32px !important;
-  background-color: #7D5A2A !important;
+  background-color: #A0784A !important;
   image-rendering: pixelated !important;
-  border: 3px solid #3D2B1A !important;
-  box-shadow: 3px 3px 0 #1a1208 !important;
+  border-top: 8px solid #5C3A1A !important;
+  border-bottom: 8px solid #3D2010 !important;
+  border-left: 5px solid #6B4520 !important;
+  border-right: 5px solid #3D2010 !important;
+  border-radius: 0 !important;
+  box-shadow: 4px 4px 0 #1a1208, inset 0 3px 0 rgba(255,255,255,0.18), inset 0 -3px 0 rgba(0,0,0,0.25) !important;
+  position: relative !important;
+}
+/* 풀 카드 상단 고리 (표지판 걸개) */
+[data-theme="minecraft"] .pool-card::before {
+  content: '' !important;
+  position: absolute !important;
+  top: -16px !important;
+  left: 20px !important;
+  width: 8px !important;
+  height: 10px !important;
+  background: #3D2010 !important;
+  box-shadow: 30px 0 0 #3D2010 !important;
+  image-rendering: pixelated !important;
 }
 
-/* 모달/설정 카드 — 흙 블록 (2D flat) */
+/* 모달/설정 카드 — 표지판 스타일 (큰 표지판) */
 [data-theme="minecraft"] .modal-box,
 [data-theme="minecraft"] .settings-card {
-  background-image: url('/mc_dirt2.png') !important;
+  background-image: url('/mc_oak_planks.png') !important;
   background-size: 32px 32px !important;
-  background-color: #C6A87D !important;
+  background-color: #A0784A !important;
   image-rendering: pixelated !important;
-  border: 3px solid #3D2B1A !important;
-  box-shadow: 4px 4px 0 #1a1208 !important;
+  border-top: 10px solid #5C3A1A !important;
+  border-bottom: 10px solid #3D2010 !important;
+  border-left: 6px solid #6B4520 !important;
+  border-right: 6px solid #3D2010 !important;
+  border-radius: 0 !important;
+  box-shadow: 6px 6px 0 #1a1208, inset 0 4px 0 rgba(255,255,255,0.15), inset 0 -4px 0 rgba(0,0,0,0.2) !important;
 }
 
 /* 일정 아이템 — 돌 블록 (2D flat) */
@@ -290,15 +312,43 @@
 }
 
 /* 입력창 */
+/* 입력창 영역 — 작은 표지판 */
+[data-theme="minecraft"] .task-input-wrap {
+  background-image: url('/mc_oak_planks.png') !important;
+  background-size: 32px 32px !important;
+  background-color: #A0784A !important;
+  image-rendering: pixelated !important;
+  border-top: 6px solid #5C3A1A !important;
+  border-bottom: 6px solid #3D2010 !important;
+  border-left: 4px solid #6B4520 !important;
+  border-right: 4px solid #3D2010 !important;
+  border-radius: 0 !important;
+  box-shadow: 3px 3px 0 #1a1208 !important;
+  padding: 6px 8px !important;
+}
+
 [data-theme="minecraft"] .task-input-wrap input {
-  background: #1a1208 !important;
-  border: 3px solid #3D2B1A !important;
+  background: rgba(0,0,0,0.55) !important;
+  border: 2px solid #3D2B1A !important;
+  border-radius: 0 !important;
   color: #fff !important;
   box-shadow: inset 2px 2px 0 rgba(0,0,0,0.5) !important;
 }
 
 [data-theme="minecraft"] .task-input-wrap input::placeholder {
-  color: #888 !important;
+  color: #aaa !important;
+}
+
+/* 모달/설정 내 텍스트 — 표지판 위 새긴 글씨 느낌 */
+[data-theme="minecraft"] .modal-box label,
+[data-theme="minecraft"] .modal-box h2,
+[data-theme="minecraft"] .modal-box h3,
+[data-theme="minecraft"] .settings-card label,
+[data-theme="minecraft"] .settings-card h2,
+[data-theme="minecraft"] .settings-card h3,
+[data-theme="minecraft"] .settings-tab-content {
+  color: #1a0800 !important;
+  text-shadow: 1px 1px 0 rgba(255,255,255,0.25) !important;
 }
 
 /* 상단 바 */
