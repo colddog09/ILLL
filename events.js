@@ -44,58 +44,6 @@ poolEl.addEventListener('touchend', e => {
 // ──────────────────────────────────────────────
 // dayGrid 이벤트 위임 — 완료 토글, 미루기
 // ──────────────────────────────────────────────
-// ── Minecraft 광질 애니메이션 (캡처 페이즈) ──
-const MC_ORES = [
-  { ore: '/mc_diamond_ore.png', item: '/mc_item_diamond.png',    color: '#4aedd9' },
-  { ore: '/mc_emerald_ore.png', item: '/mc_item_emerald.png',    color: '#17c964' },
-  { ore: '/mc_gold_ore.png',    item: '/mc_item_raw_gold.png',   color: '#f5a623' },
-  { ore: '/mc_iron_ore.png',    item: '/mc_item_raw_iron.png',   color: '#d4a574' },
-  { ore: '/mc_redstone_ore.png',item: '/mc_item_redstone.png',   color: '#ff3333' },
-  { ore: '/mc_lapis_ore.png',   item: '/mc_item_lapis_lazuli.png',color: '#3355cc' },
-  { ore: '/mc_coal_ore.png',    item: '/mc_item_coal.png',       color: '#555555' },
-];
-
-dayGrid.addEventListener('click', e => {
-  if (document.documentElement.dataset.theme !== 'minecraft') return;
-  const btnO = e.target.closest('.btn-o');
-  if (!btnO) return;
-  const schedItem = btnO.closest('.sched-item');
-  if (!schedItem || schedItem.classList.contains('sched-item--done')) return;
-
-  e.stopImmediatePropagation();
-
-  const idx = Array.from(schedItem.parentElement?.children || []).indexOf(schedItem);
-  const mc = MC_ORES[idx % MC_ORES.length];
-
-  // 버튼 위치 기준으로 애니메이션 overlay 생성
-  const btnRect  = btnO.getBoundingClientRect();
-  const itemRect = schedItem.getBoundingClientRect();
-  const relLeft  = btnRect.left - itemRect.left;
-  const relTop   = btnRect.top  - itemRect.top;
-
-  // 곡괭이 + 원석 아이템 팝업
-  const anim = document.createElement('div');
-  anim.className = 'mc-mine-anim';
-  anim.style.cssText = `left:${relLeft - 32}px; top:${relTop - 8}px;`;
-  anim.innerHTML = `
-    <img class="mc-pickaxe-img" src="/mc_item_diamond.png" style="image-rendering:pixelated;">
-    <img class="mc-item-pop" src="${mc.item}" style="image-rendering:pixelated; --c:${mc.color}">
-  `;
-  schedItem.style.position = 'relative';
-  schedItem.appendChild(anim);
-  schedItem.classList.add('mc-mining');
-
-  // 버튼 자체를 "깨지는" 애니메이션
-  btnO.classList.add('mc-btn-break');
-
-  setTimeout(() => {
-    anim.remove();
-    btnO.classList.remove('mc-btn-break');
-    schedItem.classList.remove('mc-mining');
-    toggleStatus(btnO.dataset.date, btnO.dataset.id);
-  }, 700);
-}, true);
-
 dayGrid.addEventListener('click', e => {
   const gcalBtn = e.target.closest('.btn-gcal-done');
   if (gcalBtn) { toggleGcalStatus(gcalBtn.dataset.gcalId, gcalBtn.dataset.date); return; }

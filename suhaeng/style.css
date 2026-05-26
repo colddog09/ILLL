@@ -178,19 +178,6 @@
 }
 
 /* ── 테마: 젤리 ── */
-[data-theme="minecraft"] {
-  --app-bg: #c6d97f;
-  --card-bg: #f5f0e8;
-  --text-primary: #1a2e0a;
-  --text-secondary: #4a5e2a;
-  --accent-blue: #4a691e;
-  --accent-red: #dc2626;
-  --urgent-bg: rgba(74,105,30,0.07);
-  --glass-blur: blur(0px);
-  --glass-border: 2px solid rgba(74,105,30,0.25);
-  --glass-shadow: 0 4px 16px rgba(74,105,30,0.15);
-}
-
 [data-theme="jelly"] {
   --app-bg: #fff0f8;
   --card-bg: rgba(255,255,255,0.92);
