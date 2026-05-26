@@ -213,6 +213,19 @@ function renderGcalSidePanel() {
   panel.hidden = false;
   const resizeHandle = document.getElementById('gcalResizeHandle');
   if (resizeHandle) resizeHandle.hidden = false;
+
+  // 패널 높이를 day-grid에 맞춤
+  const grid = document.getElementById('dayGrid');
+  function syncPanelHeight() {
+    if (!grid || panel.hidden) return;
+    const h = grid.getBoundingClientRect().height;
+    if (h > 0) panel.style.maxHeight = h + 'px';
+  }
+  syncPanelHeight();
+  // day-grid 높이 변화 감지
+  if (panel._resizeObserver) panel._resizeObserver.disconnect();
+  panel._resizeObserver = new ResizeObserver(syncPanelHeight);
+  if (grid) panel._resizeObserver.observe(grid);
   panel.innerHTML = '';
 
   const header = document.createElement('div');
