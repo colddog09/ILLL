@@ -125,39 +125,59 @@
   image-rendering: pixelated;
 }
 
-/* 배경 — 잔디 블록 타일 */
+/* 배경 — 마인크래프트 메인메뉴 파노라마 느낌 */
 [data-theme="minecraft"] body {
-  background-image: url('/mc_grass_top.png');
-  background-size: 48px 48px;
-  image-rendering: pixelated;
+  background:
+    /* 안개 오버레이 */
+    linear-gradient(
+      180deg,
+      rgba(180,210,230,0.45) 0%,
+      rgba(140,190,160,0.25) 40%,
+      rgba(80,120,60,0.35) 65%,
+      rgba(50,80,30,0.5) 100%
+    ),
+    /* 하늘 → 지평선 → 땅 */
+    linear-gradient(
+      180deg,
+      #a8c8e8 0%,
+      #b8d4e8 20%,
+      #c8ddb0 45%,
+      #6a9a3a 58%,
+      #4a7a1e 65%,
+      #3d5a18 72%,
+      #2a3d10 85%,
+      #1a2a08 100%
+    ) !important;
+  background-size: cover !important;
+  background-attachment: fixed !important;
 }
 
-/* 상단 바 — 나무 블록 */
+/* 상단 바 — 나무 블록 (2D flat) */
 [data-theme="minecraft"] .top-bar {
   background-image: url('/mc_log_top.png') !important;
-  background-size: 48px 48px !important;
+  background-size: 32px 32px !important;
   image-rendering: pixelated !important;
   background-color: #5C3A1A !important;
   border-bottom: 4px solid #1a1208 !important;
   box-shadow: 0 4px 0 #1a1208 !important;
 }
 
-/* 날짜 카드 — 조약돌+돌 혼합 */
+/* 날짜 카드 — 조약돌+돌 혼합 (2D flat 16px 타일) */
 [data-theme="minecraft"] .day-card {
   background-color: #8a8a8a !important;
   background-image:
     url('/mc_cobblestone.png'),
-    url('/mc_stone.png') !important;
-  background-size: 48px 48px, 48px 48px !important;
-  background-position: 0 0, 24px 24px !important;
+    url('/mc_stone2.png') !important;
+  background-size: 32px 32px, 32px 32px !important;
+  background-position: 0 0, 16px 16px !important;
   image-rendering: pixelated !important;
   border: 3px solid #3D2B1A !important;
   box-shadow: 4px 4px 0 #1a1208 !important;
 }
 
-/* 날짜 헤더 — 잔디 블록 상단 (초록) */
+/* 날짜 헤더 — 잔디 블록 상단 (2D flat) */
 [data-theme="minecraft"] .day-card__header {
-  background-image: url('/mc_grass.png') !important;
+  background-image: url('/mc_grass_top.png') !important;
   background-size: 32px 32px !important;
   background-color: #4a7a1e !important;
   image-rendering: pixelated !important;
@@ -172,31 +192,31 @@
   text-shadow: 2px 2px 0 #1a1208 !important;
 }
 
-/* 할일 풀 카드 — 나무 블록 */
+/* 할일 풀 카드 — 나무 블록 (2D flat) */
 [data-theme="minecraft"] .pool-card {
   background-image: url('/mc_log.png') !important;
-  background-size: 40px 40px !important;
+  background-size: 32px 32px !important;
   background-color: #7D5A2A !important;
   image-rendering: pixelated !important;
   border: 3px solid #3D2B1A !important;
   box-shadow: 3px 3px 0 #1a1208 !important;
 }
 
-/* 모달/설정 카드 — 흙 블록 */
+/* 모달/설정 카드 — 흙 블록 (2D flat) */
 [data-theme="minecraft"] .modal-box,
 [data-theme="minecraft"] .settings-card {
-  background-image: url('/mc_dirt.png') !important;
-  background-size: 64px 64px !important;
+  background-image: url('/mc_dirt2.png') !important;
+  background-size: 32px 32px !important;
   background-color: #C6A87D !important;
   image-rendering: pixelated !important;
   border: 3px solid #3D2B1A !important;
   box-shadow: 4px 4px 0 #1a1208 !important;
 }
 
-/* 일정 아이템 — 돌 블록 */
+/* 일정 아이템 — 돌 블록 (2D flat) */
 [data-theme="minecraft"] .sched-item {
-  background-image: url('/mc_stone.png') !important;
-  background-size: 40px 40px !important;
+  background-image: url('/mc_stone2.png') !important;
+  background-size: 32px 32px !important;
   background-color: #9B9B9B !important;
   image-rendering: pixelated !important;
   border: 2px solid #3D3D3D !important;
@@ -205,7 +225,7 @@
 }
 
 [data-theme="minecraft"] .sched-item--done {
-  background-image: url('/mc_stone.png') !important;
+  background-image: url('/mc_stone2.png') !important;
   background-color: #6B6B6B !important;
   opacity: 0.65;
 }
@@ -4272,7 +4292,7 @@ a.settings-tab {
 
 /* 완료된 아이템 버튼 — 어두운 돌 */
 [data-theme="minecraft"] .sched-item--done .btn-o {
-  background-image: url('/mc_stone.png') !important;
+  background-image: url('/mc_stone2.png') !important;
   opacity: 0.5;
 }
 [data-theme="minecraft"] .sched-item--done .btn-o::after {
