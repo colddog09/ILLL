@@ -169,11 +169,31 @@ const settingsCloseBtn = document.getElementById('settingsCloseBtn');
 bindModal(settingsBtn, settingsModal, settingsCloseBtn, () => {
   if (typeof updateGcalUI === 'function') updateGcalUI();
   if (typeof renderGcalCalendarSettings === 'function') renderGcalCalendarSettings();
+  // Reset to general tab on open
+  document.querySelectorAll('.settings-tab').forEach(btn => btn.classList.toggle('settings-tab--active', btn.dataset.tab === 'general'));
+  const genTab  = document.getElementById('settingsTabGeneral');
+  const shopTab = document.getElementById('settingsTabThemeshop');
+  if (genTab)  genTab.hidden  = false;
+  if (shopTab) shopTab.hidden = true;
   const cfg    = getDdayConfig();
   const labelEl = document.getElementById('ddayLabelInput');
   const dateEl  = document.getElementById('ddayDateInput');
   if (labelEl) labelEl.value = cfg.label || '';
   if (dateEl)  dateEl.value  = cfg.date  || '';
+});
+
+// ── Settings tab switching ─────────────────────
+document.addEventListener('click', function(e) {
+  const tab = e.target.closest('.settings-tab');
+  if (!tab) return;
+  const targetTab = tab.dataset.tab;
+  document.querySelectorAll('.settings-tab').forEach(btn =>
+    btn.classList.toggle('settings-tab--active', btn.dataset.tab === targetTab)
+  );
+  const genTab  = document.getElementById('settingsTabGeneral');
+  const shopTab = document.getElementById('settingsTabThemeshop');
+  if (genTab)  genTab.hidden  = targetTab !== 'general';
+  if (shopTab) shopTab.hidden = targetTab !== 'themeshop';
 });
 
 // ──────────────────────────────────────────────
