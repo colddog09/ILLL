@@ -177,19 +177,6 @@
 [data-theme="hgd"] .schedule-area {
   position: relative;
 }
-/* 일정 영역 우하단 — hgd3(하트) */
-[data-theme="hgd"] .schedule-area::after {
-  content: '';
-  position: absolute;
-  bottom: 30px;
-  right: 20px;
-  width: 140px;
-  height: 140px;
-  background: url('/hgd3.png') no-repeat center / contain;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.10;
-}
 /* 할일 풀 영역 배경 — hgd2(놀란 표정) */
 [data-theme="hgd"] .task-pool {
   position: relative;
