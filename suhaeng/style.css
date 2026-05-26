@@ -136,6 +136,35 @@
   border-bottom: 1px solid rgba(100,180,255,0.3);
 }
 
+/* ── 테마: 한교동 ── */
+[data-theme="hgd"] {
+  --app-bg: #e0f7f4;
+  --card-bg: rgba(255,255,255,0.92);
+  --text-primary: #0a3330;
+  --text-secondary: #3a7a74;
+  --accent-blue: #00b4a0;
+  --accent-red: #ff6b6b;
+  --urgent-bg: rgba(255,107,107,0.08);
+  --urgent-border: rgba(255,107,107,0.22);
+  --urgent-text: #e05555;
+  --glass-shadow: 0 8px 32px rgba(0,180,160,0.15);
+}
+[data-theme="hgd"] body {
+  background-color: #e0f7f4;
+}
+[data-theme="hgd"] body::after {
+  content: '';
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  width: 120px;
+  height: 120px;
+  background: url('/HGD.png') no-repeat bottom right / contain;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.88;
+}
+
 /* ── 테마: 젤리 ── */
 [data-theme="jelly"] {
   --app-bg: #fff0f8;

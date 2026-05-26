@@ -94,6 +94,55 @@
   --bg-grad2: rgba(56,189,248,0.08);
 }
 
+/* ── 테마: 한교동 ── */
+[data-theme="hgd"] {
+  --bg: #e0f7f4;
+  --surface: #ffffff;
+  --surface-hover: #c8f0ec;
+  --border: rgba(0,180,160,0.18);
+  --border-strong: rgba(0,180,160,0.4);
+  --accent: #00b4a0;
+  --accent2: #4dd9c8;
+  --text: #0a3330;
+  --text-sub: #3a7a74;
+  --success: #00b4a0;
+  --danger: #ff6b6b;
+  --radius: 18px;
+  --radius-sm: 11px;
+  --shadow: 0 4px 20px rgba(0,180,160,0.13);
+  --shadow-lg: 0 12px 40px rgba(0,180,160,0.22);
+  --bg-grad1: rgba(0,180,160,0.09);
+  --bg-grad2: rgba(77,217,200,0.07);
+}
+
+[data-theme="hgd"] body {
+  background: #e0f7f4;
+}
+
+/* 오른쪽 하단에 한교동 캐릭터 고정 */
+[data-theme="hgd"] body::after {
+  content: '';
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  width: 120px;
+  height: 120px;
+  background: url('/HGD.png') no-repeat bottom right / contain;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.88;
+}
+
+/* 한교동 스와치 */
+.theme-swatch[data-theme="hgd"] {
+  background: linear-gradient(135deg, #00b4a0, #4dd9c8, #a8f0ea);
+  box-shadow: 0 3px 10px rgba(0,180,160,0.35);
+  background-image: url('/HGD.png');
+  background-size: 130%;
+  background-position: center 10%;
+  background-repeat: no-repeat;
+}
+
 /* ── 테마: 젤리 ── */
 [data-theme="jelly"] {
   --bg: #fff0f8;
