@@ -163,16 +163,18 @@
 }
 
 /* 날짜 카드 — 조약돌+돌 혼합 (2D flat 16px 타일) */
+/* day-card — 큰 게시판형 표지판 */
 [data-theme="minecraft"] .day-card {
-  background-color: #8a8a8a !important;
-  background-image:
-    url('/mc_cobblestone.png'),
-    url('/mc_stone2.png') !important;
-  background-size: 32px 32px, 32px 32px !important;
-  background-position: 0 0, 16px 16px !important;
+  background-image: url('/mc_oak_planks.png') !important;
+  background-size: 32px 32px !important;
+  background-color: #A0784A !important;
   image-rendering: pixelated !important;
-  border: 3px solid #3D2B1A !important;
-  box-shadow: 4px 4px 0 #1a1208 !important;
+  border-top: 10px solid #5C3A1A !important;
+  border-bottom: 10px solid #3D2010 !important;
+  border-left: 6px solid #6B4520 !important;
+  border-right: 6px solid #3D2010 !important;
+  border-radius: 0 !important;
+  box-shadow: 5px 5px 0 #1a1208, inset 0 4px 0 rgba(255,255,255,0.15), inset 0 -4px 0 rgba(0,0,0,0.2) !important;
 }
 
 /* 날짜 헤더 — 잔디 블록 상단 (2D flat) */
@@ -269,11 +271,11 @@
 
 /* 글씨 — 표지판 각인 느낌 */
 [data-theme="minecraft"] .sched-item__text {
-  background: transparent !important;
+  background: rgba(0,0,0,0.35) !important;
   padding: 2px 6px !important;
   border-radius: 0 !important;
-  text-shadow: 1px 1px 0 rgba(0,0,0,0.6) !important;
-  color: #1a0800 !important;
+  text-shadow: 1px 1px 0 #000, 0 0 3px rgba(0,0,0,0.8) !important;
+  color: #fff !important;
   flex: 1 !important;
   font-size: 0.55rem !important;
   line-height: 1.6 !important;
@@ -4506,21 +4508,21 @@ a.settings-tab {
 
 /* 날짜 그룹 헤더 */
 [data-theme="minecraft"] .gcal-side-date {
-  color: #1a0800 !important;
-  text-shadow: 1px 1px 0 rgba(255,255,255,0.3) !important;
+  color: #ffe8a0 !important;
+  text-shadow: 1px 1px 0 #000, 0 0 4px rgba(0,0,0,0.8) !important;
   font-size: 0.48rem !important;
-  background: rgba(0,0,0,0.2) !important;
+  background: rgba(0,0,0,0.45) !important;
   padding: 3px 6px !important;
   margin: 4px -4px 2px !important;
 }
 
-/* 캘린더 이벤트 아이템 — 작은 쪽지 표지판 */
+/* 캘린더 이벤트 아이템 */
 [data-theme="minecraft"] .gcal-side-event {
-  background: rgba(0,0,0,0.3) !important;
-  border-left: 3px solid rgba(255,255,255,0.3) !important;
-  border-top: 1px solid rgba(255,255,255,0.15) !important;
+  background: rgba(0,0,0,0.45) !important;
+  border-left: 3px solid rgba(255,220,100,0.5) !important;
+  border-top: 1px solid rgba(255,255,255,0.1) !important;
   border-right: none !important;
-  border-bottom: 2px solid rgba(0,0,0,0.4) !important;
+  border-bottom: 2px solid rgba(0,0,0,0.5) !important;
   border-radius: 0 !important;
   padding: 4px 6px !important;
   margin-bottom: 3px !important;
@@ -4528,12 +4530,12 @@ a.settings-tab {
 
 [data-theme="minecraft"] .gcal-side-event__text {
   color: #fff !important;
-  text-shadow: 1px 1px 0 #000 !important;
+  text-shadow: 1px 1px 0 #000, 0 0 3px rgba(0,0,0,0.9) !important;
   font-size: 0.48rem !important;
 }
 
 [data-theme="minecraft"] .gcal-side-event__time {
-  color: #e8d8a0 !important;
+  color: #ffd060 !important;
   text-shadow: 1px 1px 0 #000 !important;
   font-size: 0.42rem !important;
 }
