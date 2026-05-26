@@ -95,52 +95,157 @@
 }
 
 /* ── 테마: 마인크래프트 ── */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
 [data-theme="minecraft"] {
-  --bg: #c6d97f;
-  --surface: #f5f0e8;
-  --surface-hover: #e8e0cc;
-  --border: rgba(74,105,30,0.22);
-  --border-strong: rgba(74,105,30,0.45);
-  --accent: #4a691e;
-  --accent2: #4aedd9;
-  --text: #1a2e0a;
-  --text-sub: #4a5e2a;
-  --success: #16a34a;
-  --danger: #dc2626;
-  --shadow: 0 4px 20px rgba(74,105,30,0.18);
-  --shadow-lg: 0 12px 40px rgba(74,105,30,0.26);
-  --bg-grad1: rgba(74,105,30,0.10);
-  --bg-grad2: rgba(74,237,217,0.08);
-  --radius: 4px;
-  --radius-sm: 2px;
+  --bg: #6B8E3E;
+  --surface: #C6A87D;
+  --surface-hover: #D4B98E;
+  --border: #3D2B1A;
+  --border-strong: #1a1208;
+  --accent: #4aedd9;
+  --accent2: #7BF578;
+  --text: #FFFFFF;
+  --text-sub: #e8d8b0;
+  --success: #7BF578;
+  --danger: #FF5555;
+  --shadow: 4px 4px 0px #1a1208;
+  --shadow-lg: 6px 6px 0px #1a1208;
+  --bg-grad1: rgba(0,0,0,0);
+  --bg-grad2: rgba(0,0,0,0);
+  --radius: 0px;
+  --radius-sm: 0px;
 }
 
-[data-theme="minecraft"] body {
-  background-image:
-    linear-gradient(rgba(198,217,127,0.6) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(198,217,127,0.6) 1px, transparent 1px);
-  background-size: 32px 32px;
-}
-
-[data-theme="minecraft"] .modal-box,
-[data-theme="minecraft"] .pool-card,
-[data-theme="minecraft"] .day-card,
-[data-theme="minecraft"] .settings-card {
-  border-radius: 4px !important;
+/* 전체 픽셀 폰트 적용 */
+[data-theme="minecraft"],
+[data-theme="minecraft"] * {
+  font-family: 'Press Start 2P', monospace !important;
+  border-radius: 0 !important;
   image-rendering: pixelated;
 }
 
-[data-theme="minecraft"] .schedule-area {
-  background:
-    linear-gradient(180deg, #8BC34A 0px, #8BC34A 6px, #795548 6px, #795548 28px, #9E9E9E 28px) !important;
-  background-size: 100% 28px !important;
-  background-repeat: no-repeat !important;
+/* 배경: 흙+잔디 픽셀 패턴 */
+[data-theme="minecraft"] body {
+  background-color: #5A7A2C;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 15px,
+      rgba(0,0,0,0.08) 15px,
+      rgba(0,0,0,0.08) 16px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 15px,
+      rgba(0,0,0,0.08) 15px,
+      rgba(0,0,0,0.08) 16px
+    );
 }
 
+/* 모든 카드 — 흙 블록 스타일 */
+[data-theme="minecraft"] .day-card,
+[data-theme="minecraft"] .pool-card,
+[data-theme="minecraft"] .modal-box,
+[data-theme="minecraft"] .settings-card,
+[data-theme="minecraft"] .top-bar {
+  background: #C6A87D !important;
+  border: 3px solid #3D2B1A !important;
+  box-shadow: 4px 4px 0 #1a1208, inset 1px 1px 0 rgba(255,255,255,0.25), inset -1px -1px 0 rgba(0,0,0,0.25) !important;
+}
+
+/* 할일 풀 카드 — 나무판자 느낌 */
+[data-theme="minecraft"] .pool-card {
+  background: #A0784A !important;
+  border-color: #5C3A1A !important;
+}
+
+/* 날짜 헤더 — 잔디 블록 상단 */
+[data-theme="minecraft"] .day-card__header {
+  background: #5D8A2C;
+  margin: -14px -12px 10px;
+  padding: 8px 12px;
+  border-bottom: 3px solid #3D2B1A;
+  box-shadow: inset 0 -3px 0 rgba(0,0,0,0.3);
+}
+
+[data-theme="minecraft"] .day-card__date,
+[data-theme="minecraft"] .day-card__weekday {
+  color: #fff !important;
+  text-shadow: 2px 2px 0 #1a1208 !important;
+}
+
+/* 일정 아이템 — 돌 블록 */
+[data-theme="minecraft"] .sched-item {
+  background: #9B9B9B !important;
+  border: 2px solid #3D3D3D !important;
+  box-shadow: 2px 2px 0 #1a1208, inset 1px 1px 0 rgba(255,255,255,0.2) !important;
+  color: #fff !important;
+}
+
+[data-theme="minecraft"] .sched-item--done {
+  background: #6B6B6B !important;
+  opacity: 0.7;
+}
+
+/* 버튼 — 블록 버튼 스타일 */
 [data-theme="minecraft"] .add-task-btn,
 [data-theme="minecraft"] .auth-btn,
-[data-theme="minecraft"] .week-nav-btn {
-  border-radius: 2px !important;
+[data-theme="minecraft"] .week-nav-btn,
+[data-theme="minecraft"] .btn-o,
+[data-theme="minecraft"] .defer-btn {
+  background: #7BAF3A !important;
+  border: 3px solid #3D2B1A !important;
+  color: #fff !important;
+  text-shadow: 1px 1px 0 #1a1208 !important;
+  box-shadow: 3px 3px 0 #1a1208 !important;
+  transition: transform 0.05s, box-shadow 0.05s !important;
+}
+
+[data-theme="minecraft"] .add-task-btn:active,
+[data-theme="minecraft"] .auth-btn:active,
+[data-theme="minecraft"] .week-nav-btn:active {
+  transform: translate(2px, 2px) !important;
+  box-shadow: 1px 1px 0 #1a1208 !important;
+}
+
+/* 입력창 */
+[data-theme="minecraft"] .task-input-wrap input {
+  background: #1a1208 !important;
+  border: 3px solid #3D2B1A !important;
+  color: #fff !important;
+  box-shadow: inset 2px 2px 0 rgba(0,0,0,0.5) !important;
+}
+
+[data-theme="minecraft"] .task-input-wrap input::placeholder {
+  color: #888 !important;
+}
+
+/* 상단 바 */
+[data-theme="minecraft"] .top-bar {
+  background: #2D2D2D !important;
+  border-bottom: 4px solid #1a1208 !important;
+}
+
+[data-theme="minecraft"] .logo {
+  text-shadow: 2px 2px 0 #1a1208, -1px -1px 0 rgba(255,255,255,0.1) !important;
+}
+
+/* 오늘 배지 — 다이아몬드 색 */
+[data-theme="minecraft"] .today-badge {
+  background: #4aedd9 !important;
+  color: #0a2e2a !important;
+  border: 2px solid #1a1208 !important;
+  box-shadow: 2px 2px 0 #1a1208 !important;
+}
+
+/* D-Day */
+[data-theme="minecraft"] .dday-badge {
+  background: #4aedd9 !important;
+  color: #0a2e2a !important;
+  border: 2px solid #1a1208 !important;
 }
 
 /* ── 테마: 한교동 ── */
