@@ -30,9 +30,12 @@ export default async function handler(req, res) {
     return res.redirect('/?gcal=error&reason=auth_check_failed');
   }
 
-  const host       = req.headers.host || 'o1chu.my';
-  const proto      = host.startsWith('localhost') ? 'http' : 'https';
-  const redirectUri = `${proto}://${host}/api/gcal-callback`;
+  // redirect_uri는 Google Console에 등록된 값과 정확히 일치해야 함
+  const host = req.headers.host || '';
+  const isLocal = host.startsWith('localhost') || host.startsWith('127.');
+  const redirectUri = isLocal
+    ? `http://${host}/api/gcal-callback`
+    : 'https://o1chu.my/api/gcal-callback';
 
   // state = base64url(jwt) — callback에서 사용자 인증에 재사용
   const state = Buffer.from(jwt).toString('base64url');

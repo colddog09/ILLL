@@ -25,9 +25,12 @@ export default async function handler(req, res) {
   const CLIENT_ID       = process.env.GOOGLE_OAUTH_CLIENT_ID;
   const CLIENT_SECRET   = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
 
-  const host        = req.headers.host || 'o1chu.my';
-  const proto       = host.startsWith('localhost') ? 'http' : 'https';
-  const redirectUri = `${proto}://${host}/api/gcal-callback`;
+  // auth와 동일한 redirect_uri 사용 (Google Console 등록값과 일치해야 함)
+  const host = req.headers.host || '';
+  const isLocal = host.startsWith('localhost') || host.startsWith('127.');
+  const redirectUri = isLocal
+    ? `http://${host}/api/gcal-callback`
+    : 'https://o1chu.my/api/gcal-callback';
 
   // state에서 JWT 복원
   let jwt;
