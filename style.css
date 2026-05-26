@@ -4328,23 +4328,21 @@ a.settings-tab {
 [data-theme="minecraft"] .sched-item:nth-child(9) .btn-o { background-image: url('/mc_emerald_ore.png') !important; }
 [data-theme="minecraft"] .sched-item:nth-child(10) .btn-o { background-image: url('/mc_gold_ore.png') !important; }
 
-/* 완료된 아이템 버튼 — 어두운 돌 */
+/* 완료된 아이템 버튼 — 광물 아이템으로 변경 */
 [data-theme="minecraft"] .sched-item--done .btn-o {
-  background-image: url('/mc_stone2.png') !important;
-  opacity: 0.5;
+  opacity: 0.9 !important;
+  filter: drop-shadow(0 0 3px rgba(255,255,255,0.4)) !important;
 }
-[data-theme="minecraft"] .sched-item--done .btn-o::after {
-  content: '✓';
-  font-size: 1rem;
-  color: #7BF578;
-  font-family: monospace !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  text-shadow: 1px 1px 0 #1a1208;
-}
+[data-theme="minecraft"] .sched-item:nth-child(1).sched-item--done .btn-o  { background-image: url('/mc_item_diamond.png') !important; }
+[data-theme="minecraft"] .sched-item:nth-child(2).sched-item--done .btn-o  { background-image: url('/mc_item_emerald.png') !important; }
+[data-theme="minecraft"] .sched-item:nth-child(3).sched-item--done .btn-o  { background-image: url('/mc_item_raw_gold.png') !important; }
+[data-theme="minecraft"] .sched-item:nth-child(4).sched-item--done .btn-o  { background-image: url('/mc_item_raw_iron.png') !important; }
+[data-theme="minecraft"] .sched-item:nth-child(5).sched-item--done .btn-o  { background-image: url('/mc_item_redstone.png') !important; }
+[data-theme="minecraft"] .sched-item:nth-child(6).sched-item--done .btn-o  { background-image: url('/mc_item_lapis_lazuli.png') !important; }
+[data-theme="minecraft"] .sched-item:nth-child(7).sched-item--done .btn-o  { background-image: url('/mc_item_coal.png') !important; }
+[data-theme="minecraft"] .sched-item:nth-child(8).sched-item--done .btn-o  { background-image: url('/mc_item_diamond.png') !important; }
+[data-theme="minecraft"] .sched-item:nth-child(9).sched-item--done .btn-o  { background-image: url('/mc_item_emerald.png') !important; }
+[data-theme="minecraft"] .sched-item:nth-child(10).sched-item--done .btn-o { background-image: url('/mc_item_raw_gold.png') !important; }
 
 /* ── 광질 애니메이션 ── */
 /* ── 광질 애니메이션 오버레이 (btn-o 위치 기준) ── */
