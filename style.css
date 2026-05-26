@@ -4413,3 +4413,86 @@ a.settings-tab {
   60%     { transform: translateX(-2px); }
   80%     { transform: translateX(2px); }
 }
+
+/* ── Minecraft: 캘린더 패널 — 벽 표지판 ── */
+[data-theme="minecraft"] .gcal-side-panel {
+  background-image: url('/mc_oak_planks.png') !important;
+  background-size: 32px 32px !important;
+  background-color: #A0784A !important;
+  image-rendering: pixelated !important;
+  border-top: 6px solid #5C3A1A !important;
+  border-bottom: 6px solid #3D2010 !important;
+  border-left: 4px solid #6B4520 !important;
+  border-right: 4px solid #3D2010 !important;
+  border-radius: 0 !important;
+  box-shadow: 4px 4px 0 #1a1208, inset 0 3px 0 rgba(255,255,255,0.15), inset 0 -3px 0 rgba(0,0,0,0.2) !important;
+  position: relative !important;
+}
+
+/* 왼쪽에 달린 못/고리 — 벽 표지판 고정 표현 */
+[data-theme="minecraft"] .gcal-side-panel::before {
+  content: '' !important;
+  position: absolute !important;
+  left: -10px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 8px !important;
+  height: 40px !important;
+  background: #5C3A1A !important;
+  box-shadow: -2px 0 0 #1a1208, 2px 0 0 #8B6040 !important;
+  z-index: 1 !important;
+}
+
+/* 캘린더 헤더 */
+[data-theme="minecraft"] .gcal-side-header {
+  background: rgba(0,0,0,0.35) !important;
+  border-radius: 0 !important;
+  padding: 6px 8px !important;
+  margin: -4px -4px 6px !important;
+  border-bottom: 3px solid #1a1208 !important;
+  color: #fff !important;
+  text-shadow: 1px 1px 0 #000 !important;
+}
+
+/* 날짜 그룹 헤더 */
+[data-theme="minecraft"] .gcal-side-date {
+  color: #1a0800 !important;
+  text-shadow: 1px 1px 0 rgba(255,255,255,0.3) !important;
+  font-size: 0.48rem !important;
+  background: rgba(0,0,0,0.2) !important;
+  padding: 3px 6px !important;
+  margin: 4px -4px 2px !important;
+}
+
+/* 캘린더 이벤트 아이템 — 작은 쪽지 표지판 */
+[data-theme="minecraft"] .gcal-side-event {
+  background: rgba(0,0,0,0.3) !important;
+  border-left: 3px solid rgba(255,255,255,0.3) !important;
+  border-top: 1px solid rgba(255,255,255,0.15) !important;
+  border-right: none !important;
+  border-bottom: 2px solid rgba(0,0,0,0.4) !important;
+  border-radius: 0 !important;
+  padding: 4px 6px !important;
+  margin-bottom: 3px !important;
+}
+
+[data-theme="minecraft"] .gcal-side-event__text {
+  color: #fff !important;
+  text-shadow: 1px 1px 0 #000 !important;
+  font-size: 0.48rem !important;
+}
+
+[data-theme="minecraft"] .gcal-side-event__time {
+  color: #e8d8a0 !important;
+  text-shadow: 1px 1px 0 #000 !important;
+  font-size: 0.42rem !important;
+}
+
+/* 리사이즈 핸들 — 마인크래프트 테마 숨김 (표지판이라 불필요) */
+[data-theme="minecraft"] .gcal-resize-handle {
+  background: transparent !important;
+}
+[data-theme="minecraft"] .gcal-resize-handle::after {
+  background: #5C3A1A !important;
+  width: 4px !important;
+}
