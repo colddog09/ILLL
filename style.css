@@ -142,12 +142,15 @@
   box-shadow: 0 4px 0 #1a1208 !important;
 }
 
-/* 날짜 카드 — 흙 블록 */
+/* 날짜 카드 — 조약돌+돌 혼합 */
 [data-theme="minecraft"] .day-card {
-  background-image: url('/mc_dirt.png') !important;
-  background-size: 64px 64px !important;
+  background-color: #8a8a8a !important;
+  background-image:
+    url('/mc_cobblestone.png'),
+    url('/mc_stone.png') !important;
+  background-size: 48px 48px, 48px 48px !important;
+  background-position: 0 0, 24px 24px !important;
   image-rendering: pixelated !important;
-  background-color: #C6A87D !important;
   border: 3px solid #3D2B1A !important;
   box-shadow: 4px 4px 0 #1a1208 !important;
 }
@@ -4220,14 +4223,8 @@ a.settings-tab {
 .settings-shop-btn:hover { opacity: 0.88; }
 .settings-shop-btn:active { transform: scale(0.97); }
 
-/* ── Minecraft: 미완료 아이템 — 광물 블록 배경 ── */
-[data-theme="minecraft"] .sched-item:nth-child(1):not(.sched-item--done) { background-image: url('/mc_diamond_ore.png') !important; }
-[data-theme="minecraft"] .sched-item:nth-child(2):not(.sched-item--done) { background-image: url('/mc_emerald_ore.png') !important; }
-[data-theme="minecraft"] .sched-item:nth-child(3):not(.sched-item--done) { background-image: url('/mc_gold_ore.png') !important; background-color: #7a6520 !important; }
-[data-theme="minecraft"] .sched-item:nth-child(4):not(.sched-item--done) { background-image: url('/mc_iron_ore.png') !important; }
-[data-theme="minecraft"] .sched-item:nth-child(5):not(.sched-item--done) { background-image: url('/mc_redstone_ore.png') !important; background-color: #4a1010 !important; }
-[data-theme="minecraft"] .sched-item:nth-child(6):not(.sched-item--done) { background-image: url('/mc_lapis_ore.png') !important; background-color: #1a2a6a !important; }
-[data-theme="minecraft"] .sced-item:nth-child(7):not(.sched-item--done)  { background-image: url('/mc_coal_ore.png') !important; }
+/* ── Minecraft: 일정 아이템 — 돌 블록만 ── */
+/* (광물은 btn-o 버튼 영역에만 표시) */
 
 /* 미완료: 곡괭이 아이콘 */
 [data-theme="minecraft"] .sched-item:not(.sched-item--done) .sched-item__text::before {
@@ -4247,23 +4244,48 @@ a.settings-tab {
   opacity: 0.9;
 }
 
-/* btn-o: 곡괭이 버튼 */
+/* btn-o: 광물 블록 버튼 (오른쪽 끝) */
 [data-theme="minecraft"] .btn-o {
   font-size: 0 !important;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding: 4px 6px !important;
-  line-height: 1 !important;
-  position: relative !important;
+  border: 2px solid #1a1208 !important;
+  box-shadow: 2px 2px 0 #1a1208 !important;
+  padding: 0 !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  background-size: 36px 36px !important;
+  image-rendering: pixelated !important;
+  flex-shrink: 0 !important;
+  cursor: pointer !important;
 }
-[data-theme="minecraft"] .btn-o::after {
-  content: '⛏️';
-  font-size: 1.1rem;
+/* 광물 순환 - nth-child로 다른 광물 */
+[data-theme="minecraft"] .sched-item:nth-child(1) .btn-o { background-image: url('/mc_diamond_ore.png') !important; }
+[data-theme="minecraft"] .sched-item:nth-child(2) .btn-o { background-image: url('/mc_emerald_ore.png') !important; }
+[data-theme="minecraft"] .sched-item:nth-child(3) .btn-o { background-image: url('/mc_gold_ore.png') !important; }
+[data-theme="minecraft"] .sched-item:nth-child(4) .btn-o { background-image: url('/mc_iron_ore.png') !important; }
+[data-theme="minecraft"] .sched-item:nth-child(5) .btn-o { background-image: url('/mc_redstone_ore.png') !important; }
+[data-theme="minecraft"] .sched-item:nth-child(6) .btn-o { background-image: url('/mc_lapis_ore.png') !important; }
+[data-theme="minecraft"] .sched-item:nth-child(7) .btn-o { background-image: url('/mc_coal_ore.png') !important; }
+[data-theme="minecraft"] .sched-item:nth-child(8) .btn-o { background-image: url('/mc_diamond_ore.png') !important; }
+[data-theme="minecraft"] .sched-item:nth-child(9) .btn-o { background-image: url('/mc_emerald_ore.png') !important; }
+[data-theme="minecraft"] .sched-item:nth-child(10) .btn-o { background-image: url('/mc_gold_ore.png') !important; }
+
+/* 완료된 아이템 버튼 — 어두운 돌 */
+[data-theme="minecraft"] .sched-item--done .btn-o {
+  background-image: url('/mc_stone.png') !important;
+  opacity: 0.5;
 }
 [data-theme="minecraft"] .sched-item--done .btn-o::after {
-  content: '✅';
-  opacity: 0.7;
+  content: '✓';
+  font-size: 1rem;
+  color: #7BF578;
+  font-family: monospace !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  text-shadow: 1px 1px 0 #1a1208;
 }
 
 /* ── 광질 애니메이션 ── */
