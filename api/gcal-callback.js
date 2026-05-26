@@ -72,17 +72,34 @@ export default async function handler(req, res) {
     return res.redirect('/?gcal=connected&fresh=0');
   }
 
-  // DB에 refresh_token 저장 (RLS: user JWT 사용)
-  const { error: dbErr } = await supabase
+  // DB에 refresh_token 저장
+  // UPDATE 우선 (기존 데이터 보존) → 영향받은 행 없으면 신규 유저 → INSERT
+  const { data: updated, error: updateErr } = await supabase
     .from('user_states')
-    .upsert(
-      { user_id: user.id, gcal_refresh_token: tokens.refresh_token },
-      { onConflict: 'user_id' }
-    );
+    .update({ gcal_refresh_token: tokens.refresh_token })
+    .eq('user_id', user.id)
+    .select('user_id');
 
-  if (dbErr) {
-    console.error('gcal-callback: DB 저장 실패', dbErr.message);
+  if (updateErr) {
+    console.error('gcal-callback: UPDATE 실패', updateErr.message);
     return res.redirect('/?gcal=error&reason=db_error');
+  }
+
+  // 업데이트된 행이 없으면 (신규 유저) 기본값으로 INSERT
+  if (!updated || updated.length === 0) {
+    const { error: insertErr } = await supabase
+      .from('user_states')
+      .insert({
+        user_id:            user.id,
+        gcal_refresh_token: tokens.refresh_token,
+        pool:               [],
+        schedule:           {},
+        links:              []
+      });
+    if (insertErr) {
+      console.error('gcal-callback: INSERT 실패', insertErr.message);
+      return res.redirect('/?gcal=error&reason=db_error');
+    }
   }
 
   return res.redirect('/?gcal=connected&fresh=1');
