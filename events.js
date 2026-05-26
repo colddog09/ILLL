@@ -46,13 +46,13 @@ poolEl.addEventListener('touchend', e => {
 // ──────────────────────────────────────────────
 // ── Minecraft 광질 애니메이션 (캡처 페이즈) ──
 const MC_ORES = [
-  { img: '/mc_diamond_ore.png',  gem: '💎', color: '#4aedd9' },
-  { img: '/mc_emerald_ore.png',  gem: '💚', color: '#17c964' },
-  { img: '/mc_gold_ore.png',     gem: '🟡', color: '#f5a623' },
-  { img: '/mc_iron_ore.png',     gem: '🔩', color: '#d4a574' },
-  { img: '/mc_redstone_ore.png', gem: '🔴', color: '#ff3333' },
-  { img: '/mc_lapis_ore.png',    gem: '🔵', color: '#3355cc' },
-  { img: '/mc_coal_ore.png',     gem: '⬛', color: '#444444' },
+  { ore: '/mc_diamond_ore.png', item: '/mc_item_diamond.png',    color: '#4aedd9' },
+  { ore: '/mc_emerald_ore.png', item: '/mc_item_emerald.png',    color: '#17c964' },
+  { ore: '/mc_gold_ore.png',    item: '/mc_item_raw_gold.png',   color: '#f5a623' },
+  { ore: '/mc_iron_ore.png',    item: '/mc_item_raw_iron.png',   color: '#d4a574' },
+  { ore: '/mc_redstone_ore.png',item: '/mc_item_redstone.png',   color: '#ff3333' },
+  { ore: '/mc_lapis_ore.png',   item: '/mc_item_lapis_lazuli.png',color: '#3355cc' },
+  { ore: '/mc_coal_ore.png',    item: '/mc_item_coal.png',       color: '#555555' },
 ];
 
 dayGrid.addEventListener('click', e => {
@@ -65,28 +65,32 @@ dayGrid.addEventListener('click', e => {
   e.stopImmediatePropagation();
 
   const idx = Array.from(schedItem.parentElement?.children || []).indexOf(schedItem);
-  const ore = MC_ORES[idx % MC_ORES.length];
+  const mc = MC_ORES[idx % MC_ORES.length];
 
-  // 파티클 생성
-  const particles = ['✨','⭐','💥','✦','★'];
-  let particleHTML = '';
-  for (let i = 0; i < 6; i++) {
-    const p = particles[i % particles.length];
-    particleHTML += `<span class="mc-particle mc-particle-${i}" style="--c:${ore.color}">${p}</span>`;
-  }
+  // 버튼 위치 기준으로 애니메이션 overlay 생성
+  const btnRect  = btnO.getBoundingClientRect();
+  const itemRect = schedItem.getBoundingClientRect();
+  const relLeft  = btnRect.left - itemRect.left;
+  const relTop   = btnRect.top  - itemRect.top;
 
+  // 곡괭이 + 원석 아이템 팝업
   const anim = document.createElement('div');
   anim.className = 'mc-mine-anim';
+  anim.style.cssText = `left:${relLeft - 32}px; top:${relTop - 8}px;`;
   anim.innerHTML = `
-    <span class="mc-pickaxe">⛏️</span>
-    <span class="mc-gem">${ore.gem}</span>
-    ${particleHTML}
+    <img class="mc-pickaxe-img" src="/mc_item_diamond.png" style="image-rendering:pixelated;">
+    <img class="mc-item-pop" src="${mc.item}" style="image-rendering:pixelated; --c:${mc.color}">
   `;
+  schedItem.style.position = 'relative';
   schedItem.appendChild(anim);
   schedItem.classList.add('mc-mining');
 
+  // 버튼 자체를 "깨지는" 애니메이션
+  btnO.classList.add('mc-btn-break');
+
   setTimeout(() => {
     anim.remove();
+    btnO.classList.remove('mc-btn-break');
     schedItem.classList.remove('mc-mining');
     toggleStatus(btnO.dataset.date, btnO.dataset.id);
   }, 700);

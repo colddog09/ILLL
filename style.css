@@ -4309,74 +4309,71 @@ a.settings-tab {
 }
 
 /* ── 광질 애니메이션 ── */
+/* ── 광질 애니메이션 오버레이 (btn-o 위치 기준) ── */
 .mc-mine-anim {
   position: absolute;
-  inset: 0;
+  width: 80px;
+  height: 60px;
+  pointer-events: none;
+  z-index: 100;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  pointer-events: none;
-  z-index: 10;
-  overflow: hidden;
+  gap: 4px;
 }
 
-/* 곡괭이 스윙 */
-.mc-pickaxe {
-  font-size: 2rem;
-  display: inline-block;
-  transform-origin: bottom right;
-  animation: mcPickSwing 0.35s ease-in-out 2 forwards;
+/* 다이아몬드 곡괭이 이미지 */
+.mc-pickaxe-img {
+  width: 32px;
+  height: 32px;
+  display: block;
+  transform-origin: 80% 80%;
+  animation: mcPickSwing 0.18s ease-in-out 3 forwards;
+  filter: drop-shadow(1px 1px 0 #1a1208);
 }
 @keyframes mcPickSwing {
-  0%   { transform: rotate(-40deg) scale(1.2); }
-  40%  { transform: rotate(20deg)  scale(1.3); }
-  70%  { transform: rotate(-20deg) scale(1.1); }
-  100% { transform: rotate(10deg)  scale(1); opacity: 0; }
+  0%   { transform: rotate(-50deg) scale(1.1); }
+  50%  { transform: rotate(25deg)  scale(1.2); }
+  100% { transform: rotate(-40deg) scale(1); opacity: 0.2; }
 }
 
-/* 광물 팡 튀어나오기 */
-.mc-gem {
-  font-size: 1.6rem;
-  display: inline-block;
-  animation: mcGemPop 0.7s cubic-bezier(0.34,1.6,0.64,1) forwards;
+/* 원석 아이템 팝업 */
+.mc-item-pop {
+  width: 28px;
+  height: 28px;
+  display: block;
+  image-rendering: pixelated;
+  animation: mcItemPop 0.7s cubic-bezier(0.34,1.8,0.64,1) 0.25s forwards;
+  opacity: 0;
+  filter: drop-shadow(0 0 4px var(--c, #fff)) drop-shadow(1px 1px 0 #1a1208);
 }
-@keyframes mcGemPop {
-  0%   { transform: scale(0) rotate(0deg);   opacity: 0; }
-  40%  { transform: scale(1.5) rotate(20deg); opacity: 1; }
-  70%  { transform: scale(1.1) rotate(-10deg); }
-  100% { transform: scale(0.8) translateY(-20px); opacity: 0; }
-}
-
-/* 파티클 흩날리기 */
-.mc-particle {
-  position: absolute;
-  font-size: 0.7rem;
-  color: var(--c, #fff);
-  animation: mcParticle 0.7s ease-out forwards;
-  pointer-events: none;
-}
-.mc-particle-0 { animation-delay: 0.0s; top: 50%; left: 30%; --angle: -60deg; }
-.mc-particle-1 { animation-delay: 0.05s; top: 30%; left: 50%; --angle: -80deg; }
-.mc-particle-2 { animation-delay: 0.05s; top: 50%; left: 70%; --angle: 60deg; }
-.mc-particle-3 { animation-delay: 0.1s;  top: 70%; left: 40%; --angle: -30deg; }
-.mc-particle-4 { animation-delay: 0.1s;  top: 70%; left: 60%; --angle: 40deg; }
-.mc-particle-5 { animation-delay: 0.15s; top: 40%; left: 20%; --angle: -90deg; }
-
-@keyframes mcParticle {
-  0%   { transform: translate(0,0) rotate(0); opacity: 1; }
-  100% { transform: translate(calc(cos(var(--angle,45deg)) * 40px), calc(sin(var(--angle,45deg)) * -40px)) rotate(360deg); opacity: 0; }
+@keyframes mcItemPop {
+  0%   { transform: scale(0) translateY(0);    opacity: 0; }
+  30%  { transform: scale(2)  translateY(-8px); opacity: 1; }
+  60%  { transform: scale(1.6) translateY(-18px); opacity: 1; }
+  100% { transform: scale(1.2) translateY(-30px); opacity: 0; }
 }
 
-/* 광질 중 블록 깨지는 효과 */
+/* 버튼 깨지는 효과 */
+[data-theme="minecraft"] .btn-o.mc-btn-break {
+  animation: mcBtnBreak 0.7s forwards;
+}
+@keyframes mcBtnBreak {
+  0%   { filter: brightness(1);   transform: scale(1); }
+  15%  { filter: brightness(3) saturate(0.5); transform: scale(1.1); }
+  30%  { filter: brightness(1.5); transform: scale(0.9) rotate(-3deg); }
+  50%  { filter: brightness(2);   transform: scale(1.05) rotate(2deg); }
+  70%  { filter: brightness(1.2); transform: scale(0.95); }
+  100% { filter: brightness(1);   transform: scale(1); }
+}
+
+/* 아이템 흔들림 */
 [data-theme="minecraft"] .sched-item.mc-mining {
-  animation: mcBlockBreak 0.7s forwards;
+  animation: mcMineShake 0.7s forwards;
 }
-@keyframes mcBlockBreak {
-  0%   { transform: scale(1);    filter: brightness(1); }
-  15%  { transform: scale(1.04); filter: brightness(2); }
-  35%  { transform: scale(0.97) skew(2deg); filter: brightness(1.5); }
-  55%  { transform: scale(1.02) skew(-1deg); filter: brightness(1.8); }
-  75%  { transform: scale(0.98); filter: brightness(1.3); }
-  100% { transform: scale(1);    filter: brightness(1); }
+@keyframes mcMineShake {
+  0%,100% { transform: translateX(0); }
+  20%     { transform: translateX(-3px); }
+  40%     { transform: translateX(3px); }
+  60%     { transform: translateX(-2px); }
+  80%     { transform: translateX(2px); }
 }
