@@ -42,6 +42,97 @@ poolEl.addEventListener('touchend', e => {
 }, { passive: false });
 
 // ──────────────────────────────────────────────
+// 스타레일 — 은하열차 대각선 통과 애니메이션
+// ──────────────────────────────────────────────
+function triggerStarRailTrain() {
+  if (document.documentElement.dataset.theme !== 'starrail') return;
+  if (document.querySelector('.sr-train-overlay')) return; // 중복 방지
+
+  const overlay = document.createElement('div');
+  overlay.className = 'sr-train-overlay';
+  overlay.innerHTML = `
+    <div class="sr-train-img-wrap">
+      <img class="sr-train-img" src="/starrail_train.png" alt="">
+    </div>
+    <canvas class="sr-stars-canvas"></canvas>
+  `;
+  document.body.appendChild(overlay);
+
+  // 별 파티클 (꼬리 효과)
+  const canvas = overlay.querySelector('.sr-stars-canvas');
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  const particles = [];
+  let animFrame;
+
+  function spawnParticle(x, y) {
+    particles.push({
+      x, y,
+      vx: (Math.random() - 0.8) * 6,
+      vy: (Math.random() + 0.3) * 4,
+      life: 1,
+      size: Math.random() * 3 + 1,
+      color: ['#c8a8ff','#e8d0ff','#a0c8ff','#ffffff'][Math.floor(Math.random()*4)]
+    });
+  }
+
+  let trainX = -600, trainY = window.innerHeight + 100;
+  const targetX = window.innerWidth + 400;
+  const targetY = -200;
+  const duration = 2200; // ms
+  const startTime = performance.now();
+
+  function animate(now) {
+    const t = Math.min((now - startTime) / duration, 1);
+    const ease = t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
+    trainX = -600 + (targetX + 600) * ease;
+    trainY = (window.innerHeight + 100) + (targetY - window.innerHeight - 100) * ease;
+
+    // 꼬리 파티클 생성
+    if (t < 0.95) {
+      for (let i = 0; i < 3; i++) {
+        spawnParticle(trainX + 200 + Math.random()*80, trainY + 120 + Math.random()*40);
+      }
+    }
+
+    // 캔버스 클리어
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 파티클 업데이트
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx; p.y += p.vy; p.life -= 0.035;
+      if (p.life <= 0) { particles.splice(i, 1); continue; }
+      ctx.globalAlpha = p.life * 0.8;
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // 열차 위치 반영
+    const wrap = overlay.querySelector('.sr-train-img-wrap');
+    if (wrap) wrap.style.transform = `translate(${trainX}px, ${trainY}px)`;
+
+    if (t < 1 || particles.length > 0) {
+      animFrame = requestAnimationFrame(animate);
+    } else {
+      overlay.remove();
+    }
+  }
+
+  animFrame = requestAnimationFrame(animate);
+
+  // 최대 3초 후 강제 제거
+  setTimeout(() => {
+    cancelAnimationFrame(animFrame);
+    overlay.remove();
+  }, 3500);
+}
+
+// ──────────────────────────────────────────────
 // dayGrid 이벤트 위임 — 완료 토글, 미루기
 // ──────────────────────────────────────────────
 dayGrid.addEventListener('click', e => {
@@ -49,7 +140,14 @@ dayGrid.addEventListener('click', e => {
   if (gcalBtn) { toggleGcalStatus(gcalBtn.dataset.gcalId, gcalBtn.dataset.date); return; }
 
   const btnO = e.target.closest('.btn-o');
-  if (btnO) { toggleStatus(btnO.dataset.date, btnO.dataset.id); return; }
+  if (btnO) {
+    // 완료 → X 방향 전환(완료 처리)일 때만 열차 등장
+    const schedItem = btnO.closest('.sched-item');
+    const isCompleting = schedItem && !schedItem.classList.contains('sched-item--done');
+    toggleStatus(btnO.dataset.date, btnO.dataset.id);
+    if (isCompleting) triggerStarRailTrain();
+    return;
+  }
 
   const deferBtn = e.target.closest('.defer-btn');
   if (deferBtn) deferTasks(deferBtn.dataset.date);

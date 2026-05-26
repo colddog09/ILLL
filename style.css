@@ -4053,3 +4053,46 @@ a.settings-tab {
 /* (광물은 btn-o 버튼 영역에만 표시) */
 
 /* 미완료: 곡괭이 아이콘 */
+/* ══════════════════════════════════════════════
+   스타레일 — 은하열차 대각선 통과 애니메이션
+   ══════════════════════════════════════════════ */
+
+/* 전체 화면 오버레이 (pointer-events 차단 안 함) */
+.sr-train-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* 별 캔버스 */
+.sr-stars-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* 열차 이미지 래퍼 — JS가 transform으로 위치 제어 */
+.sr-train-img-wrap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform;
+  /* 대각선 방향에 맞게 -30도 회전 */
+  transform-origin: center center;
+}
+
+.sr-train-img {
+  width: 520px;
+  max-width: none;
+  display: block;
+  /* 열차를 대각선 방향(좌하→우상)에 맞게 기울임 */
+  transform: rotate(-18deg);
+  filter:
+    drop-shadow(0 0 18px rgba(180, 140, 255, 0.9))
+    drop-shadow(0 0 40px rgba(120, 80, 255, 0.6))
+    brightness(1.15);
+  image-rendering: auto;
+}
