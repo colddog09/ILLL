@@ -125,50 +125,42 @@
   image-rendering: pixelated;
 }
 
-/* 배경: 흙+잔디 픽셀 패턴 */
+/* 배경 — 잔디 블록 타일 */
 [data-theme="minecraft"] body {
-  background-color: #5A7A2C;
-  background-image:
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 15px,
-      rgba(0,0,0,0.08) 15px,
-      rgba(0,0,0,0.08) 16px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent 15px,
-      rgba(0,0,0,0.08) 15px,
-      rgba(0,0,0,0.08) 16px
-    );
+  background-image: url('/mc_grass_top.png');
+  background-size: 48px 48px;
+  image-rendering: pixelated;
 }
 
-/* 모든 카드 — 흙 블록 스타일 */
-[data-theme="minecraft"] .day-card,
-[data-theme="minecraft"] .pool-card,
-[data-theme="minecraft"] .modal-box,
-[data-theme="minecraft"] .settings-card,
+/* 상단 바 — 나무 블록 */
 [data-theme="minecraft"] .top-bar {
-  background: #C6A87D !important;
+  background-image: url('/mc_log_top.png') !important;
+  background-size: 48px 48px !important;
+  image-rendering: pixelated !important;
+  background-color: #5C3A1A !important;
+  border-bottom: 4px solid #1a1208 !important;
+  box-shadow: 0 4px 0 #1a1208 !important;
+}
+
+/* 날짜 카드 — 흙 블록 */
+[data-theme="minecraft"] .day-card {
+  background-image: url('/mc_dirt.png') !important;
+  background-size: 64px 64px !important;
+  image-rendering: pixelated !important;
+  background-color: #C6A87D !important;
   border: 3px solid #3D2B1A !important;
-  box-shadow: 4px 4px 0 #1a1208, inset 1px 1px 0 rgba(255,255,255,0.25), inset -1px -1px 0 rgba(0,0,0,0.25) !important;
+  box-shadow: 4px 4px 0 #1a1208 !important;
 }
 
-/* 할일 풀 카드 — 나무판자 느낌 */
-[data-theme="minecraft"] .pool-card {
-  background: #A0784A !important;
-  border-color: #5C3A1A !important;
-}
-
-/* 날짜 헤더 — 잔디 블록 상단 */
+/* 날짜 헤더 — 잔디 블록 상단 (초록) */
 [data-theme="minecraft"] .day-card__header {
-  background: #5D8A2C;
+  background-image: url('/mc_grass.png') !important;
+  background-size: 32px 32px !important;
+  background-color: #4a7a1e !important;
+  image-rendering: pixelated !important;
   margin: -14px -12px 10px;
   padding: 8px 12px;
-  border-bottom: 3px solid #3D2B1A;
-  box-shadow: inset 0 -3px 0 rgba(0,0,0,0.3);
+  border-bottom: 3px solid #1a1208;
 }
 
 [data-theme="minecraft"] .day-card__date,
@@ -177,17 +169,42 @@
   text-shadow: 2px 2px 0 #1a1208 !important;
 }
 
+/* 할일 풀 카드 — 나무 블록 */
+[data-theme="minecraft"] .pool-card {
+  background-image: url('/mc_log.png') !important;
+  background-size: 40px 40px !important;
+  background-color: #7D5A2A !important;
+  image-rendering: pixelated !important;
+  border: 3px solid #3D2B1A !important;
+  box-shadow: 3px 3px 0 #1a1208 !important;
+}
+
+/* 모달/설정 카드 — 흙 블록 */
+[data-theme="minecraft"] .modal-box,
+[data-theme="minecraft"] .settings-card {
+  background-image: url('/mc_dirt.png') !important;
+  background-size: 64px 64px !important;
+  background-color: #C6A87D !important;
+  image-rendering: pixelated !important;
+  border: 3px solid #3D2B1A !important;
+  box-shadow: 4px 4px 0 #1a1208 !important;
+}
+
 /* 일정 아이템 — 돌 블록 */
 [data-theme="minecraft"] .sched-item {
-  background: #9B9B9B !important;
+  background-image: url('/mc_stone.png') !important;
+  background-size: 40px 40px !important;
+  background-color: #9B9B9B !important;
+  image-rendering: pixelated !important;
   border: 2px solid #3D3D3D !important;
-  box-shadow: 2px 2px 0 #1a1208, inset 1px 1px 0 rgba(255,255,255,0.2) !important;
+  box-shadow: 2px 2px 0 #1a1208 !important;
   color: #fff !important;
 }
 
 [data-theme="minecraft"] .sched-item--done {
-  background: #6B6B6B !important;
-  opacity: 0.7;
+  background-image: url('/mc_stone.png') !important;
+  background-color: #6B6B6B !important;
+  opacity: 0.65;
 }
 
 /* 버튼 — 블록 버튼 스타일 */
