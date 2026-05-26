@@ -447,6 +447,8 @@ infoHistoryBtn?.addEventListener('click', () => {
   const THEME_KEY     = 'appTheme_v1';
   const SR_UNLOCK_KEY = 'srUnlocked_v1';
   const SR_PW         = '33550336';
+  const HGD_UNLOCK_KEY = 'hgdUnlocked_v1';
+  const HGD_PW         = 'ilovehangyodon';
 
   function applyTheme(theme) {
     if (theme === 'purple' || !theme) {
@@ -464,27 +466,36 @@ infoHistoryBtn?.addEventListener('click', () => {
     return localStorage.getItem(SR_UNLOCK_KEY) === '1';
   }
 
+  function isHgdUnlocked() {
+    return localStorage.getItem(HGD_UNLOCK_KEY) === '1';
+  }
+
   function updateSwatchLock() {
-    const sw = document.querySelector('.theme-swatch[data-theme="starrail"]');
-    if (!sw) return;
-    if (isStarRailUnlocked()) {
-      sw.textContent = '';
-      sw.classList.remove('theme-swatch--locked');
+    const sr = document.querySelector('.theme-swatch[data-theme="starrail"]');
+    if (sr && isStarRailUnlocked()) {
+      sr.textContent = '';
+      sr.classList.remove('theme-swatch--locked');
+    }
+    const hgd = document.querySelector('.theme-swatch[data-theme="hgd"]');
+    if (hgd && isHgdUnlocked()) {
+      hgd.textContent = '';
+      hgd.classList.remove('theme-swatch--locked');
     }
   }
 
   applyTheme(localStorage.getItem(THEME_KEY) || 'purple');
   updateSwatchLock();
 
-  function promptStarRailPassword() {
+
+  function promptPassword(pw, unlockKey, themeId, logo) {
     const overlay = document.createElement('div');
     overlay.className = 'sr-pw-overlay';
     overlay.innerHTML = `
       <div class="sr-pw-box">
-        <div class="sr-pw-logo">✦</div>
+        <div class="sr-pw-logo">${logo}</div>
         <p class="sr-pw-title">잠긴 테마</p>
         <p class="sr-pw-desc">암호를 입력하세요</p>
-        <input class="sr-pw-input" type="password" maxlength="16" placeholder="••••••••" autocomplete="off" />
+        <input class="sr-pw-input" type="password" maxlength="30" placeholder="••••••••" autocomplete="off" />
         <div class="sr-pw-btns">
           <button class="sr-pw-cancel">취소</button>
           <button class="sr-pw-confirm">확인</button>
@@ -492,30 +503,27 @@ infoHistoryBtn?.addEventListener('click', () => {
         <p class="sr-pw-error" hidden>암호가 틀렸어요</p>
       </div>`;
     document.body.appendChild(overlay);
-
     const input   = overlay.querySelector('.sr-pw-input');
     const confirm = overlay.querySelector('.sr-pw-confirm');
     const cancel  = overlay.querySelector('.sr-pw-cancel');
     const errMsg  = overlay.querySelector('.sr-pw-error');
-
     setTimeout(() => input.focus(), 50);
     function close() { overlay.remove(); }
     function tryUnlock() {
-      if (input.value === SR_PW) {
-        localStorage.setItem(SR_UNLOCK_KEY, '1');
+      if (input.value === pw) {
+        localStorage.setItem(unlockKey, '1');
         updateSwatchLock();
         close();
-        localStorage.setItem(THEME_KEY, 'starrail');
-        applyTheme('starrail');
+        localStorage.setItem(THEME_KEY, themeId);
+        applyTheme(themeId);
       } else {
         errMsg.hidden = false;
-        input.value   = '';
+        input.value = '';
         input.focus();
         input.classList.add('sr-pw-shake');
         setTimeout(() => input.classList.remove('sr-pw-shake'), 500);
       }
     }
-
     confirm.addEventListener('click', tryUnlock);
     input.addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock(); });
     cancel.addEventListener('click', close);
@@ -526,7 +534,8 @@ infoHistoryBtn?.addEventListener('click', () => {
     const sw = e.target.closest('.theme-swatch');
     if (!sw) return;
     const theme = sw.dataset.theme;
-    if (theme === 'starrail' && !isStarRailUnlocked()) { promptStarRailPassword(); return; }
+    if (theme === 'starrail' && !isStarRailUnlocked()) { promptPassword(SR_PW, SR_UNLOCK_KEY, 'starrail', '✦'); return; }
+    if (theme === 'hgd'      && !isHgdUnlocked())      { promptPassword(HGD_PW, HGD_UNLOCK_KEY, 'hgd', '🐟'); return; }
     localStorage.setItem(THEME_KEY, theme);
     applyTheme(theme);
   });
