@@ -173,7 +173,8 @@ function showLoginScreen() {
 }
 
 function checkFirstVisit() {
-  if (!localStorage.getItem('dontShowDemo')) {
+  if (!localStorage.getItem('seenDemo')) {
+    localStorage.setItem('seenDemo', '1');
     setTimeout(() => document.getElementById('demoBtn')?.click(), 800);
   }
 }
