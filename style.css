@@ -3387,3 +3387,78 @@ body {
   /* 데스크톱 전용 gcalViewBtn은 모바일에서 숨김 */
   #gcalViewBtn { display: none !important; }
 }
+
+/* ══════════════════════════════════════════
+   설정 모달 — 캘린더 선택 필터
+   ══════════════════════════════════════════ */
+.gcal-filter-section {
+  margin-top: 14px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+.gcal-filter__label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-sub);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+.gcal-filter__list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.gcal-filter__hint {
+  font-size: 0.82rem;
+  color: var(--text-sub);
+  margin: 4px 0;
+}
+.gcal-filter__all-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.gcal-filter__all-btn {
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-sub);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.gcal-filter__all-btn:hover { background: var(--card-bg); }
+.gcal-filter__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px;
+  cursor: pointer;
+  border-radius: 8px;
+}
+.gcal-filter__row:hover { background: var(--bg); }
+.gcal-filter__check {
+  width: 16px; height: 16px;
+  cursor: pointer;
+  accent-color: var(--accent);
+  flex-shrink: 0;
+}
+.gcal-filter__color {
+  width: 12px; height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.gcal-filter__name {
+  font-size: 0.88rem;
+  color: var(--text);
+  flex: 1;
+}
+.gcal-filter__primary {
+  font-size: 0.7rem;
+  color: var(--text-sub);
+  background: var(--bg);
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin-left: 4px;
+}

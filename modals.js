@@ -168,6 +168,7 @@ const settingsCloseBtn = document.getElementById('settingsCloseBtn');
 
 bindModal(settingsBtn, settingsModal, settingsCloseBtn, () => {
   if (typeof updateGcalUI === 'function') updateGcalUI();
+  if (typeof renderGcalCalendarSettings === 'function') renderGcalCalendarSettings();
   const cfg    = getDdayConfig();
   const labelEl = document.getElementById('ddayLabelInput');
   const dateEl  = document.getElementById('ddayDateInput');

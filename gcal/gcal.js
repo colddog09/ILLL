@@ -29,12 +29,14 @@
 const GCAL_BASE = 'https://www.googleapis.com/calendar/v3';
 const GCAL_SCOPE = 'https://www.googleapis.com/auth/calendar';
 const GCAL_FLAG_KEY = 'gcal_connected';
-const GCAL_SS_KEY = 'gcal_token_v1';   // sessionStorage 키 (탭 내 새로고침 유지)
-const GCAL_TARGET = '일정';            // 연동할 캘린더 이름
+const GCAL_SS_KEY = 'gcal_token_v1';        // sessionStorage 키
+const GCAL_TARGET = '일정';                  // 쓰기 전용 캘린더 이름
+const GCAL_SELECTED_KEY = 'gcal_selected_cals'; // localStorage: 선택된 캘린더 ID 배열
 
 let _gcalToken = null;
 let _gcalTokenExpiry = 0;
-let _gcalCalendarId = null;
+let _gcalCalendarId = null;   // 쓰기 전용 ('일정' 캘린더)
+let _gcalAllCalendars = null; // 전체 캘린더 목록 캐시
 let _gcalRefreshTimer = null;
 
 // ──────────────────────────────────────────────
@@ -59,8 +61,10 @@ function gcalClearToken() {
   _gcalToken = null;
   _gcalTokenExpiry = 0;
   _gcalCalendarId = null;
+  _gcalAllCalendars = null;
   localStorage.removeItem(GCAL_FLAG_KEY);
   localStorage.removeItem('gcal_token_shared');
+  localStorage.removeItem(GCAL_SELECTED_KEY);
   try { sessionStorage.removeItem(GCAL_SS_KEY); } catch (e) { }
 }
 
@@ -185,6 +189,122 @@ async function _getCalendarId() {
 }
 
 // ──────────────────────────────────────────────
+// 전체 캘린더 목록 관리
+// ──────────────────────────────────────────────
+
+// 모든 캘린더 목록 fetch (세션 내 캐시)
+async function _fetchAllCalendars() {
+  if (_gcalAllCalendars) return _gcalAllCalendars;
+  const resp = await _gcalFetch('GET', '/users/me/calendarList?maxResults=250');
+  _gcalAllCalendars = (resp.items || [])
+    .filter(c => c.accessRole !== 'freeBusyReader')
+    .map(c => ({
+      id:              c.id,
+      summary:         c.summary || c.id,
+      backgroundColor: c.backgroundColor || '#4285f4',
+      foregroundColor: c.foregroundColor || '#ffffff',
+      primary:         c.primary || false
+    }));
+  return _gcalAllCalendars;
+}
+
+// 선택된 캘린더 ID 목록 (null = 전체 선택)
+function _getSelectedCalendarIds() {
+  try {
+    const saved = localStorage.getItem(GCAL_SELECTED_KEY);
+    return saved ? JSON.parse(saved) : null;
+  } catch { return null; }
+}
+
+function _isCalendarSelected(id) {
+  const ids = _getSelectedCalendarIds();
+  return ids ? ids.includes(id) : true;
+}
+
+// 캘린더 선택/해제 저장
+function gcalSetCalendarSelected(id, selected) {
+  if (!_gcalAllCalendars) return;
+  const allIds = _gcalAllCalendars.map(c => c.id);
+  let ids = _getSelectedCalendarIds() || [...allIds];
+  if (selected) {
+    if (!ids.includes(id)) ids.push(id);
+  } else {
+    ids = ids.filter(sid => sid !== id);
+  }
+  if (ids.length === allIds.length) {
+    localStorage.removeItem(GCAL_SELECTED_KEY); // 전체 선택 = 저장 안 함
+  } else {
+    localStorage.setItem(GCAL_SELECTED_KEY, JSON.stringify(ids));
+  }
+}
+
+// 설정 모달의 캘린더 필터 UI 렌더
+async function renderGcalCalendarSettings() {
+  const container = document.getElementById('gcalCalendarFilter');
+  if (!container) return;
+
+  if (!gcalTokenValid()) {
+    container.innerHTML = '<p class="gcal-filter__hint">캘린더 연결 후 설정 가능합니다.</p>';
+    return;
+  }
+
+  container.innerHTML = '<p class="gcal-filter__hint">캘린더 목록 불러오는 중...</p>';
+
+  try {
+    const calendars = await _fetchAllCalendars();
+    container.innerHTML = '';
+
+    // 전체 선택 / 전체 해제 버튼
+    const allRow = document.createElement('div');
+    allRow.className = 'gcal-filter__all-row';
+    allRow.innerHTML = `
+      <button class="gcal-filter__all-btn" id="gcalSelectAll">전체 선택</button>
+      <button class="gcal-filter__all-btn" id="gcalDeselectAll">전체 해제</button>
+    `;
+    container.appendChild(allRow);
+
+    calendars.forEach(cal => {
+      const isSelected = _isCalendarSelected(cal.id);
+      const row = document.createElement('label');
+      row.className = 'gcal-filter__row';
+      row.innerHTML = `
+        <input type="checkbox" class="gcal-filter__check" data-cal-id="${cal.id}" ${isSelected ? 'checked' : ''}>
+        <span class="gcal-filter__color" style="background:${escHtml(cal.backgroundColor)}"></span>
+        <span class="gcal-filter__name">${escHtml(cal.summary)}${cal.primary ? ' <span class="gcal-filter__primary">기본</span>' : ''}</span>
+      `;
+      container.appendChild(row);
+    });
+
+    // 체크박스 변경 → 즉시 저장 + 새로고침
+    container.querySelectorAll('.gcal-filter__check').forEach(cb => {
+      cb.addEventListener('change', () => {
+        gcalSetCalendarSelected(cb.dataset.calId, cb.checked);
+        gcalImportCurrentDate();
+      });
+    });
+
+    // 전체 선택
+    container.querySelector('#gcalSelectAll')?.addEventListener('click', () => {
+      localStorage.removeItem(GCAL_SELECTED_KEY);
+      container.querySelectorAll('.gcal-filter__check').forEach(cb => { cb.checked = true; });
+      gcalImportCurrentDate();
+    });
+
+    // 전체 해제
+    container.querySelector('#gcalDeselectAll')?.addEventListener('click', () => {
+      localStorage.setItem(GCAL_SELECTED_KEY, '[]');
+      container.querySelectorAll('.gcal-filter__check').forEach(cb => { cb.checked = false; });
+      gcalEvents = {};
+      if (typeof renderGcalSidePanel === 'function') renderGcalSidePanel();
+      if (typeof renderGcalSheet === 'function') renderGcalSheet();
+    });
+
+  } catch (err) {
+    container.innerHTML = `<p class="gcal-filter__hint" style="color:var(--danger)">불러오기 실패: ${escHtml(err.message)}</p>`;
+  }
+}
+
+// ──────────────────────────────────────────────
 // 날짜 유틸
 // ──────────────────────────────────────────────
 function _nextDay(key) {
@@ -244,19 +364,30 @@ async function gcalSyncAll() {
 let _gcalImportTimer = null;
 let _gcalPollInterval = null;
 
-async function _gcalFetchEventsForDate(dateKey) {
-  const [y, m, d] = dateKey.split('-').map(Number);
-  const dayStart = new Date(y, m - 1, d, 0, 0, 0, 0);
-  const dayEnd = new Date(y, m - 1, d, 23, 59, 59, 999);
+// 단일 날짜 이벤트 fetch — 전체 선택 캘린더에서 병렬
+async function _gcalFetchEventsForDate(dk) {
+  const [y, m, d] = dk.split('-').map(Number);
   const params = new URLSearchParams({
-    timeMin: dayStart.toISOString(),
-    timeMax: dayEnd.toISOString(),
+    timeMin:      new Date(y, m - 1, d, 0, 0, 0, 0).toISOString(),
+    timeMax:      new Date(y, m - 1, d, 23, 59, 59, 999).toISOString(),
     singleEvents: 'true',
-    orderBy: 'startTime',
-    maxResults: '50'
+    orderBy:      'startTime',
+    maxResults:   '50'
   });
-  const calId = await _getCalendarId();
-  return _gcalFetch('GET', `/calendars/${encodeURIComponent(calId)}/events?${params}`);
+  const calendars = await _fetchAllCalendars();
+  const evs = [];
+  await Promise.all(
+    calendars.filter(cal => _isCalendarSelected(cal.id)).map(async cal => {
+      try {
+        const resp = await _gcalFetch('GET', `/calendars/${encodeURIComponent(cal.id)}/events?${params}`);
+        for (const ev of (resp.items || [])) {
+          if (ev.status === 'cancelled') continue;
+          evs.push({ ...ev, _calColor: cal.backgroundColor });
+        }
+      } catch (_) {}
+    })
+  );
+  return { items: evs };
 }
 
 // pool + schedule 에 있는 모든 gcal 이벤트 ID
@@ -288,7 +419,7 @@ async function gcalImportEvents(dk) {
         const t = new Date(ev.start.dateTime);
         timeLabel = `${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}`;
       }
-      evs.push({ id: ev.id, summary: (ev.summary || '(제목 없음)').replace(/^✅\s*/, ''), done, allDay, timeLabel });
+      evs.push({ id: ev.id, summary: (ev.summary || '(제목 없음)').replace(/^✅\s*/, ''), done, allDay, timeLabel, calendarColor: ev._calColor || null });
     }
 
     gcalEvents[dk] = evs;
@@ -394,6 +525,8 @@ function updateGcalUI() {
     connectBtn.hidden = true;
     syncBtn.hidden = false;
     disconnectBtn.hidden = false;
+    // 캘린더 필터 UI 갱신
+    renderGcalCalendarSettings();
   } else {
     dot.className = 'gcal-dot gcal-dot--off';
     txt.textContent = everConnected ? '재연결 필요' : '연결되지 않음';
@@ -416,31 +549,52 @@ async function gcalFetchRangeEvents(startKey, endKey) {
     const params = new URLSearchParams({
       timeMin, timeMax, singleEvents: 'true', orderBy: 'startTime', maxResults: '250'
     });
-    const calId = await _getCalendarId();
-    const resp = await _gcalFetch('GET', `/calendars/${encodeURIComponent(calId)}/events?${params}`);
+    // 전체 캘린더에서 선택된 것만 병렬 fetch
+    const calendars = await _fetchAllCalendars();
     const byDate = {};
 
-    for (const ev of (resp.items || [])) {
-      if (ev.status === 'cancelled') continue;
-      const dk = ev.start?.date || ev.start?.dateTime?.slice(0, 10);
-      if (!dk) continue;
-      if (!byDate[dk]) byDate[dk] = [];
-      const allDay = !!ev.start?.date && !ev.start?.dateTime;
-      let timeLabel = '';
-      if (!allDay && ev.start?.dateTime) {
-        const t = new Date(ev.start.dateTime);
-        timeLabel = `${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}`;
-      }
-      const done = /^✅/.test(ev.summary || '');
-      byDate[dk].push({
-        id: ev.id,
-        summary: (ev.summary || '(제목 없음)').replace(/^✅\s*/, ''),
-        done, allDay, timeLabel
+    await Promise.all(
+      calendars.filter(cal => _isCalendarSelected(cal.id)).map(async cal => {
+        try {
+          const resp = await _gcalFetch('GET', `/calendars/${encodeURIComponent(cal.id)}/events?${params}`);
+          for (const ev of (resp.items || [])) {
+            if (ev.status === 'cancelled') continue;
+            const dk = ev.start?.date || ev.start?.dateTime?.slice(0, 10);
+            if (!dk) continue;
+            if (!byDate[dk]) byDate[dk] = [];
+            const allDay = !!ev.start?.date && !ev.start?.dateTime;
+            let timeLabel = '';
+            if (!allDay && ev.start?.dateTime) {
+              const t = new Date(ev.start.dateTime);
+              timeLabel = `${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}`;
+            }
+            const done = /^✅/.test(ev.summary || '');
+            byDate[dk].push({
+              id:            ev.id,
+              summary:       (ev.summary || '(제목 없음)').replace(/^✅\s*/, ''),
+              done, allDay, timeLabel,
+              calendarColor: cal.backgroundColor
+            });
+          }
+        } catch (err) {
+          console.warn(`gcal fetch error (${cal.summary}):`, err.message);
+        }
+      })
+    );
+
+    // 날짜별 시간 순 정렬
+    for (const dk of Object.keys(byDate)) {
+      byDate[dk].sort((a, b) => {
+        if (!a.timeLabel && !b.timeLabel) return 0;
+        if (!a.timeLabel) return 1;
+        if (!b.timeLabel) return -1;
+        return a.timeLabel.localeCompare(b.timeLabel);
       });
     }
 
     Object.assign(gcalEvents, byDate);
     if (typeof renderGcalSidePanel === 'function') renderGcalSidePanel();
+    if (typeof renderGcalSheet === 'function') renderGcalSheet();
     return byDate;
   } catch (err) {
     console.warn('gcal range fetch error:', err.message);
