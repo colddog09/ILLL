@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>테마샵 · o1chu</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent: #6c63ff;
+      --accent2: #a78bfa;
+      --bg: #f4f5fb;
+      --surface: #fff;
+      --text: #1e1b4b;
+      --text-sub: #6b7280;
+      --border: rgba(108,99,255,0.13);
+      --font: 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── 헤더 ── */
+    .shop-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(244,245,251,0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .shop-header__logo {
+      font-size: 1.1rem;
+      font-weight: 900;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-decoration: none;
+    }
+    .shop-header__back {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-sub);
+      text-decoration: none;
+      padding: 7px 14px;
+      border-radius: 20px;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      transition: all 0.15s;
+    }
+    .shop-header__back:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    /* ── 히어로 ── */
+    .shop-hero {
+      text-align: center;
+      padding: 64px 24px 48px;
+    }
+    .shop-hero__eyebrow {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: rgba(108,99,255,0.08);
+      border: 1px solid rgba(108,99,255,0.2);
+      border-radius: 20px;
+      padding: 4px 14px;
+      margin-bottom: 20px;
+    }
+    .shop-hero__title {
+      font-size: clamp(2.2rem, 6vw, 4rem);
+      font-weight: 900;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      margin-bottom: 14px;
+      background: linear-gradient(135deg, var(--text) 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .shop-hero__sub {
+      font-size: 1.05rem;
+      color: var(--text-sub);
+      font-weight: 400;
+    }
+
+    /* ── 그리드 ── */
+    .shop-grid {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 20px;
+    }
+
+    /* ── 카드 ── */
+    .theme-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 24px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s cubic-bezier(0.34,1.4,0.64,1), box-shadow 0.2s;
+      cursor: pointer;
+    }
+    .theme-card:hover {
+      transform: translateY(-6px) scale(1.01);
+      box-shadow: 0 20px 50px rgba(108,99,255,0.14);
+    }
+    .theme-card--active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(108,99,255,0.18);
+    }
+
+    /* 프리뷰 영역 */
+    .theme-card__preview {
+      height: 160px;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .theme-card__preview-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+    /* 미니 앱 목업 */
+    .preview-mock {
+      position: absolute;
+      inset: 12px 12px 0;
+      border-radius: 12px 12px 0 0;
+      overflow: hidden;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.18);
+      display: flex;
+      flex-direction: column;
+    }
+    .preview-mock__bar {
+      height: 28px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 12px;
+      flex-shrink: 0;
+    }
+    .preview-mock__dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.5);
+    }
+    .preview-mock__body {
+      flex: 1;
+      padding: 8px;
+      display: flex;
+      gap: 6px;
+    }
+    .preview-mock__col {
+      border-radius: 6px;
+      background: rgba(255,255,255,0.15);
+    }
+    .preview-mock__col--sm { width: 32%; }
+    .preview-mock__col--lg { flex: 1; }
+
+    /* ── 카드 하단 정보 ── */
+    .theme-card__body {
+      padding: 16px 18px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .theme-card__top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .theme-card__name {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .theme-card__badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 20px;
+    }
+    .badge--free  { background: #dcfce7; color: #15803d; }
+    .badge--lock  { background: #fef3c7; color: #b45309; }
+    .badge--on    { background: rgba(108,99,255,0.12); color: var(--accent); }
+
+    .theme-card__desc {
+      font-size: 0.78rem;
+      color: var(--text-sub);
+      line-height: 1.5;
+    }
+
+    .theme-card__btn {
+      width: 100%;
+      padding: 10px 0;
+      border-radius: 12px;
+      border: none;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .theme-card__btn:active { transform: scale(0.97); }
+    .theme-card__btn--apply {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+    }
+    .theme-card__btn--apply:hover { opacity: 0.88; }
+    .theme-card__btn--active {
+      background: rgba(108,99,255,0.1);
+      color: var(--accent);
+      cursor: default;
+    }
+    .theme-card__btn--locked {
+      background: #fef3c7;
+      color: #b45309;
+    }
+    .theme-card__btn--locked:hover { opacity: 0.85; }
+
+    /* ── 반응형 ── */
+    @media (max-width: 600px) {
+      .shop-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 0 14px 60px; }
+      .shop-hero { padding: 40px 16px 32px; }
+      .theme-card__preview { height: 120px; }
+    }
+
+    /* ── 토스트 ── */
+    .shop-toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--text);
+      color: #fff;
+      font-size: 0.88rem;
+      font-weight: 600;
+      padding: 12px 24px;
+      border-radius: 99px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+      transition: transform 0.3s cubic-bezier(0.34,1.4,0.64,1), opacity 0.3s;
+      opacity: 0;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 999;
+    }
+    .shop-toast--show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* ── 비밀번호 오버레이 ── */
+    .pw-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      backdrop-filter: blur(6px);
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+    }
+    .pw-overlay--show { display: flex; }
+    .pw-box {
+      background: var(--surface);
+      border-radius: 24px;
+      padding: 32px 28px;
+      width: 320px;
+      max-width: 90vw;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      animation: popIn 0.25s cubic-bezier(0.34,1.4,0.64,1);
+    }
+    @keyframes popIn {
+      from { opacity:0; transform:scale(0.88); }
+      to   { opacity:1; transform:scale(1); }
+    }
+    .pw-box__logo { font-size: 2rem; text-align: center; }
+    .pw-box__title { font-size: 1.1rem; font-weight: 800; text-align: center; color: var(--text); }
+    .pw-box__hint  { font-size: 0.8rem; text-align: center; color: var(--text-sub); }
+    .pw-box__input {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1.5px solid var(--border);
+      background: var(--bg);
+      font-size: 0.95rem;
+      color: var(--text);
+      outline: none;
+      font-family: var(--font);
+      transition: border-color 0.15s;
+    }
+    .pw-box__input:focus { border-color: var(--accent); }
+    .pw-box__input--err  { border-color: #dc2626 !important; }
+    .pw-box__err { font-size: 0.78rem; color: #dc2626; text-align: center; min-height: 1em; }
+    .pw-box__actions { display: flex; gap: 8px; }
+    .pw-box__btn {
+      flex: 1; padding: 11px 0; border-radius: 12px; border: none;
+      font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: opacity 0.15s;
+    }
+    .pw-box__btn--cancel { background: var(--bg); color: var(--text-sub); }
+    .pw-box__btn--confirm {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+    }
+    .pw-box__btn:hover { opacity: 0.85; }
+  </style>
+</head>
+<body>
+
+  <!-- 헤더 -->
+  <header class="shop-header">
+    <span class="shop-header__logo">🎨 테마샵</span>
+    <a href="/" class="shop-header__back">← 앱으로 돌아가기</a>
+  </header>
+
+  <!-- 히어로 -->
+  <section class="shop-hero">
+    <div class="shop-hero__eyebrow">THEME SHOP</div>
+    <h1 class="shop-hero__title">내 앱, 내 스타일로</h1>
+    <p class="shop-hero__sub">원하는 테마를 골라 앱을 꾸며보세요.</p>
+  </section>
+
+  <!-- 카드 그리드 -->
+  <div class="shop-grid" id="shopGrid"></div>
+
+  <!-- 토스트 -->
+  <div class="shop-toast" id="shopToast"></div>
+
+  <!-- 비밀번호 오버레이 -->
+  <div class="pw-overlay" id="pwOverlay">
+    <div class="pw-box">
+      <div class="pw-box__logo" id="pwLogo"></div>
+      <div class="pw-box__title" id="pwTitle">비밀 테마 잠금 해제</div>
+      <div class="pw-box__hint">비밀번호를 입력하면 테마가 영구적으로 잠금 해제돼요.</div>
+      <input class="pw-box__input" id="pwInput" type="password" placeholder="비밀번호 입력..." />
+      <div class="pw-box__err" id="pwErr"></div>
+      <div class="pw-box__actions">
+        <button class="pw-box__btn pw-box__btn--cancel" id="pwCancel">취소</button>
+        <button class="pw-box__btn pw-box__btn--confirm" id="pwConfirm">확인</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const THEME_KEY   = 'appTheme_v1';
+  const HGD_KEY     = 'hgdUnlocked_v1';
+  const SR_KEY      = 'starRailUnlocked_v1';
+  const HGD_PW      = 'ilovehangyodon';
+  const SR_PW       = 'starrail2024';
+
+  const themes = [
+    {
+      id: 'purple',
+      name: '보라 (기본)',
+      desc: '기본 테마. 보랏빛 그라데이션.',
+      badge: 'free',
+      colors: ['#6c63ff','#a78bfa'],
+      barColor: '#6c63ff',
+    },
+    {
+      id: 'blue',
+      name: '블루',
+      desc: '시원한 파란 계열 테마.',
+      badge: 'free',
+      colors: ['#2563eb','#60a5fa'],
+      barColor: '#2563eb',
+    },
+    {
+      id: 'green',
+      name: '그린',
+      desc: '자연스러운 초록 계열 테마.',
+      badge: 'free',
+      colors: ['#16a34a','#4ade80'],
+      barColor: '#16a34a',
+    },
+    {
+      id: 'dark',
+      name: '다크',
+      desc: '눈이 편안한 다크 모드.',
+      badge: 'free',
+      colors: ['#1e293b','#475569'],
+      barColor: '#334155',
+    },
+    {
+      id: 'jelly',
+      name: '젤리',
+      desc: '달콤한 핑크 젤리 테마.',
+      badge: 'free',
+      colors: ['#ff5fad','#ffb3ec'],
+      barColor: '#ff5fad',
+    },
+    {
+      id: 'glass',
+      name: '리퀴드 글라스',
+      desc: '투명하고 반짝이는 글라스 테마.',
+      badge: 'free',
+      colors: ['#c4e0ff','#e8d4ff','#ffd4e8','#d4ffe8'],
+      barColor: '#818cf8',
+    },
+    {
+      id: 'hgd',
+      name: '한교동',
+      desc: '비밀 테마 🐟',
+      badge: 'lock',
+      unlockKey: HGD_KEY,
+      pw: HGD_PW,
+      logo: '🐟',
+      colors: ['#00b4a0','#4dd9c8'],
+      barColor: '#00b4a0',
+    },
+    {
+      id: 'starrail',
+      name: '붕괴 스타레일',
+      desc: '비밀 테마 ✦',
+      badge: 'lock',
+      unlockKey: SR_KEY,
+      pw: SR_PW,
+      logo: '✦',
+      colors: ['#0e1d35','#89c4ff','#162a48'],
+      barColor: '#4a90d9',
+    },
+  ];
+
+  function currentTheme() {
+    return localStorage.getItem(THEME_KEY) || 'purple';
+  }
+
+  function isUnlocked(t) {
+    if (t.badge !== 'lock') return true;
+    return !!localStorage.getItem(t.unlockKey);
+  }
+
+  function gradStyle(colors) {
+    if (colors.length === 2)
+      return `linear-gradient(135deg, ${colors[0]}, ${colors[1]})`;
+    return `linear-gradient(135deg, ${colors.join(', ')})`;
+  }
+
+  function buildCard(t) {
+    const active   = currentTheme() === t.id;
+    const unlocked = isUnlocked(t);
+
+    const card = document.createElement('div');
+    card.className = 'theme-card' + (active ? ' theme-card--active' : '');
+    card.dataset.id = t.id;
+
+    // 프리뷰
+    const preview = document.createElement('div');
+    preview.className = 'theme-card__preview';
+    preview.style.background = gradStyle(t.colors);
+    preview.innerHTML = `
+      <div class="preview-mock">
+        <div class="preview-mock__bar" style="background:${t.barColor}cc">
+          <div class="preview-mock__dot"></div>
+          <div class="preview-mock__dot"></div>
+          <div class="preview-mock__dot"></div>
+        </div>
+        <div class="preview-mock__body" style="background:${t.colors[0]}22">
+          <div class="preview-mock__col preview-mock__col--sm" style="background:${t.barColor}33"></div>
+          <div class="preview-mock__col preview-mock__col--lg" style="background:${t.barColor}22"></div>
+        </div>
+      </div>
+    `;
+
+    // 배지
+    const badgeLabel = t.badge === 'lock'
+      ? (unlocked ? '🔓 해금됨' : '🔒 비밀')
+      : '무료';
+    const badgeClass = t.badge === 'lock'
+      ? (unlocked ? 'badge--on' : 'badge--lock')
+      : 'badge--free';
+
+    // 버튼
+    let btnClass, btnText;
+    if (active) {
+      btnClass = 'theme-card__btn--active';
+      btnText  = '✓ 적용 중';
+    } else if (t.badge === 'lock' && !unlocked) {
+      btnClass = 'theme-card__btn--locked';
+      btnText  = '🔒 잠금 해제';
+    } else {
+      btnClass = 'theme-card__btn--apply';
+      btnText  = '적용하기';
+    }
+
+    const body = document.createElement('div');
+    body.className = 'theme-card__body';
+    body.innerHTML = `
+      <div class="theme-card__top">
+        <span class="theme-card__name">${t.name}</span>
+        <span class="theme-card__badge ${badgeClass}">${badgeLabel}</span>
+      </div>
+      <div class="theme-card__desc">${t.desc}</div>
+      <button class="theme-card__btn ${btnClass}" data-id="${t.id}">${btnText}</button>
+    `;
+
+    card.appendChild(preview);
+    card.appendChild(body);
+    return card;
+  }
+
+  function renderGrid() {
+    const grid = document.getElementById('shopGrid');
+    grid.innerHTML = '';
+    themes.forEach(t => grid.appendChild(buildCard(t)));
+  }
+
+  function applyTheme(id) {
+    localStorage.setItem(THEME_KEY, id);
+    renderGrid();
+    showToast(`✨ ${themes.find(t=>t.id===id).name} 테마가 적용됐어요!`);
+  }
+
+  function showToast(msg) {
+    const el = document.getElementById('shopToast');
+    el.textContent = msg;
+    el.classList.add('shop-toast--show');
+    setTimeout(() => el.classList.remove('shop-toast--show'), 2400);
+  }
+
+  // 비밀번호 오버레이
+  let pendingTheme = null;
+  const pwOverlay = document.getElementById('pwOverlay');
+  const pwInput   = document.getElementById('pwInput');
+  const pwErr     = document.getElementById('pwErr');
+
+  function openPwOverlay(t) {
+    pendingTheme = t;
+    document.getElementById('pwLogo').textContent  = t.logo || '🔒';
+    document.getElementById('pwTitle').textContent = `${t.name} 잠금 해제`;
+    pwInput.value = '';
+    pwErr.textContent = '';
+    pwInput.classList.remove('pw-box__input--err');
+    pwOverlay.classList.add('pw-overlay--show');
+    setTimeout(() => pwInput.focus(), 100);
+  }
+
+  function closePwOverlay() {
+    pwOverlay.classList.remove('pw-overlay--show');
+    pendingTheme = null;
+  }
+
+  document.getElementById('pwCancel').addEventListener('click', closePwOverlay);
+  document.getElementById('pwConfirm').addEventListener('click', () => {
+    if (!pendingTheme) return;
+    if (pwInput.value === pendingTheme.pw) {
+      localStorage.setItem(pendingTheme.unlockKey, '1');
+      closePwOverlay();
+      applyTheme(pendingTheme.id);
+    } else {
+      pwErr.textContent = '비밀번호가 틀렸어요.';
+      pwInput.classList.add('pw-box__input--err');
+      pwInput.value = '';
+    }
+  });
+  pwInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('pwConfirm').click();
+    if (e.key === 'Escape') closePwOverlay();
+  });
+  pwOverlay.addEventListener('click', e => {
+    if (e.target === pwOverlay) closePwOverlay();
+  });
+
+  // 카드 클릭
+  document.getElementById('shopGrid').addEventListener('click', e => {
+    const btn = e.target.closest('.theme-card__btn');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    const t  = themes.find(x => x.id === id);
+    if (!t) return;
+
+    if (t.badge === 'lock' && !isUnlocked(t)) {
+      openPwOverlay(t);
+    } else {
+      applyTheme(id);
+    }
+  });
+
+  renderGrid();
+</script>
+</body>
+</html>

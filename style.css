@@ -3934,9 +3934,15 @@ body {
   bottom: -1px;
   border-bottom: 2px solid transparent;
 }
-.settings-tab:hover {
+.settings-tab:hover,
+a.settings-tab:hover {
   background: var(--bg);
   color: var(--text);
+  text-decoration: none;
+}
+a.settings-tab {
+  text-decoration: none;
+  color: var(--text-sub);
 }
 .settings-tab--active {
   color: var(--accent);
