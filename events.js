@@ -44,7 +44,17 @@ poolEl.addEventListener('touchend', e => {
 // ──────────────────────────────────────────────
 // dayGrid 이벤트 위임 — 완료 토글, 미루기
 // ──────────────────────────────────────────────
-// ── Minecraft 몬스터 처치 애니메이션 (캡처 페이즈) ──
+// ── Minecraft 광질 애니메이션 (캡처 페이즈) ──
+const MC_ORES = [
+  { img: '/mc_diamond_ore.png',  gem: '💎', color: '#4aedd9' },
+  { img: '/mc_emerald_ore.png',  gem: '💚', color: '#17c964' },
+  { img: '/mc_gold_ore.png',     gem: '🟡', color: '#f5a623' },
+  { img: '/mc_iron_ore.png',     gem: '🔩', color: '#d4a574' },
+  { img: '/mc_redstone_ore.png', gem: '🔴', color: '#ff3333' },
+  { img: '/mc_lapis_ore.png',    gem: '🔵', color: '#3355cc' },
+  { img: '/mc_coal_ore.png',     gem: '⬛', color: '#444444' },
+];
+
 dayGrid.addEventListener('click', e => {
   if (document.documentElement.dataset.theme !== 'minecraft') return;
   const btnO = e.target.closest('.btn-o');
@@ -54,23 +64,32 @@ dayGrid.addEventListener('click', e => {
 
   e.stopImmediatePropagation();
 
-  // 몬스터 종류 결정 (좀비/스켈레톤 번갈아)
   const idx = Array.from(schedItem.parentElement?.children || []).indexOf(schedItem);
-  const monster = idx % 2 === 0 ? '🧟' : '💀';
+  const ore = MC_ORES[idx % MC_ORES.length];
 
-  // 애니메이션 오버레이 생성
+  // 파티클 생성
+  const particles = ['✨','⭐','💥','✦','★'];
+  let particleHTML = '';
+  for (let i = 0; i < 6; i++) {
+    const p = particles[i % particles.length];
+    particleHTML += `<span class="mc-particle mc-particle-${i}" style="--c:${ore.color}">${p}</span>`;
+  }
+
   const anim = document.createElement('div');
-  anim.className = 'mc-kill-anim';
-  anim.innerHTML = `<span class="mc-kill-monster">${monster}</span><span class="mc-kill-sword">⚔️</span>`;
+  anim.className = 'mc-mine-anim';
+  anim.innerHTML = `
+    <span class="mc-pickaxe">⛏️</span>
+    <span class="mc-gem">${ore.gem}</span>
+    ${particleHTML}
+  `;
   schedItem.appendChild(anim);
-
-  schedItem.classList.add('mc-killing');
+  schedItem.classList.add('mc-mining');
 
   setTimeout(() => {
     anim.remove();
-    schedItem.classList.remove('mc-killing');
+    schedItem.classList.remove('mc-mining');
     toggleStatus(btnO.dataset.date, btnO.dataset.id);
-  }, 650);
+  }, 700);
 }, true);
 
 dayGrid.addEventListener('click', e => {

@@ -4220,94 +4220,121 @@ a.settings-tab {
 .settings-shop-btn:hover { opacity: 0.88; }
 .settings-shop-btn:active { transform: scale(0.97); }
 
-/* ── Minecraft: 미완료 아이템에 몬스터 표시 ── */
+/* ── Minecraft: 미완료 아이템 — 광물 블록 배경 ── */
+[data-theme="minecraft"] .sched-item:nth-child(1):not(.sched-item--done) { background-image: url('/mc_diamond_ore.png') !important; }
+[data-theme="minecraft"] .sched-item:nth-child(2):not(.sched-item--done) { background-image: url('/mc_emerald_ore.png') !important; }
+[data-theme="minecraft"] .sched-item:nth-child(3):not(.sched-item--done) { background-image: url('/mc_gold_ore.png') !important; background-color: #7a6520 !important; }
+[data-theme="minecraft"] .sched-item:nth-child(4):not(.sched-item--done) { background-image: url('/mc_iron_ore.png') !important; }
+[data-theme="minecraft"] .sched-item:nth-child(5):not(.sched-item--done) { background-image: url('/mc_redstone_ore.png') !important; background-color: #4a1010 !important; }
+[data-theme="minecraft"] .sched-item:nth-child(6):not(.sched-item--done) { background-image: url('/mc_lapis_ore.png') !important; background-color: #1a2a6a !important; }
+[data-theme="minecraft"] .sced-item:nth-child(7):not(.sched-item--done)  { background-image: url('/mc_coal_ore.png') !important; }
+
+/* 미완료: 곡괭이 아이콘 */
 [data-theme="minecraft"] .sched-item:not(.sched-item--done) .sched-item__text::before {
-  content: attr(data-mc-monster, '🧟');
-  margin-right: 6px;
+  content: '⛏️ ';
   display: inline-block;
-  animation: mcBob 0.8s ease-in-out infinite;
+  animation: mcPickIdle 1.2s ease-in-out infinite;
 }
-[data-theme="minecraft"] .sched-item:nth-child(odd):not(.sched-item--done) .sched-item__text::before  { content: '🧟 '; }
-[data-theme="minecraft"] .sched-item:nth-child(even):not(.sched-item--done) .sched-item__text::before { content: '💀 '; }
-
-@keyframes mcBob {
-  0%, 100% { transform: translateY(0px); }
-  50%       { transform: translateY(-3px); }
+@keyframes mcPickIdle {
+  0%, 100% { transform: rotate(0deg); }
+  50%       { transform: rotate(-15deg); }
 }
 
-/* 완료된 아이템 — 다이아몬드 검 */
+/* 완료: 광물 획득 표시 */
 [data-theme="minecraft"] .sched-item.sched-item--done .sched-item__text::before {
-  content: '⚔️ ';
+  content: '💎 ';
   animation: none;
-  opacity: 0.7;
+  opacity: 0.9;
 }
 
-/* btn-o: 마인크래프트 스타일 */
+/* btn-o: 곡괭이 버튼 */
 [data-theme="minecraft"] .btn-o {
-  font-size: 1.1rem !important;
+  font-size: 0 !important;
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  padding: 4px !important;
+  padding: 4px 6px !important;
   line-height: 1 !important;
+  position: relative !important;
 }
-[data-theme="minecraft"] .sched-item:not(.sched-item--done) .btn-o::before { content: '🗡️'; }
-[data-theme="minecraft"] .sched-item:not(.sched-item--done) .btn-o          { font-size: 0 !important; }
-[data-theme="minecraft"] .sched-item.sched-item--done .btn-o                { opacity: 0.5; }
+[data-theme="minecraft"] .btn-o::after {
+  content: '⛏️';
+  font-size: 1.1rem;
+}
+[data-theme="minecraft"] .sched-item--done .btn-o::after {
+  content: '✅';
+  opacity: 0.7;
+}
 
-/* ── 몬스터 처치 애니메이션 ── */
-.mc-kill-anim {
+/* ── 광질 애니메이션 ── */
+.mc-mine-anim {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   pointer-events: none;
   z-index: 10;
-  animation: mcKillBg 0.65s forwards;
-}
-@keyframes mcKillBg {
-  0%   { background: transparent; }
-  30%  { background: rgba(255,0,0,0.25); }
-  100% { background: transparent; }
+  overflow: hidden;
 }
 
-.mc-kill-monster {
-  font-size: 1.8rem;
+/* 곡괭이 스윙 */
+.mc-pickaxe {
+  font-size: 2rem;
   display: inline-block;
-  animation: mcMonsterHit 0.65s forwards;
+  transform-origin: bottom right;
+  animation: mcPickSwing 0.35s ease-in-out 2 forwards;
 }
-@keyframes mcMonsterHit {
-  0%   { transform: scale(1)   translateX(0);  opacity: 1; filter: brightness(1); }
-  20%  { transform: scale(1.3) translateX(10px); filter: brightness(3) saturate(0); }
-  50%  { transform: scale(0.8) translateX(-5px); opacity: 0.8; }
-  80%  { transform: scale(1.4) translateX(20px) rotate(30deg); opacity: 0.4; }
-  100% { transform: scale(0)   translateX(40px) rotate(60deg); opacity: 0; }
+@keyframes mcPickSwing {
+  0%   { transform: rotate(-40deg) scale(1.2); }
+  40%  { transform: rotate(20deg)  scale(1.3); }
+  70%  { transform: rotate(-20deg) scale(1.1); }
+  100% { transform: rotate(10deg)  scale(1); opacity: 0; }
 }
 
-.mc-kill-sword {
-  font-size: 1.8rem;
+/* 광물 팡 튀어나오기 */
+.mc-gem {
+  font-size: 1.6rem;
   display: inline-block;
-  animation: mcSwordSwing 0.65s forwards;
+  animation: mcGemPop 0.7s cubic-bezier(0.34,1.6,0.64,1) forwards;
 }
-@keyframes mcSwordSwing {
-  0%   { transform: translate(-30px, 10px) rotate(-60deg); opacity: 0; }
-  20%  { transform: translate(0, 0)        rotate(-30deg); opacity: 1; }
-  50%  { transform: translate(10px, -5px)  rotate(10deg);  opacity: 1; }
-  80%  { transform: translate(20px, 5px)   rotate(40deg);  opacity: 0.8; }
-  100% { transform: translate(30px, 0)     rotate(60deg);  opacity: 0; }
+@keyframes mcGemPop {
+  0%   { transform: scale(0) rotate(0deg);   opacity: 0; }
+  40%  { transform: scale(1.5) rotate(20deg); opacity: 1; }
+  70%  { transform: scale(1.1) rotate(-10deg); }
+  100% { transform: scale(0.8) translateY(-20px); opacity: 0; }
 }
 
-/* 아이템 타격 시 흔들림 */
-[data-theme="minecraft"] .sched-item.mc-killing {
-  animation: mcItemShake 0.65s forwards;
+/* 파티클 흩날리기 */
+.mc-particle {
+  position: absolute;
+  font-size: 0.7rem;
+  color: var(--c, #fff);
+  animation: mcParticle 0.7s ease-out forwards;
+  pointer-events: none;
 }
-@keyframes mcItemShake {
-  0%,100% { transform: translateX(0); }
-  15%     { transform: translateX(-6px); background: #ff5555 !important; }
-  30%     { transform: translateX(6px);  background: #ff8888 !important; }
-  45%     { transform: translateX(-4px); background: #ff5555 !important; }
-  60%     { transform: translateX(4px); }
-  75%     { transform: translateX(-2px); }
+.mc-particle-0 { animation-delay: 0.0s; top: 50%; left: 30%; --angle: -60deg; }
+.mc-particle-1 { animation-delay: 0.05s; top: 30%; left: 50%; --angle: -80deg; }
+.mc-particle-2 { animation-delay: 0.05s; top: 50%; left: 70%; --angle: 60deg; }
+.mc-particle-3 { animation-delay: 0.1s;  top: 70%; left: 40%; --angle: -30deg; }
+.mc-particle-4 { animation-delay: 0.1s;  top: 70%; left: 60%; --angle: 40deg; }
+.mc-particle-5 { animation-delay: 0.15s; top: 40%; left: 20%; --angle: -90deg; }
+
+@keyframes mcParticle {
+  0%   { transform: translate(0,0) rotate(0); opacity: 1; }
+  100% { transform: translate(calc(cos(var(--angle,45deg)) * 40px), calc(sin(var(--angle,45deg)) * -40px)) rotate(360deg); opacity: 0; }
+}
+
+/* 광질 중 블록 깨지는 효과 */
+[data-theme="minecraft"] .sched-item.mc-mining {
+  animation: mcBlockBreak 0.7s forwards;
+}
+@keyframes mcBlockBreak {
+  0%   { transform: scale(1);    filter: brightness(1); }
+  15%  { transform: scale(1.04); filter: brightness(2); }
+  35%  { transform: scale(0.97) skew(2deg); filter: brightness(1.5); }
+  55%  { transform: scale(1.02) skew(-1deg); filter: brightness(1.8); }
+  75%  { transform: scale(0.98); filter: brightness(1.3); }
+  100% { transform: scale(1);    filter: brightness(1); }
 }
