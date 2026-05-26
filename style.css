@@ -1482,7 +1482,7 @@ body {
   padding-inline: 4px;
   overflow: visible;
   display: flex;
-  gap: 14px;
+  gap: 4px;
   align-items: flex-start;
 }
 
