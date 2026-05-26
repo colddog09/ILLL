@@ -1483,7 +1483,7 @@ body {
   overflow: visible;
   display: flex;
   gap: 4px;
-  align-items: flex-start;
+  align-items: stretch;
 }
 
 /* 캘린더 사이드 패널 */
@@ -1498,9 +1498,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  position: sticky;
-  top: 0;
-  height: 420px;
   overflow: hidden;
 }
 
@@ -1515,6 +1512,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  align-self: stretch;
 }
 .gcal-resize-handle::after {
   content: '';
