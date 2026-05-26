@@ -155,14 +155,26 @@
 [data-theme="hgd"] body::after {
   content: '';
   position: fixed;
-  bottom: 0;
-  right: 0;
-  width: 120px;
-  height: 120px;
+  bottom: -8px;
+  right: 8px;
+  width: 110px;
+  height: 110px;
   background: url('/HGD.png') no-repeat bottom right / contain;
   pointer-events: none;
   z-index: 9999;
-  opacity: 0.88;
+  opacity: 0.9;
+}
+[data-theme="hgd"] body::before {
+  content: '';
+  position: fixed;
+  bottom: -6px;
+  left: 10px;
+  width: 95px;
+  height: 95px;
+  background: url('/hgd1.png') no-repeat bottom left / contain;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.85;
 }
 
 /* ── 테마: 젤리 ── */

@@ -119,18 +119,58 @@
   background: #e0f7f4;
 }
 
-/* 오른쪽 하단에 한교동 캐릭터 고정 */
+/* 한교동 캐릭터들 — 곳곳에 배치 */
+/* HGD: 우하단 */
 [data-theme="hgd"] body::after {
   content: '';
   position: fixed;
-  bottom: 0;
-  right: 0;
-  width: 120px;
-  height: 120px;
+  bottom: -8px;
+  right: 8px;
+  width: 110px;
+  height: 110px;
   background: url('/HGD.png') no-repeat bottom right / contain;
   pointer-events: none;
   z-index: 9999;
-  opacity: 0.88;
+  opacity: 0.9;
+}
+/* hgd1 (선글라스): 좌하단 */
+[data-theme="hgd"] body::before {
+  content: '';
+  position: fixed;
+  bottom: -6px;
+  left: 10px;
+  width: 95px;
+  height: 95px;
+  background: url('/hgd1.png') no-repeat bottom left / contain;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.85;
+}
+/* hgd2 (놀란 표정): 우상단 */
+[data-theme="hgd"] .app::before {
+  content: '';
+  position: fixed;
+  top: 12px;
+  right: 14px;
+  width: 80px;
+  height: 80px;
+  background: url('/hgd2.png') no-repeat top right / contain;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.75;
+}
+/* hgd3 (하트): 입력창 근처 (좌상단) */
+[data-theme="hgd"] .app::after {
+  content: '';
+  position: fixed;
+  top: 10px;
+  left: 12px;
+  width: 80px;
+  height: 80px;
+  background: url('/hgd3.png') no-repeat top left / contain;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.75;
 }
 
 /* 한교동 스와치 */
