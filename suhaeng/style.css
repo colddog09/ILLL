@@ -33,6 +33,111 @@
     --safe-bottom: env(safe-area-inset-bottom);
 }
 
+/* ── 테마: 블루 ── */
+[data-theme="blue"] {
+  --app-bg: #e8f3ff;
+  --card-bg: rgba(255,255,255,0.88);
+  --text-primary: #1e3a5f;
+  --text-secondary: #5a85a8;
+  --accent-blue: #2563eb;
+  --accent-red: #e11d48;
+  --urgent-bg: rgba(225,29,72,0.07);
+  --urgent-border: rgba(225,29,72,0.2);
+  --urgent-text: #be123c;
+  --glass-shadow: 0 8px 32px rgba(37,99,235,0.1);
+}
+
+/* ── 테마: 그린 ── */
+[data-theme="green"] {
+  --app-bg: #ecfaf2;
+  --card-bg: rgba(255,255,255,0.88);
+  --text-primary: #14532d;
+  --text-secondary: #4d8265;
+  --accent-blue: #16a34a;
+  --accent-red: #e11d48;
+  --urgent-bg: rgba(225,29,72,0.07);
+  --urgent-border: rgba(225,29,72,0.2);
+  --urgent-text: #be123c;
+  --glass-shadow: 0 8px 32px rgba(22,163,74,0.1);
+}
+
+/* ── 테마: 다크 ── */
+[data-theme="dark"] {
+  --app-bg: #0f172a;
+  --card-bg: rgba(30,41,59,0.92);
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --accent-blue: #818cf8;
+  --accent-red: #f87171;
+  --urgent-bg: rgba(248,113,113,0.1);
+  --urgent-border: rgba(248,113,113,0.25);
+  --urgent-text: #fca5a5;
+  --glass-border: 1px solid rgba(255,255,255,0.08);
+  --glass-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+[data-theme="dark"] body {
+  background-color: #0f172a;
+}
+[data-theme="dark"] header {
+  background: rgba(15,23,42,0.85) !important;
+  border-bottom: 1px solid rgba(148,163,184,0.12);
+}
+
+/* ── 테마: 붕괴 스타레일 ── */
+[data-theme="starrail"] {
+  --app-bg: #0e1d35;
+  --card-bg: rgba(22,42,72,0.92);
+  --text-primary: #e8f4ff;
+  --text-secondary: #8ab0d0;
+  --accent-blue: #89c4ff;
+  --accent-red: #f87171;
+  --urgent-bg: rgba(248,113,113,0.1);
+  --urgent-border: rgba(248,113,113,0.22);
+  --urgent-text: #fca5a5;
+  --glass-border: 1px solid rgba(137,196,255,0.2);
+  --glass-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+[data-theme="starrail"] body {
+  background-color: #0e1d35;
+}
+[data-theme="starrail"] header {
+  background: rgba(14,29,53,0.88) !important;
+  border-bottom: 1px solid rgba(137,196,255,0.15);
+}
+
+/* ── 테마: 리퀴드 글라스 ── */
+[data-theme="glass"] {
+  --app-bg: #dbeeff;
+  --card-bg: rgba(255,255,255,0.52);
+  --text-primary: #0c2d4e;
+  --text-secondary: #3d6a8a;
+  --accent-blue: #0ea5e9;
+  --accent-red: #e11d48;
+  --urgent-bg: rgba(225,29,72,0.07);
+  --urgent-border: rgba(225,29,72,0.2);
+  --urgent-text: #be123c;
+  --glass-border: 1px solid rgba(100,180,255,0.4);
+  --glass-shadow: 0 8px 32px rgba(14,165,233,0.15);
+}
+[data-theme="glass"] body {
+  background: linear-gradient(135deg, #c4e0ff 0%, #d4f0ff 20%, #e8d4ff 45%, #ffd4e8 65%, #d4ffe8 85%, #c4e0ff 100%);
+  background-size: 400% 400%;
+  animation: glassGradientSh 12s ease infinite;
+}
+@keyframes glassGradientSh {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+[data-theme="glass"] header {
+  backdrop-filter: blur(16px) saturate(1.5);
+  -webkit-backdrop-filter: blur(16px) saturate(1.5);
+  background: rgba(255,255,255,0.45) !important;
+  border-bottom: 1px solid rgba(100,180,255,0.3);
+}
+
+/* ── 테마: 보라 (기본 — 명시적 오버라이드 없음) ── */
+
 * {
     margin: 0;
     padding: 0;

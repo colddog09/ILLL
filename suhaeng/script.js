@@ -551,6 +551,14 @@ function toggleViewMode() {
   applyViewMode(_cachedEvents);
 }
 
+// ── 메인 앱 테마 동기화 ──
+(function applyMainTheme() {
+  const theme = localStorage.getItem('appTheme_v1') || 'purple';
+  if (theme && theme !== 'purple') {
+    document.documentElement.setAttribute('data-theme', theme);
+  }
+})();
+
 // ── 초기화 ──
 window.addEventListener('DOMContentLoaded', () => {
   const viewBtn = document.getElementById('viewToggleBtn');
