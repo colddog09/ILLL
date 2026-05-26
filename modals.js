@@ -410,8 +410,16 @@ infoHistoryBtn?.addEventListener('click', () => {
     if (current === 0) setTimeout(startTyping, 400);
   }
 
-  function openDemo()  { demoModal.hidden = false; current = -1; goTo(0); }
-  function closeDemo() { demoModal.hidden = true; stopTyping(); }
+  function openDemo()  {
+    const cb = document.getElementById('demoDontShow');
+    if (cb) cb.checked = false;
+    demoModal.hidden = false; current = -1; goTo(0);
+  }
+  function closeDemo() {
+    const cb = document.getElementById('demoDontShow');
+    if (cb?.checked) localStorage.setItem('dontShowDemo', '1');
+    demoModal.hidden = true; stopTyping();
+  }
 
   demoBtn.addEventListener('click', openDemo);
   closeBtn.addEventListener('click', closeDemo);

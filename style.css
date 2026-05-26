@@ -73,6 +73,74 @@
   --bg-grad2: rgba(165,180,252,0.04);
 }
 
+/* ── 테마: 리퀴드 글라스 ── */
+[data-theme="glass"] {
+  --bg: #dbeeff;
+  --surface: rgba(255,255,255,0.45);
+  --surface-hover: rgba(255,255,255,0.68);
+  --border: rgba(100,180,255,0.28);
+  --border-strong: rgba(100,180,255,0.55);
+  --accent: #0ea5e9;
+  --accent2: #38bdf8;
+  --text: #0c2d4e;
+  --text-sub: #3d6a8a;
+  --success: #0d9488;
+  --danger: #e11d48;
+  --radius: 20px;
+  --radius-sm: 13px;
+  --shadow: 0 4px 24px rgba(14,165,233,0.13);
+  --shadow-lg: 0 12px 48px rgba(14,165,233,0.22);
+  --bg-grad1: rgba(14,165,233,0.10);
+  --bg-grad2: rgba(56,189,248,0.08);
+}
+
+/* 배경 — 무지갯빛 그라디언트 */
+[data-theme="glass"] body {
+  background: linear-gradient(135deg,
+    #c4e0ff 0%, #d4f0ff 20%,
+    #e8d4ff 45%, #ffd4e8 65%,
+    #d4ffe8 85%, #c4e0ff 100%);
+  background-size: 400% 400%;
+  animation: glassGradient 12s ease infinite;
+}
+
+@keyframes glassGradient {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* 유리처럼 흐릿한 surface */
+[data-theme="glass"] .app,
+[data-theme="glass"] .modal-box,
+[data-theme="glass"] .pool-card,
+[data-theme="glass"] .sched-day,
+[data-theme="glass"] .settings-modal,
+[data-theme="glass"] .info-modal {
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  background: var(--surface) !important;
+}
+
+[data-theme="glass"] .app {
+  border: 1.5px solid var(--border-strong);
+  box-shadow: 0 8px 40px rgba(14,165,233,0.18),
+              inset 0 1px 0 rgba(255,255,255,0.7);
+}
+
+/* 테마 스와치 — 글라스 프리즘 */
+.theme-swatch[data-theme="glass"] {
+  background: linear-gradient(135deg, #c4e0ff, #e8d4ff, #ffd4e8, #d4ffe8);
+  background-size: 200% 200%;
+  animation: glassSwatchShift 4s ease infinite;
+  border: 1.5px solid rgba(100,180,255,0.5);
+}
+@keyframes glassSwatchShift {
+  0%   { background-position: 0% 0%; }
+  50%  { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
+}
+
 /* ── 테마: 붕괴 스타레일 ── */
 [data-theme="starrail"] {
   --bg: #0e1d35;
@@ -2860,6 +2928,64 @@ body {
 .demo-dot--active {
   background: var(--accent);
   transform: scale(1.3);
+}
+
+/* 다시 보지 않기 */
+.demo-dont-show {
+  text-align: center;
+  padding: 6px 0 2px;
+  font-size: 0.78rem;
+  color: var(--text-sub);
+}
+.demo-dont-show label {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.demo-dont-show input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+
+/* 구글 캘린더 가이드 슬라이드 */
+.demo-gcal-guide {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0;
+  width: 100%;
+}
+.demo-gcal-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 7px 10px;
+  animation: demo-appear 0.35s ease both;
+}
+.demo-gcal-step:nth-child(2) { animation-delay: 0.07s; }
+.demo-gcal-step:nth-child(3) { animation-delay: 0.14s; }
+.demo-gcal-step:nth-child(4) { animation-delay: 0.21s; }
+.demo-gcal-step:nth-child(5) { animation-delay: 0.28s; }
+.demo-gcal-num {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent);
+  min-width: 18px;
+  flex-shrink: 0;
+}
+.demo-gcal-text {
+  font-size: 0.75rem;
+  color: var(--text-main);
+  line-height: 1.45;
+}
+.demo-gcal-text strong {
+  color: var(--accent);
 }
 
 /* ── 오프라인 배너 ── */

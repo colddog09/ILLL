@@ -336,7 +336,6 @@ function renderUrgentList(events) {
               <span class="urgent-chip__name">${escapeHtml(ev.summary || '제목 없음')}</span>
               <span class="urgent-chip__date">${formatEventDate(ev)}</span>
             </div>
-            ${descClean ? `<span class="urgent-chip__desc">${escapeHtml(descClean)}</span>` : ''}
             <div class="urgent-chip__footer">
               ${linkBtn}
             </div>
