@@ -131,6 +131,12 @@ async function bootstrapSupabase() {
     supabaseReady  = true;
 
     supabaseClient.auth.onAuthStateChange((event, session) => {
+      // TOKEN_REFRESHED / USER_UPDATED는 데이터 재로드 불필요
+      // — 로드 중 변경사항이 덮여쓰여 데이터 소실되는 버그 방지
+      if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+        currentUser = session?.user || null;
+        return;
+      }
       updateAuthUi(session?.user || null);
     });
 

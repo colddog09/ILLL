@@ -111,8 +111,9 @@ function _doSave() {
 
   const snap = stateSnapshot();
   if (snap === lastSavedSnapshot) return;
-  if (!hasAnyTaskData()) {
-    console.warn('⚠️ 빈 state 감지 — Supabase 저장 건너뜀');
+  // lastSavedSnapshot이 없으면 아직 로드 전 — 빈 state로 덮어쓰기 방지
+  if (!lastSavedSnapshot && !hasAnyTaskData()) {
+    console.warn('⚠️ 초기 빈 state 감지 — Supabase 저장 건너뜀');
     return;
   }
 
@@ -137,7 +138,7 @@ function saveState() {
     if (!currentUser || !supabaseClient || !dataLoaded) return;
     const snap = stateSnapshot();
     if (snap === lastSavedSnapshot) { showLastSavedTime(); return; }
-    if (!hasAnyTaskData()) return;
+    if (!lastSavedSnapshot && !hasAnyTaskData()) return;
 
     supabaseClient
       .from('user_states')
@@ -155,7 +156,7 @@ function flushToSupabase() {
   if (!currentUser || !supabaseClient || !dataLoaded) return;
   const snap = stateSnapshot();
   if (snap === lastSavedSnapshot) return;
-  if (!hasAnyTaskData()) return;
+  if (!lastSavedSnapshot && !hasAnyTaskData()) return;
 
   supabaseClient
     .from('user_states')
