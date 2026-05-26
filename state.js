@@ -92,6 +92,36 @@ function hasAnyTaskData() {
 }
 
 // ──────────────────────────────────────────────
+// localStorage 백업 (새로고침 중 비동기 저장 실패 방지)
+// ──────────────────────────────────────────────
+const LS_BACKUP_KEY  = 'state_backup_v1';
+const LS_BACKUP_TS   = 'state_backup_ts_v1';
+const LS_BACKUP_UID  = 'state_backup_uid_v1';
+
+function _saveLocalBackup() {
+  if (!dataLoaded || !currentUser) return;
+  try {
+    const snap = stateSnapshot();
+    if (!lastSavedSnapshot && !hasAnyTaskData()) return; // 빈 초기 state 저장 금지
+    const ts = Date.now();
+    localStorage.setItem(LS_BACKUP_KEY, snap);
+    localStorage.setItem(LS_BACKUP_TS,  ts.toString());
+    localStorage.setItem(LS_BACKUP_UID, currentUser.id);
+  } catch (_) {}
+}
+
+function _loadLocalBackup() {
+  try {
+    const uid  = localStorage.getItem(LS_BACKUP_UID);
+    if (!uid || uid !== currentUser?.id) return null;
+    const snap = localStorage.getItem(LS_BACKUP_KEY);
+    const ts   = parseInt(localStorage.getItem(LS_BACKUP_TS) || '0', 10);
+    if (!snap || !ts) return null;
+    return { data: JSON.parse(snap), ts };
+  } catch (_) { return null; }
+}
+
+// ──────────────────────────────────────────────
 // Supabase 저장 공통 페이로드
 // ──────────────────────────────────────────────
 function _supabaseSavePayload() {
@@ -117,6 +147,7 @@ function _doSave() {
     return;
   }
 
+  _saveLocalBackup(); // 동기 백업 먼저
   supabaseClient
     .from('user_states')
     .upsert(_supabaseSavePayload(), { onConflict: 'user_id' })
@@ -140,6 +171,7 @@ function saveState() {
     if (snap === lastSavedSnapshot) { showLastSavedTime(); return; }
     if (!lastSavedSnapshot && !hasAnyTaskData()) return;
 
+    _saveLocalBackup(); // 동기 백업 먼저
     supabaseClient
       .from('user_states')
       .upsert(_supabaseSavePayload(), { onConflict: 'user_id' })
@@ -158,6 +190,7 @@ function flushToSupabase() {
   if (snap === lastSavedSnapshot) return;
   if (!lastSavedSnapshot && !hasAnyTaskData()) return;
 
+  _saveLocalBackup(); // 동기이므로 페이지 언로드 전에 확실히 저장됨
   supabaseClient
     .from('user_states')
     .upsert(_supabaseSavePayload(), { onConflict: 'user_id' })
@@ -207,14 +240,29 @@ function loadState() {
         return;
       }
 
-      if (remote) {
+      const remoteTs = remote?.updated_at ? new Date(remote.updated_at).getTime() : 0;
+      const backup   = _loadLocalBackup();
+      const backupTs = backup?.ts || 0;
+
+      if (backup && backupTs > remoteTs + 3000) {
+        // localStorage 백업이 Supabase보다 3초 이상 최신 → 백업 우선 사용
+        console.log(`🔄 로컬 백업 복원 (backup: ${new Date(backupTs).toLocaleTimeString()}, remote: ${new Date(remoteTs).toLocaleTimeString()})`);
+        applyPersistedState(backup.data);
+        lastSavedSnapshot = stateSnapshot();
+        // 바로 Supabase에 반영
+        supabaseClient
+          .from('user_states')
+          .upsert(_supabaseSavePayload(), { onConflict: 'user_id' })
+          .then(({ error }) => { if (!error) setSyncSaved(); });
+      } else if (remote) {
         applyPersistedState(remote);
         localStorage.setItem('lastSavedTime', remote.updated_at
           ? new Date(remote.updated_at).getTime().toString()
           : Date.now().toString());
         lastSavedSnapshot = stateSnapshot();
+        _saveLocalBackup(); // Supabase 데이터로 백업 동기화
       }
-      // remote가 없으면 빈 state 유지 (신규 사용자)
+      // remote도 없고 backup도 없으면 빈 state 유지 (신규 사용자)
 
       dataLoaded = true;
       autoReturnExpiredTasks();
