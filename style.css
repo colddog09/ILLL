@@ -248,6 +248,32 @@
   opacity: 0.09;
 }
 
+/* 한교동 — O버튼을 캐릭터 이미지로 교체 */
+[data-theme="hgd"] .btn-o {
+  background: url('/hgdno.png') no-repeat center / contain !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: transparent !important;
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 0 !important;
+}
+[data-theme="hgd"] .btn-o--checked,
+[data-theme="hgd"] .sched-item__done--checked ~ * .btn-o,
+[data-theme="hgd"] .pool-card--done .btn-o,
+[data-theme="hgd"] .btn-o[data-checked="true"] {
+  background-image: url('/hgdyes.png') !important;
+}
+/* active(완료) 상태 */
+[data-theme="hgd"] .btn-o.active {
+  background: url('/hgdyes.png') no-repeat center / contain !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: transparent !important;
+}
+
 /* 한교동 스와치 */
 .theme-swatch[data-theme="hgd"] {
   background: linear-gradient(135deg, #00b4a0, #4dd9c8, #a8f0ea);
