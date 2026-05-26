@@ -369,3 +369,57 @@ updateDday();
     setTimeout(() => showGcalResult?.('❌ 캘린더 ' + msg, true), 800);
   }
 })();
+
+// ── 캘린더 사이드 패널 리사이즈 ──
+(function initGcalResize() {
+  const STORAGE_KEY = 'gcalPanelWidth';
+  const MIN_WIDTH = 160;
+  const MAX_WIDTH = 420;
+
+  const panel  = document.getElementById('gcalSidePanel');
+  const handle = document.getElementById('gcalResizeHandle');
+  if (!panel || !handle) return;
+
+  // 저장된 너비 복원
+  const saved = parseInt(localStorage.getItem(STORAGE_KEY));
+  if (saved && saved >= MIN_WIDTH && saved <= MAX_WIDTH) {
+    panel.style.width = saved + 'px';
+  }
+
+  // 패널 표시 상태에 따라 핸들도 토글
+  const observer = new MutationObserver(() => {
+    handle.hidden = panel.hidden;
+  });
+  observer.observe(panel, { attributes: true, attributeFilter: ['hidden'] });
+  handle.hidden = panel.hidden;
+
+  let dragging = false;
+  let startX = 0;
+  let startWidth = 0;
+
+  handle.addEventListener('mousedown', e => {
+    dragging = true;
+    startX = e.clientX;
+    startWidth = panel.offsetWidth;
+    handle.classList.add('dragging');
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const dx = e.clientX - startX;
+    const newWidth = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, startWidth + dx));
+    panel.style.width = newWidth + 'px';
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    handle.classList.remove('dragging');
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    localStorage.setItem(STORAGE_KEY, parseInt(panel.style.width));
+  });
+})();
