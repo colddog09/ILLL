@@ -224,6 +224,18 @@
   color: #fff !important;
 }
 
+/* 글씨 가독성 — 텍스트에 검은 배경 레이어 */
+[data-theme="minecraft"] .sched-item__text {
+  background: rgba(0,0,0,0.55) !important;
+  padding: 3px 8px !important;
+  border-radius: 0 !important;
+  text-shadow: 1px 1px 0 #000, 2px 2px 0 rgba(0,0,0,0.5) !important;
+  color: #fff !important;
+  flex: 1 !important;
+  font-size: 0.55rem !important;
+  line-height: 1.5 !important;
+}
+
 [data-theme="minecraft"] .sched-item--done {
   background-image: url('/mc_stone2.png') !important;
   background-color: #6B6B6B !important;
