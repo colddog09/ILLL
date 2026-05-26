@@ -173,6 +173,66 @@
   opacity: 0.75;
 }
 
+/* 한교동 — 일정 탭/풀 영역 안에 흐릿하게 */
+[data-theme="hgd"] .schedule-area {
+  position: relative;
+}
+/* 일정 영역 우하단 — hgd3(하트) */
+[data-theme="hgd"] .schedule-area::after {
+  content: '';
+  position: absolute;
+  bottom: 30px;
+  right: 20px;
+  width: 140px;
+  height: 140px;
+  background: url('/hgd3.png') no-repeat center / contain;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.10;
+}
+/* 할일 풀 영역 배경 — hgd2(놀란 표정) */
+[data-theme="hgd"] .task-pool {
+  position: relative;
+}
+[data-theme="hgd"] .task-pool::before {
+  content: '';
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  width: 110px;
+  height: 110px;
+  background: url('/hgd2.png') no-repeat center / contain;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.12;
+}
+/* day-card 홀수번째 — hgd1(선글라스) */
+[data-theme="hgd"] .day-card:nth-child(odd)::after {
+  content: '';
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 72px;
+  height: 72px;
+  background: url('/hgd1.png') no-repeat center / contain;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.09;
+}
+/* day-card 짝수번째 — HGD(혀) */
+[data-theme="hgd"] .day-card:nth-child(even)::after {
+  content: '';
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 72px;
+  height: 72px;
+  background: url('/HGD.png') no-repeat center / contain;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.09;
+}
+
 /* 한교동 스와치 */
 .theme-swatch[data-theme="hgd"] {
   background: linear-gradient(135deg, #00b4a0, #4dd9c8, #a8f0ea);
