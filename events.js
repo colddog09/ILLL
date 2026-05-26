@@ -44,6 +44,35 @@ poolEl.addEventListener('touchend', e => {
 // ──────────────────────────────────────────────
 // dayGrid 이벤트 위임 — 완료 토글, 미루기
 // ──────────────────────────────────────────────
+// ── Minecraft 몬스터 처치 애니메이션 (캡처 페이즈) ──
+dayGrid.addEventListener('click', e => {
+  if (document.documentElement.dataset.theme !== 'minecraft') return;
+  const btnO = e.target.closest('.btn-o');
+  if (!btnO) return;
+  const schedItem = btnO.closest('.sched-item');
+  if (!schedItem || schedItem.classList.contains('sched-item--done')) return;
+
+  e.stopImmediatePropagation();
+
+  // 몬스터 종류 결정 (좀비/스켈레톤 번갈아)
+  const idx = Array.from(schedItem.parentElement?.children || []).indexOf(schedItem);
+  const monster = idx % 2 === 0 ? '🧟' : '💀';
+
+  // 애니메이션 오버레이 생성
+  const anim = document.createElement('div');
+  anim.className = 'mc-kill-anim';
+  anim.innerHTML = `<span class="mc-kill-monster">${monster}</span><span class="mc-kill-sword">⚔️</span>`;
+  schedItem.appendChild(anim);
+
+  schedItem.classList.add('mc-killing');
+
+  setTimeout(() => {
+    anim.remove();
+    schedItem.classList.remove('mc-killing');
+    toggleStatus(btnO.dataset.date, btnO.dataset.id);
+  }, 650);
+}, true);
+
 dayGrid.addEventListener('click', e => {
   const gcalBtn = e.target.closest('.btn-gcal-done');
   if (gcalBtn) { toggleGcalStatus(gcalBtn.dataset.gcalId, gcalBtn.dataset.date); return; }

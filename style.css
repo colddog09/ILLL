@@ -4202,3 +4202,95 @@ a.settings-tab {
 }
 .settings-shop-btn:hover { opacity: 0.88; }
 .settings-shop-btn:active { transform: scale(0.97); }
+
+/* ── Minecraft: 미완료 아이템에 몬스터 표시 ── */
+[data-theme="minecraft"] .sched-item:not(.sched-item--done) .sched-item__text::before {
+  content: attr(data-mc-monster, '🧟');
+  margin-right: 6px;
+  display: inline-block;
+  animation: mcBob 0.8s ease-in-out infinite;
+}
+[data-theme="minecraft"] .sched-item:nth-child(odd):not(.sched-item--done) .sched-item__text::before  { content: '🧟 '; }
+[data-theme="minecraft"] .sched-item:nth-child(even):not(.sched-item--done) .sched-item__text::before { content: '💀 '; }
+
+@keyframes mcBob {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-3px); }
+}
+
+/* 완료된 아이템 — 다이아몬드 검 */
+[data-theme="minecraft"] .sched-item.sched-item--done .sched-item__text::before {
+  content: '⚔️ ';
+  animation: none;
+  opacity: 0.7;
+}
+
+/* btn-o: 마인크래프트 스타일 */
+[data-theme="minecraft"] .btn-o {
+  font-size: 1.1rem !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 4px !important;
+  line-height: 1 !important;
+}
+[data-theme="minecraft"] .sched-item:not(.sched-item--done) .btn-o::before { content: '🗡️'; }
+[data-theme="minecraft"] .sched-item:not(.sched-item--done) .btn-o          { font-size: 0 !important; }
+[data-theme="minecraft"] .sched-item.sched-item--done .btn-o                { opacity: 0.5; }
+
+/* ── 몬스터 처치 애니메이션 ── */
+.mc-kill-anim {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  pointer-events: none;
+  z-index: 10;
+  animation: mcKillBg 0.65s forwards;
+}
+@keyframes mcKillBg {
+  0%   { background: transparent; }
+  30%  { background: rgba(255,0,0,0.25); }
+  100% { background: transparent; }
+}
+
+.mc-kill-monster {
+  font-size: 1.8rem;
+  display: inline-block;
+  animation: mcMonsterHit 0.65s forwards;
+}
+@keyframes mcMonsterHit {
+  0%   { transform: scale(1)   translateX(0);  opacity: 1; filter: brightness(1); }
+  20%  { transform: scale(1.3) translateX(10px); filter: brightness(3) saturate(0); }
+  50%  { transform: scale(0.8) translateX(-5px); opacity: 0.8; }
+  80%  { transform: scale(1.4) translateX(20px) rotate(30deg); opacity: 0.4; }
+  100% { transform: scale(0)   translateX(40px) rotate(60deg); opacity: 0; }
+}
+
+.mc-kill-sword {
+  font-size: 1.8rem;
+  display: inline-block;
+  animation: mcSwordSwing 0.65s forwards;
+}
+@keyframes mcSwordSwing {
+  0%   { transform: translate(-30px, 10px) rotate(-60deg); opacity: 0; }
+  20%  { transform: translate(0, 0)        rotate(-30deg); opacity: 1; }
+  50%  { transform: translate(10px, -5px)  rotate(10deg);  opacity: 1; }
+  80%  { transform: translate(20px, 5px)   rotate(40deg);  opacity: 0.8; }
+  100% { transform: translate(30px, 0)     rotate(60deg);  opacity: 0; }
+}
+
+/* 아이템 타격 시 흔들림 */
+[data-theme="minecraft"] .sched-item.mc-killing {
+  animation: mcItemShake 0.65s forwards;
+}
+@keyframes mcItemShake {
+  0%,100% { transform: translateX(0); }
+  15%     { transform: translateX(-6px); background: #ff5555 !important; }
+  30%     { transform: translateX(6px);  background: #ff8888 !important; }
+  45%     { transform: translateX(-4px); background: #ff5555 !important; }
+  60%     { transform: translateX(4px); }
+  75%     { transform: translateX(-2px); }
+}
