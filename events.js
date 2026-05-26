@@ -66,45 +66,55 @@ function triggerStarRailTrain() {
   const particles = [];
   let animFrame;
 
+  // 황금+보라 혼합 파티클 (사진의 열차 꼬리 불꽃)
   function spawnParticle(x, y) {
+    const isGold = Math.random() > 0.35;
     particles.push({
       x, y,
-      vx: (Math.random() - 0.8) * 6,
-      vy: (Math.random() + 0.3) * 4,
+      vx: (Math.random() - 0.5) * 5 - 2,  // 열차 뒤로 흩어짐
+      vy: (Math.random() * 3 + 1),           // 아래로 떨어짐
       life: 1,
-      size: Math.random() * 3 + 1,
-      color: ['#c8a8ff','#e8d0ff','#a0c8ff','#ffffff'][Math.floor(Math.random()*4)]
+      size: Math.random() * 4 + 1.5,
+      color: isGold
+        ? ['#ffd060','#ffb020','#ffe090','#ff8c00'][Math.floor(Math.random()*4)]
+        : ['#b080ff','#d0a0ff','#8060cc','#ffffff'][Math.floor(Math.random()*4)]
     });
   }
 
-  let trainX = -600, trainY = window.innerHeight + 100;
-  const targetX = window.innerWidth + 400;
-  const targetY = -200;
-  const duration = 2200; // ms
+  const W = window.innerWidth;
+  const H = window.innerHeight;
+  // 참조 이미지처럼: 왼쪽 하단 밖에서 → 오른쪽 상단 밖으로
+  const startX = -W * 0.5;
+  const startY = H * 0.9;
+  const endX   = W * 1.3;
+  const endY   = H * 0.05;
+  let trainX = startX, trainY = startY;
+  const duration = 2400; // ms
   const startTime = performance.now();
 
   function animate(now) {
     const t = Math.min((now - startTime) / duration, 1);
-    const ease = t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
-    trainX = -600 + (targetX + 600) * ease;
-    trainY = (window.innerHeight + 100) + (targetY - window.innerHeight - 100) * ease;
+    // 부드러운 가속-감속 (cubic ease)
+    const ease = t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2;
+    trainX = startX + (endX - startX) * ease;
+    trainY = startY + (endY - startY) * ease;
 
-    // 꼬리 파티클 생성
-    if (t < 0.95) {
-      for (let i = 0; i < 3; i++) {
-        spawnParticle(trainX + 200 + Math.random()*80, trainY + 120 + Math.random()*40);
-      }
+    // 꼬리 불꽃 파티클 — 열차 후미(왼쪽 하단) 위치에서
+    if (t < 0.92) {
+      const tailX = trainX + 60;   // 이미지 내 후미 위치 보정
+      const tailY = trainY + 180;
+      for (let i = 0; i < 5; i++) spawnParticle(tailX + Math.random()*60, tailY + Math.random()*30);
     }
 
     // 캔버스 클리어
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 파티클 업데이트
+    // 파티클 업데이트 & 드로우
     for (let i = particles.length - 1; i >= 0; i--) {
       const p = particles[i];
-      p.x += p.vx; p.y += p.vy; p.life -= 0.035;
+      p.x += p.vx; p.y += p.vy; p.life -= 0.028;
       if (p.life <= 0) { particles.splice(i, 1); continue; }
-      ctx.globalAlpha = p.life * 0.8;
+      ctx.globalAlpha = p.life * 0.85;
       ctx.fillStyle = p.color;
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);

@@ -330,6 +330,18 @@ function renderGcalSidePanel() {
       list.appendChild(el);
     });
   });
+
+  // 사이드 패널 O 버튼 클릭 위임 (한 번만 등록)
+  if (!panel._gcalBtnBound) {
+    panel._gcalBtnBound = true;
+    panel.addEventListener('click', e => {
+      const btn = e.target.closest('.btn-gcal-done');
+      if (!btn) return;
+      e.stopPropagation();
+      toggleGcalStatus(btn.dataset.gcalId, btn.dataset.date);
+      if (typeof triggerStarRailTrain === 'function') triggerStarRailTrain();
+    });
+  }
 }
 
 // ──────────────────────────────────────────────
