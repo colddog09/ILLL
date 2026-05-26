@@ -214,32 +214,58 @@
 }
 
 /* 일정 아이템 — 돌 블록 (2D flat) */
+/* 일정 아이템 — 표지판 스타일 */
 [data-theme="minecraft"] .sched-item {
-  background-image: url('/mc_stone2.png') !important;
+  background-image: url('/mc_oak_planks.png') !important;
   background-size: 32px 32px !important;
-  background-color: #9B9B9B !important;
+  background-color: #A0784A !important;
   image-rendering: pixelated !important;
-  border: 2px solid #3D3D3D !important;
-  box-shadow: 2px 2px 0 #1a1208 !important;
-  color: #fff !important;
+  /* 표지판 테두리: 위아래 두꺼운 나무 테 */
+  border-top: 5px solid #5C3A1A !important;
+  border-bottom: 5px solid #3D2010 !important;
+  border-left: 3px solid #6B4520 !important;
+  border-right: 3px solid #3D2010 !important;
+  box-shadow: 3px 3px 0 #1a1208, inset 0 2px 0 rgba(255,255,255,0.15), inset 0 -2px 0 rgba(0,0,0,0.2) !important;
+  color: #1a0a00 !important;
+  position: relative !important;
 }
 
-/* 글씨 가독성 — 텍스트에 검은 배경 레이어 */
+/* 표지판 아래 기둥 */
+[data-theme="minecraft"] .sched-item::after {
+  content: '' !important;
+  display: block !important;
+  position: absolute !important;
+  bottom: -12px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 6px !important;
+  height: 10px !important;
+  background: #5C3A1A !important;
+  box-shadow: 1px 1px 0 #1a1208 !important;
+  z-index: 0 !important;
+}
+
+/* 글씨 — 표지판 각인 느낌 */
 [data-theme="minecraft"] .sched-item__text {
-  background: rgba(0,0,0,0.55) !important;
-  padding: 3px 8px !important;
+  background: transparent !important;
+  padding: 2px 6px !important;
   border-radius: 0 !important;
-  text-shadow: 1px 1px 0 #000, 2px 2px 0 rgba(0,0,0,0.5) !important;
-  color: #fff !important;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.6) !important;
+  color: #1a0800 !important;
   flex: 1 !important;
   font-size: 0.55rem !important;
-  line-height: 1.5 !important;
+  line-height: 1.6 !important;
 }
 
 [data-theme="minecraft"] .sched-item--done {
-  background-image: url('/mc_stone2.png') !important;
-  background-color: #6B6B6B !important;
-  opacity: 0.65;
+  background-image: url('/mc_oak_planks.png') !important;
+  background-color: #7A5830 !important;
+  opacity: 0.6;
+}
+
+[data-theme="minecraft"] .sched-item--done .sched-item__text {
+  text-decoration: line-through !important;
+  color: #3a1a00 !important;
 }
 
 /* 버튼 — 블록 버튼 스타일 */
