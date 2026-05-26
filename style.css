@@ -144,46 +144,28 @@
   100% { transform: scale(1,1); }
 }
 @keyframes jellyFloat {
-  0%,100% { transform: translateY(0) scale(1); }
-  30%      { transform: translateY(-3px) scale(1.04, 0.97); }
-  60%      { transform: translateY(1px) scale(0.97, 1.03); }
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-2px); }
 }
 
-/* 상단 버튼 아이콘들 — 둥둥 떠다니기 */
-[data-theme="jelly"] .header-btn,
-[data-theme="jelly"] .nav-btn,
+/* 상단 버튼 아이콘들 — 아주 살짝만 */
 [data-theme="jelly"] #addBtn,
 [data-theme="jelly"] #demoBtn,
 [data-theme="jelly"] #infoBtn,
 [data-theme="jelly"] #settingsBtn,
-[data-theme="jelly"] #deadlineBtn,
-[data-theme="jelly"] .gcal-sheet-btn {
-  animation: jellyFloat 2.8s ease-in-out infinite;
+[data-theme="jelly"] #deadlineBtn {
+  animation: jellyFloat 4s ease-in-out infinite;
 }
-
-/* 각 버튼마다 딜레이 달리해서 따로따로 움직이게 */
 [data-theme="jelly"] #demoBtn     { animation-delay: 0s; }
-[data-theme="jelly"] #infoBtn     { animation-delay: 0.4s; }
-[data-theme="jelly"] #settingsBtn { animation-delay: 0.8s; }
-[data-theme="jelly"] #deadlineBtn { animation-delay: 1.2s; }
-[data-theme="jelly"] #addBtn      { animation-delay: 0.2s; }
-[data-theme="jelly"] .gcal-sheet-btn { animation-delay: 0.6s; }
+[data-theme="jelly"] #infoBtn     { animation-delay: 0.8s; }
+[data-theme="jelly"] #settingsBtn { animation-delay: 1.6s; }
+[data-theme="jelly"] #deadlineBtn { animation-delay: 2.4s; }
+[data-theme="jelly"] #addBtn      { animation-delay: 0.4s; }
 
 /* 클릭하면 쫀득하게 튀기 */
-[data-theme="jelly"] button:active,
-[data-theme="jelly"] .pool-card:active {
-  animation: jellyWobble 0.5s ease forwards !important;
+[data-theme="jelly"] button:active {
+  animation: jellyWobble 0.45s ease forwards !important;
 }
-
-/* 할일 카드 — 아주 살짝 흔들흔들 */
-[data-theme="jelly"] .pool-card {
-  animation: jellyFloat 3.5s ease-in-out infinite;
-}
-[data-theme="jelly"] .pool-card:nth-child(2) { animation-delay: 0.3s; }
-[data-theme="jelly"] .pool-card:nth-child(3) { animation-delay: 0.6s; }
-[data-theme="jelly"] .pool-card:nth-child(4) { animation-delay: 0.9s; }
-[data-theme="jelly"] .pool-card:nth-child(5) { animation-delay: 1.2s; }
-[data-theme="jelly"] .pool-card:nth-child(6) { animation-delay: 1.5s; }
 
 /* 젤리 스와치 */
 .theme-swatch[data-theme="jelly"] {
