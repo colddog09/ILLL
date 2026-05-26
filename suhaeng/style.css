@@ -180,12 +180,11 @@ body {
 }
 
 
-/* Hide scrollbar for Chrome/Safari/Opera */
-body::-webkit-scrollbar,
-.scroll-container::-webkit-scrollbar,
-.calendar-section::-webkit-scrollbar {
-    display: none;
-}
+/* Hide scrollbar — all browsers */
+* { scrollbar-width: none !important; }
+*::-webkit-scrollbar { width: 0 !important; height: 0 !important; display: none !important; background: transparent !important; }
+*::-webkit-scrollbar-thumb { background: transparent !important; }
+*::-webkit-scrollbar-track { background: transparent !important; }
 
 
 /* Main App Structure */

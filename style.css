@@ -163,8 +163,10 @@
 html { scroll-behavior: smooth; overflow-x: hidden; }
 
 /* 스크롤바 숨기기 (스크롤 동작은 유지) */
-* { scrollbar-width: none; }
-*::-webkit-scrollbar { display: none; }
+* { scrollbar-width: none !important; }
+*::-webkit-scrollbar { width: 0 !important; height: 0 !important; display: none !important; background: transparent !important; }
+*::-webkit-scrollbar-thumb { background: transparent !important; }
+*::-webkit-scrollbar-track { background: transparent !important; }
 
 [hidden] { display: none !important; }
 
