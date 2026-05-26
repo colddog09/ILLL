@@ -136,6 +136,20 @@
   border-bottom: 1px solid rgba(100,180,255,0.3);
 }
 
+/* ── 테마: 젤리 ── */
+[data-theme="jelly"] {
+  --app-bg: #fff0f8;
+  --card-bg: rgba(255,255,255,0.92);
+  --text-primary: #4a0030;
+  --text-secondary: #b06090;
+  --accent-blue: #ff5fad;
+  --accent-red: #ef4444;
+  --urgent-bg: rgba(239,68,68,0.07);
+  --urgent-border: rgba(239,68,68,0.2);
+  --urgent-text: #dc2626;
+  --glass-shadow: 0 8px 32px rgba(255,95,173,0.15);
+}
+
 /* ── 테마: 보라 (기본 — 명시적 오버라이드 없음) ── */
 
 * {

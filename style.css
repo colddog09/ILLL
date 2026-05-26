@@ -94,6 +94,51 @@
   --bg-grad2: rgba(56,189,248,0.08);
 }
 
+/* ── 테마: 젤리 ── */
+[data-theme="jelly"] {
+  --bg: #fff0f8;
+  --surface: #ffffff;
+  --surface-hover: #ffe4f4;
+  --border: rgba(255,105,180,0.18);
+  --border-strong: rgba(255,105,180,0.4);
+  --accent: #ff5fad;
+  --accent2: #ff9de2;
+  --text: #4a0030;
+  --text-sub: #b06090;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --radius: 22px;
+  --radius-sm: 14px;
+  --shadow: 0 4px 20px rgba(255,95,173,0.13);
+  --shadow-lg: 0 12px 40px rgba(255,95,173,0.22);
+  --bg-grad1: rgba(255,95,173,0.09);
+  --bg-grad2: rgba(255,157,226,0.07);
+}
+
+[data-theme="jelly"] body {
+  background: #fff0f8;
+}
+
+/* 젤리 — 둥글고 통통한 surface */
+[data-theme="jelly"] .app {
+  border-radius: 28px;
+  box-shadow: 0 8px 40px rgba(255,95,173,0.18),
+              0 2px 0 rgba(255,255,255,0.9) inset;
+}
+[data-theme="jelly"] .pool-card,
+[data-theme="jelly"] .sched-day,
+[data-theme="jelly"] .modal-box {
+  border-radius: 20px;
+  box-shadow: 0 6px 20px rgba(255,95,173,0.12),
+              0 1px 0 rgba(255,255,255,0.8) inset;
+}
+
+/* 젤리 스와치 */
+.theme-swatch[data-theme="jelly"] {
+  background: linear-gradient(135deg, #ff5fad, #ff9de2, #ffb3ec);
+  box-shadow: 0 3px 10px rgba(255,95,173,0.4);
+}
+
 /* 배경 — 무지갯빛 그라디언트 */
 [data-theme="glass"] body {
   background: linear-gradient(135deg,
