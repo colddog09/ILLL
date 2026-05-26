@@ -1483,7 +1483,7 @@ body {
   overflow: visible;
   display: flex;
   gap: 4px;
-  align-items: stretch;
+  align-items: flex-start;
 }
 
 /* 캘린더 사이드 패널 */
@@ -1499,6 +1499,10 @@ body {
   flex-direction: column;
   gap: 4px;
   overflow: hidden;
+  align-self: flex-start;
+  position: sticky;
+  top: 0;
+  max-height: 90vh;
 }
 
 /* 리사이즈 핸들 */
@@ -1512,7 +1516,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  align-self: stretch;
+  align-self: flex-start;
+  max-height: 90vh;
 }
 .gcal-resize-handle::after {
   content: '';
@@ -1560,6 +1565,7 @@ body {
   flex-direction: column;
   gap: 4px;
   min-height: 0;
+  max-height: calc(90vh - 80px);
 }
 
 .gcal-side-event {
