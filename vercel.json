@@ -13,6 +13,7 @@
   ],
   "routes": [
     { "handle": "filesystem" },
+    { "src": "/shop", "dest": "/shop.html" },
     { "src": "/(.*)", "dest": "/404.html", "status": 404 }
   ]
 }
