@@ -386,12 +386,7 @@ updateDday();
     panel.style.width = saved + 'px';
   }
 
-  // 패널 표시 상태에 따라 핸들도 토글
-  const observer = new MutationObserver(() => {
-    handle.hidden = panel.hidden;
-  });
-  observer.observe(panel, { attributes: true, attributeFilter: ['hidden'] });
-  handle.hidden = panel.hidden;
+  // 핸들은 render.js에서 패널과 함께 직접 표시
 
   let dragging = false;
   let startX = 0;

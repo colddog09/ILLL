@@ -211,6 +211,8 @@ function renderGcalSidePanel() {
     .sort();
 
   panel.hidden = false;
+  const resizeHandle = document.getElementById('gcalResizeHandle');
+  if (resizeHandle) resizeHandle.hidden = false;
   panel.innerHTML = '';
 
   const header = document.createElement('div');
