@@ -94,6 +94,55 @@
   --bg-grad2: rgba(56,189,248,0.08);
 }
 
+/* ── 테마: 마인크래프트 ── */
+[data-theme="minecraft"] {
+  --bg: #c6d97f;
+  --surface: #f5f0e8;
+  --surface-hover: #e8e0cc;
+  --border: rgba(74,105,30,0.22);
+  --border-strong: rgba(74,105,30,0.45);
+  --accent: #4a691e;
+  --accent2: #4aedd9;
+  --text: #1a2e0a;
+  --text-sub: #4a5e2a;
+  --success: #16a34a;
+  --danger: #dc2626;
+  --shadow: 0 4px 20px rgba(74,105,30,0.18);
+  --shadow-lg: 0 12px 40px rgba(74,105,30,0.26);
+  --bg-grad1: rgba(74,105,30,0.10);
+  --bg-grad2: rgba(74,237,217,0.08);
+  --radius: 4px;
+  --radius-sm: 2px;
+}
+
+[data-theme="minecraft"] body {
+  background-image:
+    linear-gradient(rgba(198,217,127,0.6) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(198,217,127,0.6) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+[data-theme="minecraft"] .modal-box,
+[data-theme="minecraft"] .pool-card,
+[data-theme="minecraft"] .day-card,
+[data-theme="minecraft"] .settings-card {
+  border-radius: 4px !important;
+  image-rendering: pixelated;
+}
+
+[data-theme="minecraft"] .schedule-area {
+  background:
+    linear-gradient(180deg, #8BC34A 0px, #8BC34A 6px, #795548 6px, #795548 28px, #9E9E9E 28px) !important;
+  background-size: 100% 28px !important;
+  background-repeat: no-repeat !important;
+}
+
+[data-theme="minecraft"] .add-task-btn,
+[data-theme="minecraft"] .auth-btn,
+[data-theme="minecraft"] .week-nav-btn {
+  border-radius: 2px !important;
+}
+
 /* ── 테마: 한교동 ── */
 [data-theme="hgd"] {
   --bg: #e0f7f4;
