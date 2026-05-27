@@ -819,6 +819,15 @@ body {
   flex-wrap: wrap;
 }
 
+.logo-link {
+  text-decoration: none;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  transition: opacity 0.15s;
+}
+.logo-link:hover { opacity: 0.75; }
 .logo {
   font-size: 1.2rem;
   font-weight: 800;
