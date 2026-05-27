@@ -679,3 +679,17 @@ updateDday();
     localStorage.setItem(STORAGE_KEY, parseInt(panel.style.width));
   });
 })();
+
+// ─────────────────────────────────────────────────────────────
+// 즉시 로컬 렌더 — bootstrapSupabase()가 완료되기 전 빈 화면 방지
+// auth 완료 후 loadState()가 정식으로 덮어쓰므로 데이터 무결성 보장
+// ─────────────────────────────────────────────────────────────
+(function _eagerLocalRender() {
+  if (dataLoaded) return; // 이미 loadState 완료된 경우 스킵
+  try {
+    const snap = localStorage.getItem(LS_BACKUP_KEY);
+    if (!snap) return;
+    applyPersistedState(JSON.parse(snap));
+    renderApp();
+  } catch (_) {}
+})();
