@@ -3411,17 +3411,12 @@ body {
 }
 [data-theme="starrail"] .sched-item.done { opacity: 0.45; }
 
-/* ── 스타레일 폰트 ── */
-[data-theme="starrail"] body,
-[data-theme="starrail"] .sched-item__text,
-[data-theme="starrail"] .pool-item__text,
+/* ── 스타레일 폰트 — 제목/날짜류만 Black Han Sans ── */
 [data-theme="starrail"] .day-col__title,
 [data-theme="starrail"] .week-label,
-[data-theme="starrail"] .top-bar__title,
-[data-theme="starrail"] button,
-[data-theme="starrail"] input {
+[data-theme="starrail"] .top-bar__title {
   font-family: 'Black Han Sans', 'Pretendard', sans-serif !important;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
 }
 
 [data-theme="starrail"] body {
