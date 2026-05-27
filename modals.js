@@ -530,6 +530,48 @@ infoHistoryBtn?.addEventListener('click', () => {
     return localStorage.getItem(t.unlockKey) === '1';
   }
 
+  // ── 겨울 눈 효과 ──────────────────────────────
+  function removeWinterEffects() {
+    document.getElementById('winterSnow')?.remove();
+    document.getElementById('winterDeco')?.remove();
+  }
+
+  function spawnWinterEffects() {
+    removeWinterEffects();
+
+    // 눈 컨테이너
+    const snow = document.createElement('div');
+    snow.className = 'winter-snow';
+    snow.id = 'winterSnow';
+
+    const FLAKES = ['❄', '❅', '❆', '✦', '·'];
+    const COUNT  = 28;
+    for (let i = 0; i < COUNT; i++) {
+      const f = document.createElement('span');
+      f.className = 'snowflake';
+      f.textContent = FLAKES[Math.floor(Math.random() * FLAKES.length)];
+      const size  = 0.55 + Math.random() * 1.1;
+      const drift = (Math.random() * 100 - 50).toFixed(1);
+      f.style.cssText = [
+        `left:${(Math.random() * 102 - 1).toFixed(1)}vw`,
+        `font-size:${size.toFixed(2)}rem`,
+        `animation-duration:${(5 + Math.random() * 9).toFixed(1)}s`,
+        `animation-delay:${(-(Math.random() * 12)).toFixed(1)}s`,
+        `--drift:${drift}px`,
+      ].join(';');
+      snow.appendChild(f);
+    }
+    document.body.appendChild(snow);
+
+    // 데코 (눈사람 + 크리스마스 트리)
+    const deco = document.createElement('div');
+    deco.className = 'winter-deco';
+    deco.id = 'winterDeco';
+    deco.innerHTML = '🎄<br>⛄';
+    document.body.appendChild(deco);
+  }
+  // ─────────────────────────────────────────────
+
   function applyTheme(theme) {
     if (theme === 'purple' || !theme) {
       document.documentElement.removeAttribute('data-theme');
@@ -539,6 +581,14 @@ infoHistoryBtn?.addEventListener('click', () => {
     document.querySelectorAll('.theme-swatch').forEach(sw => {
       sw.classList.toggle('theme-swatch--active', sw.dataset.theme === (theme || 'purple'));
     });
+
+    // 겨울 효과 on/off
+    if (theme === 'winter') {
+      spawnWinterEffects();
+    } else {
+      removeWinterEffects();
+    }
+
     if (typeof renderWeek === 'function') renderWeek();
   }
 

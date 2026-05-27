@@ -472,6 +472,49 @@
   background: linear-gradient(90deg, #3a9bd5, #7ec8e8);
 }
 
+/* ── 겨울 눈 파티클 ── */
+.winter-snow {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9;
+  overflow: hidden;
+}
+.snowflake {
+  position: absolute;
+  top: -2em;
+  color: #c8e8f8;
+  user-select: none;
+  animation: snowFall linear infinite;
+}
+@keyframes snowFall {
+  0%   { transform: translateY(-2em) translateX(0)                rotate(0deg);   opacity: 0; }
+  8%   { opacity: 1; }
+  100% { transform: translateY(105vh) translateX(var(--drift,30px)) rotate(540deg); opacity: 0.25; }
+}
+
+/* ── 겨울 데코 (눈사람·트리) ── */
+.winter-deco {
+  position: fixed;
+  bottom: 18px;
+  right: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 1.6rem;
+  line-height: 1;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0.82;
+  animation: decoFloat 4s ease-in-out infinite;
+  filter: drop-shadow(0 2px 6px rgba(58,155,213,0.25));
+}
+@keyframes decoFloat {
+  0%,100% { transform: translateY(0); }
+  50%     { transform: translateY(-5px); }
+}
+
 /* 겨울 스와치 */
 .theme-swatch[data-theme="winter"] {
   background: linear-gradient(135deg, #b8ddf0 0%, #e8f6fc 50%, #3a9bd5 100%);
