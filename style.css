@@ -4084,16 +4084,16 @@ a.settings-tab {
 
 /* 참조 이미지처럼 화면 대각선 전체를 가로지르는 크기 */
 .sr-train-img {
-  width: 75vw;
-  max-width: 900px;
-  min-width: 480px;
+  width: 80vw;
+  max-width: 980px;
+  min-width: 500px;
   display: block;
-  /* 좌하→우상 대각선 각도 ~-28도 */
   transform: rotate(-28deg);
-  /* 투명 PNG이므로 blend mode 불필요 */
   filter:
-    drop-shadow(0 0 24px rgba(255, 200, 80, 0.8))
-    drop-shadow(0 0 50px rgba(160, 100, 255, 0.7))
-    brightness(1.3);
+    drop-shadow(0 0 20px rgba(255, 200, 80, 0.9))
+    drop-shadow(0 0 45px rgba(160, 100, 255, 0.8))
+    drop-shadow(-12px 0px 8px rgba(255,255,255,0.15))
+    brightness(1.25);
   image-rendering: auto;
+  will-change: transform;
 }

@@ -66,55 +66,83 @@ function triggerStarRailTrain() {
   const particles = [];
   let animFrame;
 
-  // 황금+보라 혼합 파티클 (사진의 열차 꼬리 불꽃)
-  function spawnParticle(x, y) {
-    const isGold = Math.random() > 0.35;
+  const W = window.innerWidth;
+  const H = window.innerHeight;
+
+  // 시작: 화면 왼쪽 하단 밖, 끝: 오른쪽 상단 밖
+  const startX = -W * 0.6;
+  const startY = H * 1.05;
+  const endX   = W * 1.4;
+  const endY   = H * -0.15;
+
+  // 속도감 있는 ease: 빠르게 치고 나가다 끝에 살짝 감속
+  // easeInQuart — 처음엔 느렸다 순식간에 가속
+  function easeInOutExpo(t) {
+    if (t === 0) return 0;
+    if (t === 1) return 1;
+    return t < 0.5 ? Math.pow(2, 20*t - 10) / 2 : (2 - Math.pow(2, -20*t + 10)) / 2;
+  }
+
+  // 꼬리 파티클 — 빠른 속도감에 맞게 길고 얇게
+  function spawnParticle(x, y, vBase) {
+    const isGold = Math.random() > 0.4;
     particles.push({
       x, y,
-      vx: (Math.random() - 0.5) * 5 - 2,  // 열차 뒤로 흩어짐
-      vy: (Math.random() * 3 + 1),           // 아래로 떨어짐
+      vx: vBase.vx * (0.3 + Math.random() * 0.4) + (Math.random() - 0.5) * 3,
+      vy: vBase.vy * (0.3 + Math.random() * 0.4) + (Math.random() - 0.5) * 3,
       life: 1,
-      size: Math.random() * 4 + 1.5,
+      size: Math.random() * 3 + 1,
       color: isGold
         ? ['#ffd060','#ffb020','#ffe090','#ff8c00'][Math.floor(Math.random()*4)]
-        : ['#b080ff','#d0a0ff','#8060cc','#ffffff'][Math.floor(Math.random()*4)]
+        : ['#b080ff','#d0a0ff','#c8a0ff','#ffffff'][Math.floor(Math.random()*4)]
     });
   }
 
-  const W = window.innerWidth;
-  const H = window.innerHeight;
-  // 참조 이미지처럼: 왼쪽 하단 밖에서 → 오른쪽 상단 밖으로
-  const startX = -W * 0.5;
-  const startY = H * 0.9;
-  const endX   = W * 1.3;
-  const endY   = H * 0.05;
-  let trainX = startX, trainY = startY;
-  const duration = 2400; // ms
+  const duration = 900; // 매우 빠르게 — 0.9초
   const startTime = performance.now();
+  let prevX = startX, prevY = startY;
+
+  // 진입 전 짧은 딜레이 — 0.1초 후 등장 (더 갑작스럽게)
+  let trainX = startX, trainY = startY;
+  const wrap = overlay.querySelector('.sr-train-img-wrap');
+  if (wrap) wrap.style.transform = `translate(${trainX}px, ${trainY}px)`;
 
   function animate(now) {
-    const t = Math.min((now - startTime) / duration, 1);
-    // 부드러운 가속-감속 (cubic ease)
-    const ease = t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2;
+    const elapsed = now - startTime;
+    const t = Math.min(elapsed / duration, 1);
+    const ease = easeInOutExpo(t);
+
     trainX = startX + (endX - startX) * ease;
     trainY = startY + (endY - startY) * ease;
 
-    // 꼬리 불꽃 파티클 — 열차 후미(왼쪽 하단) 위치에서
-    if (t < 0.92) {
-      const tailX = trainX + 60;   // 이미지 내 후미 위치 보정
-      const tailY = trainY + 180;
-      for (let i = 0; i < 5; i++) spawnParticle(tailX + Math.random()*60, tailY + Math.random()*30);
+    // 프레임 속도 기반 꼬리 파티클
+    const vx = trainX - prevX;
+    const vy = trainY - prevY;
+    if (t > 0.05 && t < 0.95) {
+      const tailX = trainX + 80;
+      const tailY = trainY + 200;
+      const count = Math.min(8, Math.floor(Math.sqrt(vx*vx + vy*vy) * 0.4));
+      for (let i = 0; i < count; i++) {
+        spawnParticle(
+          tailX + Math.random() * 80,
+          tailY + Math.random() * 40,
+          { vx: -vx * 0.6, vy: -vy * 0.3 }
+        );
+      }
     }
+    prevX = trainX;
+    prevY = trainY;
 
-    // 캔버스 클리어
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 파티클 업데이트 & 드로우
+    // 파티클 — 빠른 속도감에 맞게 빠르게 사라짐
     for (let i = particles.length - 1; i >= 0; i--) {
       const p = particles[i];
-      p.x += p.vx; p.y += p.vy; p.life -= 0.028;
+      p.x += p.vx; p.y += p.vy;
+      p.vx *= 0.92; p.vy *= 0.92;
+      p.life -= 0.055; // 빠르게 사라짐
       if (p.life <= 0) { particles.splice(i, 1); continue; }
-      ctx.globalAlpha = p.life * 0.85;
+      ctx.globalAlpha = p.life * 0.9;
       ctx.fillStyle = p.color;
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
@@ -122,8 +150,6 @@ function triggerStarRailTrain() {
     }
     ctx.globalAlpha = 1;
 
-    // 열차 위치 반영
-    const wrap = overlay.querySelector('.sr-train-img-wrap');
     if (wrap) wrap.style.transform = `translate(${trainX}px, ${trainY}px)`;
 
     if (t < 1 || particles.length > 0) {
@@ -135,11 +161,8 @@ function triggerStarRailTrain() {
 
   animFrame = requestAnimationFrame(animate);
 
-  // 최대 3초 후 강제 제거
-  setTimeout(() => {
-    cancelAnimationFrame(animFrame);
-    overlay.remove();
-  }, 3500);
+  // 최대 2.5초 후 강제 제거
+  setTimeout(() => { cancelAnimationFrame(animFrame); overlay.remove(); }, 2500);
 }
 
 // ──────────────────────────────────────────────
