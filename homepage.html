@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>오일추 — 드래그앤드롭 일정 관리 앱</title>
+  <meta name="description" content="할일을 드래그해서 날짜에 배치하는 스마트 일정 관리 앱. 구글 캘린더 연동, D-Day 카운터, 클라우드 동기화, PWA 지원." />
+  <meta name="google-site-verification" content="t3L9hcNzasdjnVxV-kNvPxpu1naEcTJf8QLl-ACxlQY" />
+  <link rel="canonical" href="https://o1chu.my/homepage" />
+  <meta property="og:type"        content="website" />
+  <meta property="og:site_name"   content="오일추" />
+  <meta property="og:title"       content="오일추 — 드래그앤드롭 일정 관리 앱" />
+  <meta property="og:description" content="할일을 드래그해서 날짜에 배치하는 스마트 일정 관리 앱." />
+  <meta property="og:url"         content="https://o1chu.my/homepage" />
+  <meta property="og:image"       content="https://o1chu.my/icon-512.png" />
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"WebApplication","name":"오일추","url":"https://o1chu.my","description":"할일을 드래그해서 날짜에 배치하는 스마트 일정 관리 앱.","applicationCategory":"ProductivityApplication","operatingSystem":"Web, iOS, Android","offers":{"@type":"Offer","price":"0","priceCurrency":"KRW"}}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent:  #6c63ff;
+      --accent2: #a78bfa;
+      --bg:      #f5f4ff;
+      --surface: #ffffff;
+      --border:  rgba(108,99,255,0.13);
+      --text:    #1e1b4b;
+      --sub:     #6b7280;
+      --font: 'Pretendard', -apple-system, sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ────────────────────────────────
+       BACKGROUND GLOW
+    ──────────────────────────────── */
+    .bg-glow {
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .bg-glow::before {
+      content: '';
+      position: absolute;
+      top: -10%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1000px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(ellipse, rgba(108,99,255,0.1) 0%, transparent 65%);
+    }
+    .bg-glow::after {
+      content: '';
+      position: absolute;
+      top: 35%;
+      right: -5%;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(ellipse, rgba(167,139,250,0.07) 0%, transparent 65%);
+    }
+
+    /* ────────────────────────────────
+       NAV
+    ──────────────────────────────── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 12px 20px;
+    }
+    .nav-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      border-radius: 16px;
+      transition: background 0.3s, border 0.3s, backdrop-filter 0.3s, box-shadow 0.3s;
+    }
+    nav.scrolled .nav-inner {
+      background: rgba(245,244,255,0.85);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 4px 24px rgba(108,99,255,0.08);
+    }
+    .nav-logo {
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--text);
+      text-decoration: none;
+      letter-spacing: -0.3px;
+    }
+    .nav-logo span {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .nav-links a {
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--sub);
+      padding: 7px 14px;
+      border-radius: 8px;
+      transition: color 0.15s, background 0.15s;
+    }
+    .nav-links a:hover { color: var(--text); background: var(--surface); }
+    .nav-cta {
+      background: var(--accent) !important;
+      color: #fff !important;
+      font-weight: 600 !important;
+      padding: 8px 18px !important;
+      border-radius: 10px !important;
+    }
+    .nav-cta:hover { background: #6a5df5 !important; color: #fff !important; }
+    .nav-mobile-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text);
+      cursor: pointer;
+      padding: 6px;
+    }
+    @media (max-width: 640px) {
+      .nav-links .nav-secondary { display: none; }
+      .nav-mobile-toggle { display: block; }
+    }
+
+    /* ────────────────────────────────
+       HERO
+    ──────────────────────────────── */
+    .hero {
+      position: relative;
+      z-index: 1;
+      padding: 160px 24px 100px;
+      text-align: center;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* Stagger animation helpers */
+    .anim-item {
+      opacity: 0;
+      animation: blurUp 0.9s cubic-bezier(.22,1,.36,1) forwards;
+    }
+    .anim-item:nth-child(1) { animation-delay: 0.1s; }
+    .anim-item:nth-child(2) { animation-delay: 0.25s; }
+    .anim-item:nth-child(3) { animation-delay: 0.4s; }
+    .anim-item:nth-child(4) { animation-delay: 0.55s; }
+    .anim-item:nth-child(5) { animation-delay: 0.7s; }
+
+    @keyframes blurUp {
+      from { opacity: 0; filter: blur(12px); transform: translateY(16px); }
+      to   { opacity: 1; filter: blur(0);    transform: translateY(0); }
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(108,99,255,0.08);
+      border: 1px solid rgba(108,99,255,0.2);
+      color: #5b52cc;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 7px 16px 7px 14px;
+      border-radius: 999px;
+      margin-bottom: 32px;
+      cursor: default;
+    }
+    .hero-badge .badge-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 6px var(--accent);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.4; }
+    }
+    .hero-badge .badge-pill {
+      background: rgba(108,99,255,0.12);
+      padding: 2px 9px;
+      border-radius: 99px;
+      font-size: 11px;
+      color: var(--accent);
+    }
+
+    .hero h1 {
+      font-size: clamp(38px, 6vw, 72px);
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: -1.5px;
+      margin-bottom: 24px;
+      color: var(--text);
+    }
+    .hero h1 .gradient-text {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-desc {
+      font-size: clamp(15px, 1.8vw, 18px);
+      color: var(--sub);
+      max-width: 500px;
+      margin: 0 auto 44px;
+      line-height: 1.75;
+    }
+
+    .hero-btns {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn-primary-wrap {
+      background: linear-gradient(135deg, rgba(108,99,255,0.3), rgba(164,120,255,0.3));
+      padding: 2px;
+      border-radius: 14px;
+    }
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      text-decoration: none;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      color: var(--sub);
+      text-decoration: none;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      transition: color 0.15s, border-color 0.15s, transform 0.15s;
+    }
+    .btn-ghost:hover { color: var(--text); border-color: rgba(108,99,255,0.35); transform: translateY(-1px); }
+
+    /* ────────────────────────────────
+       APP MOCKUP
+    ──────────────────────────────── */
+    .mockup-wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 16px 0;
+    }
+    .mockup-fade {
+      position: relative;
+    }
+    .mockup-fade::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 55%;
+      background: linear-gradient(to bottom, transparent 0%, #f5f4ff 100%);
+      z-index: 2;
+      pointer-events: none;
+    }
+    .mockup-frame {
+      background: #fff;
+      border: 1px solid rgba(108,99,255,0.15);
+      border-radius: 20px;
+      padding: 16px;
+      box-shadow:
+        0 2px 0 rgba(108,99,255,0.06),
+        0 20px 60px rgba(108,99,255,0.12),
+        0 4px 16px rgba(0,0,0,0.06);
+      overflow: hidden;
+    }
+
+    /* App UI inside mockup */
+    .app-ui {
+      background: #f8f7ff;
+      border-radius: 12px;
+      overflow: hidden;
+      aspect-ratio: 16/8;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid rgba(108,99,255,0.1);
+    }
+    .app-topbar {
+      background: #ffffff;
+      border-bottom: 1px solid rgba(108,99,255,0.1);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .app-topbar-logo {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--accent);
+    }
+    .app-input-mock {
+      flex: 1;
+      height: 28px;
+      background: #f4f5fb;
+      border: 1px solid rgba(108,99,255,0.15);
+      border-radius: 8px;
+    }
+    .app-body {
+      flex: 1;
+      display: flex;
+      gap: 12px;
+      padding: 12px;
+      overflow: hidden;
+    }
+    .app-pool {
+      width: 140px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .app-pool-title {
+      font-size: 9px;
+      font-weight: 700;
+      color: rgba(108,99,255,0.5);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .app-task {
+      background: #fff;
+      border: 1px solid rgba(108,99,255,0.18);
+      border-radius: 6px;
+      padding: 5px 8px;
+      font-size: 9px;
+      color: #4b4680;
+    }
+    .app-days {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(5,1fr);
+      gap: 8px;
+    }
+    .app-day {
+      background: #ffffff;
+      border: 1px solid rgba(108,99,255,0.1);
+      border-radius: 8px;
+      padding: 6px;
+    }
+    .app-day-label {
+      font-size: 8px;
+      color: rgba(108,99,255,0.5);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .app-day.today { border-color: rgba(108,99,255,0.35); background: rgba(108,99,255,0.04); }
+    .app-day.today .app-day-label { color: var(--accent); }
+    .app-sched-item {
+      background: rgba(108,99,255,0.07);
+      border-radius: 4px;
+      padding: 3px 5px;
+      font-size: 7.5px;
+      color: #5b52cc;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .app-sched-item.done {
+      opacity: 0.4;
+      text-decoration: line-through;
+    }
+    .app-o-btn {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: rgba(108,99,255,0.15);
+      border: 1px solid rgba(108,99,255,0.35);
+      flex-shrink: 0;
+    }
+    .app-o-btn.done { background: var(--accent); border-color: var(--accent); }
+    .app-progress {
+      height: 2px;
+      background: rgba(108,99,255,0.1);
+      border-radius: 2px;
+      margin-top: 4px;
+      overflow: hidden;
+    }
+    .app-progress-bar {
+      height: 100%;
+      border-radius: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+    }
+
+    /* ────────────────────────────────
+       STATS / BADGES ROW
+    ──────────────────────────────── */
+    .stats-row {
+      position: relative;
+      z-index: 1;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 60px 24px 0;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 32px;
+    }
+    .stat-item {
+      text-align: center;
+      opacity: 0;
+    }
+    .stat-item.visible {
+      animation: blurUp 0.7s cubic-bezier(.22,1,.36,1) forwards;
+    }
+    .stat-num {
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .stat-label {
+      font-size: 13px;
+      color: var(--sub);
+      margin-top: 2px;
+    }
+
+    /* ────────────────────────────────
+       FEATURES
+    ──────────────────────────────── */
+    .section {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 100px 24px;
+    }
+    .section-eyebrow {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent2);
+      margin-bottom: 12px;
+    }
+    .section-title {
+      text-align: center;
+      font-size: clamp(26px, 3.5vw, 40px);
+      font-weight: 900;
+      letter-spacing: -0.8px;
+      color: #fff;
+      margin-bottom: 60px;
+    }
+    .section-title span {
+      color: var(--sub);
+      font-weight: 400;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+      opacity: 0;
+      box-shadow: 0 2px 8px rgba(108,99,255,0.05);
+    }
+    .feature-card.visible {
+      animation: blurUp 0.7s cubic-bezier(.22,1,.36,1) forwards;
+    }
+    .feature-card:hover {
+      border-color: rgba(108,99,255,0.3);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(108,99,255,0.1);
+    }
+    .feature-icon {
+      width: 44px; height: 44px;
+      background: rgba(108,99,255,0.08);
+      border: 1px solid rgba(108,99,255,0.15);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin-bottom: 16px;
+    }
+    .feature-card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .feature-card p {
+      font-size: 14px;
+      color: var(--sub);
+      line-height: 1.65;
+    }
+
+    /* ────────────────────────────────
+       HOW IT WORKS
+    ──────────────────────────────── */
+    .how-section {
+      position: relative;
+      z-index: 1;
+      padding: 0 24px 100px;
+    }
+    .how-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0;
+      position: relative;
+    }
+    .steps::before {
+      content: '';
+      position: absolute;
+      top: 32px; left: 10%; right: 10%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(108,99,255,0.2) 20%, rgba(108,99,255,0.2) 80%, transparent);
+    }
+    .step {
+      text-align: center;
+      padding: 0 20px;
+      opacity: 0;
+    }
+    .step.visible {
+      animation: blurUp 0.7s cubic-bezier(.22,1,.36,1) forwards;
+    }
+    .step-num {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(108,99,255,0.1), rgba(167,139,250,0.1));
+      border: 1.5px solid rgba(108,99,255,0.2);
+      color: var(--accent);
+      font-size: 22px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      position: relative;
+      z-index: 1;
+      background-color: #fff;
+    }
+    .step h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .step p {
+      font-size: 14px;
+      color: var(--sub);
+    }
+
+    /* ────────────────────────────────
+       CTA
+    ──────────────────────────────── */
+    .cta-section {
+      position: relative;
+      z-index: 1;
+      padding: 0 24px 120px;
+    }
+    .cta-box {
+      max-width: 800px;
+      margin: 0 auto;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      border-radius: 28px;
+      padding: 72px 48px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(108,99,255,0.25);
+    }
+    .cta-box::before {
+      content: '';
+      position: absolute;
+      top: -40%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px; height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(ellipse, rgba(255,255,255,0.12) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .cta-box h2 {
+      font-size: clamp(26px, 3.5vw, 42px);
+      font-weight: 900;
+      letter-spacing: -1px;
+      color: #fff;
+      margin-bottom: 14px;
+    }
+    .cta-box p {
+      font-size: 16px;
+      color: rgba(255,255,255,0.8);
+      margin-bottom: 36px;
+    }
+    .cta-btns {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* ────────────────────────────────
+       FOOTER
+    ──────────────────────────────── */
+    footer {
+      position: relative;
+      z-index: 1;
+      border-top: 1px solid var(--border);
+      padding: 36px 24px;
+    }
+    .footer-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+    .footer-logo {
+      font-size: 16px;
+      font-weight: 900;
+      color: rgba(108,99,255,0.5);
+    }
+    .footer-links {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .footer-links a {
+      font-size: 13px;
+      color: var(--sub);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .footer-links a:hover { color: var(--accent); }
+    .footer-copy { font-size: 12px; color: #b0b8d0; }
+
+    /* ────────────────────────────────
+       SCROLL FADE-IN UTILITY
+    ──────────────────────────────── */
+    .scroll-reveal {
+      opacity: 0;
+    }
+    .scroll-reveal.visible {
+      animation: blurUp 0.7s cubic-bezier(.22,1,.36,1) forwards;
+    }
+
+    @media (max-width: 640px) {
+      .hero { padding: 130px 20px 80px; }
+      .steps::before { display: none; }
+      .cta-box { padding: 44px 24px; }
+      .app-days { grid-template-columns: repeat(3, 1fr); }
+      .app-days .app-day:nth-child(n+4) { display: none; }
+    }
+
+    /* ────────────────────────────────
+       TESTIMONIAL SLIDER
+    ──────────────────────────────── */
+    .testimonials-section {
+      position: relative; z-index: 1;
+      padding: 0 24px 100px;
+    }
+    .testimonials-inner { max-width: 1100px; margin: 0 auto; }
+    .slider-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .slider-controls { display: flex; gap: 8px; }
+    .slider-btn {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      background: white;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(108,99,255,0.07);
+      transition: all 0.15s;
+      color: var(--accent);
+      font-size: 18px;
+    }
+    .slider-btn:hover:not(:disabled) { border-color: var(--accent); transform: scale(1.08); }
+    .slider-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+    .slider-overflow { overflow: hidden; border-radius: 4px; }
+    .slider-track {
+      display: flex;
+      transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: transform;
+    }
+    .slider-card-wrap {
+      flex-shrink: 0;
+      padding: 8px;
+    }
+    .testimonial-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 2px 12px rgba(108,99,255,0.07);
+      transition: transform 0.2s, box-shadow 0.2s;
+      height: 100%;
+      display: flex; flex-direction: column;
+      position: relative; overflow: hidden;
+    }
+    .testimonial-card:hover { transform: translateY(-3px); box-shadow: 0 10px 32px rgba(108,99,255,0.12); }
+    .testimonial-quote-bg {
+      position: absolute; top: -8px; left: 12px;
+      font-size: 80px; font-weight: 900; line-height: 1;
+      color: rgba(108,99,255,0.06);
+      font-family: Georgia, serif;
+      pointer-events: none; user-select: none;
+    }
+    .testimonial-text {
+      font-size: 15px; color: var(--text); line-height: 1.75;
+      margin-bottom: 20px; flex: 1;
+      position: relative; z-index: 1;
+    }
+    .testimonial-author {
+      display: flex; align-items: center; gap: 12px;
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+    }
+    .testimonial-avatar {
+      width: 44px; height: 44px;
+      border-radius: 50%; object-fit: cover;
+      border: 2px solid rgba(108,99,255,0.15);
+      flex-shrink: 0;
+    }
+    .testimonial-name { font-weight: 700; font-size: 14px; color: var(--text); }
+    .testimonial-role { font-size: 12px; color: var(--sub); margin-top: 1px; }
+    .slider-dots {
+      display: flex; justify-content: center; gap: 8px; margin-top: 28px;
+    }
+    .slider-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: rgba(108,99,255,0.2);
+      border: none; cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+      padding: 0;
+    }
+    .slider-dot.active { background: var(--accent); transform: scale(1.3); }
+
+    /* ── SHOP CTA BANNER ── */
+    .shop-banner {
+      position: relative; z-index: 1;
+      max-width: 1100px; margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+    .shop-banner-inner {
+      background: linear-gradient(135deg, rgba(108,99,255,0.06), rgba(167,139,250,0.08));
+      border: 1.5px solid rgba(108,99,255,0.18);
+      border-radius: 20px;
+      padding: 36px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .shop-banner-left h3 {
+      font-size: 20px; font-weight: 800;
+      color: var(--text); margin-bottom: 6px;
+    }
+    .shop-banner-left p { font-size: 14px; color: var(--sub); }
+    .shop-banner-right a {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white; text-decoration: none;
+      padding: 12px 24px; border-radius: 12px;
+      font-size: 15px; font-weight: 700;
+      white-space: nowrap;
+      transition: opacity 0.15s, transform 0.15s;
+      box-shadow: 0 4px 16px rgba(108,99,255,0.25);
+    }
+    .shop-banner-right a:hover { opacity: 0.88; transform: translateY(-1px); }
+    @media (max-width: 640px) {
+      .shop-banner-inner { padding: 24px 20px; flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- BACKGROUND GLOW -->
+  <div class="bg-glow" aria-hidden="true"></div>
+
+  <!-- ─── NAV ─── -->
+  <nav id="mainNav">
+    <div class="nav-inner">
+      <a class="nav-logo" href="/homepage"><span>오</span>일추</a>
+      <div class="nav-links">
+        <a href="#features" class="nav-secondary">기능</a>
+        <a href="#how" class="nav-secondary">사용법</a>
+        <a href="/shop" class="nav-secondary" style="color:var(--accent);font-weight:600;">🎨 테마샵</a>
+        <a href="/" class="nav-cta">앱 시작하기 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ─── HERO ─── -->
+  <section class="hero">
+    <div class="anim-item">
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        무료 · 로그인만 하면 시작
+        <span class="badge-pill">PWA 지원</span>
+      </div>
+    </div>
+
+    <h1 class="anim-item">
+      공부 계획을<br>
+      <span class="gradient-text">드래그 한 번</span>으로
+    </h1>
+
+    <p class="hero-desc anim-item">
+      할일 목록을 만들고 원하는 날짜에 드래그해서 배치하세요.<br>
+      구글 캘린더 연동, D-Day 카운터, 멀티 기기 동기화까지.
+    </p>
+
+    <div class="hero-btns anim-item">
+      <div class="btn-primary-wrap">
+        <a class="btn-primary" href="/">
+          📋 지금 시작하기
+        </a>
+      </div>
+      <a class="btn-ghost" href="#features">기능 살펴보기 ↓</a>
+    </div>
+  </section>
+
+  <!-- ─── APP MOCKUP ─── -->
+  <div class="mockup-wrap anim-item">
+    <div class="mockup-fade">
+      <div class="mockup-frame">
+        <div class="app-ui" aria-hidden="true">
+          <!-- Top bar -->
+          <div class="app-topbar">
+            <span class="app-topbar-logo">오일추</span>
+            <div class="app-input-mock"></div>
+          </div>
+          <!-- Body -->
+          <div class="app-body">
+            <!-- Pool -->
+            <div class="app-pool">
+              <div class="app-pool-title">할일 목록</div>
+              <div class="app-task">📝 수학 숙제</div>
+              <div class="app-task">📝 영어 단어</div>
+              <div class="app-task">📝 물리 예습</div>
+              <div class="app-task">📝 독서 기록</div>
+            </div>
+            <!-- Day grid -->
+            <div class="app-days">
+              <div class="app-day">
+                <div class="app-day-label">월</div>
+                <div class="app-sched-item done">
+                  국어 복습<div class="app-o-btn done"></div>
+                </div>
+                <div class="app-progress"><div class="app-progress-bar" style="width:100%"></div></div>
+              </div>
+              <div class="app-day">
+                <div class="app-day-label">화</div>
+                <div class="app-sched-item done">
+                  수학 p.32<div class="app-o-btn done"></div>
+                </div>
+                <div class="app-sched-item">
+                  영어 단어<div class="app-o-btn"></div>
+                </div>
+                <div class="app-progress"><div class="app-progress-bar" style="width:50%"></div></div>
+              </div>
+              <div class="app-day today">
+                <div class="app-day-label">수 · 오늘</div>
+                <div class="app-sched-item">
+                  물리 예습<div class="app-o-btn"></div>
+                </div>
+                <div class="app-sched-item">
+                  수학 숙제<div class="app-o-btn"></div>
+                </div>
+                <div class="app-progress"><div class="app-progress-bar" style="width:0%"></div></div>
+              </div>
+              <div class="app-day">
+                <div class="app-day-label">목</div>
+                <div class="app-sched-item">
+                  독서 기록<div class="app-o-btn"></div>
+                </div>
+                <div class="app-progress"><div class="app-progress-bar" style="width:0%"></div></div>
+              </div>
+              <div class="app-day">
+                <div class="app-day-label">금</div>
+                <div class="app-progress"><div class="app-progress-bar" style="width:0%"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── STATS ROW ─── -->
+  <div class="stats-row">
+    <div class="stat-item">
+      <div class="stat-num">100%</div>
+      <div class="stat-label">무료</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">즉시</div>
+      <div class="stat-label">Google 로그인</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">멀티</div>
+      <div class="stat-label">기기 동기화</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">PWA</div>
+      <div class="stat-label">앱처럼 설치</div>
+    </div>
+  </div>
+
+  <!-- ─── FEATURES ─── -->
+  <section class="section" id="features">
+    <div class="section-eyebrow scroll-reveal">Features</div>
+    <h2 class="section-title scroll-reveal">필요한 건 <span>다 있어요</span></h2>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🖱️</div>
+        <h3>드래그앤드롭</h3>
+        <p>할일을 원하는 날짜로 드래그해서 배치하세요. 모바일에서는 더블탭하면 오늘에 바로 추가돼요.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">☁️</div>
+        <h3>실시간 클라우드 동기화</h3>
+        <p>어느 기기에서 접속해도 데이터가 자동으로 동기화돼요. 변경하면 2초 후 자동으로 백업.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📅</div>
+        <h3>Google Calendar 연동</h3>
+        <p>Google 캘린더 일정을 앱에서 바로 확인하고 할일 목록에 추가하세요.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⏰</div>
+        <h3>D-Day 카운터</h3>
+        <p>시험, 수행평가까지 남은 날을 상단에 항상 표시해요. 설정에서 원하는 날짜로 변경 가능.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📱</div>
+        <h3>PWA 설치</h3>
+        <p>홈 화면에 추가하면 앱처럼 사용할 수 있어요. iOS, Android, 데스크탑 모두 지원.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎨</div>
+        <h3>테마 변경</h3>
+        <p>보라, 블루, 그린, 다크, 리퀴드 글라스, 그리고 특별한 스타레일 테마까지!</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── HOW IT WORKS ─── -->
+  <section class="how-section" id="how">
+    <div class="how-inner">
+      <div class="section-eyebrow scroll-reveal">How it works</div>
+      <h2 class="section-title scroll-reveal">3단계로 <span>끝</span></h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <h3>구글로 로그인</h3>
+          <p>Google 계정으로 1초 만에 시작하세요. 별도 회원가입 없어요.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <h3>할일 추가</h3>
+          <p>상단 입력창에 할일을 입력하면 목록에 쌓여요. 기한 설정도 가능.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <h3>날짜에 배치</h3>
+          <p>할일을 드래그해서 원하는 요일 칸에 놓으면 끝!</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── TESTIMONIALS ─── -->
+  <section class="testimonials-section" id="testimonials">
+    <div class="testimonials-inner">
+      <div class="slider-header">
+        <div>
+          <div class="section-eyebrow scroll-reveal" style="text-align:left;">Testimonials</div>
+          <h2 class="section-title scroll-reveal" style="text-align:left;margin-bottom:0;">사용자들의 <span>솔직한 후기</span></h2>
+        </div>
+        <div class="slider-controls">
+          <button class="slider-btn" id="sliderPrev" aria-label="이전">&#8592;</button>
+          <button class="slider-btn" id="sliderNext" aria-label="다음">&#8594;</button>
+        </div>
+      </div>
+      <div class="slider-overflow" id="sliderOverflow">
+        <div class="slider-track" id="sliderTrack"></div>
+      </div>
+      <div class="slider-dots" id="sliderDots"></div>
+    </div>
+  </section>
+
+  <!-- ─── SHOP BANNER ─── -->
+  <div class="shop-banner scroll-reveal">
+    <div class="shop-banner-inner">
+      <div class="shop-banner-left">
+        <h3>🎨 테마샵에서 나만의 테마를</h3>
+        <p>보라, 블루, 그린, 다크, 리퀴드 글라스, 스타레일까지 — 취향껏 앱을 꾸며보세요.</p>
+      </div>
+      <div class="shop-banner-right">
+        <a href="/shop">🛍️ 테마샵 열기 →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── CTA ─── -->
+  <section class="cta-section">
+    <div class="cta-box scroll-reveal">
+      <h2>지금 바로 시작해보세요</h2>
+      <p>Google 계정만 있으면 돼요. 완전 무료입니다.</p>
+      <div class="cta-btns">
+        <a class="btn-primary" href="/" style="background:#fff;color:var(--accent);box-shadow:0 4px 20px rgba(0,0,0,0.12);">📋 오일추 시작하기 →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── FOOTER ─── -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-logo">오일추</div>
+      <div class="footer-links">
+        <a href="/privacy.html">개인정보처리방침</a>
+        <a href="/terms.html">이용약관</a>
+        <a href="/license.html">오픈소스 라이선스</a>
+        <a href="mailto:colddog09@gmail.com">문의하기</a>
+      </div>
+      <p class="footer-copy">© 2026 오일추. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    // ── Nav scroll effect ──
+    const nav = document.getElementById('mainNav');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 40);
+    }, { passive: true });
+
+    // ── Intersection Observer: scroll-reveal ──
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          // stagger for grouped elements
+          const siblings = entry.target.parentElement.querySelectorAll('.feature-card, .step, .stat-item');
+          const idx = [...siblings].indexOf(entry.target);
+          entry.target.style.animationDelay = (idx * 0.1) + 's';
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+
+    document.querySelectorAll('.scroll-reveal, .feature-card, .step, .stat-item').forEach(el => observer.observe(el));
+
+    // ── Testimonial Slider ──
+    (function() {
+      const testimonials = [
+        {
+          quote: "수행평가 기한을 절대 놓치지 않게 됐어요. 드래그로 일정 짜는 게 이렇게 편할 줄 몰랐어요. 매일 쓰고 있어요!",
+          name: "김민준", role: "고등학교 2학년",
+          avatar: "https://i.pravatar.cc/80?img=12"
+        },
+        {
+          quote: "스타레일 테마 너무 귀여워요! 폼폼 누르면서 공부하니까 뭔가 즐거워지고 자꾸 완료 누르고 싶어져요 ㅋㅋ",
+          name: "이서연", role: "고등학교 1학년",
+          avatar: "https://i.pravatar.cc/80?img=47"
+        },
+        {
+          quote: "구글 캘린더 연동해서 학원 일정까지 한 번에 관리해요. 여러 앱 쓸 필요 없어서 진짜 편해요.",
+          name: "박지호", role: "고등학교 2학년",
+          avatar: "https://i.pravatar.cc/80?img=33"
+        },
+        {
+          quote: "집 PC랑 핸드폰이랑 동기화가 돼서 어디서든 일정 확인할 수 있어요. 클라우드 저장 기능이 정말 좋아요!",
+          name: "최하은", role: "고등학교 3학년",
+          avatar: "https://i.pravatar.cc/80?img=45"
+        },
+        {
+          quote: "D-Day 기능으로 수능까지 카운트다운 중이에요. 매일 숫자 보면서 긴장도 되고 동기부여가 확실히 돼요.",
+          name: "정승현", role: "고등학교 3학년",
+          avatar: "https://i.pravatar.cc/80?img=68"
+        },
+      ];
+
+      let currentIndex = 0;
+      let direction = 1;
+      let autoPlayTimer = null;
+      let touchStartX = 0;
+      let isDragging = false;
+      let dragStartX = 0;
+
+      const track    = document.getElementById('sliderTrack');
+      const dots     = document.getElementById('sliderDots');
+      const prevBtn  = document.getElementById('sliderPrev');
+      const nextBtn  = document.getElementById('sliderNext');
+      const overflow = document.getElementById('sliderOverflow');
+
+      function getVisibleCount() {
+        if (window.innerWidth >= 1024) return 3;
+        if (window.innerWidth >= 640)  return 2;
+        return 1;
+      }
+
+      function getMaxIndex() {
+        return Math.max(0, testimonials.length - getVisibleCount());
+      }
+
+      function updateUI() {
+        const vc = getVisibleCount();
+        const pct = 100 / vc;
+        track.style.transform = `translateX(-${currentIndex * pct}%)`;
+        track.querySelectorAll('.slider-card-wrap').forEach(w => { w.style.width = pct + '%'; });
+        dots.querySelectorAll('.slider-dot').forEach((d, i) => d.classList.toggle('active', i === currentIndex));
+        prevBtn.disabled = currentIndex <= 0;
+        nextBtn.disabled = currentIndex >= getMaxIndex();
+      }
+
+      function buildSlider() {
+        const vc  = getVisibleCount();
+        const pct = 100 / vc;
+        track.innerHTML = testimonials.map(t => `
+          <div class="slider-card-wrap" style="width:${pct}%">
+            <div class="testimonial-card">
+              <div class="testimonial-quote-bg">&ldquo;</div>
+              <p class="testimonial-text">&ldquo;${t.quote}&rdquo;</p>
+              <div class="testimonial-author">
+                <img class="testimonial-avatar" src="${t.avatar}" alt="${t.name}" loading="lazy" />
+                <div>
+                  <div class="testimonial-name">${t.name}</div>
+                  <div class="testimonial-role">${t.role}</div>
+                </div>
+              </div>
+            </div>
+          </div>`).join('');
+
+        const maxIdx = getMaxIndex();
+        dots.innerHTML = Array.from({length: maxIdx + 1}, (_, i) =>
+          `<button class="slider-dot${i === currentIndex ? ' active' : ''}" data-idx="${i}" aria-label="슬라이드 ${i+1}"></button>`
+        ).join('');
+        dots.querySelectorAll('.slider-dot').forEach(d => {
+          d.addEventListener('click', () => { currentIndex = +d.dataset.idx; updateUI(); resetAutoPlay(); });
+        });
+        updateUI();
+      }
+
+      function goNext() { if (currentIndex < getMaxIndex()) { currentIndex++; updateUI(); } }
+      function goPrev() { if (currentIndex > 0) { currentIndex--; updateUI(); } }
+
+      function startAutoPlay() {
+        clearInterval(autoPlayTimer);
+        autoPlayTimer = setInterval(() => {
+          const max = getMaxIndex();
+          if (direction === 1) {
+            if (currentIndex >= max) { direction = -1; currentIndex = Math.max(0, currentIndex - 1); }
+            else { currentIndex++; }
+          } else {
+            if (currentIndex <= 0) { direction = 1; currentIndex = Math.min(max, currentIndex + 1); }
+            else { currentIndex--; }
+          }
+          updateUI();
+        }, 4000);
+      }
+
+      function resetAutoPlay() {
+        clearInterval(autoPlayTimer);
+        setTimeout(startAutoPlay, 8000);
+      }
+
+      prevBtn.addEventListener('click', () => { goPrev(); resetAutoPlay(); });
+      nextBtn.addEventListener('click', () => { goNext(); resetAutoPlay(); });
+
+      // Touch swipe
+      overflow.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+      overflow.addEventListener('touchend', e => {
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        if (dx < -30) { goNext(); resetAutoPlay(); }
+        else if (dx > 30) { goPrev(); resetAutoPlay(); }
+      }, { passive: true });
+
+      // Mouse drag
+      overflow.addEventListener('mousedown', e => { isDragging = true; dragStartX = e.clientX; overflow.style.cursor = 'grabbing'; });
+      document.addEventListener('mouseup', e => {
+        if (!isDragging) return;
+        isDragging = false;
+        overflow.style.cursor = '';
+        const dx = e.clientX - dragStartX;
+        if (dx < -30) { goNext(); resetAutoPlay(); }
+        else if (dx > 30) { goPrev(); resetAutoPlay(); }
+      });
+
+      window.addEventListener('resize', () => {
+        const max = getMaxIndex();
+        if (currentIndex > max) currentIndex = max;
+        buildSlider();
+      });
+
+      buildSlider();
+      startAutoPlay();
+    })();
+  </script>
+</body>
+</html>
