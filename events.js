@@ -98,7 +98,7 @@ function triggerStarRailTrain() {
     });
   }
 
-  const duration = 900; // 매우 빠르게 — 0.9초
+  const duration = 1600; // 빠르지만 충분히 보이게 — 1.6초
   const startTime = performance.now();
   let prevX = startX, prevY = startY;
 
@@ -140,7 +140,7 @@ function triggerStarRailTrain() {
       const p = particles[i];
       p.x += p.vx; p.y += p.vy;
       p.vx *= 0.92; p.vy *= 0.92;
-      p.life -= 0.055; // 빠르게 사라짐
+      p.life -= 0.032; // 파티클도 좀 더 오래 유지
       if (p.life <= 0) { particles.splice(i, 1); continue; }
       ctx.globalAlpha = p.life * 0.9;
       ctx.fillStyle = p.color;
@@ -161,8 +161,8 @@ function triggerStarRailTrain() {
 
   animFrame = requestAnimationFrame(animate);
 
-  // 최대 2.5초 후 강제 제거
-  setTimeout(() => { cancelAnimationFrame(animFrame); overlay.remove(); }, 2500);
+  // 최대 4초 후 강제 제거
+  setTimeout(() => { cancelAnimationFrame(animFrame); overlay.remove(); }, 4000);
 }
 
 // ──────────────────────────────────────────────
