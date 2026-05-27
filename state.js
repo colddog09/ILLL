@@ -32,9 +32,10 @@ const taskInput = document.getElementById('taskInput');
 // ──────────────────────────────────────────────
 // 저장 관련 플래그
 // ──────────────────────────────────────────────
-let dataLoaded        = false;
-let loadInProgress    = false;
-let lastSavedSnapshot = null;
+let dataLoaded          = false;
+let loadInProgress      = false;
+let lastSavedSnapshot   = null;
+let _localChangePending = false; // 로컬 변경이 Supabase에 아직 업로드 안 됐을 때 true
 
 // ──────────────────────────────────────────────
 // 상태 관리 헬퍼
@@ -155,6 +156,7 @@ function saveState() {
   // 1. localStorage 즉시 저장 (주 저장소)
   lastSavedSnapshot = snap;
   _saveLocal();
+  _localChangePending = true; // 로컬 변경 발생 — Supabase 아직 미업로드
   showLastSavedTime();
 
   // 2. Supabase 백그라운드 동기화 (디바운스 2초)
@@ -162,11 +164,13 @@ function saveState() {
   clearTimeout(_saveTimer);
   setSyncStatus('📝 동기화 중...');
   _saveTimer = setTimeout(() => {
+    if (!currentUser || !supabaseClient) return; // 로그아웃 후 타이머 방어
     supabaseClient
       .from('user_states')
       .upsert(_supabaseSavePayload(), { onConflict: 'user_id' })
       .then(({ error }) => {
         if (error) { setSyncStatus('⚠️ 클라우드 저장 실패'); return; }
+        _localChangePending = false; // 업로드 성공 시 플래그 해제
         setSyncSaved();
       });
   }, 2000);
@@ -284,16 +288,30 @@ function loadState() {
     const localTs  = local?.ts || 0;
 
     if (remote && remoteTs > localTs + 3000) {
-      // 다른 기기에서 더 최신 데이터 → 덮어쓰기
-      console.log(`☁️ 클라우드 최신 적용 (remote: ${new Date(remoteTs).toLocaleTimeString()}, local: ${new Date(localTs).toLocaleTimeString()})`);
-      applyPersistedState(remote);
-      lastSavedSnapshot = stateSnapshot();
-      _saveLocal();
-      dataLoaded = true;
-      autoReturnExpiredTasks();
-      renderApp();
-      showLastSavedTime();
-      setSyncSaved();
+      // 로컬에 Supabase 미업로드 변경사항이 있으면 원격 덮어쓰기 방지
+      if (_localChangePending) {
+        console.warn('[sync] 로컬 미업로드 변경사항 보호 — 원격 우선 적용 생략, 로컬을 업로드');
+        // 로컬 데이터를 원격에 업로드해서 충돌 해소
+        if (currentUser && supabaseClient) {
+          supabaseClient.from('user_states')
+            .upsert(_supabaseSavePayload(), { onConflict: 'user_id' })
+            .then(({ error }) => {
+              if (!error) { _localChangePending = false; setSyncSaved(); }
+              else { setSyncStatus('⚠️ 클라우드 저장 실패'); }
+            });
+        }
+      } else {
+        // 다른 기기에서 더 최신 데이터 → 덮어쓰기
+        console.log(`☁️ 클라우드 최신 적용 (remote: ${new Date(remoteTs).toLocaleTimeString()}, local: ${new Date(localTs).toLocaleTimeString()})`);
+        applyPersistedState(remote);
+        lastSavedSnapshot = stateSnapshot();
+        _saveLocal();
+        dataLoaded = true;
+        autoReturnExpiredTasks();
+        renderApp();
+        showLastSavedTime();
+        setSyncSaved();
+      }
     } else if (!local) {
       // 로컬 없음 (첫 기기 or 캐시 삭제)
       if (remote) {
