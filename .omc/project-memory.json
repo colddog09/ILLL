@@ -1,0 +1,152 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1779872363559,
+  "projectRoot": "/Users/sunjaechung/Desktop/경기북과학고등학교/일정관리",
+  "techStack": {
+    "languages": [],
+    "frameworks": [],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [],
+    "gitBranches": {
+      "defaultBranch": "main",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "api": {
+      "path": "api",
+      "purpose": "API routes",
+      "fileCount": 9,
+      "lastAccessed": 1779872363552,
+      "keyFiles": [
+        "config.js",
+        "gcal-auth.js",
+        "gcal-callback.js",
+        "gcal-client-id.js",
+        "gcal-token.js"
+      ]
+    },
+    "gcal": {
+      "path": "gcal",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1779872363552,
+      "keyFiles": [
+        "gcal.js"
+      ]
+    },
+    "suhaeng": {
+      "path": "suhaeng",
+      "purpose": null,
+      "fileCount": 7,
+      "lastAccessed": 1779872363552,
+      "keyFiles": [
+        "icon-192.png",
+        "icon-512.png",
+        "index.html",
+        "manifest.json",
+        "script.js"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "shop.html",
+      "accessCount": 33,
+      "lastAccessed": 1779895952246,
+      "type": "file"
+    },
+    {
+      "path": "modals.js",
+      "accessCount": 28,
+      "lastAccessed": 1779879364706,
+      "type": "file"
+    },
+    {
+      "path": "index.html",
+      "accessCount": 23,
+      "lastAccessed": 1779896411739,
+      "type": "file"
+    },
+    {
+      "path": "style.css",
+      "accessCount": 18,
+      "lastAccessed": 1779896474938,
+      "type": "file"
+    },
+    {
+      "path": "sw.js",
+      "accessCount": 14,
+      "lastAccessed": 1779878672788,
+      "type": "file"
+    },
+    {
+      "path": "homepage.html",
+      "accessCount": 10,
+      "lastAccessed": 1779872758278,
+      "type": "file"
+    },
+    {
+      "path": "events.js",
+      "accessCount": 5,
+      "lastAccessed": 1779877537204,
+      "type": "file"
+    },
+    {
+      "path": "render.js",
+      "accessCount": 2,
+      "lastAccessed": 1779877513287,
+      "type": "file"
+    },
+    {
+      "path": "terms.html",
+      "accessCount": 2,
+      "lastAccessed": 1779896213462,
+      "type": "file"
+    },
+    {
+      "path": "privacy.html",
+      "accessCount": 2,
+      "lastAccessed": 1779896213878,
+      "type": "file"
+    },
+    {
+      "path": ".claude/settings.json",
+      "accessCount": 2,
+      "lastAccessed": 1779896238526,
+      "type": "file"
+    },
+    {
+      "path": "drag.js",
+      "accessCount": 1,
+      "lastAccessed": 1779872601769,
+      "type": "file"
+    },
+    {
+      "path": "auth.js",
+      "accessCount": 1,
+      "lastAccessed": 1779877242027,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

@@ -52,6 +52,28 @@
     </div>
   </div>
 
+  <!-- ─── 상단 네비게이션 바 ─── -->
+  <nav class="navbar">
+    <div class="navbar__inner">
+      <a href="/homepage" class="navbar__logo">오일추</a>
+      <div class="navbar__menu">
+        <a href="/homepage" class="navbar__link">📋 메인 홈페이지</a>
+        <a href="/shop" class="navbar__link">🎨 테마샵</a>
+        <a href="/" class="navbar__link navbar__link--app">✨ 창작마당 앱 열기</a>
+      </div>
+      <div id="authSection" class="navbar__auth">
+        <div id="authStack" class="auth-stack">
+          <button id="loginBtn" class="auth-btn">Google 로그인</button>
+        </div>
+        <div id="userInfo" class="user-info" hidden>
+          <img id="userPhoto" class="user-photo" src="" alt="프로필" />
+          <span id="userName" class="user-name"></span>
+          <button id="settingsBtn" class="icon-btn" aria-label="내 정보 수정" title="내 정보 수정">⚙️</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
   <!-- ─── 상단 영역 ─── -->
   <header class="top-bar">
     <div class="top-bar__inner">
@@ -59,17 +81,11 @@
         <h1 class="logo">오일추 <span id="ddayBadge" class="dday-badge dday-badge--title"></span></h1>
         <div class="header-right">
           <!-- ─── 인증 UI ─── -->
-          <div id="authSection" class="auth-section">
-            <div class="auth-stack">
-              <button id="loginBtn" class="auth-btn">Google 로그인</button>
-              <p id="authHint" class="auth-hint" hidden>웹앱에서는 브라우저 로그인으로 자동 전환될 수 있어요.</p>
-            </div>
-            <div id="userInfo" class="user-info" hidden>
-              <img id="userPhoto" class="user-photo" src="" alt="프로필" />
-              <span id="userName" class="user-name"></span>
+          <div id="authSection2" class="auth-section">
+            <div id="userInfo2" class="user-info" hidden>
+              <img id="userPhoto2" class="user-photo" src="" alt="프로필" />
               <span id="syncStatus" class="sync-status"></span>
               <button id="demoBtn" class="icon-btn" aria-label="사용법 보기" title="사용법 데모">🔍</button>
-              <button id="settingsBtn" class="icon-btn" aria-label="내 정보 수정" title="내 정보 수정">⚙️</button>
               <button id="gcalReconnectBtn" class="gcal-reconnect-btn" title="캘린더 재연결" hidden>🗓️ 재연결</button>
             </div>
           </div>
@@ -228,13 +244,6 @@
           <a href="/shop" target="_blank">🎨 테마샵</a>
         </div>
 
-        <div class="settings-legal-links">
-          <a href="/privacy.html" target="_blank">개인정보처리방침</a>
-          <span>·</span>
-          <a href="/terms.html" target="_blank">이용약관</a>
-          <span>·</span>
-          <a href="/license.html" target="_blank">오픈소스</a>
-        </div>
       </div>
 
     </div>
