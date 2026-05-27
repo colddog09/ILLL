@@ -69,19 +69,24 @@ function triggerStarRailTrain() {
   const W = window.innerWidth;
   const H = window.innerHeight;
 
-  // 열차 회전각 -28도에 맞춰 이동 방향도 정확히 일치
-  const ANGLE_DEG = 28;
-  const ANGLE_RAD = ANGLE_DEG * Math.PI / 180;
-  const cosA = Math.cos(ANGLE_RAD); // ≈ 0.883
-  const sinA = Math.sin(ANGLE_RAD); // ≈ 0.469
-  const dist  = Math.sqrt(W * W + H * H) * 0.9; // 화면 대각선 길이
-  const cx = W * 0.5;
-  const cy = H * 0.55; // 화면 중앙보다 살짝 아래에서 지나가게
+  // 이미지 실제 크기 계산 (CSS와 동일)
+  const imgW = Math.min(W * 1.2, 1600);
+  const imgH = imgW * (704 / 1526); // 원본 비율
 
-  const startX = cx - dist * cosA;
-  const startY = cy + dist * sinA;
-  const endX   = cx + dist * cosA;
-  const endY   = cy - dist * sinA;
+  // 이동 방향: 열차 회전각 -28도와 정확히 일치
+  const ANGLE_RAD = 28 * Math.PI / 180;
+  const cosA = Math.cos(ANGLE_RAD);
+  const sinA = Math.sin(ANGLE_RAD);
+  const dist  = Math.sqrt(W * W + H * H) * 0.95;
+
+  // 이미지 중심이 화면 중앙을 지나도록 wrap 좌표 보정
+  const pathCX = W * 0.5 - imgW * 0.5;
+  const pathCY = H * 0.5 - imgH * 0.4;
+
+  const startX = pathCX - dist * cosA;
+  const startY = pathCY + dist * sinA;
+  const endX   = pathCX + dist * cosA;
+  const endY   = pathCY - dist * sinA;
 
   // 속도감 있는 ease: 빠르게 치고 나가다 끝에 살짝 감속
   // easeInQuart — 처음엔 느렸다 순식간에 가속
@@ -106,7 +111,7 @@ function triggerStarRailTrain() {
     });
   }
 
-  const duration = 2400; // 원래 속도
+  const duration = 3200; // 자연스럽게 슝 — 3.2초
   const startTime = performance.now();
   let prevX = startX, prevY = startY;
 
@@ -169,8 +174,8 @@ function triggerStarRailTrain() {
 
   animFrame = requestAnimationFrame(animate);
 
-  // 최대 4초 후 강제 제거
-  setTimeout(() => { cancelAnimationFrame(animFrame); overlay.remove(); }, 4000);
+  // 최대 5초 후 강제 제거
+  setTimeout(() => { cancelAnimationFrame(animFrame); overlay.remove(); }, 5000);
 }
 
 // ──────────────────────────────────────────────
