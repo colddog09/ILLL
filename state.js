@@ -182,8 +182,35 @@ setInterval(flushToSupabase, 10 * 60 * 1000);
 // ──────────────────────────────────────────────
 // 데이터 불러오기
 // Phase 1: localStorage 즉시 복원 → 바로 렌더
-// Phase 2: Supabase 백그라운드 체크 → 다른 기기에서 수정된 경우만 덮어쓰기
+// Phase 2: Supabase 백그라운드 체크 (타임아웃 8초)
 // ──────────────────────────────────────────────
+
+// Supabase 요청에 타임아웃을 붙이는 래퍼
+function _supabaseWithTimeout(promise, ms = 8000) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('TIMEOUT')), ms)
+    )
+  ]);
+}
+
+// 재시도 버튼 표시 (로컬 데이터도 없고 클라우드도 실패한 경우)
+function _showRetryButton() {
+  if (document.getElementById('sr-retry-btn')) return;
+  const btn = document.createElement('button');
+  btn.id = 'sr-retry-btn';
+  btn.textContent = '🔄 다시 불러오기';
+  btn.style.cssText = [
+    'position:fixed','bottom:80px','left:50%','transform:translateX(-50%)',
+    'z-index:9999','padding:10px 22px','border-radius:20px',
+    'background:#1e3a5f','color:#89c4ff','border:1.5px solid rgba(137,196,255,0.4)',
+    'font-size:0.9rem','cursor:pointer','box-shadow:0 4px 20px rgba(0,0,0,0.5)'
+  ].join(';');
+  btn.addEventListener('click', () => { btn.remove(); loadInProgress = false; loadState(); });
+  document.body.appendChild(btn);
+}
+
 function loadState() {
   if (!currentUser || !supabaseClient) {
     resetScheduleState();
@@ -209,62 +236,78 @@ function loadState() {
     setSyncStatus('☁️ 불러오는 중...');
   }
 
-  // ── Phase 2: Supabase 백그라운드 체크 ──
-  supabaseClient
-    .from('user_states')
-    .select('pool, schedule, links, updated_at')
-    .eq('user_id', currentUser.id)
-    .maybeSingle()
-    .then(({ data: remote, error }) => {
-      loadInProgress = false;
+  // ── Phase 2: Supabase 백그라운드 체크 (타임아웃 8초) ──
+  _supabaseWithTimeout(
+    supabaseClient
+      .from('user_states')
+      .select('pool, schedule, links, updated_at')
+      .eq('user_id', currentUser.id)
+      .maybeSingle()
+  )
+  .then(({ data: remote, error }) => {
+    loadInProgress = false;
 
-      if (error) {
-        console.error('Supabase 읽기 에러:', error);
-        if (!local) {
-          // 로컬도 없고 클라우드도 실패 → 빈 상태로 시작
-          dataLoaded = true;
-          renderApp();
-        }
-        setSyncStatus('⚠️ 클라우드 동기화 실패');
-        return;
+    if (error) {
+      console.error('Supabase 읽기 에러:', error);
+      if (!local) {
+        dataLoaded = true;
+        renderApp();
+        _showRetryButton();
       }
+      setSyncStatus('⚠️ 클라우드 동기화 실패');
+      return;
+    }
 
-      const remoteTs = remote?.updated_at ? new Date(remote.updated_at).getTime() : 0;
-      const localTs  = local?.ts || 0;
+    const remoteTs = remote?.updated_at ? new Date(remote.updated_at).getTime() : 0;
+    const localTs  = local?.ts || 0;
 
-      if (remote && remoteTs > localTs + 3000) {
-        // 다른 기기에서 더 최신 데이터가 있음 → 덮어쓰기
-        console.log(`☁️ 클라우드 최신 데이터 적용 (remote: ${new Date(remoteTs).toLocaleTimeString()}, local: ${new Date(localTs).toLocaleTimeString()})`);
+    if (remote && remoteTs > localTs + 3000) {
+      // 다른 기기에서 더 최신 데이터 → 덮어쓰기
+      console.log(`☁️ 클라우드 최신 적용 (remote: ${new Date(remoteTs).toLocaleTimeString()}, local: ${new Date(localTs).toLocaleTimeString()})`);
+      applyPersistedState(remote);
+      lastSavedSnapshot = stateSnapshot();
+      _saveLocal();
+      dataLoaded = true;
+      autoReturnExpiredTasks();
+      renderApp();
+      showLastSavedTime();
+      setSyncSaved();
+    } else if (!local) {
+      // 로컬 없음 (첫 기기 or 캐시 삭제)
+      if (remote) {
         applyPersistedState(remote);
         lastSavedSnapshot = stateSnapshot();
-        _saveLocal(); // 로컬에도 반영
-        dataLoaded = true;
-        autoReturnExpiredTasks();
-        renderApp();
-        showLastSavedTime();
-        setSyncSaved();
-      } else if (!local) {
-        // 로컬 없음 (첫 기기 or 캐시 삭제)
-        if (remote) {
-          applyPersistedState(remote);
-          lastSavedSnapshot = stateSnapshot();
-          _saveLocal();
-        }
-        dataLoaded = true;
-        autoReturnExpiredTasks();
-        renderApp();
-        showLastSavedTime();
-        checkFirstVisit();
-        setSyncSaved();
-      } else {
-        // 로컬이 최신 → 클라우드에 업로드 (이미 렌더 완료)
-        if (hasAnyTaskData()) {
-          supabaseClient.from('user_states')
-            .upsert(_supabaseSavePayload(), { onConflict: 'user_id' })
-            .then(({ error }) => { if (!error) setSyncSaved(); });
-        } else {
-          setSyncSaved();
-        }
+        _saveLocal();
       }
-    });
+      dataLoaded = true;
+      autoReturnExpiredTasks();
+      renderApp();
+      showLastSavedTime();
+      checkFirstVisit();
+      setSyncSaved();
+    } else {
+      // 로컬이 최신 → 클라우드 업로드만 (이미 렌더 완료)
+      if (hasAnyTaskData()) {
+        supabaseClient.from('user_states')
+          .upsert(_supabaseSavePayload(), { onConflict: 'user_id' })
+          .then(({ error }) => { if (!error) setSyncSaved(); });
+      } else {
+        setSyncSaved();
+      }
+    }
+  })
+  .catch(err => {
+    loadInProgress = false;
+    console.error('Supabase 로드 실패:', err.message);
+    if (!local) {
+      // 로컬 데이터도 없고 타임아웃/에러 → 재시도 버튼
+      dataLoaded = true;
+      renderApp();
+      _showRetryButton();
+      setSyncStatus('⚠️ 불러오기 실패 — 재시도하세요');
+    } else {
+      // 로컬 데이터는 있으므로 이미 렌더됨 — 그냥 경고만
+      setSyncStatus('⚠️ 클라우드 동기화 실패');
+    }
+  });
 }
