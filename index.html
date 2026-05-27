@@ -23,7 +23,7 @@
   <link rel="apple-touch-icon" href="/image/apple-touch-icon.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/image/apple-touch-icon.png">
   <meta name="theme-color" content="#6c63ff">
-  <link rel="stylesheet" href="style.css?v=44" />
+  <link rel="stylesheet" href="style.css?v=45" />
 </head>
 <body>
 
@@ -510,7 +510,7 @@
 
   <script src="utils.js?v=2"></script>
   <script src="state.js?v=5"></script>
-  <script src="auth.js?v=3"></script>
+  <script src="auth.js?v=4"></script>
   <script src="render.js?v=16"></script>
   <script src="drag.js?v=6"></script>
   <script src="deadline.js?v=1"></script>
@@ -532,11 +532,16 @@
           });
         });
       });
-      // SW 교체 완료 → 자동 reload 대신 토스트로 안내 (자동 reload 시 일정이 잠깐 사라지는 버그 방지)
+      // SW 교체 완료 → 설정 버튼에 ! 배지 + 토스트 (자동 reload 금지)
       let _swReloadPending = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (_swReloadPending) return;
         _swReloadPending = true;
+
+        // 설정 버튼에 ! 배지 표시
+        document.getElementById('settingsBtn')?.classList.add('icon-btn--update-badge');
+
+        // 토스트
         const t = document.createElement('div');
         t.style.cssText = [
           'position:fixed','bottom:82px','left:50%','transform:translateX(-50%)',
