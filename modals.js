@@ -520,6 +520,7 @@ infoHistoryBtn?.addEventListener('click', () => {
     { id: 'dark',     label: '다크',          unlockKey: null },
     { id: 'jelly',    label: '젤리',          unlockKey: null },
     { id: 'glass',    label: '리퀴드 글라스', unlockKey: null },
+    { id: 'winter',   label: '겨울',          unlockKey: null },
     { id: 'hgd',      label: '한교동',        unlockKey: HGD_UNLOCK_KEY },
     { id: 'starrail', label: '붕괴 스타레일', unlockKey: SR_UNLOCK_KEY  },
   ];

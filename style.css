@@ -398,6 +398,87 @@
   100% { background-position: 0% 0%; }
 }
 
+/* ══════════════════════════════════════════════
+   테마: 겨울 (Winter)
+   ══════════════════════════════════════════════ */
+[data-theme="winter"] {
+  --bg: #eaf5fc;
+  --surface: #ffffff;
+  --surface-hover: #d5ecf7;
+  --border: rgba(58,155,213,0.18);
+  --border-strong: rgba(58,155,213,0.38);
+  --accent: #3a9bd5;
+  --accent2: #7ec8e8;
+  --text: #1a3a5c;
+  --text-sub: #5a7a9c;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow: 0 4px 20px rgba(58,155,213,0.13);
+  --shadow-lg: 0 12px 40px rgba(58,155,213,0.2);
+  --bg-grad1: rgba(58,155,213,0.07);
+  --bg-grad2: rgba(126,200,232,0.05);
+}
+
+[data-theme="winter"] body {
+  background:
+    radial-gradient(ellipse 80% 40% at 20% 10%, rgba(184,224,245,0.5) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 30% at 80% 90%, rgba(126,200,232,0.35) 0%, transparent 55%),
+    linear-gradient(180deg, #d6eef8 0%, #eaf5fc 50%, #f3faff 100%);
+  background-attachment: fixed;
+}
+
+[data-theme="winter"] .app {
+  background: rgba(255,255,255,0.88) !important;
+  border: 1.5px solid rgba(58,155,213,0.2);
+  box-shadow:
+    0 8px 40px rgba(58,155,213,0.14),
+    inset 0 1px 0 rgba(255,255,255,0.9);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+[data-theme="winter"] .pool-card,
+[data-theme="winter"] .sched-day,
+[data-theme="winter"] .modal-box {
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(58,155,213,0.1),
+              inset 0 1px 0 rgba(255,255,255,0.85);
+}
+
+/* 날짜 헤더 accent 색 */
+[data-theme="winter"] .day-card__date  { color: #3a9bd5; }
+[data-theme="winter"] .today-badge {
+  background: linear-gradient(135deg, #3a9bd5, #7ec8e8);
+  color: #fff;
+}
+
+/* 버튼들 */
+[data-theme="winter"] .auth-btn,
+[data-theme="winter"] #addTaskBtn {
+  background: linear-gradient(135deg, #3a9bd5, #7ec8e8);
+  color: #fff;
+}
+
+/* 입력창 포커스 */
+[data-theme="winter"] .task-input:focus {
+  border-color: #3a9bd5;
+  box-shadow: 0 0 0 3px rgba(58,155,213,0.15);
+}
+
+/* 진행 바 */
+[data-theme="winter"] .day-card__progress-bar {
+  background: linear-gradient(90deg, #3a9bd5, #7ec8e8);
+}
+
+/* 겨울 스와치 */
+.theme-swatch[data-theme="winter"] {
+  background: linear-gradient(135deg, #b8ddf0 0%, #e8f6fc 50%, #3a9bd5 100%);
+  border: 1.5px solid rgba(58,155,213,0.35);
+  box-shadow: 0 2px 8px rgba(58,155,213,0.2);
+}
+
 /* ── 테마: 붕괴 스타레일 ── */
 [data-theme="starrail"] {
   --bg: #0e1d35;
