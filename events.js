@@ -166,7 +166,7 @@ function srTrainDepart_UNUSED() {
   overlay.className = 'sr-train-overlay';
   overlay.innerHTML = `
     <div class="sr-train-img-wrap">
-      <img class="sr-train-img" src="/starrail_train.png" alt="">
+      <img class="sr-train-img" src="/image/starrail_train.png" alt="">
     </div>
     <canvas class="sr-stars-canvas"></canvas>
   `;

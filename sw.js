@@ -1,4 +1,4 @@
-const CACHE_NAME = 'illl-v92';
+const CACHE_NAME = 'illl-v93';
 const CORE_FILES = [
   '/',
   '/index.html',
@@ -14,11 +14,11 @@ const CORE_FILES = [
   '/modals.js?v=7',
   '/events.js?v=15',
   '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png',
-  '/apple-touch-icon.png',
-  '/pompomno.webp',
-  '/pompomyes.webp'
+  '/image/icon-192.png',
+  '/image/icon-512.png',
+  '/image/apple-touch-icon.png',
+  '/image/pompomno.webp',
+  '/image/pompomyes.webp'
 ];
 
 /* ── 설치: 핵심 파일 캐시 ── */
@@ -53,8 +53,8 @@ self.addEventListener('push', e => {
   e.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
-      icon: '/icon-192.png',
-      badge: '/icon-192.png',
+      icon: '/image/icon-192.png',
+      badge: '/image/icon-192.png',
       tag: 'deadline-alert',
       renotify: true,
     })

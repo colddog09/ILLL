@@ -128,7 +128,7 @@
   right: 8px;
   width: 110px;
   height: 110px;
-  background: url('/HGD.png') no-repeat bottom right / contain;
+  background: url('/image/HGD.png') no-repeat bottom right / contain;
   pointer-events: none;
   z-index: 9999;
   opacity: 0.9;
@@ -141,7 +141,7 @@
   left: 10px;
   width: 95px;
   height: 95px;
-  background: url('/hgd1.png') no-repeat bottom left / contain;
+  background: url('/image/hgd1.png') no-repeat bottom left / contain;
   pointer-events: none;
   z-index: 9999;
   opacity: 0.85;
@@ -154,7 +154,7 @@
   right: 14px;
   width: 80px;
   height: 80px;
-  background: url('/hgd2.png') no-repeat top right / contain;
+  background: url('/image/hgd2.png') no-repeat top right / contain;
   pointer-events: none;
   z-index: 9999;
   opacity: 0.75;
@@ -167,7 +167,7 @@
   left: 12px;
   width: 80px;
   height: 80px;
-  background: url('/hgd3.png') no-repeat top left / contain;
+  background: url('/image/hgd3.png') no-repeat top left / contain;
   pointer-events: none;
   z-index: 9999;
   opacity: 0.75;
@@ -188,7 +188,7 @@
   left: 30px;
   width: 72px;
   height: 72px;
-  background: url('/hgd3.png') no-repeat center / contain;
+  background: url('/image/hgd3.png') no-repeat center / contain;
   pointer-events: none;
   z-index: 2;
   opacity: 0.55;
@@ -204,7 +204,7 @@
   right: 10px;
   width: 110px;
   height: 110px;
-  background: url('/hgd2.png') no-repeat center / contain;
+  background: url('/image/hgd2.png') no-repeat center / contain;
   pointer-events: none;
   z-index: 0;
   opacity: 0.12;
@@ -217,7 +217,7 @@
   right: 8px;
   width: 72px;
   height: 72px;
-  background: url('/hgd1.png') no-repeat center / contain;
+  background: url('/image/hgd1.png') no-repeat center / contain;
   pointer-events: none;
   z-index: 0;
   opacity: 0.09;
@@ -230,7 +230,7 @@
   right: 8px;
   width: 72px;
   height: 72px;
-  background: url('/HGD.png') no-repeat center / contain;
+  background: url('/image/HGD.png') no-repeat center / contain;
   pointer-events: none;
   z-index: 0;
   opacity: 0.09;
@@ -238,7 +238,7 @@
 
 /* 한교동 — O버튼을 캐릭터 이미지로 교체 */
 [data-theme="hgd"] .btn-o {
-  background: url('/hgdno.png') no-repeat center / contain !important;
+  background: url('/image/hgdno.png') no-repeat center / contain !important;
   background-color: transparent !important;
   border: none !important;
   box-shadow: none !important;
@@ -251,11 +251,11 @@
 [data-theme="hgd"] .sched-item__done--checked ~ * .btn-o,
 [data-theme="hgd"] .pool-card--done .btn-o,
 [data-theme="hgd"] .btn-o[data-checked="true"] {
-  background-image: url('/hgdyes.png') !important;
+  background-image: url('/image/hgdyes.png') !important;
 }
 /* active(완료) 상태 */
 [data-theme="hgd"] .btn-o.active {
-  background: url('/hgdyes.png') no-repeat center / contain !important;
+  background: url('/image/hgdyes.png') no-repeat center / contain !important;
   background-color: transparent !important;
   border: none !important;
   box-shadow: none !important;
@@ -266,7 +266,7 @@
 .theme-swatch[data-theme="hgd"] {
   background: linear-gradient(135deg, #00b4a0, #4dd9c8, #a8f0ea);
   box-shadow: 0 3px 10px rgba(0,180,160,0.35);
-  background-image: url('/HGD.png');
+  background-image: url('/image/HGD.png');
   background-size: 130%;
   background-position: center 10%;
   background-repeat: no-repeat;

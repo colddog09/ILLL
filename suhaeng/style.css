@@ -159,7 +159,7 @@
   right: 8px;
   width: 110px;
   height: 110px;
-  background: url('/HGD.png') no-repeat bottom right / contain;
+  background: url('/image/HGD.png') no-repeat bottom right / contain;
   pointer-events: none;
   z-index: 9999;
   opacity: 0.9;
@@ -171,7 +171,7 @@
   left: 10px;
   width: 95px;
   height: 95px;
-  background: url('/hgd1.png') no-repeat bottom left / contain;
+  background: url('/image/hgd1.png') no-repeat bottom left / contain;
   pointer-events: none;
   z-index: 9999;
   opacity: 0.85;
