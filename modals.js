@@ -530,6 +530,97 @@ infoHistoryBtn?.addEventListener('click', () => {
     return localStorage.getItem(t.unlockKey) === '1';
   }
 
+  // ── 겨울 얼음 깨기 파편 효과 ─────────────────
+  function spawnIceBreakEffect(el) {
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+
+    // 플래시 오버레이
+    const flash = document.createElement('div');
+    flash.style.cssText = [
+      'position:fixed',
+      `left:${rect.left - 3}px`, `top:${rect.top - 3}px`,
+      `width:${rect.width + 6}px`, `height:${rect.height + 6}px`,
+      'background:rgba(196,226,242,0.7)',
+      'border-radius:10px',
+      'pointer-events:none',
+      'z-index:9998',
+      'animation:iceFlash 0.22s ease-out forwards',
+    ].join(';');
+    document.body.appendChild(flash);
+    setTimeout(() => flash.remove(), 260);
+
+    // 파편 캔버스
+    const canvas = document.createElement('canvas');
+    canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:9999;';
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+    document.body.appendChild(canvas);
+    const ctx = canvas.getContext('2d');
+
+    const ICE_COLORS = ['#c8e8f8','#e8f6fc','#7ec8e8','#ffffff','#b8ddf0','#a0d4ee'];
+    const cx = rect.left + rect.width  / 2;
+    const cy = rect.top  + rect.height / 2;
+    const shards = [];
+
+    for (let i = 0; i < 22; i++) {
+      const angle = (Math.PI * 2 / 22) * i + (Math.random() - 0.5) * 0.5;
+      const speed = 2.5 + Math.random() * 5.5;
+      shards.push({
+        x: cx + (Math.random() - 0.5) * rect.width  * 0.6,
+        y: cy + (Math.random() - 0.5) * rect.height * 0.6,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 1.5,
+        size: 3 + Math.random() * 9,
+        rot: Math.random() * Math.PI * 2,
+        rotV: (Math.random() - 0.5) * 0.18,
+        life: 1,
+        decay: 0.022 + Math.random() * 0.022,
+        color: ICE_COLORS[Math.floor(Math.random() * ICE_COLORS.length)],
+        sides: Math.random() > 0.5 ? 3 : 4,
+      });
+    }
+
+    function drawShard(s) {
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      ctx.rotate(s.rot);
+      ctx.globalAlpha = Math.min(s.life * 1.1, 1);
+      ctx.fillStyle   = s.color;
+      ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+      ctx.lineWidth   = 0.7;
+      ctx.beginPath();
+      for (let j = 0; j < s.sides; j++) {
+        const a = (Math.PI * 2 / s.sides) * j;
+        const r = s.size * (j % 2 === 0 ? 1 : 0.55);
+        j === 0 ? ctx.moveTo(Math.cos(a)*r, Math.sin(a)*r)
+                : ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    (function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = shards.length - 1; i >= 0; i--) {
+        const s = shards[i];
+        s.x += s.vx; s.y += s.vy;
+        s.vy += 0.13;
+        s.vx *= 0.97;
+        s.rot += s.rotV;
+        s.life -= s.decay;
+        if (s.life <= 0) { shards.splice(i, 1); continue; }
+        drawShard(s);
+      }
+      if (shards.length > 0) requestAnimationFrame(animate);
+      else canvas.remove();
+    })();
+  }
+  // expose for events.js
+  window._spawnIceBreakEffect = spawnIceBreakEffect;
+
   // ── 겨울 눈 효과 ──────────────────────────────
   function removeWinterEffects() {
     document.getElementById('winterSnow')?.remove();

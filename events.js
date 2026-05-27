@@ -319,7 +319,15 @@ function toggleStatus(date, id) {
   if (!requireLogin()) return;
   const item = (state.schedule[date] || []).find(it => it.id === id);
   if (!item) return;
-  item.status = item.status === 'O' ? null : 'O';
+  const completing = item.status !== 'O';
+  item.status = completing ? 'O' : null;
+
+  // 겨울 테마: 완료 시 얼음 파편 효과
+  if (completing && document.documentElement.getAttribute('data-theme') === 'winter') {
+    const el = document.querySelector(`.sched-item[data-item-id="${id}"]`);
+    window._spawnIceBreakEffect?.(el);
+  }
+
   saveState();
   renderDayTasks(date);
 

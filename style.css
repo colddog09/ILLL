@@ -472,6 +472,37 @@
   background: linear-gradient(90deg, #3a9bd5, #7ec8e8);
 }
 
+/* ── 겨울 테마: 미완료 일정 = 얼음 스타일 ── */
+[data-theme="winter"] .sched-item:not(.done) {
+  background: linear-gradient(135deg,
+    rgba(196,226,242,0.55) 0%,
+    rgba(230,244,252,0.75) 100%) !important;
+  border-color: rgba(58,155,213,0.35) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.75),
+    inset 0 -1px 0 rgba(58,155,213,0.1),
+    0 2px 8px rgba(58,155,213,0.1) !important;
+}
+/* 서리 균열 */
+[data-theme="winter"] .sched-item:not(.done)::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background-image:
+    linear-gradient(48deg,  transparent 42%, rgba(255,255,255,0.45) 42%, rgba(255,255,255,0.45) 43%, transparent 43%),
+    linear-gradient(138deg, transparent 58%, rgba(184,221,240,0.3)  58%, rgba(184,221,240,0.3)  59%, transparent 59%),
+    linear-gradient(210deg, transparent 30%, rgba(255,255,255,0.25) 30%, rgba(255,255,255,0.25) 31%, transparent 31%);
+  z-index: 0;
+}
+/* 얼음 깨기 플래시 keyframe */
+@keyframes iceFlash {
+  0%   { opacity: 0.85; transform: scale(1); }
+  40%  { opacity: 1;    transform: scale(1.04); }
+  100% { opacity: 0;    transform: scale(1.08); }
+}
+
 /* ── 겨울 눈 파티클 ── */
 .winter-snow {
   position: fixed;
