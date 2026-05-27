@@ -3381,7 +3381,7 @@ body {
 [data-theme="starrail"] .sched-item.done { opacity: 0.45; }
 [data-theme="starrail"] body {
   background-image: url('/starrail_bg.png');
-  background-size: cover;
+  background-size: 100% 100%;
   background-position: center center;
   background-repeat: no-repeat;
   background-attachment: fixed;
