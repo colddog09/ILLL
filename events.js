@@ -69,11 +69,19 @@ function triggerStarRailTrain() {
   const W = window.innerWidth;
   const H = window.innerHeight;
 
-  // 시작: 화면 왼쪽 하단 밖, 끝: 오른쪽 상단 밖
-  const startX = -W * 0.6;
-  const startY = H * 1.05;
-  const endX   = W * 1.4;
-  const endY   = H * -0.15;
+  // 열차 회전각 -28도에 맞춰 이동 방향도 정확히 일치
+  const ANGLE_DEG = 28;
+  const ANGLE_RAD = ANGLE_DEG * Math.PI / 180;
+  const cosA = Math.cos(ANGLE_RAD); // ≈ 0.883
+  const sinA = Math.sin(ANGLE_RAD); // ≈ 0.469
+  const dist  = Math.sqrt(W * W + H * H) * 0.9; // 화면 대각선 길이
+  const cx = W * 0.5;
+  const cy = H * 0.55; // 화면 중앙보다 살짝 아래에서 지나가게
+
+  const startX = cx - dist * cosA;
+  const startY = cy + dist * sinA;
+  const endX   = cx + dist * cosA;
+  const endY   = cy - dist * sinA;
 
   // 속도감 있는 ease: 빠르게 치고 나가다 끝에 살짝 감속
   // easeInQuart — 처음엔 느렸다 순식간에 가속
@@ -98,7 +106,7 @@ function triggerStarRailTrain() {
     });
   }
 
-  const duration = 1600; // 빠르지만 충분히 보이게 — 1.6초
+  const duration = 2400; // 원래 속도
   const startTime = performance.now();
   let prevX = startX, prevY = startY;
 

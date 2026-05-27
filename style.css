@@ -4084,9 +4084,9 @@ a.settings-tab {
 
 /* 참조 이미지처럼 화면 대각선 전체를 가로지르는 크기 */
 .sr-train-img {
-  width: 80vw;
-  max-width: 980px;
-  min-width: 500px;
+  width: 120vw;
+  max-width: 1600px;
+  min-width: 700px;
   display: block;
   transform: rotate(-28deg);
   filter:
