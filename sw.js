@@ -1,4 +1,4 @@
-const CACHE_NAME = 'illl-v97';
+const CACHE_NAME = 'illl-v98';
 const CORE_FILES = [
   '/',
   '/index.html',
@@ -11,7 +11,7 @@ const CORE_FILES = [
   '/deadline.js?v=1',
   '/push.js?v=1',
   '/gcal/gcal.js?v=13',
-  '/modals.js?v=11',
+  '/modals.js?v=12',
   '/events.js?v=15',
   '/manifest.json',
   '/image/icon-192.png',
@@ -20,6 +20,7 @@ const CORE_FILES = [
   '/image/pompomno.webp',
   '/image/pompomyes.webp',
   '/image/tree.avif',
+  '/image/tree.png',
   '/image/snowman.png'
 ];
 

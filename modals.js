@@ -680,12 +680,12 @@ infoHistoryBtn?.addEventListener('click', () => {
 
     // 데코 — 트리·눈사람 이미지 (크게), 나머지 이모지
     const DECOS = [
-      { img: '/image/tree.avif',   w: '4rem',   style: 'top:10px;left:12px;animation-delay:0s' },
-      { img: '/image/snowman.png', w: '3.4rem', style: 'top:8px;right:12px;animation-delay:0.6s' },
-      { emoji: '🎁',               style: 'bottom:22px;left:14px;font-size:2rem;animation-delay:1.1s' },
-      { emoji: '❄️',               style: 'top:48%;left:8px;font-size:1.5rem;animation-delay:1.8s;opacity:0.7' },
-      { img: '/image/tree.avif',   w: '3.2rem', style: 'bottom:16px;right:12px;animation-delay:2.2s' },
-      { img: '/image/snowman.png', w: '2.8rem', style: 'top:52%;right:8px;animation-delay:0.4s;opacity:0.9' },
+      { img: '/image/tree.png',    w: '4.8rem', style: 'top:8px;left:10px;animation-delay:0s' },
+      { img: '/image/snowman.png', w: '4.2rem', style: 'top:6px;right:10px;animation-delay:0.6s' },
+      { emoji: '🎁',               style: 'bottom:20px;left:12px;font-size:2.8rem;animation-delay:1.1s' },
+      { emoji: '❄️',               style: 'top:48%;left:6px;font-size:1.6rem;animation-delay:1.8s;opacity:0.7' },
+      { img: '/image/tree.png',    w: '3.8rem', style: 'bottom:14px;right:10px;animation-delay:2.2s' },
+      { img: '/image/snowman.png', w: '3.5rem', style: 'top:50%;right:6px;animation-delay:0.4s;opacity:0.9' },
     ];
     const decoWrap = document.createElement('div');
     decoWrap.id = 'winterDeco';
@@ -697,7 +697,7 @@ infoHistoryBtn?.addEventListener('click', () => {
         const imgEl = document.createElement('img');
         imgEl.src = img;
         // mix-blend-mode:multiply 로 흰 배경 제거
-        imgEl.style.cssText = `width:${w};height:auto;display:block;mix-blend-mode:multiply;`;
+        imgEl.style.cssText = `width:${w};height:auto;display:block;`;
         imgEl.alt = '';
         span.appendChild(imgEl);
       } else {
