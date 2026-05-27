@@ -2070,8 +2070,8 @@ body {
 .sched-item__ox { display: flex; gap: 4px; flex-shrink: 0; }
 
 .btn-o {
-  width: 36px;
-  height: 36px;
+  width: 46px;
+  height: 46px;
   border: none;
   border-radius: 50%;
   cursor: pointer;
