@@ -494,7 +494,7 @@
     0 3px 10px rgba(58,155,213,0.14) !important;
 }
 
-/* 서리 결정 + 반사광 specular */
+/* 서리 결정 + 반사광 + 광택 (::before 하나로 통합, z-index 충돌 방지) */
 [data-theme="winter"] .sched-item:not(.done)::before {
   content: '';
   position: absolute;
@@ -503,55 +503,41 @@
   border-radius: inherit;
   z-index: 0;
   background:
-    /* 좌상단 반사광 하이라이트 */
-    radial-gradient(ellipse 65% 48% at 10% 18%, rgba(255,255,255,0.78) 0%, transparent 100%),
+    /* 광택 필름 — 상단 좌측 얇은 글로스 */
+    linear-gradient(108deg, rgba(255,255,255,0.32) 0%, rgba(255,255,255,0.06) 28%, transparent 46%),
+    /* 좌상단 반사광 */
+    radial-gradient(ellipse 65% 48% at 10% 18%, rgba(255,255,255,0.55) 0%, transparent 100%),
     /* 우하단 보조 반사 */
-    radial-gradient(ellipse 45% 55% at 86% 83%, rgba(195,232,252,0.42) 0%, transparent 100%),
+    radial-gradient(ellipse 45% 55% at 86% 83%, rgba(195,232,252,0.32) 0%, transparent 100%),
     /* 서리 해칭 A */
     repeating-linear-gradient(
       -52deg,
       transparent 0px, transparent 8px,
-      rgba(255,255,255,0.42) 8px, rgba(255,255,255,0.42) 9px
+      rgba(255,255,255,0.32) 8px, rgba(255,255,255,0.32) 9px
     ),
     /* 서리 해칭 B */
     repeating-linear-gradient(
       40deg,
       transparent 0px, transparent 13px,
-      rgba(110,185,228,0.28) 13px, rgba(110,185,228,0.28) 14px
+      rgba(110,185,228,0.2) 13px, rgba(110,185,228,0.2) 14px
     );
 }
 /* nth-child 교차 패턴 */
 [data-theme="winter"] .sched-item:not(.done):nth-child(even)::before {
   background:
-    radial-gradient(ellipse 55% 52% at 88% 15%, rgba(255,255,255,0.72) 0%, transparent 100%),
-    radial-gradient(ellipse 40% 50% at 12% 85%, rgba(185,225,250,0.38) 0%, transparent 100%),
+    linear-gradient(108deg, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.05) 25%, transparent 44%),
+    radial-gradient(ellipse 55% 52% at 88% 15%, rgba(255,255,255,0.5) 0%, transparent 100%),
+    radial-gradient(ellipse 40% 50% at 12% 85%, rgba(185,225,250,0.28) 0%, transparent 100%),
     repeating-linear-gradient(
       -38deg,
       transparent 0px, transparent 10px,
-      rgba(255,255,255,0.38) 10px, rgba(255,255,255,0.38) 11px
+      rgba(255,255,255,0.28) 10px, rgba(255,255,255,0.28) 11px
     ),
     repeating-linear-gradient(
       52deg,
       transparent 0px, transparent 16px,
-      rgba(110,185,228,0.24) 16px, rgba(110,185,228,0.24) 17px
+      rgba(110,185,228,0.18) 16px, rgba(110,185,228,0.18) 17px
     );
-}
-
-/* 광택 필름 (얼음 표면 유리질 느낌) */
-[data-theme="winter"] .sched-item:not(.done)::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  border-radius: inherit;
-  z-index: 1;
-  background: linear-gradient(
-    108deg,
-    rgba(255,255,255,0.62) 0%,
-    rgba(255,255,255,0.18) 30%,
-    transparent 52%,
-    rgba(185,225,248,0.12) 100%
-  );
 }
 
 /* ── 대기목록(pool card) 얼음 텍스처 ── */
@@ -631,15 +617,6 @@
   50%     { transform: translateY(-5px); }
 }
 
-/* ── 산타 날아가기 ── */
-@keyframes santaFlyRL {
-  from { transform: translateX(110vw); }
-  to   { transform: translateX(-160vw); }
-}
-@keyframes santaFlyLR {
-  from { transform: translateX(-160vw); }
-  to   { transform: translateX(110vw); }
-}
 
 /* 겨울 스와치 */
 .theme-swatch[data-theme="winter"] {

@@ -575,38 +575,22 @@ infoHistoryBtn?.addEventListener('click', () => {
     document.body.appendChild(canvas);
     const ctx = canvas.getContext('2d');
 
-    const ICE_COLORS = ['#c8e8f8','#e8f6fc','#7ec8e8','#ffffff','#b8ddf0','#a0d4ee','#d4f0fc'];
-
-    // ── 파편 (버스트 단계에서 생성) ──
-    const shards = [];
-    function buildShards() {
-      for (let i = 0; i < 55; i++) {
-        const a  = (Math.PI * 2 / 55) * i + (Math.random() - 0.5) * 0.5;
-        const sp = 4 + Math.random() * 12;
-        shards.push({
-          x:    cx + (Math.random() - 0.5) * rect.width  * 0.9,
-          y:    cy + (Math.random() - 0.5) * rect.height * 0.9,
-          vx:   Math.cos(a) * sp,
-          vy:   Math.sin(a) * sp - 2,
-          size: 3 + Math.random() * 15,
-          rot:  Math.random() * Math.PI * 2,
-          rotV: (Math.random() - 0.5) * 0.28,
-          life: 1,
-          decay: 0.012 + Math.random() * 0.018,
-          color: ICE_COLORS[Math.floor(Math.random() * ICE_COLORS.length)],
-          sides: [3, 4, 4, 5, 6][Math.floor(Math.random() * 5)],
-          glow:  Math.random() > 0.55,
-        });
-      }
-    }
+    // ── 진동 (Web Animations API) ──
+    el.animate([
+      { transform: 'translateX(0)' },
+      { transform: 'translateX(-3px)' },
+      { transform: 'translateX(3px)' },
+      { transform: 'translateX(-2px)' },
+      { transform: 'translateX(2px)' },
+      { transform: 'translateX(-1px)' },
+      { transform: 'translateX(0)' },
+    ], { duration: 200, easing: 'ease-out' });
 
     function drawCracksAt(progress, alpha) {
-      // 균열은 아이템 경계 안에만 그림
       ctx.save();
       ctx.beginPath();
       ctx.rect(rect.left - 1, rect.top - 1, rect.width + 2, rect.height + 2);
       ctx.clip();
-
       cracks.forEach(cr => {
         const { pts } = cr;
         const end  = progress * (pts.length - 1);
@@ -625,78 +609,36 @@ infoHistoryBtn?.addEventListener('click', () => {
             break;
           }
         }
-        ctx.strokeStyle = `rgba(150,220,255,${0.4 * alpha})`;
+        ctx.strokeStyle = `rgba(150,220,255,${0.38 * alpha})`;
         ctx.lineWidth   = cr.w * 4.5;
         ctx.stroke();
         ctx.strokeStyle = `rgba(255,255,255,${0.95 * alpha})`;
         ctx.lineWidth   = cr.w;
         ctx.stroke();
       });
-
       ctx.restore();
     }
 
-    function drawShard(s) {
-      ctx.save();
-      ctx.translate(s.x, s.y);
-      ctx.rotate(s.rot);
-      ctx.globalAlpha = Math.min(s.life * 1.3, 1);
-      if (s.glow) {
-        const g = ctx.createRadialGradient(0, 0, 0, 0, 0, s.size * 2.2);
-        g.addColorStop(0, 'rgba(200,240,255,0.5)');
-        g.addColorStop(1, 'transparent');
-        ctx.fillStyle = g;
-        ctx.fillRect(-s.size * 2.2, -s.size * 2.2, s.size * 4.4, s.size * 4.4);
-      }
-      ctx.fillStyle   = s.color;
-      ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-      ctx.lineWidth   = 0.8;
-      ctx.beginPath();
-      for (let j = 0; j < s.sides; j++) {
-        const a = (Math.PI * 2 / s.sides) * j;
-        const r = s.size * (j % 2 === 0 ? 1 : 0.6);
-        j === 0 ? ctx.moveTo(Math.cos(a)*r, Math.sin(a)*r)
-                : ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r);
-      }
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    // ── 애니메이션 루프 ──
-    const CRACK_DUR = 260; // ms: 크랙 퍼지는 시간
+    // ── 애니메이션: 크랙 150ms 퍼짐 → 250ms 소멸 ──
+    const CRACK_DUR = 150;
+    const FADE_DUR  = 250;
     const t0 = performance.now();
-    let phase      = 'crack';
-    let crackAlpha = 1;
 
     (function tick(now) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      if (phase === 'crack') {
-        const t    = Math.min((now - t0) / CRACK_DUR, 1);
-        const ease = 1 - Math.pow(1 - t, 3); // cubic ease-out
+      const elapsed = now - t0;
+      if (elapsed < CRACK_DUR) {
+        const ease = 1 - Math.pow(1 - elapsed / CRACK_DUR, 3);
         drawCracksAt(ease, 1);
-        if (t >= 1) { phase = 'burst'; buildShards(); }
         requestAnimationFrame(tick);
       } else {
-        // 크랙 서서히 소멸
-        crackAlpha -= 0.045;
-        if (crackAlpha > 0) drawCracksAt(1, crackAlpha);
-
-        // 파편 물리
-        for (let i = shards.length - 1; i >= 0; i--) {
-          const s = shards[i];
-          s.x  += s.vx;  s.y  += s.vy;
-          s.vy += 0.22;  s.vx *= 0.965;
-          s.rot  += s.rotV;
-          s.life -= s.decay;
-          if (s.life <= 0) { shards.splice(i, 1); continue; }
-          drawShard(s);
+        const fadeAlpha = Math.max(0, 1 - (elapsed - CRACK_DUR) / FADE_DUR);
+        if (fadeAlpha > 0) {
+          drawCracksAt(1, fadeAlpha);
+          requestAnimationFrame(tick);
+        } else {
+          canvas.remove();
         }
-
-        if (shards.length > 0 || crackAlpha > 0) requestAnimationFrame(tick);
-        else canvas.remove();
       }
     })(t0);
   }
@@ -704,43 +646,9 @@ infoHistoryBtn?.addEventListener('click', () => {
   window._spawnIceBreakEffect = spawnIceBreakEffect;
 
   // ── 겨울 눈 효과 ──────────────────────────────
-  let _santaTimer = null;
-
   function removeWinterEffects() {
     document.getElementById('winterSnow')?.remove();
     document.getElementById('winterDeco')?.remove();
-    document.getElementById('winterSanta')?.remove();
-    if (_santaTimer) { clearTimeout(_santaTimer); _santaTimer = null; }
-  }
-
-  function _spawnSantaFlyby() {
-    document.getElementById('winterSanta')?.remove();
-
-    const goRight = Math.random() > 0.5;
-    const top     = 8 + Math.random() * 50; // 화면 위쪽 8~58%
-    const dur     = (7 + Math.random() * 5).toFixed(1); // 7~12초
-
-    const el = document.createElement('div');
-    el.id = 'winterSanta';
-    // 왼→오: 🎅🛷🦌🦌🦌  /  오→왼: 🦌🦌🦌🛷🎅
-    el.textContent = goRight ? '🎅🛷🦌🦌🦌' : '🦌🦌🦌🛷🎅';
-    el.style.cssText = [
-      'position:fixed',
-      `top:${top.toFixed(1)}%`,
-      'left:0',
-      'white-space:nowrap',
-      'font-size:2.2rem',
-      'line-height:1',
-      'pointer-events:none',
-      'z-index:15',
-      `animation:santaFly${goRight ? 'LR' : 'RL'} ${dur}s linear forwards`,
-      'filter:drop-shadow(0 3px 8px rgba(0,20,80,0.35))',
-    ].join(';');
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), (parseFloat(dur) + 1) * 1000);
-
-    // 다음 등장: 40~90초 후
-    _santaTimer = setTimeout(_spawnSantaFlyby, 40000 + Math.random() * 50000);
   }
 
   function spawnWinterEffects() {
@@ -770,25 +678,26 @@ infoHistoryBtn?.addEventListener('click', () => {
     }
     document.body.appendChild(snow);
 
-    // 데코 — 곳곳에 배치 (트리·눈사람은 이미지, 나머지는 이모지)
+    // 데코 — 트리·눈사람 이미지 (크게), 나머지 이모지
     const DECOS = [
-      { img: '/image/tree.avif',   w: '2.2rem', style: 'top:12px;left:16px;animation-delay:0s' },
-      { img: '/image/snowman.png', w: '2rem',   style: 'top:12px;right:16px;animation-delay:0.6s' },
-      { emoji: '🎁',               style: 'bottom:22px;left:14px;font-size:1.7rem;animation-delay:1.1s' },
-      { emoji: '❄️',               style: 'top:48%;left:8px;font-size:1.4rem;animation-delay:1.8s;opacity:0.7' },
-      { img: '/image/tree.avif',   w: '1.8rem', style: 'bottom:22px;right:14px;animation-delay:2.2s' },
-      { img: '/image/snowman.png', w: '1.5rem', style: 'top:55%;right:10px;animation-delay:0.4s;opacity:0.75' },
+      { img: '/image/tree.avif',   w: '4rem',   style: 'top:10px;left:12px;animation-delay:0s' },
+      { img: '/image/snowman.png', w: '3.4rem', style: 'top:8px;right:12px;animation-delay:0.6s' },
+      { emoji: '🎁',               style: 'bottom:22px;left:14px;font-size:2rem;animation-delay:1.1s' },
+      { emoji: '❄️',               style: 'top:48%;left:8px;font-size:1.5rem;animation-delay:1.8s;opacity:0.7' },
+      { img: '/image/tree.avif',   w: '3.2rem', style: 'bottom:16px;right:12px;animation-delay:2.2s' },
+      { img: '/image/snowman.png', w: '2.8rem', style: 'top:52%;right:8px;animation-delay:0.4s;opacity:0.9' },
     ];
     const decoWrap = document.createElement('div');
     decoWrap.id = 'winterDeco';
     decoWrap.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:10;';
     DECOS.forEach(({ emoji, img, w, style }) => {
       const span = document.createElement('span');
-      span.style.cssText = `position:absolute;display:block;${style};filter:drop-shadow(0 2px 4px rgba(58,155,213,0.3));animation:decoFloat 4s ease-in-out infinite;`;
+      span.style.cssText = `position:absolute;display:block;${style};filter:drop-shadow(0 2px 6px rgba(58,155,213,0.35));animation:decoFloat 4s ease-in-out infinite;`;
       if (img) {
         const imgEl = document.createElement('img');
         imgEl.src = img;
-        imgEl.style.cssText = `width:${w};height:auto;display:block;`;
+        // mix-blend-mode:multiply 로 흰 배경 제거
+        imgEl.style.cssText = `width:${w};height:auto;display:block;mix-blend-mode:multiply;`;
         imgEl.alt = '';
         span.appendChild(imgEl);
       } else {
@@ -797,9 +706,6 @@ infoHistoryBtn?.addEventListener('click', () => {
       decoWrap.appendChild(span);
     });
     document.body.appendChild(decoWrap);
-
-    // 산타 첫 등장: 15~35초 후
-    _santaTimer = setTimeout(_spawnSantaFlyby, 15000 + Math.random() * 20000);
   }
   // ─────────────────────────────────────────────
 
