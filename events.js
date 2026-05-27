@@ -301,17 +301,7 @@ dayGrid.addEventListener('click', e => {
     const schedItem = btnO.closest('.sched-item');
     const isCompleting = schedItem && !schedItem.classList.contains('sched-item--done');
 
-    // 스타레일 테마 + 완료 처리 → 열차 출발 애니메이션
-    if (isCompleting && document.documentElement.dataset.theme === 'starrail') {
-      schedItem.classList.add('sr-departing');
-      schedItem.style.pointerEvents = 'none';
-      spawnTrainDepartureEffects(schedItem); // 스파크 + 플래시 효과
-      setTimeout(() => {
-        toggleStatus(btnO.dataset.date, btnO.dataset.id);
-      }, 720);
-    } else {
-      toggleStatus(btnO.dataset.date, btnO.dataset.id);
-    }
+    toggleStatus(btnO.dataset.date, btnO.dataset.id);
     return;
   }
 
