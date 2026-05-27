@@ -506,11 +506,28 @@ infoHistoryBtn?.addEventListener('click', () => {
 // 테마
 // ──────────────────────────────────────────────
 (function initTheme() {
-  const THEME_KEY     = 'appTheme_v1';
-  const SR_UNLOCK_KEY = 'srUnlocked_v1';
-  const SR_PW         = '33550336';
+  const THEME_KEY      = 'appTheme_v1';
+  const SR_UNLOCK_KEY  = 'srUnlocked_v1';
+  const SR_PW          = '33550336';
   const HGD_UNLOCK_KEY = 'hgdUnlocked_v1';
   const HGD_PW         = 'ilovehangyodon';
+
+  // 모든 테마 정의 (shop.html과 동기화)
+  const ALL_THEMES = [
+    { id: 'purple',   label: '보라',          unlockKey: null },
+    { id: 'blue',     label: '블루',          unlockKey: null },
+    { id: 'green',    label: '그린',          unlockKey: null },
+    { id: 'dark',     label: '다크',          unlockKey: null },
+    { id: 'jelly',    label: '젤리',          unlockKey: null },
+    { id: 'glass',    label: '리퀴드 글라스', unlockKey: null },
+    { id: 'hgd',      label: '한교동',        unlockKey: HGD_UNLOCK_KEY },
+    { id: 'starrail', label: '붕괴 스타레일', unlockKey: SR_UNLOCK_KEY  },
+  ];
+
+  function isUnlocked(t) {
+    if (!t.unlockKey) return true;
+    return localStorage.getItem(t.unlockKey) === '1';
+  }
 
   function applyTheme(theme) {
     if (theme === 'purple' || !theme) {
@@ -524,30 +541,44 @@ infoHistoryBtn?.addEventListener('click', () => {
     if (typeof renderWeek === 'function') renderWeek();
   }
 
-  function isStarRailUnlocked() {
-    return localStorage.getItem(SR_UNLOCK_KEY) === '1';
+  // 스와치 행 동적 렌더링
+  function renderSwatchRow() {
+    const row = document.getElementById('themeSwatchRow');
+    if (!row) return;
+    const current = localStorage.getItem(THEME_KEY) || 'purple';
+    row.innerHTML = '';
+    ALL_THEMES.forEach(t => {
+      const unlocked = isUnlocked(t);
+      const btn = document.createElement('button');
+      btn.className = 'theme-swatch' +
+        (t.id === current ? ' theme-swatch--active' : '') +
+        (!unlocked ? ' theme-swatch--locked' : '');
+      btn.dataset.theme = t.id;
+      btn.dataset.label = t.label + (!unlocked ? ' 🔒' : '');
+      btn.setAttribute('aria-label', t.label);
+      btn.title = t.label;
+      row.appendChild(btn);
+    });
   }
 
-  function isHgdUnlocked() {
-    return localStorage.getItem(HGD_UNLOCK_KEY) === '1';
-  }
-
-  function updateSwatchLock() {
-    const sr = document.querySelector('.theme-swatch[data-theme="starrail"]');
-    if (sr && isStarRailUnlocked()) {
-      sr.textContent = '';
-      sr.classList.remove('theme-swatch--locked');
-    }
-    const hgd = document.querySelector('.theme-swatch[data-theme="hgd"]');
-    if (hgd && isHgdUnlocked()) {
-      hgd.textContent = '';
-      hgd.classList.remove('theme-swatch--locked');
-    }
-  }
-
+  // 초기 적용
   applyTheme(localStorage.getItem(THEME_KEY) || 'purple');
-  updateSwatchLock();
+  renderSwatchRow();
 
+  // 설정 모달 열릴 때마다 갱신 (테마샵에서 잠금 해제 후 돌아왔을 때 반영)
+  const settingsBtn = document.getElementById('settingsBtn');
+  if (settingsBtn) {
+    settingsBtn.addEventListener('click', () => {
+      setTimeout(renderSwatchRow, 50);
+    });
+  }
+  // storage 이벤트로 다른 탭/창에서 해금된 경우에도 반영
+  window.addEventListener('storage', e => {
+    if (e.key === HGD_UNLOCK_KEY || e.key === SR_UNLOCK_KEY || e.key === THEME_KEY) {
+      renderSwatchRow();
+      if (e.key === THEME_KEY) applyTheme(e.newValue || 'purple');
+    }
+  });
 
   function promptPassword(pw, unlockKey, themeId, logo) {
     const overlay = document.createElement('div');
@@ -574,10 +605,10 @@ infoHistoryBtn?.addEventListener('click', () => {
     function tryUnlock() {
       if (input.value === pw) {
         localStorage.setItem(unlockKey, '1');
-        updateSwatchLock();
         close();
         localStorage.setItem(THEME_KEY, themeId);
         applyTheme(themeId);
+        renderSwatchRow();
       } else {
         errMsg.hidden = false;
         input.value = '';
@@ -596,9 +627,14 @@ infoHistoryBtn?.addEventListener('click', () => {
     const sw = e.target.closest('.theme-swatch');
     if (!sw) return;
     const theme = sw.dataset.theme;
-    if (theme === 'starrail' && !isStarRailUnlocked()) { promptPassword(SR_PW, SR_UNLOCK_KEY, 'starrail', '✦'); return; }
-    if (theme === 'hgd'      && !isHgdUnlocked())      { promptPassword(HGD_PW, HGD_UNLOCK_KEY, 'hgd', '🐟'); return; }
+    const t = ALL_THEMES.find(x => x.id === theme);
+    if (!t) return;
+    if (!isUnlocked(t)) {
+      if (theme === 'starrail') { promptPassword(SR_PW,  SR_UNLOCK_KEY,  'starrail', '✦'); return; }
+      if (theme === 'hgd')      { promptPassword(HGD_PW, HGD_UNLOCK_KEY, 'hgd', '🐟'); return; }
+    }
     localStorage.setItem(THEME_KEY, theme);
     applyTheme(theme);
+    renderSwatchRow();
   });
 })();
