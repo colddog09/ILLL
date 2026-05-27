@@ -536,7 +536,8 @@ infoHistoryBtn?.addEventListener('click', () => {
     const rect = el.getBoundingClientRect();
     const cx   = rect.left + rect.width  / 2;
     const cy   = rect.top  + rect.height / 2;
-    const maxR = Math.max(rect.width, rect.height) * 0.95;
+    // 아이템 모든 모서리에 닿을 수 있는 대각선 반경 (clip으로 아이템 외부는 잘림)
+    const maxR = Math.sqrt(Math.pow(rect.width / 2, 2) + Math.pow(rect.height / 2, 2)) * 1.15;
 
     // ── 크랙 경로 사전 계산 (매 프레임 변하지 않도록) ──
     const NUM_CRACKS = 14;
@@ -600,6 +601,12 @@ infoHistoryBtn?.addEventListener('click', () => {
     }
 
     function drawCracksAt(progress, alpha) {
+      // 균열은 아이템 경계 안에만 그림
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(rect.left - 1, rect.top - 1, rect.width + 2, rect.height + 2);
+      ctx.clip();
+
       cracks.forEach(cr => {
         const { pts } = cr;
         const end  = progress * (pts.length - 1);
@@ -625,6 +632,8 @@ infoHistoryBtn?.addEventListener('click', () => {
         ctx.lineWidth   = cr.w;
         ctx.stroke();
       });
+
+      ctx.restore();
     }
 
     function drawShard(s) {
@@ -761,22 +770,30 @@ infoHistoryBtn?.addEventListener('click', () => {
     }
     document.body.appendChild(snow);
 
-    // 데코 — 곳곳에 배치
+    // 데코 — 곳곳에 배치 (트리·눈사람은 이미지, 나머지는 이모지)
     const DECOS = [
-      { emoji: '🎄', style: 'top:12px;left:16px;font-size:2rem;animation-delay:0s' },
-      { emoji: '⛄', style: 'top:12px;right:16px;font-size:1.8rem;animation-delay:0.6s' },
-      { emoji: '🎁', style: 'bottom:22px;left:14px;font-size:1.7rem;animation-delay:1.1s' },
-      { emoji: '❄️', style: 'top:48%;left:8px;font-size:1.4rem;animation-delay:1.8s;opacity:0.7' },
-      { emoji: '🎄', style: 'bottom:22px;right:14px;font-size:1.5rem;animation-delay:2.2s' },
-      { emoji: '⛄', style: 'top:55%;right:10px;font-size:1.3rem;animation-delay:0.4s;opacity:0.75' },
+      { img: '/image/tree.avif',   w: '2.2rem', style: 'top:12px;left:16px;animation-delay:0s' },
+      { img: '/image/snowman.png', w: '2rem',   style: 'top:12px;right:16px;animation-delay:0.6s' },
+      { emoji: '🎁',               style: 'bottom:22px;left:14px;font-size:1.7rem;animation-delay:1.1s' },
+      { emoji: '❄️',               style: 'top:48%;left:8px;font-size:1.4rem;animation-delay:1.8s;opacity:0.7' },
+      { img: '/image/tree.avif',   w: '1.8rem', style: 'bottom:22px;right:14px;animation-delay:2.2s' },
+      { img: '/image/snowman.png', w: '1.5rem', style: 'top:55%;right:10px;animation-delay:0.4s;opacity:0.75' },
     ];
     const decoWrap = document.createElement('div');
     decoWrap.id = 'winterDeco';
     decoWrap.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:10;';
-    DECOS.forEach(({ emoji, style }) => {
+    DECOS.forEach(({ emoji, img, w, style }) => {
       const span = document.createElement('span');
-      span.textContent = emoji;
-      span.style.cssText = `position:absolute;${style};filter:drop-shadow(0 2px 4px rgba(58,155,213,0.3));animation:decoFloat 4s ease-in-out infinite;`;
+      span.style.cssText = `position:absolute;display:block;${style};filter:drop-shadow(0 2px 4px rgba(58,155,213,0.3));animation:decoFloat 4s ease-in-out infinite;`;
+      if (img) {
+        const imgEl = document.createElement('img');
+        imgEl.src = img;
+        imgEl.style.cssText = `width:${w};height:auto;display:block;`;
+        imgEl.alt = '';
+        span.appendChild(imgEl);
+      } else {
+        span.textContent = emoji;
+      }
       decoWrap.appendChild(span);
     });
     document.body.appendChild(decoWrap);

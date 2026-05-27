@@ -480,17 +480,21 @@
 
 /* ── 미완료 일정 = 얼음 스타일 ── */
 [data-theme="winter"] .sched-item:not(.done) {
-  background: linear-gradient(135deg,
-    rgba(196,226,242,0.55) 0%,
-    rgba(230,244,252,0.75) 100%) !important;
-  border-color: rgba(58,155,213,0.35) !important;
+  background:
+    linear-gradient(160deg,
+      rgba(240,251,255,0.99) 0%,
+      rgba(208,238,252,0.97) 28%,
+      rgba(242,252,255,0.98) 55%,
+      rgba(192,226,248,0.96) 100%) !important;
+  border: 1.5px solid rgba(80,168,222,0.55) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.75),
-    inset 0 -1px 0 rgba(58,155,213,0.1),
-    0 2px 8px rgba(58,155,213,0.1) !important;
+    inset 0 2px 5px rgba(255,255,255,0.92),
+    inset 0 -2px 4px rgba(58,155,213,0.2),
+    inset 3px 0 7px rgba(255,255,255,0.5),
+    0 3px 10px rgba(58,155,213,0.14) !important;
 }
 
-/* 서리 결정 — 촘촘한 해칭 패턴 (아이템 내부에만 적용) */
+/* 서리 결정 + 반사광 specular */
 [data-theme="winter"] .sched-item:not(.done)::before {
   content: '';
   position: absolute;
@@ -499,38 +503,55 @@
   border-radius: inherit;
   z-index: 0;
   background:
+    /* 좌상단 반사광 하이라이트 */
+    radial-gradient(ellipse 65% 48% at 10% 18%, rgba(255,255,255,0.78) 0%, transparent 100%),
+    /* 우하단 보조 반사 */
+    radial-gradient(ellipse 45% 55% at 86% 83%, rgba(195,232,252,0.42) 0%, transparent 100%),
+    /* 서리 해칭 A */
     repeating-linear-gradient(
       -52deg,
-      transparent,
-      transparent 14px,
-      rgba(255,255,255,0.22) 14px,
-      rgba(255,255,255,0.22) 15px
+      transparent 0px, transparent 8px,
+      rgba(255,255,255,0.42) 8px, rgba(255,255,255,0.42) 9px
     ),
+    /* 서리 해칭 B */
     repeating-linear-gradient(
-      38deg,
-      transparent,
-      transparent 22px,
-      rgba(184,221,240,0.14) 22px,
-      rgba(184,221,240,0.14) 23px
+      40deg,
+      transparent 0px, transparent 13px,
+      rgba(110,185,228,0.28) 13px, rgba(110,185,228,0.28) 14px
     );
 }
-/* nth-child로 인접 아이템이 같은 패턴이 안 겹치도록 */
+/* nth-child 교차 패턴 */
 [data-theme="winter"] .sched-item:not(.done):nth-child(even)::before {
   background:
+    radial-gradient(ellipse 55% 52% at 88% 15%, rgba(255,255,255,0.72) 0%, transparent 100%),
+    radial-gradient(ellipse 40% 50% at 12% 85%, rgba(185,225,250,0.38) 0%, transparent 100%),
     repeating-linear-gradient(
       -38deg,
-      transparent,
-      transparent 18px,
-      rgba(255,255,255,0.18) 18px,
-      rgba(255,255,255,0.18) 19px
+      transparent 0px, transparent 10px,
+      rgba(255,255,255,0.38) 10px, rgba(255,255,255,0.38) 11px
     ),
     repeating-linear-gradient(
       52deg,
-      transparent,
-      transparent 26px,
-      rgba(184,221,240,0.12) 26px,
-      rgba(184,221,240,0.12) 27px
+      transparent 0px, transparent 16px,
+      rgba(110,185,228,0.24) 16px, rgba(110,185,228,0.24) 17px
     );
+}
+
+/* 광택 필름 (얼음 표면 유리질 느낌) */
+[data-theme="winter"] .sched-item:not(.done)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: 1;
+  background: linear-gradient(
+    108deg,
+    rgba(255,255,255,0.62) 0%,
+    rgba(255,255,255,0.18) 30%,
+    transparent 52%,
+    rgba(185,225,248,0.12) 100%
+  );
 }
 
 /* ── 대기목록(pool card) 얼음 텍스처 ── */

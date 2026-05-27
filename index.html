@@ -23,7 +23,7 @@
   <link rel="apple-touch-icon" href="/image/apple-touch-icon.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/image/apple-touch-icon.png">
   <meta name="theme-color" content="#6c63ff">
-  <link rel="stylesheet" href="style.css?v=42" />
+  <link rel="stylesheet" href="style.css?v=43" />
 </head>
 <body>
 
@@ -516,7 +516,7 @@
   <script src="deadline.js?v=1"></script>
   <script src="gcal/gcal.js?v=13"></script>
   <script src="push.js?v=1"></script>
-  <script src="modals.js?v=9"></script>
+  <script src="modals.js?v=10"></script>
   <script src="events.js?v=15"></script>
   <script>
     if ('serviceWorker' in navigator) {
@@ -532,9 +532,24 @@
           });
         });
       });
-      // SW 교체 후 페이지 새로고침
+      // SW 교체 완료 → 자동 reload 대신 토스트로 안내 (자동 reload 시 일정이 잠깐 사라지는 버그 방지)
+      let _swReloadPending = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        window.location.reload();
+        if (_swReloadPending) return;
+        _swReloadPending = true;
+        const t = document.createElement('div');
+        t.style.cssText = [
+          'position:fixed','bottom:82px','left:50%','transform:translateX(-50%)',
+          'background:rgba(30,30,46,0.93)','color:#fff','padding:11px 22px',
+          'border-radius:22px','font-size:0.85rem','font-weight:500',
+          'z-index:99999','cursor:pointer','white-space:nowrap',
+          'box-shadow:0 4px 18px rgba(0,0,0,0.32)',
+          'transition:opacity 0.4s',
+        ].join(';');
+        t.textContent = '✅ 업데이트 완료! 탭하면 새로고침';
+        t.addEventListener('click', () => window.location.reload());
+        document.body.appendChild(t);
+        setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 450); }, 8000);
       });
     }
   </script>

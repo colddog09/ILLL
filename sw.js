@@ -1,8 +1,8 @@
-const CACHE_NAME = 'illl-v95';
+const CACHE_NAME = 'illl-v96';
 const CORE_FILES = [
   '/',
   '/index.html',
-  '/style.css?v=42',
+  '/style.css?v=43',
   '/utils.js?v=2',
   '/state.js?v=5',
   '/auth.js?v=3',
@@ -11,14 +11,16 @@ const CORE_FILES = [
   '/deadline.js?v=1',
   '/push.js?v=1',
   '/gcal/gcal.js?v=13',
-  '/modals.js?v=9',
+  '/modals.js?v=10',
   '/events.js?v=15',
   '/manifest.json',
   '/image/icon-192.png',
   '/image/icon-512.png',
   '/image/apple-touch-icon.png',
   '/image/pompomno.webp',
-  '/image/pompomyes.webp'
+  '/image/pompomyes.webp',
+  '/image/tree.avif',
+  '/image/snowman.png'
 ];
 
 /* ── 설치: 핵심 파일 캐시 ── */
