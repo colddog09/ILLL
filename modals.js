@@ -658,7 +658,7 @@ infoHistoryBtn?.addEventListener('click', () => {
     const deco = document.createElement('div');
     deco.className = 'winter-deco';
     deco.id = 'winterDeco';
-    deco.innerHTML = '🎄<br>⛄';
+    deco.innerHTML = '🎄<br>⛄<br>🎁';
     document.body.appendChild(deco);
   }
   // ─────────────────────────────────────────────
