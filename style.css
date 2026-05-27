@@ -4091,6 +4091,51 @@ a.settings-tab {
 .settings-shop-btn:hover { opacity: 0.88; }
 .settings-shop-btn:active { transform: scale(0.97); }
 
+/* ══════════════════════════════════════════════
+   다크/스타레일 테마 — 가독성 보정
+   하드코딩된 어두운 색이 다크 배경에서 안 보이는 문제 수정
+   ══════════════════════════════════════════════ */
+
+/* 토요일 색 */
+[data-theme="dark"] .list-view__date-dow--sat,
+[data-theme="starrail"] .list-view__date-dow--sat { color: #60a5fa; }
+
+/* 일요일 색 */
+[data-theme="dark"] .list-view__date-dow--sun,
+[data-theme="starrail"] .list-view__date-dow--sun { color: #f87171; }
+
+/* 긴급 마감 배지 */
+[data-theme="dark"] .sched-item__deadline--urgent,
+[data-theme="starrail"] .sched-item__deadline--urgent {
+  color: #fca5a5;
+  background: rgba(248,113,113,0.15);
+  border-color: rgba(248,113,113,0.35);
+}
+
+/* 캘린더 경고 레이블 (다크 배경에서 #1d4ed8 안 보임) */
+[data-theme="dark"] .trash-zone.gcal-warn .trash-zone__label,
+[data-theme="starrail"] .trash-zone.gcal-warn .trash-zone__label { color: #93c5fd; }
+
+/* settings 위험 카드 */
+[data-theme="dark"] .settings-card--danger,
+[data-theme="starrail"] .settings-card--danger {
+  background: rgba(220,53,69,0.12) !important;
+  border-color: rgba(220,53,69,0.3) !important;
+}
+[data-theme="dark"] .settings-card--danger .settings-card__eyebrow,
+[data-theme="starrail"] .settings-card--danger .settings-card__eyebrow { color: #f87171; }
+
+[data-theme="dark"] .settings-logout-btn,
+[data-theme="starrail"] .settings-logout-btn { color: #f87171; }
+
+/* gcal 풀 구분선 */
+[data-theme="dark"] .pool-gcal-sep span,
+[data-theme="starrail"] .pool-gcal-sep span { color: #93c5fd; }
+
+/* gcal 연결 안됨 텍스트 */
+[data-theme="dark"] .gcal-side-empty--disconnected,
+[data-theme="starrail"] .gcal-side-empty--disconnected { color: var(--text-sub); }
+
 /* ── Minecraft: 일정 아이템 — 돌 블록만 ── */
 /* (광물은 btn-o 버튼 영역에만 표시) */
 
