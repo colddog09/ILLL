@@ -3713,18 +3713,17 @@ body {
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 120px;
+  height: 90px;
   background-image: url('/starrail_train.png');
-  background-size: contain;
+  background-size: 100% 100%;
   background-repeat: no-repeat;
   background-position: center bottom;
   pointer-events: none;
   z-index: 10;
-  opacity: 0.88;
-  filter: drop-shadow(0 -5px 15px rgba(137, 196, 255, 0.25));
-  animation: floatTrain 6s ease-in-out infinite;
+  opacity: 0.9;
+  filter: drop-shadow(0 -4px 10px rgba(137, 196, 255, 0.25));
+  animation: glowTrain 5s ease-in-out infinite;
   transition: opacity 0.3s ease, transform 0.3s ease;
-  transform-origin: center bottom;
 }
 
 /* 로그인 화면 활성화 시 하단 열차 페이드 아웃 */
@@ -3736,41 +3735,32 @@ body {
 
 /* 스타레일 테마 하단 여백 추가로 스크롤 시 일정 카드가 열차에 가려지지 않게 함 */
 [data-theme="starrail"] .schedule-area {
-  padding-bottom: calc(130px + env(safe-area-inset-bottom, 0px)) !important;
+  padding-bottom: calc(105px + env(safe-area-inset-bottom, 0px)) !important;
 }
 
-@keyframes floatTrain {
+@keyframes glowTrain {
   0% {
-    transform: translateY(0) scale(1);
+    filter: drop-shadow(0 -4px 10px rgba(137, 196, 255, 0.25));
+    opacity: 0.88;
   }
   50% {
-    transform: translateY(-6px) scale(1.005);
-    filter: drop-shadow(0 -8px 20px rgba(137, 196, 255, 0.4));
+    filter: drop-shadow(0 -8px 20px rgba(137, 196, 255, 0.55));
+    opacity: 0.96;
   }
   100% {
-    transform: translateY(0) scale(1);
+    filter: drop-shadow(0 -4px 10px rgba(137, 196, 255, 0.25));
+    opacity: 0.88;
   }
 }
 
 /* 모바일 환경 대응 */
 @media (max-width: 600px) {
   [data-theme="starrail"] .starrail-bottom-train {
-    height: 70px;
-    filter: drop-shadow(0 -3px 10px rgba(137, 196, 255, 0.2));
+    height: 55px;
+    filter: drop-shadow(0 -3px 8px rgba(137, 196, 255, 0.2));
   }
   [data-theme="starrail"] .schedule-area {
-    padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px)) !important;
-  }
-  @keyframes floatTrain {
-    0% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-4px);
-    }
-    100% {
-      transform: translateY(0);
-    }
+    padding-bottom: calc(75px + env(safe-area-inset-bottom, 0px)) !important;
   }
 }
 
