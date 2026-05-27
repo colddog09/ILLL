@@ -3380,7 +3380,7 @@ body {
 }
 [data-theme="starrail"] .sched-item.done { opacity: 0.45; }
 [data-theme="starrail"] body {
-  background-image: url('/starrail_train.png');
+  background-image: url('/starrail_bg.png');
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
@@ -4091,8 +4091,7 @@ a.settings-tab {
   display: block;
   /* 좌하→우상 대각선 각도 ~-28도 */
   transform: rotate(-28deg);
-  /* 검은 배경 제거 — 밝은 열차만 보임 */
-  mix-blend-mode: screen;
+  /* 투명 PNG이므로 blend mode 불필요 */
   filter:
     drop-shadow(0 0 24px rgba(255, 200, 80, 0.8))
     drop-shadow(0 0 50px rgba(160, 100, 255, 0.7))
