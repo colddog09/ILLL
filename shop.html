@@ -36,39 +36,37 @@
       position: sticky;
       top: 0;
       z-index: 200;
-      padding: 0 20px;
+      padding: 12px 20px;
     }
     .shop-nav-inner {
       max-width: 1100px;
       margin: 0 auto;
-      height: 60px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      padding: 10px 20px;
+      border-radius: 16px;
       gap: 12px;
-      border-radius: 0 0 20px 20px;
-      padding: 0 20px;
-      background: rgba(15,11,31,0.72);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,0.07);
-      border-top: none;
-      transition: background 0.3s;
+      transition: background 0.3s, border 0.3s, backdrop-filter 0.3s, box-shadow 0.3s;
     }
     .shop-nav.scrolled .shop-nav-inner {
-      background: rgba(15,11,31,0.9);
-      box-shadow: 0 4px 32px rgba(0,0,0,0.25);
+      background: rgba(245,244,255,0.85);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 4px 24px rgba(108,99,255,0.08);
     }
     .shop-nav__logo {
-      font-size: 1rem;
+      font-size: 18px;
       font-weight: 900;
+      color: var(--text);
       text-decoration: none;
-      color: #fff;
+      letter-spacing: -0.3px;
       white-space: nowrap;
       flex-shrink: 0;
     }
     .shop-nav__logo span {
-      background: linear-gradient(135deg, #a78bfa, #60a5fa);
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -106,31 +104,37 @@
     .shop-nav__links {
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 4px;
       flex-shrink: 0;
     }
     .shop-nav__link {
-      font-size: 0.78rem;
-      font-weight: 600;
-      color: rgba(255,255,255,0.55);
       text-decoration: none;
-      padding: 6px 12px;
-      border-radius: 10px;
-      border: 1px solid transparent;
-      transition: all 0.15s;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--sub);
+      padding: 7px 14px;
+      border-radius: 8px;
+      transition: color 0.15s, background 0.15s;
       white-space: nowrap;
     }
-    .shop-nav__link:hover { color: #fff; border-color: rgba(255,255,255,0.12); background: rgba(255,255,255,0.06); }
-    .shop-nav__link--cta {
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      color: #fff !important;
-      border: none !important;
+    .shop-nav__link:hover { color: var(--text); background: var(--surface); }
+    .shop-nav__app-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 10px;
+      text-decoration: none;
+      transition: background 0.15s, transform 0.15s;
     }
-    .shop-nav__link--cta:hover { opacity: 0.88; background: linear-gradient(135deg, var(--accent), var(--accent2)) !important; }
+    .shop-nav__app-btn:hover { background: var(--accent2); transform: translateY(-1px); }
 
     /* ── 모바일 nav ── */
     @media (max-width: 600px) {
-      .shop-nav__links .shop-nav__link:not(.shop-nav__link--cta) { display: none; }
+      .shop-nav__links .shop-nav__link { display: none; }
       .shop-tab { padding: 5px 10px; font-size: 0.72rem; }
     }
 
@@ -599,8 +603,14 @@
       </div>
 
       <div class="shop-nav__links">
-        <a href="/homepage" class="shop-nav__link">홈</a>
-        <a href="/" class="shop-nav__link shop-nav__link--cta">앱 열기 →</a>
+        <a href="/" class="shop-nav__app-btn" title="앱 바로가기">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="3" width="8" height="8" rx="2"/>
+            <rect x="13" y="3" width="8" height="8" rx="2"/>
+            <rect x="3" y="13" width="8" height="8" rx="2"/>
+            <rect x="13" y="13" width="8" height="8" rx="2"/>
+          </svg>
+        </a>
       </div>
     </div>
   </nav>

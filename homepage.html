@@ -136,6 +136,19 @@
       border-radius: 10px !important;
     }
     .nav-cta:hover { background: #6a5df5 !important; color: #fff !important; }
+    .nav-app-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 10px;
+      text-decoration: none;
+      transition: background 0.15s, transform 0.15s;
+    }
+    .nav-app-btn:hover { background: var(--accent2); transform: translateY(-1px); }
     .nav-mobile-toggle {
       display: none;
       background: none;
@@ -841,9 +854,16 @@
     <div class="nav-inner">
       <a class="nav-logo" href="/homepage"><span>오</span>일추</a>
       <div class="nav-links">
-        <a href="/homepage" class="nav-secondary">🏠 홈페이지</a>
-        <a href="/shop" class="nav-secondary" style="color:var(--accent);font-weight:600;">🎨 테마샵</a>
-        <a href="/" class="nav-cta">✨ 창작마당 →</a>
+        <a href="/shop" class="nav-secondary">🎨 테마샵</a>
+        <a href="/shop" class="nav-secondary">✨ 창작마당</a>
+        <a href="/" class="nav-app-btn" title="앱 바로가기">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="3" width="8" height="8" rx="2"/>
+            <rect x="13" y="3" width="8" height="8" rx="2"/>
+            <rect x="3" y="13" width="8" height="8" rx="2"/>
+            <rect x="13" y="13" width="8" height="8" rx="2"/>
+          </svg>
+        </a>
       </div>
     </div>
   </nav>
