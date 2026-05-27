@@ -447,6 +447,48 @@ infoHistoryBtn?.addEventListener('click', () => {
 })();
 
 // ──────────────────────────────────────────────
+// 앱 업데이트 버튼
+// ──────────────────────────────────────────────
+(function initUpdateCheck() {
+  const btn = document.getElementById('updateCheckBtn');
+  if (!btn) return;
+
+  btn.addEventListener('click', async () => {
+    if (!('serviceWorker' in navigator)) {
+      btn.textContent = '⚠️ 지원 안 됨';
+      setTimeout(() => { btn.textContent = '🔄 업데이트 확인'; }, 2000);
+      return;
+    }
+    btn.textContent = '확인 중...';
+    btn.disabled = true;
+    try {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (!reg) {
+        btn.textContent = '✅ 최신 버전';
+        setTimeout(() => { btn.textContent = '🔄 업데이트 확인'; btn.disabled = false; }, 2000);
+        return;
+      }
+      await reg.update();
+      if (reg.waiting) {
+        btn.textContent = '🔄 업데이트 중...';
+        reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+        // controllerchange 이벤트로 페이지 새로고침됨
+      } else if (reg.installing) {
+        btn.textContent = '⏳ 설치 중...';
+        setTimeout(() => { btn.textContent = '🔄 업데이트 확인'; btn.disabled = false; }, 4000);
+      } else {
+        btn.textContent = '✅ 최신 버전';
+        setTimeout(() => { btn.textContent = '🔄 업데이트 확인'; btn.disabled = false; }, 2000);
+      }
+    } catch (e) {
+      console.error('업데이트 확인 실패:', e);
+      btn.textContent = '🔄 업데이트 확인';
+      btn.disabled = false;
+    }
+  });
+})();
+
+// ──────────────────────────────────────────────
 // 오프라인 배너
 // ──────────────────────────────────────────────
 (function initOfflineBanner() {

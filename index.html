@@ -23,7 +23,7 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
   <meta name="theme-color" content="#6c63ff">
-  <link rel="stylesheet" href="style.css?v=25" />
+  <link rel="stylesheet" href="style.css?v=35" />
 </head>
 <body>
 
@@ -207,6 +207,13 @@
               <p class="gcal-filter__hint">캘린더 연결 후 설정 가능합니다.</p>
             </div>
           </div>
+        </section>
+
+        <section class="settings-card">
+          <div class="settings-card__eyebrow">앱 업데이트</div>
+          <h3 class="settings-card__title">업데이트 확인</h3>
+          <p class="settings-card__desc">새 버전이 있으면 앱을 최신 버전으로 업데이트합니다.</p>
+          <button id="updateCheckBtn" class="auth-btn settings-save-btn">🔄 업데이트 확인</button>
         </section>
 
         <div class="settings-logout-row">
@@ -494,16 +501,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script src="utils.js?v=2"></script>
-  <script src="state.js?v=4"></script>
+  <script src="state.js?v=5"></script>
   <script src="auth.js?v=3"></script>
   <script src="render.js?v=16"></script>
   <script src="drag.js?v=6"></script>
   <script src="deadline.js?v=1"></script>
   <script src="gcal/gcal.js?v=13"></script>
   <script src="push.js?v=1"></script>
-  <script src="modals.js?v=1"></script>
-  <script src="render.js?v=16"></script>
-  <script src="events.js?v=13"></script>
+  <script src="modals.js?v=2"></script>
+  <script src="events.js?v=14"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').then(reg => {

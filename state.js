@@ -288,10 +288,9 @@ function loadState() {
     const localTs  = local?.ts || 0;
 
     if (remote && remoteTs > localTs + 3000) {
-      // 로컬에 Supabase 미업로드 변경사항이 있으면 원격 덮어쓰기 방지
+      // 로컬에 미업로드 변경사항이 있으면 원격 덮어쓰기 방지
       if (_localChangePending) {
         console.warn('[sync] 로컬 미업로드 변경사항 보호 — 원격 우선 적용 생략, 로컬을 업로드');
-        // 로컬 데이터를 원격에 업로드해서 충돌 해소
         if (currentUser && supabaseClient) {
           supabaseClient.from('user_states')
             .upsert(_supabaseSavePayload(), { onConflict: 'user_id' })
@@ -300,8 +299,19 @@ function loadState() {
               else { setSyncStatus('⚠️ 클라우드 저장 실패'); }
             });
         }
+      } else if (!_remoteHasData(remote) && hasAnyTaskData()) {
+        // 원격이 비어있고 로컬에 데이터 있음 → 로컬 보호 후 원격에 업로드
+        console.warn('[sync] 원격 데이터 없음, 로컬 데이터 보호하여 업로드');
+        if (currentUser && supabaseClient) {
+          supabaseClient.from('user_states')
+            .upsert(_supabaseSavePayload(), { onConflict: 'user_id' })
+            .then(({ error }) => {
+              if (!error) setSyncSaved();
+              else setSyncStatus('⚠️ 클라우드 저장 실패');
+            });
+        }
       } else {
-        // 다른 기기에서 더 최신 데이터 → 덮어쓰기
+        // 다른 기기에서 더 최신 데이터 → 덮어쓰기 (원격에 실제 데이터 있을 때만)
         console.log(`☁️ 클라우드 최신 적용 (remote: ${new Date(remoteTs).toLocaleTimeString()}, local: ${new Date(localTs).toLocaleTimeString()})`);
         applyPersistedState(remote);
         lastSavedSnapshot = stateSnapshot();
