@@ -1,8 +1,8 @@
-const CACHE_NAME = 'illl-v84';
+const CACHE_NAME = 'illl-v85';
 const CORE_FILES = [
   '/',
   '/index.html',
-  '/style.css?v=34',
+  '/style.css?v=25',
   '/utils.js?v=2',
   '/state.js?v=4',
   '/auth.js?v=3',
@@ -12,7 +12,8 @@ const CORE_FILES = [
   '/push.js?v=1',
   '/gcal/gcal.js?v=13',
   '/modals.js?v=1',
-  '/events.js?v=12',
+  '/events.js?v=13',
+  '/starrail_train.png',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',

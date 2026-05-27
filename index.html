@@ -23,7 +23,7 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
   <meta name="theme-color" content="#6c63ff">
-  <link rel="stylesheet" href="style.css?v=24" />
+  <link rel="stylesheet" href="style.css?v=25" />
 </head>
 <body>
 
@@ -489,6 +489,9 @@
     </div>
   </div>
 
+  <!-- ─── 붕괴 스타레일 테마 전용 화면 하단 은하열차 ─── -->
+  <div class="starrail-bottom-train" aria-hidden="true"></div>
+
   <!-- ─── Supabase SDK ─── -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -502,7 +505,7 @@
   <script src="push.js?v=1"></script>
   <script src="modals.js?v=1"></script>
   <script src="render.js?v=16"></script>
-  <script src="events.js?v=12"></script>
+  <script src="events.js?v=13"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').then(reg => {

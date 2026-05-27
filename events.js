@@ -299,7 +299,11 @@ dayGrid.addEventListener('click', e => {
   const btnO = e.target.closest('.btn-o');
   if (btnO) {
     const schedItem = btnO.closest('.sched-item');
-    const isCompleting = schedItem && !schedItem.classList.contains('sched-item--done');
+    const isCompleting = schedItem && !schedItem.classList.contains('done');
+
+    if (isCompleting && document.documentElement.getAttribute('data-theme') === 'starrail' && typeof spawnTrainDepartureEffects === 'function') {
+      spawnTrainDepartureEffects(schedItem);
+    }
 
     toggleStatus(btnO.dataset.date, btnO.dataset.id);
     return;

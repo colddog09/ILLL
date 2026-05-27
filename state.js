@@ -140,10 +140,20 @@ function _supabaseSavePayload() {
 let _saveTimer = null;
 function saveState() {
   if (!dataLoaded) return;
-  if (!lastSavedSnapshot && !hasAnyTaskData()) return; // 빈 초기 state 저장 방지
+
+  const snap = stateSnapshot();
+
+  // 빈 state 저장 방지 (로드 전 빈 state로 덮어쓰는 버그 차단)
+  if (!lastSavedSnapshot && !hasAnyTaskData()) return;
+
+  // 변경이 없으면 localStorage 저장 생략
+  if (snap === lastSavedSnapshot) {
+    showLastSavedTime();
+    return;
+  }
 
   // 1. localStorage 즉시 저장 (주 저장소)
-  lastSavedSnapshot = stateSnapshot();
+  lastSavedSnapshot = snap;
   _saveLocal();
   showLastSavedTime();
 
@@ -160,6 +170,18 @@ function saveState() {
         setSyncSaved();
       });
   }, 2000);
+}
+
+// remote 데이터에 실제 내용이 있는지 확인 (빈 remote로 덮어쓰기 방지)
+function _remoteHasData(remote) {
+  if (!remote) return false;
+  if (remote.pool?.length > 0) return true;
+  if (remote.schedule) {
+    for (const k of Object.keys(remote.schedule)) {
+      if (Array.isArray(remote.schedule[k]) && remote.schedule[k].length > 0) return true;
+    }
+  }
+  return false;
 }
 
 // 페이지 종료/백그라운드 전환 시 Supabase에 즉시 플러시
