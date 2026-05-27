@@ -3411,11 +3411,11 @@ body {
 }
 /* 완료 시 카드 전체를 어둡게, 폼폼만 역보정으로 원래 밝기 유지 */
 [data-theme="starrail"] .sched-item.done {
-  filter: brightness(0.45) saturate(0.6);
+  filter: brightness(0.65) saturate(0.7);
   transition: filter 0.2s;
 }
 [data-theme="starrail"] .sched-item.done .btn-o {
-  filter: brightness(2.2) saturate(1.7) !important;
+  filter: brightness(1.55) saturate(1.4) !important;
 }
 [data-theme="starrail"] body {
   background-image:
