@@ -654,12 +654,25 @@ infoHistoryBtn?.addEventListener('click', () => {
     }
     document.body.appendChild(snow);
 
-    // 데코 (눈사람 + 크리스마스 트리)
-    const deco = document.createElement('div');
-    deco.className = 'winter-deco';
-    deco.id = 'winterDeco';
-    deco.innerHTML = '🎄<br>⛄<br>🎁';
-    document.body.appendChild(deco);
+    // 데코 — 곳곳에 배치
+    const DECOS = [
+      { emoji: '🎄', style: 'top:12px;left:16px;font-size:2rem;animation-delay:0s' },
+      { emoji: '⛄', style: 'top:12px;right:16px;font-size:1.8rem;animation-delay:0.6s' },
+      { emoji: '🎁', style: 'bottom:22px;left:14px;font-size:1.7rem;animation-delay:1.1s' },
+      { emoji: '❄️', style: 'top:48%;left:8px;font-size:1.4rem;animation-delay:1.8s;opacity:0.7' },
+      { emoji: '🎄', style: 'bottom:22px;right:14px;font-size:1.5rem;animation-delay:2.2s' },
+      { emoji: '⛄', style: 'top:55%;right:10px;font-size:1.3rem;animation-delay:0.4s;opacity:0.75' },
+    ];
+    const decoWrap = document.createElement('div');
+    decoWrap.id = 'winterDeco';
+    decoWrap.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:10;';
+    DECOS.forEach(({ emoji, style }) => {
+      const el = document.createElement('span');
+      el.textContent = emoji;
+      el.style.cssText = `position:absolute;${style};filter:drop-shadow(0 2px 4px rgba(58,155,213,0.3));animation:decoFloat 4s ease-in-out infinite;`;
+      decoWrap.appendChild(el);
+    });
+    document.body.appendChild(decoWrap);
   }
   // ─────────────────────────────────────────────
 
