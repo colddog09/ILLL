@@ -1287,6 +1287,33 @@ body {
   opacity: 1;
   background: rgba(220,38,38,0.07);
 }
+/* 설정 모달 — 홈페이지·테마샵 바로가기 */
+.settings-nav-links {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  padding: 10px 0 4px;
+}
+.settings-nav-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 18px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text-sub);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.settings-nav-links a:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(108,99,255,0.05);
+}
+
 .settings-legal-links {
   display: flex;
   align-items: center;

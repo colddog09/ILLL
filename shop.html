@@ -27,47 +27,73 @@
       min-height: 100vh;
     }
 
-    /* ── 헤더 ── */
-    .shop-header {
+    /* ── 헤더 / Nav ── */
+    .shop-nav {
       position: sticky;
       top: 0;
       z-index: 100;
-      background: rgba(244,245,251,0.85);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-bottom: 1px solid var(--border);
       padding: 0 24px;
-      height: 60px;
+    }
+    .shop-nav-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      height: 62px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      border-radius: 0 0 18px 18px;
+      padding: 0 20px;
+      background: rgba(244,245,251,0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-top: none;
+      transition: background 0.3s, box-shadow 0.3s;
     }
-    .shop-header__logo {
-      font-size: 1.1rem;
+    .shop-nav.scrolled .shop-nav-inner {
+      background: rgba(244,245,251,0.92);
+      box-shadow: 0 4px 24px rgba(108,99,255,0.08);
+    }
+    .shop-nav__logo {
+      font-size: 1.05rem;
       font-weight: 900;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      text-decoration: none;
+      color: var(--text);
+    }
+    .shop-nav__logo span {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      text-decoration: none;
     }
-    .shop-header__back {
+    .shop-nav__links {
       display: flex;
       align-items: center;
       gap: 6px;
-      font-size: 0.85rem;
+    }
+    .shop-nav__link {
+      font-size: 0.83rem;
       font-weight: 600;
       color: var(--text-sub);
       text-decoration: none;
       padding: 7px 14px;
       border-radius: 20px;
-      border: 1.5px solid var(--border);
-      background: var(--surface);
+      border: 1.5px solid transparent;
       transition: all 0.15s;
     }
-    .shop-header__back:hover {
+    .shop-nav__link:hover {
       color: var(--accent);
-      border-color: var(--accent);
+      border-color: var(--border);
+      background: var(--surface);
+    }
+    .shop-nav__link--cta {
+      background: var(--accent);
+      color: #fff !important;
+      border-color: var(--accent) !important;
+    }
+    .shop-nav__link--cta:hover {
+      opacity: 0.88;
+      background: var(--accent) !important;
     }
 
     /* ── 히어로 ── */
@@ -335,11 +361,16 @@
 </head>
 <body>
 
-  <!-- 헤더 -->
-  <header class="shop-header">
-    <span class="shop-header__logo">🎨 테마샵</span>
-    <a href="/" class="shop-header__back">← 앱으로 돌아가기</a>
-  </header>
+  <!-- 네비게이션 -->
+  <nav class="shop-nav" id="shopNav">
+    <div class="shop-nav-inner">
+      <a class="shop-nav__logo" href="/homepage"><span>오</span>일추 테마샵</a>
+      <div class="shop-nav__links">
+        <a href="/homepage" class="shop-nav__link">🏠 홈페이지</a>
+        <a href="/" class="shop-nav__link shop-nav__link--cta">앱 열기 →</a>
+      </div>
+    </div>
+  </nav>
 
   <!-- 히어로 -->
   <section class="shop-hero">
@@ -605,6 +636,12 @@
   });
 
   renderGrid();
+
+  // 스크롤 시 nav 효과
+  const shopNav = document.getElementById('shopNav');
+  window.addEventListener('scroll', () => {
+    shopNav.classList.toggle('scrolled', window.scrollY > 20);
+  }, { passive: true });
 </script>
 </body>
 </html>
