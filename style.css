@@ -610,6 +610,16 @@
   50%     { transform: translateY(-5px); }
 }
 
+/* ── 산타 날아가기 ── */
+@keyframes santaFlyRL {
+  from { transform: translateX(110vw); }
+  to   { transform: translateX(-160vw); }
+}
+@keyframes santaFlyLR {
+  from { transform: translateX(-160vw); }
+  to   { transform: translateX(110vw); }
+}
+
 /* 겨울 스와치 */
 .theme-swatch[data-theme="winter"] {
   background: linear-gradient(135deg, #b8ddf0 0%, #e8f6fc 50%, #3a9bd5 100%);

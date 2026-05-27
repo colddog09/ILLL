@@ -534,23 +534,39 @@ infoHistoryBtn?.addEventListener('click', () => {
   function spawnIceBreakEffect(el) {
     if (!el) return;
     const rect = el.getBoundingClientRect();
+    const cx   = rect.left + rect.width  / 2;
+    const cy   = rect.top  + rect.height / 2;
+    const maxR = Math.max(rect.width, rect.height) * 0.95;
 
-    // 플래시 오버레이
+    // ── 크랙 경로 사전 계산 (매 프레임 변하지 않도록) ──
+    const NUM_CRACKS = 14;
+    const cracks = Array.from({ length: NUM_CRACKS }, (_, i) => {
+      let angle = (Math.PI * 2 / NUM_CRACKS) * i + (Math.random() - 0.5) * 0.22;
+      const pts = [{ x: cx, y: cy }];
+      for (let s = 1; s <= 5; s++) {
+        angle += (Math.random() - 0.5) * 0.38;
+        pts.push({
+          x: cx + Math.cos(angle) * maxR * (s / 5),
+          y: cy + Math.sin(angle) * maxR * (s / 5),
+        });
+      }
+      return { pts, w: 1 + Math.random() * 1.5 };
+    });
+
+    // ── 플래시 오버레이 (항목 전체를 강하게 덮음) ──
     const flash = document.createElement('div');
-    flash.style.cssText = [
-      'position:fixed',
-      `left:${rect.left - 3}px`, `top:${rect.top - 3}px`,
-      `width:${rect.width + 6}px`, `height:${rect.height + 6}px`,
-      'background:rgba(196,226,242,0.7)',
-      'border-radius:10px',
-      'pointer-events:none',
-      'z-index:9998',
-      'animation:iceFlash 0.22s ease-out forwards',
-    ].join(';');
+    flash.style.cssText = `position:fixed;left:${rect.left-5}px;top:${rect.top-5}px;`
+      + `width:${rect.width+10}px;height:${rect.height+10}px;`
+      + `background:rgba(255,255,255,0.97);border-radius:10px;`
+      + `pointer-events:none;z-index:9998;`;
     document.body.appendChild(flash);
-    setTimeout(() => flash.remove(), 260);
+    requestAnimationFrame(() => {
+      flash.style.transition = 'opacity 0.35s ease-out';
+      flash.style.opacity    = '0';
+    });
+    setTimeout(() => flash.remove(), 420);
 
-    // 파편 캔버스
+    // ── 전체화면 캔버스 ──
     const canvas = document.createElement('canvas');
     canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:9999;';
     canvas.width  = window.innerWidth;
@@ -558,26 +574,56 @@ infoHistoryBtn?.addEventListener('click', () => {
     document.body.appendChild(canvas);
     const ctx = canvas.getContext('2d');
 
-    const ICE_COLORS = ['#c8e8f8','#e8f6fc','#7ec8e8','#ffffff','#b8ddf0','#a0d4ee'];
-    const cx = rect.left + rect.width  / 2;
-    const cy = rect.top  + rect.height / 2;
-    const shards = [];
+    const ICE_COLORS = ['#c8e8f8','#e8f6fc','#7ec8e8','#ffffff','#b8ddf0','#a0d4ee','#d4f0fc'];
 
-    for (let i = 0; i < 22; i++) {
-      const angle = (Math.PI * 2 / 22) * i + (Math.random() - 0.5) * 0.5;
-      const speed = 2.5 + Math.random() * 5.5;
-      shards.push({
-        x: cx + (Math.random() - 0.5) * rect.width  * 0.6,
-        y: cy + (Math.random() - 0.5) * rect.height * 0.6,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - 1.5,
-        size: 3 + Math.random() * 9,
-        rot: Math.random() * Math.PI * 2,
-        rotV: (Math.random() - 0.5) * 0.18,
-        life: 1,
-        decay: 0.022 + Math.random() * 0.022,
-        color: ICE_COLORS[Math.floor(Math.random() * ICE_COLORS.length)],
-        sides: Math.random() > 0.5 ? 3 : 4,
+    // ── 파편 (버스트 단계에서 생성) ──
+    const shards = [];
+    function buildShards() {
+      for (let i = 0; i < 55; i++) {
+        const a  = (Math.PI * 2 / 55) * i + (Math.random() - 0.5) * 0.5;
+        const sp = 4 + Math.random() * 12;
+        shards.push({
+          x:    cx + (Math.random() - 0.5) * rect.width  * 0.9,
+          y:    cy + (Math.random() - 0.5) * rect.height * 0.9,
+          vx:   Math.cos(a) * sp,
+          vy:   Math.sin(a) * sp - 2,
+          size: 3 + Math.random() * 15,
+          rot:  Math.random() * Math.PI * 2,
+          rotV: (Math.random() - 0.5) * 0.28,
+          life: 1,
+          decay: 0.012 + Math.random() * 0.018,
+          color: ICE_COLORS[Math.floor(Math.random() * ICE_COLORS.length)],
+          sides: [3, 4, 4, 5, 6][Math.floor(Math.random() * 5)],
+          glow:  Math.random() > 0.55,
+        });
+      }
+    }
+
+    function drawCracksAt(progress, alpha) {
+      cracks.forEach(cr => {
+        const { pts } = cr;
+        const end  = progress * (pts.length - 1);
+        const full = Math.floor(end);
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) {
+          if (i <= full) {
+            ctx.lineTo(pts[i].x, pts[i].y);
+          } else if (i === full + 1) {
+            const frac = end - full;
+            ctx.lineTo(
+              pts[i-1].x + (pts[i].x - pts[i-1].x) * frac,
+              pts[i-1].y + (pts[i].y - pts[i-1].y) * frac,
+            );
+            break;
+          }
+        }
+        ctx.strokeStyle = `rgba(150,220,255,${0.4 * alpha})`;
+        ctx.lineWidth   = cr.w * 4.5;
+        ctx.stroke();
+        ctx.strokeStyle = `rgba(255,255,255,${0.95 * alpha})`;
+        ctx.lineWidth   = cr.w;
+        ctx.stroke();
       });
     }
 
@@ -585,14 +631,21 @@ infoHistoryBtn?.addEventListener('click', () => {
       ctx.save();
       ctx.translate(s.x, s.y);
       ctx.rotate(s.rot);
-      ctx.globalAlpha = Math.min(s.life * 1.1, 1);
+      ctx.globalAlpha = Math.min(s.life * 1.3, 1);
+      if (s.glow) {
+        const g = ctx.createRadialGradient(0, 0, 0, 0, 0, s.size * 2.2);
+        g.addColorStop(0, 'rgba(200,240,255,0.5)');
+        g.addColorStop(1, 'transparent');
+        ctx.fillStyle = g;
+        ctx.fillRect(-s.size * 2.2, -s.size * 2.2, s.size * 4.4, s.size * 4.4);
+      }
       ctx.fillStyle   = s.color;
-      ctx.strokeStyle = 'rgba(255,255,255,0.7)';
-      ctx.lineWidth   = 0.7;
+      ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+      ctx.lineWidth   = 0.8;
       ctx.beginPath();
       for (let j = 0; j < s.sides; j++) {
         const a = (Math.PI * 2 / s.sides) * j;
-        const r = s.size * (j % 2 === 0 ? 1 : 0.55);
+        const r = s.size * (j % 2 === 0 ? 1 : 0.6);
         j === 0 ? ctx.moveTo(Math.cos(a)*r, Math.sin(a)*r)
                 : ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r);
       }
@@ -602,29 +655,83 @@ infoHistoryBtn?.addEventListener('click', () => {
       ctx.restore();
     }
 
-    (function animate() {
+    // ── 애니메이션 루프 ──
+    const CRACK_DUR = 260; // ms: 크랙 퍼지는 시간
+    const t0 = performance.now();
+    let phase      = 'crack';
+    let crackAlpha = 1;
+
+    (function tick(now) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      for (let i = shards.length - 1; i >= 0; i--) {
-        const s = shards[i];
-        s.x += s.vx; s.y += s.vy;
-        s.vy += 0.13;
-        s.vx *= 0.97;
-        s.rot += s.rotV;
-        s.life -= s.decay;
-        if (s.life <= 0) { shards.splice(i, 1); continue; }
-        drawShard(s);
+
+      if (phase === 'crack') {
+        const t    = Math.min((now - t0) / CRACK_DUR, 1);
+        const ease = 1 - Math.pow(1 - t, 3); // cubic ease-out
+        drawCracksAt(ease, 1);
+        if (t >= 1) { phase = 'burst'; buildShards(); }
+        requestAnimationFrame(tick);
+      } else {
+        // 크랙 서서히 소멸
+        crackAlpha -= 0.045;
+        if (crackAlpha > 0) drawCracksAt(1, crackAlpha);
+
+        // 파편 물리
+        for (let i = shards.length - 1; i >= 0; i--) {
+          const s = shards[i];
+          s.x  += s.vx;  s.y  += s.vy;
+          s.vy += 0.22;  s.vx *= 0.965;
+          s.rot  += s.rotV;
+          s.life -= s.decay;
+          if (s.life <= 0) { shards.splice(i, 1); continue; }
+          drawShard(s);
+        }
+
+        if (shards.length > 0 || crackAlpha > 0) requestAnimationFrame(tick);
+        else canvas.remove();
       }
-      if (shards.length > 0) requestAnimationFrame(animate);
-      else canvas.remove();
-    })();
+    })(t0);
   }
   // expose for events.js
   window._spawnIceBreakEffect = spawnIceBreakEffect;
 
   // ── 겨울 눈 효과 ──────────────────────────────
+  let _santaTimer = null;
+
   function removeWinterEffects() {
     document.getElementById('winterSnow')?.remove();
     document.getElementById('winterDeco')?.remove();
+    document.getElementById('winterSanta')?.remove();
+    if (_santaTimer) { clearTimeout(_santaTimer); _santaTimer = null; }
+  }
+
+  function _spawnSantaFlyby() {
+    document.getElementById('winterSanta')?.remove();
+
+    const goRight = Math.random() > 0.5;
+    const top     = 8 + Math.random() * 50; // 화면 위쪽 8~58%
+    const dur     = (7 + Math.random() * 5).toFixed(1); // 7~12초
+
+    const el = document.createElement('div');
+    el.id = 'winterSanta';
+    // 왼→오: 🎅🛷🦌🦌🦌  /  오→왼: 🦌🦌🦌🛷🎅
+    el.textContent = goRight ? '🎅🛷🦌🦌🦌' : '🦌🦌🦌🛷🎅';
+    el.style.cssText = [
+      'position:fixed',
+      `top:${top.toFixed(1)}%`,
+      'left:0',
+      'white-space:nowrap',
+      'font-size:2.2rem',
+      'line-height:1',
+      'pointer-events:none',
+      'z-index:15',
+      `animation:santaFly${goRight ? 'LR' : 'RL'} ${dur}s linear forwards`,
+      'filter:drop-shadow(0 3px 8px rgba(0,20,80,0.35))',
+    ].join(';');
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), (parseFloat(dur) + 1) * 1000);
+
+    // 다음 등장: 40~90초 후
+    _santaTimer = setTimeout(_spawnSantaFlyby, 40000 + Math.random() * 50000);
   }
 
   function spawnWinterEffects() {
@@ -667,12 +774,15 @@ infoHistoryBtn?.addEventListener('click', () => {
     decoWrap.id = 'winterDeco';
     decoWrap.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:10;';
     DECOS.forEach(({ emoji, style }) => {
-      const el = document.createElement('span');
-      el.textContent = emoji;
-      el.style.cssText = `position:absolute;${style};filter:drop-shadow(0 2px 4px rgba(58,155,213,0.3));animation:decoFloat 4s ease-in-out infinite;`;
-      decoWrap.appendChild(el);
+      const span = document.createElement('span');
+      span.textContent = emoji;
+      span.style.cssText = `position:absolute;${style};filter:drop-shadow(0 2px 4px rgba(58,155,213,0.3));animation:decoFloat 4s ease-in-out infinite;`;
+      decoWrap.appendChild(span);
     });
     document.body.appendChild(decoWrap);
+
+    // 산타 첫 등장: 15~35초 후
+    _santaTimer = setTimeout(_spawnSantaFlyby, 15000 + Math.random() * 20000);
   }
   // ─────────────────────────────────────────────
 
