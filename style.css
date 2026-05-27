@@ -3409,14 +3409,21 @@ body {
   border-color: rgba(137,196,255,0.18);
   color: var(--text);
 }
-/* 완료 시 카드 전체를 어둡게, 폼폼만 역보정으로 원래 밝기 유지 */
-[data-theme="starrail"] .sched-item.done {
-  filter: brightness(0.65) saturate(0.7);
-  transition: filter 0.2s;
+[data-theme="starrail"] .sched-item.done { opacity: 0.45; }
+
+/* ── 스타레일 폰트 ── */
+[data-theme="starrail"] body,
+[data-theme="starrail"] .sched-item__text,
+[data-theme="starrail"] .pool-item__text,
+[data-theme="starrail"] .day-col__title,
+[data-theme="starrail"] .week-label,
+[data-theme="starrail"] .top-bar__title,
+[data-theme="starrail"] button,
+[data-theme="starrail"] input {
+  font-family: 'Black Han Sans', 'Pretendard', sans-serif !important;
+  letter-spacing: 0.03em;
 }
-[data-theme="starrail"] .sched-item.done .btn-o {
-  filter: brightness(1.55) saturate(1.4) !important;
-}
+
 [data-theme="starrail"] body {
   background-image:
     radial-gradient(ellipse at 20% 10%, rgba(137,196,255,0.12) 0%, transparent 55%),
