@@ -42,10 +42,121 @@ poolEl.addEventListener('touchend', e => {
 }, { passive: false });
 
 // ──────────────────────────────────────────────
-// 스타레일 — 일정 칸 열차 출발 애니메이션
+// 스타레일 — 일정 칸 열차 출발 파티클 효과
 // ──────────────────────────────────────────────
 function triggerStarRailTrain() {
   // (레거시 호환용 빈 함수)
+}
+
+function spawnTrainDepartureEffects(el) {
+  const rect = el.getBoundingClientRect();
+
+  // ── 1. 점화 플래시 오버레이 ──
+  const flash = document.createElement('div');
+  const cx = rect.left + rect.width * 0.5;
+  const cy = rect.top  + rect.height * 0.6;
+  flash.style.cssText = [
+    'position:fixed','inset:0','pointer-events:none','z-index:9998',
+    `background:radial-gradient(ellipse 320px 80px at ${cx}px ${cy}px,` +
+      'rgba(255,215,60,0.38),rgba(255,130,30,0.12) 55%,transparent 80%)',
+    'animation:sr-engine-flash 0.38s ease-out forwards'
+  ].join(';');
+  document.body.appendChild(flash);
+  setTimeout(() => flash.remove(), 420);
+
+  // ── 2. 스파크 파티클 캔버스 ──
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:9999;';
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+
+  const GOLD  = ['#ffd040','#ffb820','#ffe880','#ff9800','#fff0a0'];
+  const CYAN  = ['#3dc8e8','#20b8d8','#60d8f0','#a0eeff','#ffffff'];
+  const particles = [];
+
+  function mkParticle(x, y, isInit) {
+    const isGold = Math.random() > 0.45;
+    const speed  = isInit ? (3 + Math.random() * 6) : (1.5 + Math.random() * 4);
+    // 초기 버스트: 왼쪽+위 방향, 이후: 뒤쪽으로 흘러감
+    const baseAngle = isInit
+      ? (Math.PI * 0.75 + (Math.random() - 0.5) * Math.PI * 0.9)
+      : (Math.PI + (Math.random() - 0.5) * Math.PI * 0.5);
+    return {
+      x, y,
+      vx: Math.cos(baseAngle) * speed,
+      vy: Math.sin(baseAngle) * speed - (isInit ? 1.5 : 0.5),
+      life: 1,
+      decay: 0.022 + Math.random() * 0.028,
+      size: isInit ? (2 + Math.random() * 3.5) : (1.2 + Math.random() * 2.5),
+      color: (isGold ? GOLD : CYAN)[Math.floor(Math.random() * 5)]
+    };
+  }
+
+  // 점화 순간 버스트
+  const burstX = rect.left + 30;
+  const burstY = rect.top  + rect.height * 0.62;
+  for (let i = 0; i < 55; i++) particles.push(mkParticle(burstX + Math.random()*rect.width*0.25, burstY + (Math.random()-0.5)*rect.height*0.5, true));
+
+  const spawnEnd = performance.now() + 480;
+
+  function animate(now) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 열차가 지나가는 동안 꼬리 파티클 지속 생성
+    if (now < spawnEnd) {
+      const cr = el.getBoundingClientRect();
+      const tailX = cr.left + 10;
+      const tailY = cr.top  + cr.height * 0.62;
+      for (let i = 0; i < 5; i++) {
+        particles.push(mkParticle(
+          tailX + Math.random() * 50,
+          tailY + (Math.random() - 0.5) * cr.height * 0.55,
+          false
+        ));
+      }
+    }
+
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x  += p.vx;
+      p.y  += p.vy;
+      p.vx *= 0.93;
+      p.vy += 0.10; // 중력
+      p.life -= p.decay;
+      if (p.life <= 0) { particles.splice(i, 1); continue; }
+
+      ctx.globalAlpha = Math.min(p.life * 1.1, 1);
+      ctx.fillStyle   = p.color;
+      // 빠른 입자는 선으로, 느린 입자는 원으로
+      const speed = Math.sqrt(p.vx*p.vx + p.vy*p.vy);
+      if (speed > 3) {
+        ctx.save();
+        ctx.strokeStyle = p.color;
+        ctx.lineWidth   = p.size * p.life * 0.8;
+        ctx.lineCap     = 'round';
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(p.x - p.vx * 2.5, p.y - p.vy * 2.5);
+        ctx.stroke();
+        ctx.restore();
+      } else {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * p.life * 0.9, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.globalAlpha = 1;
+
+    if (particles.length > 0 || now < spawnEnd) {
+      requestAnimationFrame(animate);
+    } else {
+      canvas.remove();
+    }
+  }
+
+  requestAnimationFrame(animate);
 }
 function srTrainDepart_UNUSED() {
   if (document.documentElement.dataset.theme !== 'starrail') return;
@@ -194,9 +305,10 @@ dayGrid.addEventListener('click', e => {
     if (isCompleting && document.documentElement.dataset.theme === 'starrail') {
       schedItem.classList.add('sr-departing');
       schedItem.style.pointerEvents = 'none';
+      spawnTrainDepartureEffects(schedItem); // 스파크 + 플래시 효과
       setTimeout(() => {
         toggleStatus(btnO.dataset.date, btnO.dataset.id);
-      }, 620);
+      }, 720);
     } else {
       toggleStatus(btnO.dataset.date, btnO.dataset.id);
     }

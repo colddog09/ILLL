@@ -92,27 +92,27 @@ function hasAnyTaskData() {
 }
 
 // ──────────────────────────────────────────────
-// localStorage 백업 (새로고침 중 비동기 저장 실패 방지)
+// localStorage = 주 저장소 (항상 즉시 저장, 새로고침에도 안전)
+// Supabase     = 클라우드 백업 (멀티디바이스 동기화, 백그라운드)
 // ──────────────────────────────────────────────
 const LS_BACKUP_KEY  = 'state_backup_v1';
 const LS_BACKUP_TS   = 'state_backup_ts_v1';
 const LS_BACKUP_UID  = 'state_backup_uid_v1';
 
-function _saveLocalBackup() {
-  if (!dataLoaded || !currentUser) return;
+function _saveLocal() {
+  if (!currentUser) return;
   try {
-    const snap = stateSnapshot();
-    if (!lastSavedSnapshot && !hasAnyTaskData()) return; // 빈 초기 state 저장 금지
     const ts = Date.now();
-    localStorage.setItem(LS_BACKUP_KEY, snap);
+    localStorage.setItem(LS_BACKUP_KEY, stateSnapshot());
     localStorage.setItem(LS_BACKUP_TS,  ts.toString());
     localStorage.setItem(LS_BACKUP_UID, currentUser.id);
+    localStorage.setItem('lastSavedTime', ts.toString());
   } catch (_) {}
 }
 
-function _loadLocalBackup() {
+function _loadLocal() {
   try {
-    const uid  = localStorage.getItem(LS_BACKUP_UID);
+    const uid = localStorage.getItem(LS_BACKUP_UID);
     if (!uid || uid !== currentUser?.id) return null;
     const snap = localStorage.getItem(LS_BACKUP_KEY);
     const ts   = parseInt(localStorage.getItem(LS_BACKUP_TS) || '0', 10);
@@ -134,72 +134,43 @@ function _supabaseSavePayload() {
   };
 }
 
-// 즉시 저장 (loadState 내부에서 직접 호출)
-function _doSave() {
-  localStorage.setItem('lastSavedTime', Date.now().toString());
-  if (!currentUser || !supabaseClient) { setSyncStatus('⚠️ 로그인 필요'); return; }
-
-  const snap = stateSnapshot();
-  if (snap === lastSavedSnapshot) return;
-  // lastSavedSnapshot이 없으면 아직 로드 전 — 빈 state로 덮어쓰기 방지
-  if (!lastSavedSnapshot && !hasAnyTaskData()) {
-    console.warn('⚠️ 초기 빈 state 감지 — Supabase 저장 건너뜀');
-    return;
-  }
-
-  _saveLocalBackup(); // 동기 백업 먼저
-  supabaseClient
-    .from('user_states')
-    .upsert(_supabaseSavePayload(), { onConflict: 'user_id' })
-    .then(({ error }) => {
-      if (error) { console.error('Supabase 저장 에러:', error); return; }
-      lastSavedSnapshot = snap;
-      setSyncSaved();
-    });
-}
-
-// debounce 저장 (UI 변경 직후 호출)
+// ──────────────────────────────────────────────
+// 저장: localStorage 즉시 → Supabase 디바운스 2초
+// ──────────────────────────────────────────────
 let _saveTimer = null;
 function saveState() {
-  localStorage.setItem('lastSavedTime', Date.now().toString());
-  setSyncStatus('📝 저장 중...');
+  if (!dataLoaded) return;
+  if (!lastSavedSnapshot && !hasAnyTaskData()) return; // 빈 초기 state 저장 방지
 
+  // 1. localStorage 즉시 저장 (주 저장소)
+  lastSavedSnapshot = stateSnapshot();
+  _saveLocal();
+  showLastSavedTime();
+
+  // 2. Supabase 백그라운드 동기화 (디바운스 2초)
+  if (!currentUser || !supabaseClient) return;
   clearTimeout(_saveTimer);
+  setSyncStatus('📝 동기화 중...');
   _saveTimer = setTimeout(() => {
-    if (!currentUser || !supabaseClient || !dataLoaded) return;
-    const snap = stateSnapshot();
-    if (snap === lastSavedSnapshot) { showLastSavedTime(); return; }
-    if (!lastSavedSnapshot && !hasAnyTaskData()) return;
-
-    _saveLocalBackup(); // 동기 백업 먼저
     supabaseClient
       .from('user_states')
       .upsert(_supabaseSavePayload(), { onConflict: 'user_id' })
       .then(({ error }) => {
-        if (error) { setSyncStatus('❌ 저장 실패'); return; }
-        lastSavedSnapshot = snap;
+        if (error) { setSyncStatus('⚠️ 클라우드 저장 실패'); return; }
         setSyncSaved();
       });
-  }, 1500);
+  }, 2000);
 }
 
-// 앱 종료/백그라운드 전환 시 즉시 동기화
+// 페이지 종료/백그라운드 전환 시 Supabase에 즉시 플러시
+// (localStorage는 saveState에서 이미 최신 상태)
 function flushToSupabase() {
   if (!currentUser || !supabaseClient || !dataLoaded) return;
-  const snap = stateSnapshot();
-  if (snap === lastSavedSnapshot) return;
   if (!lastSavedSnapshot && !hasAnyTaskData()) return;
-
-  _saveLocalBackup(); // 동기이므로 페이지 언로드 전에 확실히 저장됨
   supabaseClient
     .from('user_states')
     .upsert(_supabaseSavePayload(), { onConflict: 'user_id' })
-    .then(({ error }) => {
-      if (error) { setSyncStatus('❌ 저장 실패'); return; }
-      lastSavedSnapshot = snap;
-      localStorage.setItem('lastSavedTime', Date.now().toString());
-      setSyncSaved();
-    });
+    .then(({ error }) => { if (!error) setSyncSaved(); });
 }
 
 window.addEventListener('beforeunload', flushToSupabase);
@@ -209,7 +180,9 @@ document.addEventListener('visibilitychange', () => {
 setInterval(flushToSupabase, 10 * 60 * 1000);
 
 // ──────────────────────────────────────────────
-// 데이터 불러오기 (Supabase 단독)
+// 데이터 불러오기
+// Phase 1: localStorage 즉시 복원 → 바로 렌더
+// Phase 2: Supabase 백그라운드 체크 → 다른 기기에서 수정된 경우만 덮어쓰기
 // ──────────────────────────────────────────────
 function loadState() {
   if (!currentUser || !supabaseClient) {
@@ -220,10 +193,23 @@ function loadState() {
   }
   if (loadInProgress) return;
   loadInProgress = true;
-  dataLoaded = false;
 
-  setSyncStatus('☁️ 불러오는 중...');
+  // ── Phase 1: localStorage 즉시 복원 ──
+  const local = _loadLocal();
+  if (local) {
+    applyPersistedState(local.data);
+    lastSavedSnapshot = stateSnapshot();
+    dataLoaded = true;
+    autoReturnExpiredTasks();
+    renderApp();
+    showLastSavedTime();
+    checkFirstVisit();
+    setSyncStatus('☁️ 동기화 확인 중...');
+  } else {
+    setSyncStatus('☁️ 불러오는 중...');
+  }
 
+  // ── Phase 2: Supabase 백그라운드 체크 ──
   supabaseClient
     .from('user_states')
     .select('pool, schedule, links, updated_at')
@@ -234,45 +220,51 @@ function loadState() {
 
       if (error) {
         console.error('Supabase 읽기 에러:', error);
-        dataLoaded = true;
-        setSyncStatus('❌ 불러오기 실패');
-        renderApp();
+        if (!local) {
+          // 로컬도 없고 클라우드도 실패 → 빈 상태로 시작
+          dataLoaded = true;
+          renderApp();
+        }
+        setSyncStatus('⚠️ 클라우드 동기화 실패');
         return;
       }
 
       const remoteTs = remote?.updated_at ? new Date(remote.updated_at).getTime() : 0;
-      const backup   = _loadLocalBackup();
-      const backupTs = backup?.ts || 0;
+      const localTs  = local?.ts || 0;
 
-      let loadedOk = false; // 실제로 데이터를 성공적으로 불러왔는지
-
-      if (backup && backupTs > remoteTs + 3000) {
-        // localStorage 백업이 Supabase보다 3초 이상 최신 → 백업 우선 사용
-        console.log(`🔄 로컬 백업 복원 (backup: ${new Date(backupTs).toLocaleTimeString()}, remote: ${new Date(remoteTs).toLocaleTimeString()})`);
-        applyPersistedState(backup.data);
-        lastSavedSnapshot = stateSnapshot();
-        loadedOk = hasAnyTaskData(); // 복원한 백업에 실제 데이터 있을 때만
-        // 바로 Supabase에 반영
-        supabaseClient
-          .from('user_states')
-          .upsert(_supabaseSavePayload(), { onConflict: 'user_id' })
-          .then(({ error }) => { if (!error) setSyncSaved(); });
-      } else if (remote) {
+      if (remote && remoteTs > localTs + 3000) {
+        // 다른 기기에서 더 최신 데이터가 있음 → 덮어쓰기
+        console.log(`☁️ 클라우드 최신 데이터 적용 (remote: ${new Date(remoteTs).toLocaleTimeString()}, local: ${new Date(localTs).toLocaleTimeString()})`);
         applyPersistedState(remote);
-        localStorage.setItem('lastSavedTime', remote.updated_at
-          ? new Date(remote.updated_at).getTime().toString()
-          : Date.now().toString());
         lastSavedSnapshot = stateSnapshot();
-        loadedOk = true; // remote에서 정상 로드
+        _saveLocal(); // 로컬에도 반영
+        dataLoaded = true;
+        autoReturnExpiredTasks();
+        renderApp();
+        showLastSavedTime();
+        setSyncSaved();
+      } else if (!local) {
+        // 로컬 없음 (첫 기기 or 캐시 삭제)
+        if (remote) {
+          applyPersistedState(remote);
+          lastSavedSnapshot = stateSnapshot();
+          _saveLocal();
+        }
+        dataLoaded = true;
+        autoReturnExpiredTasks();
+        renderApp();
+        showLastSavedTime();
+        checkFirstVisit();
+        setSyncSaved();
+      } else {
+        // 로컬이 최신 → 클라우드에 업로드 (이미 렌더 완료)
+        if (hasAnyTaskData()) {
+          supabaseClient.from('user_states')
+            .upsert(_supabaseSavePayload(), { onConflict: 'user_id' })
+            .then(({ error }) => { if (!error) setSyncSaved(); });
+        } else {
+          setSyncSaved();
+        }
       }
-      // remote도 없고 backup도 없으면 신규 사용자 — 백업 저장 안 함
-
-      dataLoaded = true;
-      // 정상적으로 데이터 불러왔을 때만 백업 갱신 (불러오기 실패 시 덮어쓰기 방지)
-      if (loadedOk) _saveLocalBackup();
-      autoReturnExpiredTasks();
-      renderApp();
-      showLastSavedTime();
-      checkFirstVisit();
     });
 }

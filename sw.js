@@ -1,22 +1,24 @@
-const CACHE_NAME = 'illl-v70';
+const CACHE_NAME = 'illl-v73';
 const CORE_FILES = [
   '/',
   '/index.html',
-  '/style.css?v=21',
+  '/style.css?v=23',
   '/utils.js?v=2',
-  '/state.js?v=2',
+  '/state.js?v=3',
   '/auth.js?v=3',
-  '/render.js?v=14',
+  '/render.js?v=15',
   '/drag.js?v=6',
   '/deadline.js?v=1',
   '/push.js?v=1',
   '/gcal/gcal.js?v=13',
   '/modals.js?v=1',
-  '/events.js?v=11',
+  '/events.js?v=12',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
-  '/apple-touch-icon.png'
+  '/apple-touch-icon.png',
+  '/pompomno.webp',
+  '/pompomyes.webp'
 ];
 
 /* ── 설치: 핵심 파일 캐시 ── */

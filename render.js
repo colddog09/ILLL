@@ -277,7 +277,7 @@ function renderGcalSidePanel() {
       el.innerHTML = `
         ${timeLabel}
         <span class="gcal-side-event__text">${escHtml(ev.summary)}</span>
-        <button class="btn-gcal-done btn-o${ev.done ? ' active' : ''}" data-gcal-id="${ev.id}" data-date="${dk}" title="완료">O</button>`;
+        <button class="btn-gcal-done btn-o${ev.done ? ' active' : ''}" data-gcal-id="${ev.id}" data-date="${dk}" title="완료"><img class="btn-o__img" src="${ev.done?'/pompomyes.webp':'/pompomno.webp'}" alt="${ev.done?'완료':'미완료'}"></button>`;
 
       // 데스크톱 더블클릭 → 현재 날짜에 추가
       if (currentUser) {
@@ -500,7 +500,7 @@ function renderDayTasks(key) {
       <span class="sched-item__text" title="${escHtml(item.text)}">${escHtml(item.text)}</span>
       ${deadlineBadge}
       <div class="sched-item__ox">
-        <button class="btn-o${item.status==='O'?' active':''}" data-date="${key}" data-id="${item.id}" title="완료(O)">O</button>
+        <button class="btn-o${item.status==='O'?' active':''}" data-date="${key}" data-id="${item.id}" title="완료(O)"><img class="btn-o__img" src="${item.status==='O'?'/pompomyes.webp':'/pompomno.webp'}" alt="${item.status==='O'?'완료':'미완료'}"></button>
       </div>`;
     fragment.appendChild(el);
 

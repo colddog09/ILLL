@@ -2070,27 +2070,32 @@ body {
 .sched-item__ox { display: flex; gap: 4px; flex-shrink: 0; }
 
 .btn-o {
-  width: 28px;
-  height: 28px;
-  border: 1.5px solid var(--border);
-  border-radius: 8px;
-  font-size: 0.82rem;
-  font-weight: 800;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s, transform 0.12s, box-shadow 0.15s, border-color 0.15s;
-  background: var(--surface);
-  color: var(--success);
+  padding: 0;
+  transition: transform 0.14s, filter 0.14s, box-shadow 0.14s;
+  background: transparent;
+  flex-shrink: 0;
 }
-.btn-o:hover { background: rgba(22,163,74,0.1); border-color: var(--success); transform: scale(1.1); }
-.btn-o.active {
-  background: var(--success);
-  border-color: var(--success);
-  color: #fff;
-  box-shadow: 0 2px 10px rgba(22,163,74,0.35);
+.btn-o__img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  border-radius: 50%;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
 }
+.btn-o:hover { transform: scale(1.18); filter: brightness(1.15) drop-shadow(0 0 4px rgba(100,200,100,0.5)); }
+.btn-o.active { filter: drop-shadow(0 0 5px rgba(50,200,100,0.6)); }
+.btn-o:active { transform: scale(0.92); }
 
 /* ============================
    VIEW MODE TOGGLE BUTTON
@@ -3383,7 +3388,7 @@ body {
   background-image:
     radial-gradient(ellipse at 20% 10%, rgba(137,196,255,0.12) 0%, transparent 55%),
     radial-gradient(ellipse at 80% 85%, rgba(200,223,248,0.09) 0%, transparent 50%),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='500'%3E%3Ccircle cx='327' cy='57' r='0.3' fill='%2389c4ff' opacity='0.3'/%3E%3Ccircle cx='71' cy='377' r='0.3' fill='%23ffffff' opacity='0.44'/%3E%3Ccircle cx='16' cy='15' r='0.3' fill='%23c8dfff' opacity='0.29'/%3E%3Ccircle cx='308' cy='13' r='0.7' fill='%23c8dfff' opacity='0.49'/%3E%3Ccircle cx='359' cy='279' r='0.5' fill='%23c8dfff' opacity='0.38'/%3E%3Ccircle cx='142' cy='414' r='0.3' fill='%23c8dfff' opacity='0.48'/%3E%3Ccircle cx='174' cy='142' r='0.3' fill='%23c8dfff' opacity='0.58'/%3E%3Ccircle cx='172' cy='52' r='0.3' fill='%23e8f4ff' opacity='0.24'/%3E%3Ccircle cx='433' cy='176' r='0.4' fill='%23ffffff' opacity='0.49'/%3E%3Ccircle cx='274' cy='63' r='0.5' fill='%23ffffff' opacity='0.42'/%3E%3Ccircle cx='424' cy='321' r='0.5' fill='%23c8dfff' opacity='0.48'/%3E%3Ccircle cx='23' cy='338' r='0.4' fill='%2389c4ff' opacity='0.59'/%3E%3Ccircle cx='437' cy='119' r='0.3' fill='%23e8f4ff' opacity='0.31'/%3E%3Ccircle cx='325' cy='427' r='0.5' fill='%23c8dfff' opacity='0.35'/%3E%3Ccircle cx='107' cy='343' r='0.4' fill='%23ffffff' opacity='0.44'/%3E%3Ccircle cx='87' cy='273' r='0.4' fill='%23c8dfff' opacity='0.38'/%3E%3Ccircle cx='138' cy='473' r='0.7' fill='%23c8dfff' opacity='0.47'/%3E%3Ccircle cx='431' cy='393' r='0.3' fill='%23c8dfff' opacity='0.53'/%3E%3Ccircle cx='412' cy='161' r='0.5' fill='%2389c4ff' opacity='0.23'/%3E%3Ccircle cx='467' cy='482' r='0.5' fill='%23c8dfff' opacity='0.46'/%3E%3Ccircle cx='202' cy='452' r='0.6' fill='%23c8dfff' opacity='0.31'/%3E%3Ccircle cx='126' cy='381' r='0.7' fill='%2389c4ff' opacity='0.5'/%3E%3Ccircle cx='219' cy='459' r='0.5' fill='%2389c4ff' opacity='0.29'/%3E%3Ccircle cx='70' cy='260' r='0.6' fill='%23ffffff' opacity='0.5'/%3E%3Ccircle cx='440' cy='56' r='0.3' fill='%23c8dfff' opacity='0.52'/%3E%3Ccircle cx='216' cy='305' r='0.3' fill='%23e8f4ff' opacity='0.35'/%3E%3Ccircle cx='239' cy='270' r='0.4' fill='%23ffffff' opacity='0.47'/%3E%3Ccircle cx='58' cy='349' r='0.7' fill='%2389c4ff' opacity='0.51'/%3E%3Ccircle cx='174' cy='57' r='0.4' fill='%23e8f4ff' opacity='0.26'/%3E%3Ccircle cx='54' cy='445' r='0.4' fill='%23c8dfff' opacity='0.26'/%3E%3Ccircle cx='390' cy='82' r='0.7' fill='%23ffffff' opacity='0.44'/%3E%3Ccircle cx='250' cy='9' r='0.3' fill='%2389c4ff' opacity='0.55'/%3E%3Ccircle cx='449' cy='290' r='0.3' fill='%23ffffff' opacity='0.49'/%3E%3Ccircle cx='417' cy='35' r='0.7' fill='%23c8dfff' opacity='0.25'/%3E%3Ccircle cx='243' cy='484' r='0.7' fill='%23c8dfff' opacity='0.31'/%3E%3Ccircle cx='446' cy='310' r='0.5' fill='%23c8dfff' opacity='0.57'/%3E%3Ccircle cx='386' cy='373' r='0.4' fill='%2389c4ff' opacity='0.36'/%3E%3Ccircle cx='343' cy='332' r='0.5' fill='%23e8f4ff' opacity='0.56'/%3E%3Ccircle cx='231' cy='61' r='0.4' fill='%23c8dfff' opacity='0.23'/%3E%3Ccircle cx='10' cy='301' r='0.7' fill='%23c8dfff' opacity='0.44'/%3E%3Ccircle cx='16' cy='440' r='0.5' fill='%23ffffff' opacity='0.41'/%3E%3Ccircle cx='142' cy='342' r='0.6' fill='%23c8dfff' opacity='0.42'/%3E%3Ccircle cx='370' cy='478' r='0.6' fill='%23c8dfff' opacity='0.51'/%3E%3Ccircle cx='413' cy='208' r='0.4' fill='%23ffffff' opacity='0.24'/%3E%3Ccircle cx='220' cy='181' r='0.5' fill='%23e8f4ff' opacity='0.39'/%3E%3Ccircle cx='373' cy='27' r='0.3' fill='%23ffffff' opacity='0.36'/%3E%3Ccircle cx='274' cy='229' r='0.3' fill='%23e8f4ff' opacity='0.27'/%3E%3Ccircle cx='236' cy='127' r='0.3' fill='%23e8f4ff' opacity='0.52'/%3E%3Ccircle cx='438' cy='281' r='0.3' fill='%23ffffff' opacity='0.46'/%3E%3Ccircle cx='276' cy='428' r='0.3' fill='%23ffffff' opacity='0.57'/%3E%3Ccircle cx='434' cy='121' r='0.3' fill='%23e8f4ff' opacity='0.39'/%3E%3Ccircle cx='109' cy='442' r='0.5' fill='%23ffffff' opacity='0.27'/%3E%3Ccircle cx='356' cy='490' r='0.7' fill='%23e8f4ff' opacity='0.26'/%3E%3Ccircle cx='151' cy='111' r='0.3' fill='%23ffffff' opacity='0.5'/%3E%3Ccircle cx='260' cy='41' r='0.3' fill='%23ffffff' opacity='0.44'/%3E%3Ccircle cx='455' cy='291' r='0.4' fill='%23ffffff' opacity='0.45'/%3E%3Ccircle cx='214' cy='336' r='0.7' fill='%2389c4ff' opacity='0.57'/%3E%3Ccircle cx='104' cy='342' r='0.5' fill='%23c8dfff' opacity='0.31'/%3E%3Ccircle cx='67' cy='343' r='0.4' fill='%23e8f4ff' opacity='0.33'/%3E%3Ccircle cx='384' cy='479' r='0.3' fill='%23ffffff' opacity='0.38'/%3E%3Ccircle cx='288' cy='51' r='0.3' fill='%23c8dfff' opacity='0.4'/%3E%3Ccircle cx='67' cy='477' r='0.5' fill='%23ffffff' opacity='0.55'/%3E%3Ccircle cx='189' cy='145' r='0.3' fill='%23e8f4ff' opacity='0.53'/%3E%3Ccircle cx='360' cy='154' r='0.7' fill='%23ffffff' opacity='0.47'/%3E%3Ccircle cx='283' cy='153' r='0.3' fill='%23c8dfff' opacity='0.31'/%3E%3Ccircle cx='455' cy='54' r='0.7' fill='%23c8dfff' opacity='0.31'/%3E%3Ccircle cx='309' cy='107' r='0.5' fill='%23c8dfff' opacity='0.47'/%3E%3Ccircle cx='436' cy='135' r='0.7' fill='%23e8f4ff' opacity='0.3'/%3E%3Ccircle cx='464' cy='433' r='0.3' fill='%23ffffff' opacity='0.45'/%3E%3Ccircle cx='424' cy='141' r='0.3' fill='%23ffffff' opacity='0.33'/%3E%3Ccircle cx='66' cy='326' r='0.4' fill='%23c8dfff' opacity='0.5'/%3E%3Ccircle cx='282' cy='361' r='0.5' fill='%23ffffff' opacity='0.24'/%3E%3Ccircle cx='483' cy='452' r='0.3' fill='%23ffffff' opacity='0.53'/%3E%3Ccircle cx='298' cy='282' r='0.3' fill='%23e8f4ff' opacity='0.25'/%3E%3Ccircle cx='157' cy='186' r='0.3' fill='%2389c4ff' opacity='0.28'/%3E%3Ccircle cx='127' cy='341' r='0.3' fill='%2389c4ff' opacity='0.51'/%3E%3Ccircle cx='452' cy='447' r='0.5' fill='%23c8dfff' opacity='0.57'/%3E%3Ccircle cx='121' cy='442' r='0.3' fill='%23c8dfff' opacity='0.55'/%3E%3Ccircle cx='12' cy='91' r='0.5' fill='%23e8f4ff' opacity='0.52'/%3E%3Ccircle cx='442' cy='376' r='0.4' fill='%2389c4ff' opacity='0.26'/%3E%3Ccircle cx='359' cy='55' r='0.5' fill='%23ffffff' opacity='0.54'/%3E%3Ccircle cx='113' cy='102' r='0.6' fill='%2389c4ff' opacity='0.32'/%3E%3Ccircle cx='98' cy='204' r='0.5' fill='%2389c4ff' opacity='0.55'/%3E%3Ccircle cx='495' cy='395' r='0.4' fill='%2389c4ff' opacity='0.46'/%3E%3Ccircle cx='204' cy='347' r='0.7' fill='%2389c4ff' opacity='0.58'/%3E%3Ccircle cx='59' cy='449' r='0.4' fill='%23c8dfff' opacity='0.43'/%3E%3Ccircle cx='135' cy='19' r='0.3' fill='%23e8f4ff' opacity='0.34'/%3E%3Ccircle cx='402' cy='160' r='0.5' fill='%23ffffff' opacity='0.35'/%3E%3Ccircle cx='295' cy='97' r='0.4' fill='%23ffffff' opacity='0.48'/%3E%3Ccircle cx='35' cy='485' r='0.5' fill='%2389c4ff' opacity='0.47'/%3E%3Ccircle cx='63' cy='368' r='0.4' fill='%2389c4ff' opacity='0.47'/%3E%3Ccircle cx='167' cy='206' r='0.4' fill='%23c8dfff' opacity='0.28'/%3E%3Ccircle cx='340' cy='481' r='0.5' fill='%23c8dfff' opacity='0.45'/%3E%3Ccircle cx='154' cy='207' r='0.7' fill='%23ffffff' opacity='0.32'/%3E%3Ccircle cx='107' cy='220' r='0.5' fill='%23e8f4ff' opacity='0.38'/%3E%3Ccircle cx='345' cy='109' r='0.7' fill='%23e8f4ff' opacity='0.52'/%3E%3Ccircle cx='491' cy='407' r='0.3' fill='%23ffffff' opacity='0.31'/%3E%3Ccircle cx='339' cy='324' r='0.5' fill='%23ffffff' opacity='0.53'/%3E%3Ccircle cx='384' cy='120' r='0.4' fill='%23c8dfff' opacity='0.52'/%3E%3Ccircle cx='75' cy='12' r='0.3' fill='%23c8dfff' opacity='0.59'/%3E%3Ccircle cx='312' cy='435' r='0.3' fill='%23e8f4ff' opacity='0.37'/%3E%3Ccircle cx='322' cy='294' r='0.4' fill='%23e8f4ff' opacity='0.4'/%3E%3Ccircle cx='124' cy='75' r='0.3' fill='%23ffffff' opacity='0.51'/%3E%3Ccircle cx='112' cy='90' r='0.7' fill='%23e8f4ff' opacity='0.22'/%3E%3Ccircle cx='237' cy='341' r='0.7' fill='%2389c4ff' opacity='0.58'/%3E%3Ccircle cx='456' cy='226' r='0.7' fill='%23e8f4ff' opacity='0.53'/%3E%3Ccircle cx='280' cy='228' r='0.3' fill='%23e8f4ff' opacity='0.38'/%3E%3Ccircle cx='140' cy='225' r='0.3' fill='%2389c4ff' opacity='0.29'/%3E%3Ccircle cx='171' cy='163' r='0.7' fill='%23ffffff' opacity='0.26'/%3E%3C/svg%3E");
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='500'%3E%3Ccircle cx='327' cy='57' r='1.4' fill='%2389c4ff' opacity='0.3'/%3E%3Ccircle cx='71' cy='377' r='1.4' fill='%23ffffff' opacity='0.44'/%3E%3Ccircle cx='16' cy='15' r='1.4' fill='%23c8dfff' opacity='0.29'/%3E%3Ccircle cx='308' cy='13' r='3.0' fill='%23c8dfff' opacity='0.49'/%3E%3Ccircle cx='359' cy='279' r='2.2' fill='%23c8dfff' opacity='0.38'/%3E%3Ccircle cx='142' cy='414' r='1.4' fill='%23c8dfff' opacity='0.48'/%3E%3Ccircle cx='174' cy='142' r='1.4' fill='%23c8dfff' opacity='0.58'/%3E%3Ccircle cx='172' cy='52' r='1.4' fill='%23e8f4ff' opacity='0.24'/%3E%3Ccircle cx='433' cy='176' r='1.8' fill='%23ffffff' opacity='0.49'/%3E%3Ccircle cx='274' cy='63' r='2.2' fill='%23ffffff' opacity='0.42'/%3E%3Ccircle cx='424' cy='321' r='2.2' fill='%23c8dfff' opacity='0.48'/%3E%3Ccircle cx='23' cy='338' r='1.8' fill='%2389c4ff' opacity='0.59'/%3E%3Ccircle cx='437' cy='119' r='1.4' fill='%23e8f4ff' opacity='0.31'/%3E%3Ccircle cx='325' cy='427' r='2.2' fill='%23c8dfff' opacity='0.35'/%3E%3Ccircle cx='107' cy='343' r='1.8' fill='%23ffffff' opacity='0.44'/%3E%3Ccircle cx='87' cy='273' r='1.8' fill='%23c8dfff' opacity='0.38'/%3E%3Ccircle cx='138' cy='473' r='3.0' fill='%23c8dfff' opacity='0.47'/%3E%3Ccircle cx='431' cy='393' r='1.4' fill='%23c8dfff' opacity='0.53'/%3E%3Ccircle cx='412' cy='161' r='2.2' fill='%2389c4ff' opacity='0.23'/%3E%3Ccircle cx='467' cy='482' r='2.2' fill='%23c8dfff' opacity='0.46'/%3E%3Ccircle cx='202' cy='452' r='2.6' fill='%23c8dfff' opacity='0.31'/%3E%3Ccircle cx='126' cy='381' r='3.0' fill='%2389c4ff' opacity='0.5'/%3E%3Ccircle cx='219' cy='459' r='2.2' fill='%2389c4ff' opacity='0.29'/%3E%3Ccircle cx='70' cy='260' r='2.6' fill='%23ffffff' opacity='0.5'/%3E%3Ccircle cx='440' cy='56' r='1.4' fill='%23c8dfff' opacity='0.52'/%3E%3Ccircle cx='216' cy='305' r='1.4' fill='%23e8f4ff' opacity='0.35'/%3E%3Ccircle cx='239' cy='270' r='1.8' fill='%23ffffff' opacity='0.47'/%3E%3Ccircle cx='58' cy='349' r='3.0' fill='%2389c4ff' opacity='0.51'/%3E%3Ccircle cx='174' cy='57' r='1.8' fill='%23e8f4ff' opacity='0.26'/%3E%3Ccircle cx='54' cy='445' r='1.8' fill='%23c8dfff' opacity='0.26'/%3E%3Ccircle cx='390' cy='82' r='3.0' fill='%23ffffff' opacity='0.44'/%3E%3Ccircle cx='250' cy='9' r='1.4' fill='%2389c4ff' opacity='0.55'/%3E%3Ccircle cx='449' cy='290' r='1.4' fill='%23ffffff' opacity='0.49'/%3E%3Ccircle cx='417' cy='35' r='3.0' fill='%23c8dfff' opacity='0.25'/%3E%3Ccircle cx='243' cy='484' r='3.0' fill='%23c8dfff' opacity='0.31'/%3E%3Ccircle cx='446' cy='310' r='2.2' fill='%23c8dfff' opacity='0.57'/%3E%3Ccircle cx='386' cy='373' r='1.8' fill='%2389c4ff' opacity='0.36'/%3E%3Ccircle cx='343' cy='332' r='2.2' fill='%23e8f4ff' opacity='0.56'/%3E%3Ccircle cx='231' cy='61' r='1.8' fill='%23c8dfff' opacity='0.23'/%3E%3Ccircle cx='10' cy='301' r='3.0' fill='%23c8dfff' opacity='0.44'/%3E%3Ccircle cx='16' cy='440' r='2.2' fill='%23ffffff' opacity='0.41'/%3E%3Ccircle cx='142' cy='342' r='2.6' fill='%23c8dfff' opacity='0.42'/%3E%3Ccircle cx='370' cy='478' r='2.6' fill='%23c8dfff' opacity='0.51'/%3E%3Ccircle cx='413' cy='208' r='1.8' fill='%23ffffff' opacity='0.24'/%3E%3Ccircle cx='220' cy='181' r='2.2' fill='%23e8f4ff' opacity='0.39'/%3E%3Ccircle cx='373' cy='27' r='1.4' fill='%23ffffff' opacity='0.36'/%3E%3Ccircle cx='274' cy='229' r='1.4' fill='%23e8f4ff' opacity='0.27'/%3E%3Ccircle cx='236' cy='127' r='1.4' fill='%23e8f4ff' opacity='0.52'/%3E%3Ccircle cx='438' cy='281' r='1.4' fill='%23ffffff' opacity='0.46'/%3E%3Ccircle cx='276' cy='428' r='1.4' fill='%23ffffff' opacity='0.57'/%3E%3Ccircle cx='434' cy='121' r='1.4' fill='%23e8f4ff' opacity='0.39'/%3E%3Ccircle cx='109' cy='442' r='2.2' fill='%23ffffff' opacity='0.27'/%3E%3Ccircle cx='356' cy='490' r='3.0' fill='%23e8f4ff' opacity='0.26'/%3E%3Ccircle cx='151' cy='111' r='1.4' fill='%23ffffff' opacity='0.5'/%3E%3Ccircle cx='260' cy='41' r='1.4' fill='%23ffffff' opacity='0.44'/%3E%3Ccircle cx='455' cy='291' r='1.8' fill='%23ffffff' opacity='0.45'/%3E%3Ccircle cx='214' cy='336' r='3.0' fill='%2389c4ff' opacity='0.57'/%3E%3Ccircle cx='104' cy='342' r='2.2' fill='%23c8dfff' opacity='0.31'/%3E%3Ccircle cx='67' cy='343' r='1.8' fill='%23e8f4ff' opacity='0.33'/%3E%3Ccircle cx='384' cy='479' r='1.4' fill='%23ffffff' opacity='0.38'/%3E%3Ccircle cx='288' cy='51' r='1.4' fill='%23c8dfff' opacity='0.4'/%3E%3Ccircle cx='67' cy='477' r='2.2' fill='%23ffffff' opacity='0.55'/%3E%3Ccircle cx='189' cy='145' r='1.4' fill='%23e8f4ff' opacity='0.53'/%3E%3Ccircle cx='360' cy='154' r='3.0' fill='%23ffffff' opacity='0.47'/%3E%3Ccircle cx='283' cy='153' r='1.4' fill='%23c8dfff' opacity='0.31'/%3E%3Ccircle cx='455' cy='54' r='3.0' fill='%23c8dfff' opacity='0.31'/%3E%3Ccircle cx='309' cy='107' r='2.2' fill='%23c8dfff' opacity='0.47'/%3E%3Ccircle cx='436' cy='135' r='3.0' fill='%23e8f4ff' opacity='0.3'/%3E%3Ccircle cx='464' cy='433' r='1.4' fill='%23ffffff' opacity='0.45'/%3E%3Ccircle cx='424' cy='141' r='1.4' fill='%23ffffff' opacity='0.33'/%3E%3Ccircle cx='66' cy='326' r='1.8' fill='%23c8dfff' opacity='0.5'/%3E%3Ccircle cx='282' cy='361' r='2.2' fill='%23ffffff' opacity='0.24'/%3E%3Ccircle cx='483' cy='452' r='1.4' fill='%23ffffff' opacity='0.53'/%3E%3Ccircle cx='298' cy='282' r='1.4' fill='%23e8f4ff' opacity='0.25'/%3E%3Ccircle cx='157' cy='186' r='1.4' fill='%2389c4ff' opacity='0.28'/%3E%3Ccircle cx='127' cy='341' r='1.4' fill='%2389c4ff' opacity='0.51'/%3E%3Ccircle cx='452' cy='447' r='2.2' fill='%23c8dfff' opacity='0.57'/%3E%3Ccircle cx='121' cy='442' r='1.4' fill='%23c8dfff' opacity='0.55'/%3E%3Ccircle cx='12' cy='91' r='2.2' fill='%23e8f4ff' opacity='0.52'/%3E%3Ccircle cx='442' cy='376' r='1.8' fill='%2389c4ff' opacity='0.26'/%3E%3Ccircle cx='359' cy='55' r='2.2' fill='%23ffffff' opacity='0.54'/%3E%3Ccircle cx='113' cy='102' r='2.6' fill='%2389c4ff' opacity='0.32'/%3E%3Ccircle cx='98' cy='204' r='2.2' fill='%2389c4ff' opacity='0.55'/%3E%3Ccircle cx='495' cy='395' r='1.8' fill='%2389c4ff' opacity='0.46'/%3E%3Ccircle cx='204' cy='347' r='3.0' fill='%2389c4ff' opacity='0.58'/%3E%3Ccircle cx='59' cy='449' r='1.8' fill='%23c8dfff' opacity='0.43'/%3E%3Ccircle cx='135' cy='19' r='1.4' fill='%23e8f4ff' opacity='0.34'/%3E%3Ccircle cx='402' cy='160' r='2.2' fill='%23ffffff' opacity='0.35'/%3E%3Ccircle cx='295' cy='97' r='1.8' fill='%23ffffff' opacity='0.48'/%3E%3Ccircle cx='35' cy='485' r='2.2' fill='%2389c4ff' opacity='0.47'/%3E%3Ccircle cx='63' cy='368' r='1.8' fill='%2389c4ff' opacity='0.47'/%3E%3Ccircle cx='167' cy='206' r='1.8' fill='%23c8dfff' opacity='0.28'/%3E%3Ccircle cx='340' cy='481' r='2.2' fill='%23c8dfff' opacity='0.45'/%3E%3Ccircle cx='154' cy='207' r='3.0' fill='%23ffffff' opacity='0.32'/%3E%3Ccircle cx='107' cy='220' r='2.2' fill='%23e8f4ff' opacity='0.38'/%3E%3Ccircle cx='345' cy='109' r='3.0' fill='%23e8f4ff' opacity='0.52'/%3E%3Ccircle cx='491' cy='407' r='1.4' fill='%23ffffff' opacity='0.31'/%3E%3Ccircle cx='339' cy='324' r='2.2' fill='%23ffffff' opacity='0.53'/%3E%3Ccircle cx='384' cy='120' r='1.8' fill='%23c8dfff' opacity='0.52'/%3E%3Ccircle cx='75' cy='12' r='1.4' fill='%23c8dfff' opacity='0.59'/%3E%3Ccircle cx='312' cy='435' r='1.4' fill='%23e8f4ff' opacity='0.37'/%3E%3Ccircle cx='322' cy='294' r='1.8' fill='%23e8f4ff' opacity='0.4'/%3E%3Ccircle cx='124' cy='75' r='1.4' fill='%23ffffff' opacity='0.51'/%3E%3Ccircle cx='112' cy='90' r='3.0' fill='%23e8f4ff' opacity='0.22'/%3E%3Ccircle cx='237' cy='341' r='3.0' fill='%2389c4ff' opacity='0.58'/%3E%3Ccircle cx='456' cy='226' r='3.0' fill='%23e8f4ff' opacity='0.53'/%3E%3Ccircle cx='280' cy='228' r='1.4' fill='%23e8f4ff' opacity='0.38'/%3E%3Ccircle cx='140' cy='225' r='1.4' fill='%2389c4ff' opacity='0.29'/%3E%3Ccircle cx='171' cy='163' r='3.0' fill='%23ffffff' opacity='0.26'/%3E%3C/svg%3E");
 }
 [data-theme="starrail"] .login-screen {
   background: linear-gradient(160deg, #0e1d35 0%, #0a1828 55%, #0d1230 100%);
@@ -4054,114 +4059,189 @@ a.settings-tab {
 
 /* 미완료: 곡괭이 아이콘 */
 /* ══════════════════════════════════════════════
-   스타레일 — 일정 아이템 = 열차 칸
+   스타레일 — 일정 아이템 = 아스트랄 익스프레스 열차 칸
    ══════════════════════════════════════════════ */
 
 /* 열차 칸 몸체 */
 [data-theme="starrail"] .sched-item {
   position: relative !important;
   overflow: visible !important;
-  margin-bottom: 22px !important;
-  border-radius: 4px 4px 3px 3px !important;
-  border: 1.5px solid rgba(137,196,255,0.3) !important;
-  border-top: 3px solid rgba(200,223,248,0.55) !important;
-  border-bottom: 2px solid rgba(80,120,200,0.4) !important;
+  margin-bottom: 30px !important;
+  border-radius: 5px 5px 2px 2px !important;
 
-  /* 차체 배경 + 창문 패턴 */
-  background-color: #0e1d35 !important;
+  /* 테두리: 위 밝은 하이라이트, 좌우 미세한 패널 라인, 아래는 ::before 금빛 스트립 */
+  border: 1px solid rgba(100,150,220,0.22) !important;
+  border-top: 2px solid rgba(175,210,255,0.50) !important;
+  border-bottom: none !important;
+
+  /* ── 차체 배경 레이어 (위에서 아래 순서) ──
+     1. 창문 — 청록색 직사각형 반복 패턴
+     2. 창문 프레임 상하 라인
+     3. 패널 수직 구분선
+     4. 상단 반사광 (금속 광택)
+     5. 차체 기본 그라디언트
+  */
+  background-color: #090f1e !important;
   background-image:
     repeating-linear-gradient(90deg,
-      rgba(137,196,255,0.07) 0px, rgba(137,196,255,0.07) 20px,
-      transparent 20px, transparent 30px
+      transparent 0px, transparent 10px,
+      rgba(45,195,220,0.68) 10px, rgba(55,210,235,0.72) 16px,
+      rgba(45,195,220,0.68) 16px, rgba(45,195,220,0.68) 34px,
+      transparent 34px, transparent 44px
     ),
-    linear-gradient(180deg, #1e3050 0%, #0e1d35 50%, #091525 100%) !important;
-  background-position: 10px 8px, 0 0 !important;
-  background-repeat: repeat-x, no-repeat !important;
-  background-size: auto 14px, auto !important;
+    linear-gradient(180deg,
+      transparent 0%, transparent 26%,
+      rgba(70,150,230,0.20) 26%, rgba(70,150,230,0.20) 28.5%,
+      transparent 28.5%, transparent 60%,
+      rgba(70,150,230,0.18) 60%, rgba(70,150,230,0.18) 62.5%,
+      transparent 62.5%
+    ),
+    repeating-linear-gradient(90deg,
+      transparent 0px, transparent 58px,
+      rgba(130,175,240,0.07) 58px, rgba(130,175,240,0.07) 60px,
+      transparent 60px
+    ),
+    linear-gradient(180deg,
+      rgba(60,100,165,0.18) 0%, transparent 22%
+    ),
+    linear-gradient(180deg,
+      #1b2f50 0%, #0e1d36 22%, #091526 60%, #060d1c 100%
+    ) !important;
+
+  background-size:
+    44px 36%,
+    100% 100%,
+    60px 100%,
+    100% 100%,
+    100% 100% !important;
+
+  background-position:
+    16px 27%,
+    0 0, 0 0, 0 0, 0 0 !important;
+
+  background-repeat:
+    repeat-x, no-repeat, repeat-x, no-repeat, no-repeat !important;
 
   box-shadow:
-    0 4px 20px rgba(0,0,0,0.45),
-    inset 0 1px 0 rgba(255,255,255,0.07),
-    -6px 0 0 -3px rgba(137,196,255,0.35),
-    6px 0 0 -3px rgba(137,196,255,0.35) !important;
+    0 6px 28px rgba(0,0,0,0.72),
+    0 2px 6px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    inset 0 0 40px rgba(45,195,220,0.03),
+    0 4px 22px rgba(220,165,20,0.12),
+    -4px 0 12px -4px rgba(8,20,45,0.9),
+    4px 0 12px -4px rgba(8,20,45,0.9) !important;
 }
 
-/* 지붕 발광 라인 */
+/* 금빛 하단 라이트 스트립 — 아스트랄 익스프레스의 상징 */
 [data-theme="starrail"] .sched-item::before {
   content: '' !important;
   position: absolute !important;
-  top: -2px; left: 8%; right: 8% !important;
-  height: 2px !important;
+  bottom: 0; left: 0; right: 0 !important;
+  height: 5px !important;
   background: linear-gradient(90deg,
-    transparent, rgba(137,196,255,0.7), rgba(255,255,255,0.95),
-    rgba(137,196,255,0.7), transparent) !important;
-  border-radius: 1px !important;
-  z-index: 1 !important;
+    rgba(140,95,5,0.45) 0%,
+    rgba(220,165,20,0.92) 6%,
+    rgba(255,210,50,1)   22%,
+    rgba(255,228,90,1)   50%,
+    rgba(255,210,50,1)   78%,
+    rgba(220,165,20,0.92) 94%,
+    rgba(140,95,5,0.45)  100%) !important;
+  box-shadow:
+    0 0 10px rgba(245,185,25,0.95),
+    0 3px 20px rgba(210,150,10,0.65),
+    0 -1px 8px rgba(255,228,80,0.35) !important;
+  border-radius: 0 0 2px 2px !important;
+  z-index: 2 !important;
 }
 
-/* 바퀴 2개 (radial-gradient) */
+/* 바퀴 (radial-gradient) */
 [data-theme="starrail"] .sched-item::after {
   content: '' !important;
   position: absolute !important;
-  bottom: -13px !important;
+  bottom: -16px !important;
   left: 0; right: 0 !important;
-  height: 14px !important;
+  height: 16px !important;
   background:
-    radial-gradient(circle, #091525 38%, rgba(137,196,255,0.75) 38%, rgba(137,196,255,0.75) 52%, transparent 52%) no-repeat 20px 0 / 14px 14px,
-    radial-gradient(circle, #091525 38%, rgba(137,196,255,0.75) 38%, rgba(137,196,255,0.75) 52%, transparent 52%) no-repeat calc(100% - 20px) 0 / 14px 14px !important;
+    radial-gradient(circle,
+      #070d1b 35%, rgba(85,145,215,0.92) 35%, rgba(85,145,215,0.92) 54%,
+      rgba(45,85,155,0.35) 54%, transparent 70%
+    ) no-repeat 26px 0 / 16px 16px,
+    radial-gradient(circle,
+      #070d1b 35%, rgba(85,145,215,0.92) 35%, rgba(85,145,215,0.92) 54%,
+      rgba(45,85,155,0.35) 54%, transparent 70%
+    ) no-repeat calc(100% - 26px) 0 / 16px 16px !important;
   pointer-events: none !important;
   z-index: 0 !important;
 }
 
 /* 텍스트 */
 [data-theme="starrail"] .sched-item .sched-item__text {
-  color: #e8f4ff !important;
-  text-shadow: 0 0 8px rgba(137,196,255,0.25) !important;
+  color: #deeeff !important;
+  text-shadow: 0 0 10px rgba(137,196,255,0.2) !important;
   background: transparent !important;
 }
 
 /* 완료된 칸 — 불 꺼진 열차 */
 [data-theme="starrail"] .sched-item.sched-item--done {
-  opacity: 0.45 !important;
-  border-color: rgba(137,196,255,0.12) !important;
-  background-color: #060e1a !important;
+  opacity: 0.40 !important;
+  border-color: rgba(100,140,200,0.10) !important;
+  background-color: #060c1a !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.6) !important;
+}
+[data-theme="starrail"] .sched-item.sched-item--done::before {
+  background: rgba(100,80,10,0.4) !important;
+  box-shadow: none !important;
 }
 [data-theme="starrail"] .sched-item.sched-item--done .sched-item__text {
   text-decoration: line-through !important;
-  color: rgba(138,176,208,0.5) !important;
+  color: rgba(130,165,200,0.45) !important;
 }
 
-/* O 버튼 — 출발 신호등 */
+/* O 버튼 — 출발 신호등 (이미지 버튼) */
 [data-theme="starrail"] .sched-item .btn-o {
-  background: rgba(137,196,255,0.12) !important;
-  border: 1.5px solid rgba(137,196,255,0.45) !important;
-  color: #89c4ff !important;
-  border-radius: 50% !important;
-  box-shadow: 0 0 8px rgba(137,196,255,0.2), inset 0 0 4px rgba(137,196,255,0.1) !important;
-  transition: all 0.18s !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  transition: transform 0.18s, filter 0.18s !important;
 }
 [data-theme="starrail"] .sched-item .btn-o:hover {
-  background: rgba(137,196,255,0.28) !important;
-  box-shadow: 0 0 16px rgba(137,196,255,0.55) !important;
-  transform: scale(1.12) !important;
+  transform: scale(1.22) !important;
+  filter: brightness(1.2) drop-shadow(0 0 6px rgba(137,196,255,0.7)) !important;
+  box-shadow: none !important;
 }
 [data-theme="starrail"] .sched-item .btn-o.active {
-  background: rgba(93,224,176,0.18) !important;
-  border-color: rgba(93,224,176,0.65) !important;
-  color: #5de0b0 !important;
-  box-shadow: 0 0 14px rgba(93,224,176,0.45) !important;
+  filter: drop-shadow(0 0 8px rgba(245,185,25,0.75)) !important;
 }
 
 /* ── 출발 애니메이션 ── */
 @keyframes sr-train-depart {
-  0%   { transform: translateX(0) scaleX(1); opacity: 1; filter: brightness(1); }
-  8%   { transform: translateX(-6px) scaleX(0.99); } /* 출발 전 살짝 뒤로 */
-  18%  { filter: brightness(1.4); }                  /* 엔진 점화 */
-  100% { transform: translateX(115vw) scaleX(1.04); opacity: 0.4; filter: brightness(1.2) blur(1px); }
+  0%   { transform: translateX(0) scaleX(1) scaleY(1);
+         opacity: 1; filter: brightness(1) blur(0px); }
+  6%   { transform: translateX(-11px) scaleX(0.97) scaleY(1.02);
+         filter: brightness(1.15) blur(0px); }          /* 뒤로 당김 */
+  13%  { transform: translateX(8px) scaleX(1.02) scaleY(0.99);
+         filter: brightness(2.6) blur(0px); }           /* 점화 플래시 */
+  22%  { transform: translateX(55px) scaleX(1.03);
+         filter: brightness(1.7) blur(0.5px); }
+  55%  { filter: brightness(1.3) blur(1.5px); }
+  100% { transform: translateX(140vw) scaleX(1.08);
+         opacity: 0.15; filter: brightness(1.2) blur(4px); }
+}
+
+/* 출발 순간 속도선 오버레이 */
+@keyframes sr-speedlines {
+  0%   { opacity: 0; transform: scaleX(0.4); }
+  15%  { opacity: 0.7; transform: scaleX(1); }
+  100% { opacity: 0; transform: scaleX(1.1); }
+}
+
+@keyframes sr-engine-flash {
+  0%   { opacity: 0.75; }
+  100% { opacity: 0; }
 }
 
 [data-theme="starrail"] .sched-item.sr-departing {
-  animation: sr-train-depart 0.65s cubic-bezier(0.25, 0, 0.6, 1) forwards !important;
+  animation: sr-train-depart 0.72s cubic-bezier(0.22, 0, 0.55, 1) forwards !important;
   pointer-events: none !important;
   z-index: 10 !important;
 }
