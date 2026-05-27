@@ -3380,10 +3380,11 @@ body {
 }
 [data-theme="starrail"] .sched-item.done { opacity: 0.45; }
 [data-theme="starrail"] body {
-  background-image:
-    radial-gradient(ellipse at 20% 10%, rgba(137,196,255,0.12) 0%, transparent 55%),
-    radial-gradient(ellipse at 80% 85%, rgba(200,223,248,0.09) 0%, transparent 50%),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='500'%3E%3Ccircle cx='60' cy='90' r='1' fill='%23c8dfff' opacity='0.55'/%3E%3Ccircle cx='180' cy='40' r='0.7' fill='%23ffffff' opacity='0.45'/%3E%3Ccircle cx='300' cy='130' r='1.2' fill='%2389c4ff' opacity='0.5'/%3E%3Ccircle cx='420' cy='70' r='0.8' fill='%23ffffff' opacity='0.4'/%3E%3Ccircle cx='100' cy='220' r='0.9' fill='%23c8dfff' opacity='0.45'/%3E%3Ccircle cx='240' cy='300' r='1' fill='%23ffffff' opacity='0.35'/%3E%3Ccircle cx='460' cy='340' r='0.7' fill='%2389c4ff' opacity='0.4'/%3E%3Ccircle cx='40' cy='400' r='1.1' fill='%23ffffff' opacity='0.4'/%3E%3Ccircle cx='380' cy='450' r='0.8' fill='%23c8dfff' opacity='0.45'/%3E%3Ccircle cx='140' cy='470' r='1' fill='%2389c4ff' opacity='0.35'/%3E%3C/svg%3E");
+  background-image: url('/starrail_train.png');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 [data-theme="starrail"] .login-screen {
   background: linear-gradient(160deg, #0e1d35 0%, #0a1828 55%, #0d1230 100%);

@@ -260,11 +260,11 @@ function loadState() {
           ? new Date(remote.updated_at).getTime().toString()
           : Date.now().toString());
         lastSavedSnapshot = stateSnapshot();
-        _saveLocalBackup(); // Supabase 데이터로 백업 동기화
       }
       // remote도 없고 backup도 없으면 빈 state 유지 (신규 사용자)
 
       dataLoaded = true;
+      _saveLocalBackup(); // dataLoaded=true 이후에 호출해야 저장됨
       autoReturnExpiredTasks();
       renderApp();
       showLastSavedTime();
