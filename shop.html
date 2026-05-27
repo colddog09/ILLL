@@ -6,6 +6,7 @@
   <title>테마샵 · o1chu</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -269,6 +270,87 @@
     }
     .theme-card__btn--locked:hover { opacity: 0.85; }
 
+    /* ── 로그인 게이트 오버레이 ── */
+    .login-gate {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 900;
+      background: rgba(245,244,251,0.7);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      align-items: center;
+      justify-content: center;
+    }
+    .login-gate--show { display: flex; }
+    .login-gate__box {
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 28px;
+      padding: 44px 36px;
+      max-width: 360px;
+      width: 90vw;
+      text-align: center;
+      box-shadow: 0 24px 64px rgba(108,99,255,0.14);
+      animation: popIn 0.3s cubic-bezier(0.34,1.4,0.64,1);
+    }
+    @keyframes popIn {
+      from { opacity:0; transform:scale(0.88) translateY(20px); }
+      to   { opacity:1; transform:scale(1) translateY(0); }
+    }
+    .login-gate__icon { font-size: 3rem; margin-bottom: 16px; }
+    .login-gate__title {
+      font-size: 1.25rem;
+      font-weight: 900;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .login-gate__desc {
+      font-size: 0.88rem;
+      color: var(--text-sub);
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+    .login-gate__btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 14px 0;
+      border-radius: 14px;
+      border: none;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .login-gate__btn:hover { opacity: 0.88; }
+    .login-gate__btn:active { transform: scale(0.97); }
+
+    /* 로딩 중 스켈레톤 */
+    .shop-loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 200px;
+      color: var(--text-sub);
+      font-size: 0.9rem;
+      gap: 10px;
+    }
+    .shop-loading::before {
+      content: '';
+      width: 18px; height: 18px;
+      border: 2.5px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
     /* ── 반응형 ── */
     @media (max-width: 600px) {
       .shop-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 0 14px 60px; }
@@ -360,6 +442,16 @@
   </style>
 </head>
 <body>
+
+  <!-- 로그인 게이트 -->
+  <div class="login-gate" id="loginGate">
+    <div class="login-gate__box">
+      <div class="login-gate__icon">🔐</div>
+      <div class="login-gate__title">로그인이 필요해요</div>
+      <div class="login-gate__desc">테마샵을 이용하려면 오일추 앱에 로그인해야 해요.<br>앱에서 로그인 후 다시 방문해주세요.</div>
+      <a href="/" class="login-gate__btn">🚀 앱에서 로그인하기</a>
+    </div>
+  </div>
 
   <!-- 네비게이션 -->
   <nav class="shop-nav" id="shopNav">
@@ -635,13 +727,45 @@
     }
   });
 
-  renderGrid();
-
   // 스크롤 시 nav 효과
   const shopNav = document.getElementById('shopNav');
   window.addEventListener('scroll', () => {
     shopNav.classList.toggle('scrolled', window.scrollY > 20);
   }, { passive: true });
+
+  // ── 로그인 체크 후 렌더 ──
+  (async function initShop() {
+    const grid = document.getElementById('shopGrid');
+    const gate = document.getElementById('loginGate');
+
+    // 로딩 스피너 표시
+    grid.innerHTML = '<div class="shop-loading">불러오는 중...</div>';
+
+    try {
+      // 1. config 가져오기
+      const cfg = await fetch('/api/config').then(r => r.json());
+      if (!cfg.supabaseUrl) throw new Error('config error');
+
+      // 2. Supabase 세션 확인
+      const client = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+      const { data: { session } } = await client.auth.getSession();
+
+      if (!session) {
+        // 비로그인 → 게이트 표시
+        grid.innerHTML = '';
+        gate.classList.add('login-gate--show');
+        return;
+      }
+
+      // 로그인 됨 → 정상 렌더
+      renderGrid();
+
+    } catch (e) {
+      // config 실패 시 일단 렌더 (오프라인 대응)
+      console.warn('[shop] auth check failed, rendering anyway:', e);
+      renderGrid();
+    }
+  })();
 </script>
 </body>
 </html>
