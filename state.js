@@ -244,11 +244,14 @@ function loadState() {
       const backup   = _loadLocalBackup();
       const backupTs = backup?.ts || 0;
 
+      let loadedOk = false; // 실제로 데이터를 성공적으로 불러왔는지
+
       if (backup && backupTs > remoteTs + 3000) {
         // localStorage 백업이 Supabase보다 3초 이상 최신 → 백업 우선 사용
         console.log(`🔄 로컬 백업 복원 (backup: ${new Date(backupTs).toLocaleTimeString()}, remote: ${new Date(remoteTs).toLocaleTimeString()})`);
         applyPersistedState(backup.data);
         lastSavedSnapshot = stateSnapshot();
+        loadedOk = hasAnyTaskData(); // 복원한 백업에 실제 데이터 있을 때만
         // 바로 Supabase에 반영
         supabaseClient
           .from('user_states')
@@ -260,11 +263,13 @@ function loadState() {
           ? new Date(remote.updated_at).getTime().toString()
           : Date.now().toString());
         lastSavedSnapshot = stateSnapshot();
+        loadedOk = true; // remote에서 정상 로드
       }
-      // remote도 없고 backup도 없으면 빈 state 유지 (신규 사용자)
+      // remote도 없고 backup도 없으면 신규 사용자 — 백업 저장 안 함
 
       dataLoaded = true;
-      _saveLocalBackup(); // dataLoaded=true 이후에 호출해야 저장됨
+      // 정상적으로 데이터 불러왔을 때만 백업 갱신 (불러오기 실패 시 덮어쓰기 방지)
+      if (loadedOk) _saveLocalBackup();
       autoReturnExpiredTasks();
       renderApp();
       showLastSavedTime();
