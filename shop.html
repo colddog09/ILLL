@@ -26,123 +26,248 @@
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
+      overflow-x: hidden;
     }
 
-    /* ── 헤더 / Nav ── */
+    /* ══════════════════════════════════════
+       NAV
+    ══════════════════════════════════════ */
     .shop-nav {
       position: sticky;
       top: 0;
-      z-index: 100;
-      padding: 0 24px;
+      z-index: 200;
+      padding: 0 20px;
     }
     .shop-nav-inner {
       max-width: 1100px;
       margin: 0 auto;
-      height: 62px;
+      height: 60px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-radius: 0 0 18px 18px;
+      gap: 12px;
+      border-radius: 0 0 20px 20px;
       padding: 0 20px;
-      background: rgba(244,245,251,0.7);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--border);
+      background: rgba(15,11,31,0.72);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.07);
       border-top: none;
-      transition: background 0.3s, box-shadow 0.3s;
+      transition: background 0.3s;
     }
     .shop-nav.scrolled .shop-nav-inner {
-      background: rgba(244,245,251,0.92);
-      box-shadow: 0 4px 24px rgba(108,99,255,0.08);
+      background: rgba(15,11,31,0.9);
+      box-shadow: 0 4px 32px rgba(0,0,0,0.25);
     }
     .shop-nav__logo {
-      font-size: 1.05rem;
+      font-size: 1rem;
       font-weight: 900;
       text-decoration: none;
-      color: var(--text);
+      color: #fff;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
     .shop-nav__logo span {
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      background: linear-gradient(135deg, #a78bfa, #60a5fa);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
+    }
+
+    /* ── 탭 pills ── */
+    .shop-tabs {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 14px;
+      padding: 4px;
+      flex-shrink: 0;
+    }
+    .shop-tab {
+      padding: 6px 14px;
+      border-radius: 10px;
+      border: none;
+      background: transparent;
+      color: rgba(255,255,255,0.55);
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: var(--font);
+      transition: all 0.18s;
+      white-space: nowrap;
+    }
+    .shop-tab:hover { color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.06); }
+    .shop-tab--active {
+      background: rgba(255,255,255,0.14);
+      color: #fff;
     }
     .shop-nav__links {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
+      flex-shrink: 0;
     }
     .shop-nav__link {
-      font-size: 0.83rem;
+      font-size: 0.78rem;
       font-weight: 600;
-      color: var(--text-sub);
+      color: rgba(255,255,255,0.55);
       text-decoration: none;
-      padding: 7px 14px;
-      border-radius: 20px;
-      border: 1.5px solid transparent;
+      padding: 6px 12px;
+      border-radius: 10px;
+      border: 1px solid transparent;
       transition: all 0.15s;
+      white-space: nowrap;
     }
-    .shop-nav__link:hover {
-      color: var(--accent);
-      border-color: var(--border);
-      background: var(--surface);
-    }
+    .shop-nav__link:hover { color: #fff; border-color: rgba(255,255,255,0.12); background: rgba(255,255,255,0.06); }
     .shop-nav__link--cta {
-      background: var(--accent);
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
       color: #fff !important;
-      border-color: var(--accent) !important;
+      border: none !important;
     }
-    .shop-nav__link--cta:hover {
-      opacity: 0.88;
-      background: var(--accent) !important;
+    .shop-nav__link--cta:hover { opacity: 0.88; background: linear-gradient(135deg, var(--accent), var(--accent2)) !important; }
+
+    /* ── 모바일 nav ── */
+    @media (max-width: 600px) {
+      .shop-nav__links .shop-nav__link:not(.shop-nav__link--cta) { display: none; }
+      .shop-tab { padding: 5px 10px; font-size: 0.72rem; }
     }
 
-    /* ── 히어로 ── */
-    .shop-hero {
-      text-align: center;
-      padding: 64px 24px 48px;
+    /* ══════════════════════════════════════
+       TAB PANELS
+    ══════════════════════════════════════ */
+    .tab-panel { display: none; animation: tabFadeIn 0.28s ease; }
+    .tab-panel--active { display: block; }
+    @keyframes tabFadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
-    .shop-hero__eyebrow {
-      display: inline-block;
-      font-size: 0.75rem;
+
+    /* ══════════════════════════════════════
+       HERO (테마샵 탭)
+    ══════════════════════════════════════ */
+    .hero {
+      position: relative;
+      min-height: 400px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: linear-gradient(150deg, #f0f4ff 0%, #faf5ff 50%, #eff6ff 100%);
+      padding: 80px 24px 72px;
+    }
+    /* 배경 오브 */
+    .hero-orbs { position: absolute; inset: 0; pointer-events: none; }
+    .hero-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(70px);
+    }
+    .hero-orb--1 { width: 480px; height: 480px; background: radial-gradient(circle, rgba(108,99,255,0.28) 0%, transparent 70%); top: -140px; left: -100px; animation: orbFloat1 8s ease-in-out infinite; }
+    .hero-orb--2 { width: 360px; height: 360px; background: radial-gradient(circle, rgba(236,72,153,0.18) 0%, transparent 70%); bottom: -80px; right: -60px; animation: orbFloat2 10s ease-in-out infinite; }
+    .hero-orb--3 { width: 280px; height: 280px; background: radial-gradient(circle, rgba(56,189,248,0.16) 0%, transparent 70%); top: 40%; left: 55%; animation: orbFloat3 12s ease-in-out infinite; }
+    @keyframes orbFloat1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(40px,30px)} }
+    @keyframes orbFloat2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-30px,-20px)} }
+    @keyframes orbFloat3 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(20px,-40px)} }
+
+    /* 그리드 노이즈 오버레이 */
+    .hero::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(108,99,255,0.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(108,99,255,0.055) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      max-width: 680px;
+    }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.7rem;
       font-weight: 700;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
       color: var(--accent);
       background: rgba(108,99,255,0.08);
-      border: 1px solid rgba(108,99,255,0.2);
-      border-radius: 20px;
-      padding: 4px 14px;
-      margin-bottom: 20px;
+      border: 1px solid rgba(108,99,255,0.22);
+      border-radius: 99px;
+      padding: 5px 14px;
+      margin-bottom: 24px;
     }
-    .shop-hero__title {
-      font-size: clamp(2.2rem, 6vw, 4rem);
+    .hero-eyebrow::before { content: '✦'; font-size: 0.6rem; }
+    .hero-title {
+      font-size: clamp(2.6rem, 8vw, 5rem);
       font-weight: 900;
-      line-height: 1.15;
-      letter-spacing: -0.03em;
-      margin-bottom: 14px;
-      background: linear-gradient(135deg, var(--text) 0%, var(--accent) 100%);
+      line-height: 1.08;
+      letter-spacing: -0.04em;
+      color: var(--text);
+      margin-bottom: 18px;
+    }
+    .hero-title span {
+      background: linear-gradient(135deg, #6c63ff 0%, #a78bfa 50%, #f472b6 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
-    .shop-hero__sub {
+    .hero-sub {
       font-size: 1.05rem;
       color: var(--text-sub);
       font-weight: 400;
+      margin-bottom: 36px;
     }
+    /* 컬러 스와치 장식 */
+    .hero-swatches {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .hero-swatch {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.12);
+      box-shadow: 0 0 16px rgba(0,0,0,0.3);
+      transition: transform 0.2s;
+    }
+    .hero-swatch:hover { transform: scale(1.2); }
 
-    /* ── 그리드 ── */
+    /* ══════════════════════════════════════
+       섹션 헤더 (탭 공통)
+    ══════════════════════════════════════ */
+    .section-wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+    .section-header { padding: 52px 0 28px; }
+    .section-header__label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+    .section-header__title { font-size: 1.5rem; font-weight: 900; color: var(--text); }
+
+    /* ══════════════════════════════════════
+       SHOP GRID & CARDS
+    ══════════════════════════════════════ */
     .shop-grid {
       max-width: 1100px;
       margin: 0 auto;
       padding: 0 24px 80px;
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 18px;
     }
-
-    /* ── 카드 ── */
     .theme-card {
       background: var(--surface);
       border: 1.5px solid var(--border);
@@ -150,7 +275,7 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      transition: transform 0.2s cubic-bezier(0.34,1.4,0.64,1), box-shadow 0.2s;
+      transition: transform 0.22s cubic-bezier(0.34,1.4,0.64,1), box-shadow 0.22s;
       cursor: pointer;
     }
     .theme-card:hover {
@@ -161,20 +286,12 @@
       border-color: var(--accent);
       box-shadow: 0 0 0 3px rgba(108,99,255,0.18);
     }
-
-    /* 프리뷰 영역 */
     .theme-card__preview {
-      height: 160px;
+      height: 150px;
       position: relative;
       overflow: hidden;
       flex-shrink: 0;
     }
-    .theme-card__preview-inner {
-      width: 100%;
-      height: 100%;
-      position: relative;
-    }
-    /* 미니 앱 목업 */
     .preview-mock {
       position: absolute;
       inset: 12px 12px 0;
@@ -185,245 +302,242 @@
       flex-direction: column;
     }
     .preview-mock__bar {
-      height: 28px;
+      height: 26px;
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 0 12px;
+      gap: 5px;
+      padding: 0 10px;
       flex-shrink: 0;
     }
-    .preview-mock__dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.5);
-    }
-    .preview-mock__body {
-      flex: 1;
-      padding: 8px;
-      display: flex;
-      gap: 6px;
-    }
-    .preview-mock__col {
-      border-radius: 6px;
-      background: rgba(255,255,255,0.15);
-    }
+    .preview-mock__dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.5); }
+    .preview-mock__body { flex: 1; padding: 7px; display: flex; gap: 5px; }
+    .preview-mock__col { border-radius: 5px; background: rgba(255,255,255,0.15); }
     .preview-mock__col--sm { width: 32%; }
     .preview-mock__col--lg { flex: 1; }
-
-    /* ── 카드 하단 정보 ── */
-    .theme-card__body {
-      padding: 16px 18px 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .theme-card__top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .theme-card__name {
-      font-size: 1rem;
-      font-weight: 800;
-      color: var(--text);
-    }
-    .theme-card__badge {
-      font-size: 0.68rem;
-      font-weight: 700;
-      padding: 3px 9px;
-      border-radius: 20px;
-    }
+    .theme-card__body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 10px; }
+    .theme-card__top { display: flex; align-items: center; justify-content: space-between; }
+    .theme-card__name { font-size: 0.95rem; font-weight: 800; color: var(--text); }
+    .theme-card__badge { font-size: 0.66rem; font-weight: 700; padding: 3px 9px; border-radius: 20px; }
     .badge--free  { background: #dcfce7; color: #15803d; }
     .badge--lock  { background: #fef3c7; color: #b45309; }
     .badge--on    { background: rgba(108,99,255,0.12); color: var(--accent); }
-
-    .theme-card__desc {
-      font-size: 0.78rem;
-      color: var(--text-sub);
-      line-height: 1.5;
-    }
-
+    .theme-card__desc { font-size: 0.76rem; color: var(--text-sub); line-height: 1.5; }
     .theme-card__btn {
-      width: 100%;
-      padding: 10px 0;
-      border-radius: 12px;
-      border: none;
-      font-size: 0.88rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: opacity 0.15s, transform 0.1s;
+      width: 100%; padding: 10px 0; border-radius: 12px; border: none;
+      font-size: 0.86rem; font-weight: 700; cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s; font-family: var(--font);
     }
     .theme-card__btn:active { transform: scale(0.97); }
-    .theme-card__btn--apply {
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      color: #fff;
-    }
+    .theme-card__btn--apply { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; }
     .theme-card__btn--apply:hover { opacity: 0.88; }
-    .theme-card__btn--active {
-      background: rgba(108,99,255,0.1);
-      color: var(--accent);
-      cursor: default;
-    }
-    .theme-card__btn--locked {
-      background: #fef3c7;
-      color: #b45309;
-    }
+    .theme-card__btn--active { background: rgba(108,99,255,0.1); color: var(--accent); cursor: default; }
+    .theme-card__btn--locked { background: #fef3c7; color: #b45309; }
     .theme-card__btn--locked:hover { opacity: 0.85; }
 
-    /* ── 로그인 게이트 오버레이 ── */
-    .login-gate {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 900;
-      background: rgba(245,244,251,0.7);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      align-items: center;
-      justify-content: center;
-    }
-    .login-gate--show { display: flex; }
-    .login-gate__box {
-      background: #fff;
-      border: 1.5px solid var(--border);
-      border-radius: 28px;
-      padding: 44px 36px;
-      max-width: 360px;
-      width: 90vw;
-      text-align: center;
-      box-shadow: 0 24px 64px rgba(108,99,255,0.14);
-      animation: popIn 0.3s cubic-bezier(0.34,1.4,0.64,1);
-    }
-    @keyframes popIn {
-      from { opacity:0; transform:scale(0.88) translateY(20px); }
-      to   { opacity:1; transform:scale(1) translateY(0); }
-    }
-    .login-gate__icon { font-size: 3rem; margin-bottom: 16px; }
-    .login-gate__title {
-      font-size: 1.25rem;
-      font-weight: 900;
-      color: var(--text);
-      margin-bottom: 8px;
-    }
-    .login-gate__desc {
-      font-size: 0.88rem;
-      color: var(--text-sub);
-      line-height: 1.6;
-      margin-bottom: 28px;
-    }
-    .login-gate__btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      width: 100%;
-      padding: 14px 0;
-      border-radius: 14px;
-      border: none;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      color: #fff;
-      font-size: 0.95rem;
-      font-weight: 700;
-      cursor: pointer;
-      text-decoration: none;
-      transition: opacity 0.15s, transform 0.1s;
-    }
-    .login-gate__btn:hover { opacity: 0.88; }
-    .login-gate__btn:active { transform: scale(0.97); }
-
-    /* 로딩 중 스켈레톤 */
+    /* ── 로딩 ── */
     .shop-loading {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 200px;
-      color: var(--text-sub);
-      font-size: 0.9rem;
-      gap: 10px;
+      display: flex; justify-content: center; align-items: center;
+      height: 220px; color: var(--text-sub); font-size: 0.9rem; gap: 10px;
     }
     .shop-loading::before {
-      content: '';
-      width: 18px; height: 18px;
-      border: 2.5px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
+      content: ''; width: 18px; height: 18px;
+      border: 2.5px solid var(--border); border-top-color: var(--accent);
+      border-radius: 50%; animation: spin 0.7s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── 반응형 ── */
-    @media (max-width: 600px) {
-      .shop-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 0 14px 60px; }
-      .shop-hero { padding: 40px 16px 32px; }
-      .theme-card__preview { height: 120px; }
+    /* ══════════════════════════════════════
+       MY THEME 탭 (빌더)
+    ══════════════════════════════════════ */
+    .builder-hero {
+      background: linear-gradient(135deg, #1e1350 0%, #2d1b69 50%, #1a1035 100%);
+      padding: 56px 24px 52px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
     }
-
-    /* ── 토스트 ── */
-    .shop-toast {
-      position: fixed;
-      bottom: 28px;
-      left: 50%;
-      transform: translateX(-50%) translateY(80px);
-      background: var(--text);
-      color: #fff;
-      font-size: 0.88rem;
-      font-weight: 600;
-      padding: 12px 24px;
-      border-radius: 99px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
-      transition: transform 0.3s cubic-bezier(0.34,1.4,0.64,1), opacity 0.3s;
-      opacity: 0;
-      pointer-events: none;
-      white-space: nowrap;
-      z-index: 999;
-    }
-    .shop-toast--show {
-      transform: translateX(-50%) translateY(0);
-      opacity: 1;
-    }
-
-    /* ── 비밀번호 오버레이 ── */
-    .pw-overlay {
-      display: none;
-      position: fixed;
+    .builder-hero::before {
+      content: '';
+      position: absolute;
       inset: 0;
-      background: rgba(0,0,0,0.45);
-      backdrop-filter: blur(6px);
-      z-index: 500;
-      align-items: center;
-      justify-content: center;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .builder-hero__eyebrow {
+      display: inline-block; position: relative;
+      font-size: .7rem; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; color: #f9a8d4;
+      background: rgba(249,168,212,.1); border: 1px solid rgba(249,168,212,.25);
+      border-radius: 99px; padding: 4px 14px; margin-bottom: 16px;
+    }
+    .builder-hero__title {
+      position: relative;
+      font-size: clamp(1.8rem, 5vw, 3rem); font-weight: 900; color: #fff;
+      margin-bottom: 10px; letter-spacing: -0.03em;
+    }
+    .builder-hero__sub { position: relative; font-size: .95rem; color: rgba(255,255,255,0.5); }
+
+    .builder-body { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
+
+    /* 빌더 레이아웃 */
+    .custom-builder { display: grid; grid-template-columns: 230px 1fr; gap: 24px; align-items: start; }
+    @media (max-width: 700px) { .custom-builder { grid-template-columns: 1fr; } }
+    .custom-preview-wrap { position: sticky; top: 76px; }
+    .custom-preview-label { font-size: .7rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; text-align: center; }
+    .custom-preview {
+      border-radius: 18px; overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,.15);
+      background: #f4f5fb; display: flex; flex-direction: column; min-height: 300px;
+      border: 1.5px solid rgba(0,0,0,.09); transition: background .25s;
+    }
+    .cp-bar { padding: 10px 14px; background: linear-gradient(135deg,#6c63ff,#a78bfa); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; transition: background .25s; }
+    .cp-bar__title { font-size: .73rem; font-weight: 800; color: #fff; opacity: .9; font-family: var(--font); }
+    .cp-bar__dots { display: flex; gap: 4px; }
+    .cp-bar__dots span { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,.55); }
+    .cp-body { flex: 1; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+    .cp-item { background: #fff; border: 1.5px solid rgba(108,99,255,.13); border-radius: 10px; padding: 8px 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; transition: background .25s, border-color .25s; }
+    .cp-item__text { font-size: .63rem; color: #1e1b4b; font-weight: 600; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color .25s; font-family: var(--font); }
+    .cp-item__btns { display: flex; gap: 4px; flex-shrink: 0; }
+    .cp-btn-wrap { width: 22px; height: 22px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .cp-btn-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cp-btn-wrap--text { border: 2px solid #6c63ff; font-size: .55rem; font-weight: 800; color: #6c63ff; background: transparent; transition: border-color .25s, color .25s; }
+    .cp-btn-wrap--x { border: 2px solid #d1d5db; font-size: .55rem; font-weight: 800; color: #9ca3af; }
+
+    /* 컨트롤 패널 */
+    .custom-controls { background: var(--surface); border: 1.5px solid var(--border); border-radius: 24px; padding: 24px; display: flex; flex-direction: column; }
+    .ctrl-group { padding: 18px 0; border-bottom: 1px solid var(--border); }
+    .ctrl-group:first-child { padding-top: 0; }
+    .ctrl-group:last-of-type { border-bottom: none; padding-bottom: 4px; }
+    .ctrl-label { display: block; font-size: .84rem; font-weight: 800; color: var(--text); margin-bottom: 12px; }
+    .ctrl-tabs { display: flex; gap: 5px; margin-bottom: 12px; flex-wrap: wrap; }
+    .ctrl-tab { flex: 1; padding: 7px 6px; border-radius: 10px; border: 1.5px solid var(--border); background: transparent; font-size: .76rem; font-weight: 600; color: var(--text-sub); cursor: pointer; transition: all .15s; font-family: var(--font); white-space: nowrap; }
+    .ctrl-tab:hover { background: var(--bg); color: var(--text); }
+    .ctrl-tab--active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .ctrl-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+    .ctrl-row:last-child { margin-bottom: 0; }
+    .ctrl-row--col { flex-direction: column; align-items: flex-start; gap: 6px; }
+    .ctrl-sub { font-size: .75rem; color: var(--text-sub); font-weight: 500; flex: 1; }
+    .ctrl-hint { font-size: .67rem; opacity: .7; }
+    .ctrl-color { width: 34px; height: 34px; border-radius: 8px; border: 1.5px solid var(--border); padding: 2px; cursor: pointer; background: none; flex-shrink: 0; }
+    .ctrl-input { width: 100%; padding: 9px 12px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--bg); color: var(--text); font-size: .82rem; font-family: var(--font); outline: none; transition: border-color .15s; }
+    .ctrl-input:focus { border-color: var(--accent); }
+    .ctrl-range { flex: 1; accent-color: var(--accent); cursor: pointer; }
+    .ctrl-range-val { font-size: .74rem; color: var(--text-sub); min-width: 32px; text-align: right; }
+    .ctrl-presets { display: flex; gap: 8px; flex-wrap: wrap; }
+    .ctrl-preset { width: 60px; border-radius: 12px; border: 2px solid var(--border); background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 8px 4px 6px; cursor: pointer; transition: all .15s; }
+    .ctrl-preset:hover { border-color: var(--accent); }
+    .ctrl-preset--active { border-color: var(--accent); background: rgba(108,99,255,.07); }
+    .ctrl-preset img { width: 28px; height: 28px; object-fit: contain; border-radius: 50%; display: block; }
+    .ctrl-preset__emoji { font-size: 1.25rem; line-height: 1; }
+    .ctrl-preset > span { font-size: .6rem; color: var(--text-sub); font-weight: 600; text-align: center; margin-top: 2px; display: block; }
+    .ctrl-btn-section { width: 100%; }
+    .ctrl-footer { display: flex; gap: 10px; padding-top: 20px; }
+    .ctrl-save-btn { flex: 1; padding: 12px 0; border-radius: 14px; border: none; background: linear-gradient(135deg,var(--accent),var(--accent2)); color: #fff; font-size: .9rem; font-weight: 700; cursor: pointer; font-family: var(--font); transition: opacity .15s, transform .1s; }
+    .ctrl-save-btn:hover { opacity: .88; }
+    .ctrl-save-btn:active { transform: scale(.97); }
+    .ctrl-reset-btn { padding: 12px 16px; border-radius: 14px; border: 1.5px solid var(--border); background: transparent; color: var(--text-sub); font-size: .84rem; font-weight: 600; cursor: pointer; font-family: var(--font); transition: all .15s; }
+    .ctrl-reset-btn:hover { background: var(--bg); color: var(--text); }
+    .ctrl-preset__obtn { width: 26px; height: 26px; border-radius: 50%; border: 2.5px solid #6c63ff; display: flex; align-items: center; justify-content: center; font-size: .68rem; font-weight: 900; color: #6c63ff; font-family: var(--font); }
+    .ctrl-preset__xbtn { width: 26px; height: 26px; border-radius: 50%; border: 2.5px solid #9ca3af; display: flex; align-items: center; justify-content: center; font-size: .68rem; font-weight: 900; color: #9ca3af; font-family: var(--font); }
+    .ctrl-clear { width: 26px; height: 26px; border-radius: 6px; border: 1.5px solid var(--border); background: var(--bg); color: var(--text-sub); font-size: .7rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .15s; }
+    .ctrl-clear:hover { background: #fee2e2; border-color: #dc2626; color: #dc2626; }
+    .ctrl-gallery-btn { flex: 1; padding: 12px 0; border-radius: 14px; border: 1.5px solid var(--accent); background: transparent; color: var(--accent); font-size: .86rem; font-weight: 700; cursor: pointer; font-family: var(--font); transition: all .15s; }
+    .ctrl-gallery-btn:hover { background: var(--accent); color: #fff; }
+
+    /* ══════════════════════════════════════
+       창작마당 탭
+    ══════════════════════════════════════ */
+    .gallery-hero {
+      background: linear-gradient(135deg, #1c1206 0%, #2d1e08 50%, #1a1035 100%);
+      padding: 56px 24px 52px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .gallery-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .gallery-hero__orb1 {
+      position: absolute; width: 360px; height: 360px; border-radius: 50%;
+      background: radial-gradient(circle, #f59e0b 0%, transparent 70%);
+      filter: blur(90px); opacity: 0.2; top: -100px; right: -60px; pointer-events: none;
+    }
+    .gallery-hero__eyebrow {
+      display: inline-block; position: relative;
+      font-size: .7rem; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; color: #fcd34d;
+      background: rgba(252,211,77,.1); border: 1px solid rgba(252,211,77,.25);
+      border-radius: 99px; padding: 4px 14px; margin-bottom: 16px;
+    }
+    .gallery-hero__title { position: relative; font-size: clamp(1.8rem,5vw,3rem); font-weight: 900; color: #fff; margin-bottom: 10px; letter-spacing: -0.03em; }
+    .gallery-hero__sub { position: relative; font-size: .95rem; color: rgba(255,255,255,0.5); }
+
+    .gallery-body { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
+
+    /* 갤러리 카드 액션 */
+    .gallery-card-actions { display: flex; gap: 6px; margin-top: 2px; }
+    .gallery-card-actions .theme-card__btn { flex: 1; padding: 8px 0; font-size: .78rem; }
+    .gallery-edit-btn { background: var(--bg) !important; color: var(--text-sub) !important; border: 1.5px solid var(--border) !important; }
+    .gallery-delete-btn { background: none; border: none; cursor: pointer; font-size: .88rem; padding: 2px 5px; border-radius: 6px; transition: background .15s; flex-shrink: 0; }
+    .gallery-delete-btn:hover { background: #fee2e2; }
+
+    /* ══════════════════════════════════════
+       OVERLAYS
+    ══════════════════════════════════════ */
+    .login-gate {
+      display: none; position: fixed; inset: 0; z-index: 900;
+      background: rgba(245,244,251,0.7); backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px); align-items: center; justify-content: center;
+    }
+    .login-gate--show { display: flex; }
+    .login-gate__box {
+      background: #fff; border: 1.5px solid var(--border); border-radius: 28px;
+      padding: 44px 36px; max-width: 360px; width: 90vw; text-align: center;
+      box-shadow: 0 24px 64px rgba(108,99,255,0.14); animation: popIn 0.3s cubic-bezier(0.34,1.4,0.64,1);
+    }
+    .login-gate__icon { font-size: 3rem; margin-bottom: 16px; }
+    .login-gate__title { font-size: 1.25rem; font-weight: 900; color: var(--text); margin-bottom: 8px; }
+    .login-gate__desc { font-size: 0.88rem; color: var(--text-sub); line-height: 1.6; margin-bottom: 28px; }
+    .login-gate__btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 14px 0; border-radius: 14px; border: none;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff; font-size: 0.95rem; font-weight: 700; cursor: pointer;
+      text-decoration: none; transition: opacity 0.15s;
+    }
+    .login-gate__btn:hover { opacity: 0.88; }
+
+    .pw-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); backdrop-filter: blur(8px);
+      z-index: 500; align-items: center; justify-content: center;
     }
     .pw-overlay--show { display: flex; }
     .pw-box {
-      background: var(--surface);
-      border-radius: 24px;
-      padding: 32px 28px;
-      width: 320px;
-      max-width: 90vw;
-      box-shadow: 0 24px 60px rgba(0,0,0,0.2);
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
+      background: var(--surface); border-radius: 24px; padding: 32px 28px;
+      width: 320px; max-width: 90vw; box-shadow: 0 24px 60px rgba(0,0,0,0.2);
+      display: flex; flex-direction: column; gap: 16px;
       animation: popIn 0.25s cubic-bezier(0.34,1.4,0.64,1);
     }
     @keyframes popIn {
-      from { opacity:0; transform:scale(0.88); }
-      to   { opacity:1; transform:scale(1); }
+      from { opacity:0; transform:scale(0.88) translateY(16px); }
+      to   { opacity:1; transform:scale(1) translateY(0); }
     }
     .pw-box__logo { font-size: 2rem; text-align: center; }
     .pw-box__title { font-size: 1.1rem; font-weight: 800; text-align: center; color: var(--text); }
     .pw-box__hint  { font-size: 0.8rem; text-align: center; color: var(--text-sub); }
     .pw-box__input {
-      width: 100%;
-      padding: 12px 16px;
-      border-radius: 12px;
-      border: 1.5px solid var(--border);
-      background: var(--bg);
-      font-size: 0.95rem;
-      color: var(--text);
-      outline: none;
-      font-family: var(--font);
-      transition: border-color 0.15s;
+      width: 100%; padding: 12px 16px; border-radius: 12px;
+      border: 1.5px solid var(--border); background: var(--bg);
+      font-size: 0.95rem; color: var(--text); outline: none;
+      font-family: var(--font); transition: border-color 0.15s;
     }
     .pw-box__input:focus { border-color: var(--accent); }
     .pw-box__input--err  { border-color: #dc2626 !important; }
@@ -432,13 +546,32 @@
     .pw-box__btn {
       flex: 1; padding: 11px 0; border-radius: 12px; border: none;
       font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: opacity 0.15s;
+      font-family: var(--font);
     }
     .pw-box__btn--cancel { background: var(--bg); color: var(--text-sub); }
-    .pw-box__btn--confirm {
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      color: #fff;
-    }
+    .pw-box__btn--confirm { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; }
     .pw-box__btn:hover { opacity: 0.85; }
+
+    /* ══════════════════════════════════════
+       토스트
+    ══════════════════════════════════════ */
+    .shop-toast {
+      position: fixed; bottom: 28px; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #1e1b4b; color: #fff; font-size: 0.88rem; font-weight: 600;
+      padding: 12px 24px; border-radius: 99px; box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+      transition: transform 0.3s cubic-bezier(0.34,1.4,0.64,1), opacity 0.3s;
+      opacity: 0; pointer-events: none; white-space: nowrap; z-index: 999;
+    }
+    .shop-toast--show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    /* ── 반응형 ── */
+    @media (max-width: 600px) {
+      .shop-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 0 14px 60px; }
+      .theme-card__preview { height: 120px; }
+      .hero { min-height: 320px; padding: 64px 20px 56px; }
+      .hero-title { font-size: 2.4rem; }
+    }
   </style>
 </head>
 <body>
@@ -456,23 +589,21 @@
   <!-- 네비게이션 -->
   <nav class="shop-nav" id="shopNav">
     <div class="shop-nav-inner">
-      <a class="shop-nav__logo" href="/homepage"><span>오</span>일추 테마샵</a>
+      <a class="shop-nav__logo" href="/homepage"><span>오</span>일추</a>
+
+      <!-- 탭 -->
+      <div class="shop-tabs" id="shopTabs">
+        <button class="shop-tab shop-tab--active" data-tab="shop">🛍 테마샵</button>
+        <button class="shop-tab" data-tab="mytheme">🎨 내 테마</button>
+        <button class="shop-tab" data-tab="gallery">✨ 창작마당</button>
+      </div>
+
       <div class="shop-nav__links">
-        <a href="/homepage" class="shop-nav__link">🏠 홈페이지</a>
+        <a href="/homepage" class="shop-nav__link">홈</a>
         <a href="/" class="shop-nav__link shop-nav__link--cta">앱 열기 →</a>
       </div>
     </div>
   </nav>
-
-  <!-- 히어로 -->
-  <section class="shop-hero">
-    <div class="shop-hero__eyebrow">THEME SHOP</div>
-    <h1 class="shop-hero__title">내 앱, 내 스타일로</h1>
-    <p class="shop-hero__sub">원하는 테마를 골라 앱을 꾸며보세요.</p>
-  </section>
-
-  <!-- 카드 그리드 -->
-  <div class="shop-grid" id="shopGrid"></div>
 
   <!-- 토스트 -->
   <div class="shop-toast" id="shopToast"></div>
@@ -492,146 +623,351 @@
     </div>
   </div>
 
+  <!-- ════════════════════════════════
+       탭 1: 테마샵
+  ════════════════════════════════ -->
+  <div class="tab-panel tab-panel--active" id="tabShop">
+
+    <!-- 히어로 -->
+    <section class="hero">
+      <div class="hero-orbs">
+        <div class="hero-orb hero-orb--1"></div>
+        <div class="hero-orb hero-orb--2"></div>
+        <div class="hero-orb hero-orb--3"></div>
+      </div>
+      <div class="hero-content">
+        <div class="hero-eyebrow">THEME SHOP</div>
+        <h1 class="hero-title">내 앱,<br><span>내 스타일로</span></h1>
+        <p class="hero-sub">원하는 테마를 골라 오일추를 꾸며보세요.</p>
+        <div class="hero-swatches" id="heroSwatches"></div>
+      </div>
+    </section>
+
+    <!-- 섹션 헤더 -->
+    <div class="section-wrap">
+      <div class="section-header">
+        <div class="section-header__label">ALL THEMES</div>
+        <div class="section-header__title">모든 테마</div>
+      </div>
+    </div>
+
+    <!-- 카드 그리드 -->
+    <div class="shop-grid" id="shopGrid"></div>
+
+  </div>
+
+  <!-- ════════════════════════════════
+       탭 2: 나만의 테마 만들기
+  ════════════════════════════════ -->
+  <div class="tab-panel" id="tabMyTheme">
+
+    <!-- 히어로 -->
+    <div class="builder-hero">
+      <div class="builder-hero__eyebrow">MY THEME</div>
+      <h2 class="builder-hero__title">🎨 나만의 테마 만들기</h2>
+      <p class="builder-hero__sub">색상, 배경, 버튼까지 완전 자유롭게 꾸며보세요.</p>
+    </div>
+
+    <div class="builder-body">
+      <div class="custom-builder">
+        <!-- 왼쪽: 라이브 프리뷰 -->
+        <div class="custom-preview-wrap">
+          <p class="custom-preview-label">실시간 미리보기</p>
+          <div class="custom-preview" id="customPreview">
+            <div class="cp-bar" id="cpBar">
+              <span class="cp-bar__title">오일추</span>
+              <div class="cp-bar__dots"><span></span><span></span><span></span></div>
+            </div>
+            <div class="cp-body" id="cpBody">
+              <div class="cp-item">
+                <span class="cp-item__text">수학 숙제</span>
+                <div class="cp-item__btns">
+                  <div class="cp-btn-wrap cp-btn-o cp-btn-wrap--text" id="cpOWrap1">O</div>
+                  <div class="cp-btn-wrap cp-btn-x cp-btn-wrap--x" id="cpXWrap1">X</div>
+                </div>
+              </div>
+              <div class="cp-item">
+                <span class="cp-item__text">물리 보고서</span>
+                <div class="cp-item__btns">
+                  <div class="cp-btn-wrap cp-btn-o cp-btn-wrap--text" id="cpOWrap2">O</div>
+                  <div class="cp-btn-wrap cp-btn-x cp-btn-wrap--x" id="cpXWrap2">X</div>
+                </div>
+              </div>
+              <div class="cp-item">
+                <span class="cp-item__text">영어 단어 암기</span>
+                <div class="cp-item__btns">
+                  <div class="cp-btn-wrap cp-btn-o cp-btn-wrap--text" id="cpOWrap3">O</div>
+                  <div class="cp-btn-wrap cp-btn-x cp-btn-wrap--x" id="cpXWrap3">X</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 오른쪽: 컨트롤 패널 -->
+        <div class="custom-controls">
+
+          <!-- 테마 이름 -->
+          <div class="ctrl-group">
+            <label class="ctrl-label">테마 이름</label>
+            <input class="ctrl-input" type="text" id="ctrlName" placeholder="내 테마" maxlength="20" />
+          </div>
+
+          <!-- 배경 -->
+          <div class="ctrl-group">
+            <label class="ctrl-label">배경</label>
+            <div class="ctrl-tabs" id="bgTypeTabs">
+              <button class="ctrl-tab ctrl-tab--active" data-bg="solid">단색</button>
+              <button class="ctrl-tab" data-bg="gradient">그라디언트</button>
+              <button class="ctrl-tab" data-bg="image">이미지 URL</button>
+            </div>
+            <div id="bgSolidPanel">
+              <div class="ctrl-row">
+                <label class="ctrl-sub">배경색</label>
+                <input class="ctrl-color" type="color" id="ctrlBgSolid" value="#f0f4ff" />
+              </div>
+            </div>
+            <div id="bgGradPanel" hidden>
+              <div class="ctrl-row">
+                <label class="ctrl-sub">색상 1</label>
+                <input class="ctrl-color" type="color" id="ctrlBgGrad1" value="#e0e7ff" />
+              </div>
+              <div class="ctrl-row">
+                <label class="ctrl-sub">색상 2</label>
+                <input class="ctrl-color" type="color" id="ctrlBgGrad2" value="#fdf4ff" />
+              </div>
+              <div class="ctrl-row">
+                <label class="ctrl-sub">방향</label>
+                <input class="ctrl-range" type="range" id="ctrlBgGradAngle" min="0" max="360" value="135" />
+                <span class="ctrl-range-val" id="ctrlBgGradAngleVal">135°</span>
+              </div>
+            </div>
+            <div id="bgImagePanel" hidden>
+              <div class="ctrl-row ctrl-row--col">
+                <label class="ctrl-sub">이미지 URL <span class="ctrl-hint">(배경 전체에 표시)</span></label>
+                <input class="ctrl-input" type="url" id="ctrlBgImage" placeholder="https://..." />
+              </div>
+            </div>
+          </div>
+
+          <!-- 색상 설정 -->
+          <div class="ctrl-group">
+            <label class="ctrl-label">색상 설정</label>
+            <div class="ctrl-row">
+              <label class="ctrl-sub">카드 / 표면색</label>
+              <input class="ctrl-color" type="color" id="ctrlSurface" value="#ffffff" />
+            </div>
+            <div class="ctrl-row">
+              <label class="ctrl-sub">강조색 (버튼·헤더)</label>
+              <input class="ctrl-color" type="color" id="ctrlAccent" value="#6c63ff" />
+            </div>
+            <div class="ctrl-row">
+              <label class="ctrl-sub">강조색 2 (그라디언트 끝)</label>
+              <input class="ctrl-color" type="color" id="ctrlAccent2" value="#a78bfa" />
+            </div>
+            <div class="ctrl-row">
+              <label class="ctrl-sub">메인 글자색</label>
+              <input class="ctrl-color" type="color" id="ctrlText" value="#1e1b4b" />
+            </div>
+            <div class="ctrl-row">
+              <label class="ctrl-sub">서브 글자색</label>
+              <input class="ctrl-color" type="color" id="ctrlTextSub" value="#6b7280" />
+            </div>
+          </div>
+
+          <!-- O / X 버튼 이미지 -->
+          <div class="ctrl-group">
+            <label class="ctrl-label">O / X 버튼 이미지</label>
+            <div class="ctrl-btn-section">
+              <div class="ctrl-sub" style="margin-bottom:10px">O 버튼</div>
+              <div class="ctrl-presets" id="oBtnPresets">
+                <div class="ctrl-preset ctrl-preset--active" data-btn="o" data-preset="default">
+                  <div class="ctrl-preset__obtn">O</div>
+                  <span>기본</span>
+                </div>
+                <div class="ctrl-preset" data-btn="o" data-preset="upload">
+                  <div class="ctrl-preset__emoji">📁</div>
+                  <span>업로드</span>
+                </div>
+              </div>
+              <input type="file" id="ctrlOBtnFile" accept="image/*" style="display:none" />
+              <div id="ctrlOBtnPreview" style="display:none;align-items:center;gap:8px;margin-top:10px">
+                <img id="ctrlOBtnPreviewImg" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid var(--accent)" alt="O" />
+                <span style="font-size:.72rem;color:var(--text-sub);flex:1">업로드됨</span>
+                <button class="ctrl-clear" id="ctrlOBtnClear">✕</button>
+              </div>
+            </div>
+            <div class="ctrl-btn-section" style="margin-top:18px">
+              <div class="ctrl-sub" style="margin-bottom:10px">X 버튼</div>
+              <div class="ctrl-presets" id="xBtnPresets">
+                <div class="ctrl-preset ctrl-preset--active" data-btn="x" data-preset="default">
+                  <div class="ctrl-preset__xbtn">X</div>
+                  <span>기본</span>
+                </div>
+                <div class="ctrl-preset" data-btn="x" data-preset="upload">
+                  <div class="ctrl-preset__emoji">📁</div>
+                  <span>업로드</span>
+                </div>
+              </div>
+              <input type="file" id="ctrlXBtnFile" accept="image/*" style="display:none" />
+              <div id="ctrlXBtnPreview" style="display:none;align-items:center;gap:8px;margin-top:10px">
+                <img id="ctrlXBtnPreviewImg" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid var(--accent)" alt="X" />
+                <span style="font-size:.72rem;color:var(--text-sub);flex:1">업로드됨</span>
+                <button class="ctrl-clear" id="ctrlXBtnClear">✕</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 저장 / 마당 등록 -->
+          <div class="ctrl-footer">
+            <button class="ctrl-reset-btn" id="ctrlReset">초기화</button>
+            <button class="ctrl-save-btn" id="ctrlSave">✨ 적용하기</button>
+            <button class="ctrl-gallery-btn" id="ctrlGallery">💾 마당 등록</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════
+       탭 3: 창작마당
+  ════════════════════════════════ -->
+  <div class="tab-panel" id="tabGallery">
+
+    <!-- 히어로 -->
+    <div class="gallery-hero">
+      <div class="gallery-hero__orb1"></div>
+      <div class="gallery-hero__eyebrow">CREATION HUB</div>
+      <h2 class="gallery-hero__title">✨ 창작마당</h2>
+      <p class="gallery-hero__sub">내가 만든 테마들을 저장하고 관리해요.</p>
+    </div>
+
+    <div class="gallery-body">
+      <div id="galleryEmpty" style="text-align:center;padding:60px 16px;color:var(--text-sub)">
+        <div style="font-size:3rem;margin-bottom:14px">🎨</div>
+        <p style="font-weight:700;font-size:1rem;margin-bottom:8px;color:var(--text)">아직 등록된 테마가 없어요</p>
+        <p style="font-size:.85rem;margin-bottom:24px">내 테마 탭에서 테마를 만들고 <strong>마당 등록</strong>을 눌러보세요!</p>
+        <button onclick="switchTab('mytheme')" style="padding:10px 24px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:.88rem;font-weight:700;cursor:pointer;font-family:var(--font)">🎨 테마 만들러 가기</button>
+      </div>
+      <div class="shop-grid" id="galleryGrid" style="display:none;padding:0 0 40px"></div>
+    </div>
+  </div>
+
 <script>
-  const THEME_KEY   = 'appTheme_v1';
-  const HGD_KEY     = 'hgdUnlocked_v1';
-  const SR_KEY      = 'starRailUnlocked_v1';
-  const HGD_PW      = 'ilovehangyodon';
-  const SR_PW       = '33550336';
+  // ══════════════════════════════════════
+  // 탭 전환
+  // ══════════════════════════════════════
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('tab-panel--active'));
+    document.querySelectorAll('.shop-tab').forEach(b => b.classList.remove('shop-tab--active'));
+    const panel = document.getElementById('tab' + tabId.charAt(0).toUpperCase() + tabId.slice(1));
+    const btn   = document.querySelector(`.shop-tab[data-tab="${tabId}"]`);
+    if (panel) panel.classList.add('tab-panel--active');
+    if (btn)   btn.classList.add('shop-tab--active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // URL hash 동기화
+    history.replaceState(null, '', '#' + tabId);
+  }
+
+  document.getElementById('shopTabs').addEventListener('click', e => {
+    const btn = e.target.closest('.shop-tab');
+    if (btn?.dataset.tab) switchTab(btn.dataset.tab);
+  });
+
+  // 페이지 로드 시 hash 처리
+  const initTab = location.hash.slice(1);
+  if (['shop','mytheme','gallery'].includes(initTab)) switchTab(initTab);
+
+  // 스크롤 nav 효과
+  const shopNav = document.getElementById('shopNav');
+  window.addEventListener('scroll', () => {
+    shopNav.classList.toggle('scrolled', window.scrollY > 20);
+  }, { passive: true });
+
+  // ══════════════════════════════════════
+  // 테마샵
+  // ══════════════════════════════════════
+  const THEME_KEY = 'appTheme_v1';
+  const HGD_KEY   = 'hgdUnlocked_v1';
+  const SR_KEY    = 'starRailUnlocked_v1';
+  const HGD_PW    = 'ilovehangyodon';
+  const SR_PW     = '33550336';
 
   const themes = [
-    {
-      id: 'purple',
-      name: '보라 (기본)',
-      desc: '기본 테마. 보랏빛 그라데이션.',
-      badge: 'free',
-      colors: ['#6c63ff','#a78bfa'],
-      barColor: '#6c63ff',
-    },
-    {
-      id: 'blue',
-      name: '블루',
-      desc: '시원한 파란 계열 테마.',
-      badge: 'free',
-      colors: ['#2563eb','#60a5fa'],
-      barColor: '#2563eb',
-    },
-    {
-      id: 'green',
-      name: '그린',
-      desc: '자연스러운 초록 계열 테마.',
-      badge: 'free',
-      colors: ['#16a34a','#4ade80'],
-      barColor: '#16a34a',
-    },
-    {
-      id: 'dark',
-      name: '다크',
-      desc: '눈이 편안한 다크 모드.',
-      badge: 'free',
-      colors: ['#1e293b','#475569'],
-      barColor: '#334155',
-    },
-    {
-      id: 'jelly',
-      name: '젤리',
-      desc: '달콤한 핑크 젤리 테마.',
-      badge: 'free',
-      colors: ['#ff5fad','#ffb3ec'],
-      barColor: '#ff5fad',
-    },
-    {
-      id: 'glass',
-      name: '리퀴드 글라스',
-      desc: '투명하고 반짝이는 글라스 테마.',
-      badge: 'free',
-      colors: ['#c4e0ff','#e8d4ff','#ffd4e8','#d4ffe8'],
-      barColor: '#818cf8',
-    },
-    {
-      id: 'winter',
-      name: '겨울',
-      desc: '맑고 차가운 겨울 하늘 테마 ❄️',
-      badge: 'free',
-      colors: ['#b8ddf0','#e8f6fc','#3a9bd5'],
-      barColor: '#3a9bd5',
-    },
-    {
-      id: 'hgd',
-      name: '한교동',
-      desc: '비밀 테마 🐟',
-      badge: 'lock',
-      unlockKey: HGD_KEY,
-      pw: HGD_PW,
-      logo: '🐟',
-      colors: ['#00b4a0','#4dd9c8'],
-      barColor: '#00b4a0',
-    },
-    {
-      id: 'starrail',
-      name: '붕괴 스타레일',
-      desc: '비밀 테마 ✦',
-      badge: 'lock',
-      unlockKey: SR_KEY,
-      pw: SR_PW,
-      logo: '✦',
-      colors: ['#0e1d35','#89c4ff','#162a48'],
-      barColor: '#4a90d9',
-    },
+    { id:'purple',   name:'보라 (기본)',    desc:'기본 테마. 보랏빛 그라데이션.',       badge:'free', colors:['#6c63ff','#a78bfa'],                    barColor:'#6c63ff' },
+    { id:'blue',     name:'블루',           desc:'시원한 파란 계열 테마.',               badge:'free', colors:['#2563eb','#60a5fa'],                    barColor:'#2563eb' },
+    { id:'green',    name:'그린',           desc:'자연스러운 초록 계열 테마.',           badge:'free', colors:['#16a34a','#4ade80'],                    barColor:'#16a34a' },
+    { id:'dark',     name:'다크',           desc:'눈이 편안한 다크 모드.',               badge:'free', colors:['#1e293b','#475569'],                    barColor:'#334155' },
+    { id:'jelly',    name:'젤리',           desc:'달콤한 핑크 젤리 테마.',               badge:'free', colors:['#ff5fad','#ffb3ec'],                    barColor:'#ff5fad' },
+    { id:'glass',    name:'리퀴드 글라스', desc:'투명하고 반짝이는 글라스 테마.',       badge:'free', colors:['#c4e0ff','#e8d4ff','#ffd4e8','#d4ffe8'], barColor:'#818cf8' },
+    { id:'winter',   name:'겨울',           desc:'맑고 차가운 겨울 하늘 테마 ❄️',      badge:'free', colors:['#b8ddf0','#e8f6fc','#3a9bd5'],           barColor:'#3a9bd5' },
+    { id:'hgd',      name:'한교동',         desc:'비밀 테마 🐟',                         badge:'lock', unlockKey:HGD_KEY, pw:HGD_PW, logo:'🐟', colors:['#00b4a0','#4dd9c8'], barColor:'#00b4a0' },
+    { id:'starrail', name:'붕괴 스타레일', desc:'비밀 테마 ✦',                          badge:'lock', unlockKey:SR_KEY,  pw:SR_PW,  logo:'✦', colors:['#0e1d35','#89c4ff','#162a48'], barColor:'#4a90d9' },
+    { id:'custom',   name:'🎨 내 테마',    desc:'색상·배경·버튼까지 마음대로 꾸미는 나만의 테마.', badge:'free', colors:['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#c77dff'], barColor:'#a855f7', isCustom:true },
   ];
 
-  function currentTheme() {
-    return localStorage.getItem(THEME_KEY) || 'purple';
-  }
-
-  function isUnlocked(t) {
-    if (t.badge !== 'lock') return true;
-    return !!localStorage.getItem(t.unlockKey);
-  }
-
+  function currentTheme() { return localStorage.getItem(THEME_KEY) || 'purple'; }
+  function isUnlocked(t) { if (t.badge !== 'lock') return true; return !!localStorage.getItem(t.unlockKey); }
   function gradStyle(colors) {
-    if (colors.length === 2)
-      return `linear-gradient(135deg, ${colors[0]}, ${colors[1]})`;
-    return `linear-gradient(135deg, ${colors.join(', ')})`;
+    return colors.length === 2
+      ? `linear-gradient(135deg, ${colors[0]}, ${colors[1]})`
+      : `linear-gradient(135deg, ${colors.join(', ')})`;
+  }
+
+  // 히어로 스와치 렌더
+  function renderSwatches() {
+    const el = document.getElementById('heroSwatches');
+    if (!el) return;
+    el.innerHTML = '';
+    themes.filter(t => !t.isCustom && t.badge === 'free').forEach(t => {
+      const s = document.createElement('div');
+      s.className = 'hero-swatch';
+      s.style.background = gradStyle(t.colors);
+      s.title = t.name;
+      el.appendChild(s);
+    });
   }
 
   function buildCard(t) {
     const active   = currentTheme() === t.id;
     const unlocked = isUnlocked(t);
 
+    if (t.isCustom) {
+      try {
+        const sc = JSON.parse(localStorage.getItem('customTheme_v1') || '{}');
+        if (sc.accent) {
+          t = { ...t, colors: [sc.bgSolid || '#f0f4ff', sc.accent, sc.accent2 || '#a78bfa'], barColor: sc.accent };
+        }
+      } catch (_) {}
+    }
+
     const card = document.createElement('div');
     card.className = 'theme-card' + (active ? ' theme-card--active' : '');
     card.dataset.id = t.id;
 
-    // 프리뷰
     const preview = document.createElement('div');
     preview.className = 'theme-card__preview';
     preview.style.background = gradStyle(t.colors);
     preview.innerHTML = `
       <div class="preview-mock">
         <div class="preview-mock__bar" style="background:${t.barColor}cc">
-          <div class="preview-mock__dot"></div>
-          <div class="preview-mock__dot"></div>
-          <div class="preview-mock__dot"></div>
+          <div class="preview-mock__dot"></div><div class="preview-mock__dot"></div><div class="preview-mock__dot"></div>
         </div>
         <div class="preview-mock__body" style="background:${t.colors[0]}22">
           <div class="preview-mock__col preview-mock__col--sm" style="background:${t.barColor}33"></div>
-          <div class="preview-mock__col preview-mock__col--lg" style="background:${t.barColor}22"></div>
+          <div class="preview-mock__col preview-mock__col--lg"  style="background:${t.barColor}22"></div>
         </div>
-      </div>
-    `;
+      </div>`;
 
-    // 배지
-    const badgeLabel = t.badge === 'lock'
-      ? (unlocked ? '🔓 해금됨' : '🔒 비밀')
-      : '무료';
-    const badgeClass = t.badge === 'lock'
-      ? (unlocked ? 'badge--on' : 'badge--lock')
-      : 'badge--free';
+    const badgeLabel = t.badge === 'lock' ? (unlocked ? '🔓 해금됨' : '🔒 비밀') : '무료';
+    const badgeClass = t.badge === 'lock' ? (unlocked ? 'badge--on' : 'badge--lock') : 'badge--free';
 
-    // 버튼
     let btnClass, btnText;
-    if (active) {
+    if (t.isCustom) {
+      btnClass = 'theme-card__btn--apply';
+      btnText  = active ? '✓ 적용 중 · ✏️ 편집' : '✏️ 만들기 / 편집';
+    } else if (active) {
       btnClass = 'theme-card__btn--active';
       btnText  = '✓ 적용 중';
     } else if (t.badge === 'lock' && !unlocked) {
@@ -650,8 +986,7 @@
         <span class="theme-card__badge ${badgeClass}">${badgeLabel}</span>
       </div>
       <div class="theme-card__desc">${t.desc}</div>
-      <button class="theme-card__btn ${btnClass}" data-id="${t.id}">${btnText}</button>
-    `;
+      <button class="theme-card__btn ${btnClass}" data-id="${t.id}">${btnText}</button>`;
 
     card.appendChild(preview);
     card.appendChild(body);
@@ -687,25 +1022,19 @@
     pendingTheme = t;
     document.getElementById('pwLogo').textContent  = t.logo || '🔒';
     document.getElementById('pwTitle').textContent = `${t.name} 잠금 해제`;
-    pwInput.value = '';
-    pwErr.textContent = '';
+    pwInput.value = ''; pwErr.textContent = '';
     pwInput.classList.remove('pw-box__input--err');
     pwOverlay.classList.add('pw-overlay--show');
     setTimeout(() => pwInput.focus(), 100);
   }
-
-  function closePwOverlay() {
-    pwOverlay.classList.remove('pw-overlay--show');
-    pendingTheme = null;
-  }
+  function closePwOverlay() { pwOverlay.classList.remove('pw-overlay--show'); pendingTheme = null; }
 
   document.getElementById('pwCancel').addEventListener('click', closePwOverlay);
   document.getElementById('pwConfirm').addEventListener('click', () => {
     if (!pendingTheme) return;
     if (pwInput.value === pendingTheme.pw) {
       localStorage.setItem(pendingTheme.unlockKey, '1');
-      closePwOverlay();
-      applyTheme(pendingTheme.id);
+      closePwOverlay(); applyTheme(pendingTheme.id);
     } else {
       pwErr.textContent = '비밀번호가 틀렸어요.';
       pwInput.classList.add('pw-box__input--err');
@@ -716,9 +1045,7 @@
     if (e.key === 'Enter') document.getElementById('pwConfirm').click();
     if (e.key === 'Escape') closePwOverlay();
   });
-  pwOverlay.addEventListener('click', e => {
-    if (e.target === pwOverlay) closePwOverlay();
-  });
+  pwOverlay.addEventListener('click', e => { if (e.target === pwOverlay) closePwOverlay(); });
 
   // 카드 클릭
   document.getElementById('shopGrid').addEventListener('click', e => {
@@ -727,52 +1054,372 @@
     const id = btn.dataset.id;
     const t  = themes.find(x => x.id === id);
     if (!t) return;
-
-    if (t.badge === 'lock' && !isUnlocked(t)) {
-      openPwOverlay(t);
-    } else {
-      applyTheme(id);
-    }
+    if (t.isCustom) { switchTab('mytheme'); return; }
+    if (t.badge === 'lock' && !isUnlocked(t)) openPwOverlay(t);
+    else applyTheme(id);
   });
-
-  // 스크롤 시 nav 효과
-  const shopNav = document.getElementById('shopNav');
-  window.addEventListener('scroll', () => {
-    shopNav.classList.toggle('scrolled', window.scrollY > 20);
-  }, { passive: true });
 
   // ── 로그인 체크 후 렌더 ──
   (async function initShop() {
     const grid = document.getElementById('shopGrid');
     const gate = document.getElementById('loginGate');
-
-    // 로딩 스피너 표시
     grid.innerHTML = '<div class="shop-loading">불러오는 중...</div>';
-
     try {
-      // 1. config 가져오기
       const cfg = await fetch('/api/config').then(r => r.json());
       if (!cfg.supabaseUrl) throw new Error('config error');
-
-      // 2. Supabase 세션 확인
       const client = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
       const { data: { session } } = await client.auth.getSession();
-
-      if (!session) {
-        // 비로그인 → 게이트 표시
-        grid.innerHTML = '';
-        gate.classList.add('login-gate--show');
-        return;
-      }
-
-      // 로그인 됨 → 정상 렌더
+      if (!session) { grid.innerHTML = ''; gate.classList.add('login-gate--show'); return; }
       renderGrid();
-
+      renderSwatches();
     } catch (e) {
-      // config 실패 시 일단 렌더 (오프라인 대응)
       console.warn('[shop] auth check failed, rendering anyway:', e);
       renderGrid();
+      renderSwatches();
     }
+  })();
+</script>
+
+<!-- ══════════════════════════════════════
+     커스텀 테마 빌더 JS
+══════════════════════════════════════ -->
+<script>
+  (function initCustomBuilder() {
+    const CUSTOM_KEY  = 'customTheme_v1';
+    const GALLERY_KEY = 'localThemeGallery_v1';
+
+    const DEFAULT_CFG = {
+      name: '내 테마', bgType: 'solid', bgSolid: '#f0f4ff',
+      bgGrad1: '#e0e7ff', bgGrad2: '#fdf4ff', bgGradAngle: 135,
+      bgImage: '', surface: '#ffffff', accent: '#6c63ff', accent2: '#a78bfa',
+      text: '#1e1b4b', textSub: '#6b7280',
+      oBtnPreset: 'default', oBtnData: '',
+      xBtnPreset: 'default', xBtnData: '',
+    };
+
+    let cfg = { ...DEFAULT_CFG };
+    try { const raw = localStorage.getItem(CUSTOM_KEY); if (raw) cfg = { ...DEFAULT_CFG, ...JSON.parse(raw) }; } catch (_) {}
+
+    function escHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    const preview            = document.getElementById('customPreview');
+    const cpBar              = document.getElementById('cpBar');
+    const cpBody             = document.getElementById('cpBody');
+    const nameInput          = document.getElementById('ctrlName');
+    const bgTypeTabs         = document.getElementById('bgTypeTabs');
+    const bgSolidPanel       = document.getElementById('bgSolidPanel');
+    const bgGradPanel        = document.getElementById('bgGradPanel');
+    const bgImagePanel       = document.getElementById('bgImagePanel');
+    const ctrlBgSolid        = document.getElementById('ctrlBgSolid');
+    const ctrlBgGrad1        = document.getElementById('ctrlBgGrad1');
+    const ctrlBgGrad2        = document.getElementById('ctrlBgGrad2');
+    const ctrlBgGradAngle    = document.getElementById('ctrlBgGradAngle');
+    const ctrlBgGradAngleVal = document.getElementById('ctrlBgGradAngleVal');
+    const ctrlBgImage        = document.getElementById('ctrlBgImage');
+    const ctrlSurface        = document.getElementById('ctrlSurface');
+    const ctrlAccent         = document.getElementById('ctrlAccent');
+    const ctrlAccent2        = document.getElementById('ctrlAccent2');
+    const ctrlText           = document.getElementById('ctrlText');
+    const ctrlTextSub        = document.getElementById('ctrlTextSub');
+    const ctrlOBtnFile       = document.getElementById('ctrlOBtnFile');
+    const ctrlXBtnFile       = document.getElementById('ctrlXBtnFile');
+    const saveBtn            = document.getElementById('ctrlSave');
+    const galleryBtn         = document.getElementById('ctrlGallery');
+    const resetBtn           = document.getElementById('ctrlReset');
+
+    if (!preview || !saveBtn) return;
+
+    function showBgPanel(type) {
+      cfg.bgType = type;
+      bgSolidPanel.hidden = type !== 'solid';
+      bgGradPanel.hidden  = type !== 'gradient';
+      bgImagePanel.hidden = type !== 'image';
+      bgTypeTabs.querySelectorAll('.ctrl-tab').forEach(tab =>
+        tab.classList.toggle('ctrl-tab--active', tab.dataset.bg === type)
+      );
+    }
+
+    function setPresetActive(btn, preset) {
+      document.getElementById(btn === 'o' ? 'oBtnPresets' : 'xBtnPresets')
+        ?.querySelectorAll('.ctrl-preset').forEach(el =>
+          el.classList.toggle('ctrl-preset--active', el.dataset.preset === preset)
+        );
+      const previewDiv = document.getElementById(btn === 'o' ? 'ctrlOBtnPreview' : 'ctrlXBtnPreview');
+      if (previewDiv) {
+        const data = btn === 'o' ? cfg.oBtnData : cfg.xBtnData;
+        previewDiv.style.display = (preset === 'upload' && data) ? 'flex' : 'none';
+      }
+    }
+
+    function updatePreview() {
+      if (!preview) return;
+      let bg;
+      if (cfg.bgType === 'image' && cfg.bgImage) bg = `url("${cfg.bgImage}") center/cover no-repeat`;
+      else if (cfg.bgType === 'gradient') bg = `linear-gradient(${cfg.bgGradAngle}deg,${cfg.bgGrad1},${cfg.bgGrad2})`;
+      else bg = cfg.bgSolid;
+      preview.style.background = bg;
+      if (cpBar) cpBar.style.background = `linear-gradient(135deg,${cfg.accent},${cfg.accent2})`;
+      cpBody?.querySelectorAll('.cp-item').forEach(item => {
+        item.style.background  = cfg.surface;
+        item.style.borderColor = cfg.accent + '26';
+      });
+      cpBody?.querySelectorAll('.cp-item__text').forEach(el => el.style.color = cfg.text);
+      const useOImg = cfg.oBtnPreset === 'upload' && cfg.oBtnData;
+      const useXImg = cfg.xBtnPreset === 'upload' && cfg.xBtnData;
+      ['1','2','3'].forEach(n => {
+        const oWrap = document.getElementById('cpOWrap' + n);
+        const xWrap = document.getElementById('cpXWrap' + n);
+        if (oWrap) {
+          if (useOImg) {
+            oWrap.className = 'cp-btn-wrap cp-btn-o';
+            oWrap.style.border = 'none'; oWrap.style.color = '';
+            oWrap.innerHTML = `<img src="${cfg.oBtnData}" alt="O" style="width:100%;height:100%;object-fit:cover;display:block" />`;
+          } else {
+            oWrap.className = 'cp-btn-wrap cp-btn-o cp-btn-wrap--text';
+            oWrap.style.border = ''; oWrap.style.borderColor = cfg.accent || '#6c63ff';
+            oWrap.style.color = cfg.accent || '#6c63ff'; oWrap.innerHTML = 'O';
+          }
+        }
+        if (xWrap) {
+          if (useXImg) {
+            xWrap.className = 'cp-btn-wrap cp-btn-x';
+            xWrap.style.border = 'none'; xWrap.style.color = '';
+            xWrap.innerHTML = `<img src="${cfg.xBtnData}" alt="X" style="width:100%;height:100%;object-fit:cover;display:block" />`;
+          } else {
+            xWrap.className = 'cp-btn-wrap cp-btn-x cp-btn-wrap--x';
+            xWrap.style.border = ''; xWrap.style.color = ''; xWrap.innerHTML = 'X';
+          }
+        }
+      });
+    }
+
+    function fillForm() {
+      if (nameInput)           nameInput.value              = cfg.name        || '';
+      if (ctrlBgSolid)         ctrlBgSolid.value            = cfg.bgSolid     || '#f0f4ff';
+      if (ctrlBgGrad1)         ctrlBgGrad1.value            = cfg.bgGrad1     || '#e0e7ff';
+      if (ctrlBgGrad2)         ctrlBgGrad2.value            = cfg.bgGrad2     || '#fdf4ff';
+      if (ctrlBgGradAngle)     ctrlBgGradAngle.value        = cfg.bgGradAngle ?? 135;
+      if (ctrlBgGradAngleVal)  ctrlBgGradAngleVal.textContent = (cfg.bgGradAngle ?? 135) + '°';
+      if (ctrlBgImage)         ctrlBgImage.value            = cfg.bgImage     || '';
+      if (ctrlSurface)         ctrlSurface.value            = cfg.surface     || '#ffffff';
+      if (ctrlAccent)          ctrlAccent.value             = cfg.accent      || '#6c63ff';
+      if (ctrlAccent2)         ctrlAccent2.value            = cfg.accent2     || '#a78bfa';
+      if (ctrlText)            ctrlText.value               = cfg.text        || '#1e1b4b';
+      if (ctrlTextSub)         ctrlTextSub.value            = cfg.textSub     || '#6b7280';
+      showBgPanel(cfg.bgType || 'solid');
+      setPresetActive('o', cfg.oBtnPreset || 'default');
+      setPresetActive('x', cfg.xBtnPreset || 'default');
+      const oImg = document.getElementById('ctrlOBtnPreviewImg');
+      const xImg = document.getElementById('ctrlXBtnPreviewImg');
+      if (oImg && cfg.oBtnData) oImg.src = cfg.oBtnData;
+      if (xImg && cfg.xBtnData) xImg.src = cfg.xBtnData;
+    }
+
+    function loadImageFile(file, btn) {
+      if (!file || !file.type.startsWith('image/')) return;
+      if (file.size > 2 * 1024 * 1024) { showToast('⚠️ 이미지가 너무 커요 (최대 2MB)'); return; }
+      const reader = new FileReader();
+      reader.onload = e => {
+        const data = e.target.result;
+        if (btn === 'o') cfg.oBtnData = data;
+        else             cfg.xBtnData = data;
+        const pImg = document.getElementById(btn === 'o' ? 'ctrlOBtnPreviewImg' : 'ctrlXBtnPreviewImg');
+        const pDiv = document.getElementById(btn === 'o' ? 'ctrlOBtnPreview'    : 'ctrlXBtnPreview');
+        if (pImg) pImg.src = data;
+        if (pDiv) pDiv.style.display = 'flex';
+        updatePreview();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // ── Gallery ──
+    function loadGallery() {
+      try { return JSON.parse(localStorage.getItem(GALLERY_KEY) || '[]'); } catch (_) { return []; }
+    }
+
+    function saveToGallery() {
+      const gallery = loadGallery();
+      const item = {
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+        name: cfg.name || '내 테마',
+        savedAt: new Date().toISOString(),
+        cfg: { ...cfg },
+      };
+      gallery.unshift(item);
+      try {
+        localStorage.setItem(GALLERY_KEY, JSON.stringify(gallery));
+      } catch (_) {
+        gallery[0] = { ...item, cfg: { ...cfg, oBtnData: '', xBtnData: '' } };
+        try { localStorage.setItem(GALLERY_KEY, JSON.stringify(gallery)); } catch (_2) {}
+        showToast('⚠️ 이미지 크기로 버튼 이미지 제외 저장됐어요');
+        renderGallery(); return;
+      }
+      renderGallery();
+      showToast(`💾 "${item.name}" 창작마당에 등록됐어요!`);
+    }
+
+    function applyFromGallery(id) {
+      const item = loadGallery().find(g => g.id === id);
+      if (!item) return;
+      cfg = { ...DEFAULT_CFG, ...item.cfg };
+      localStorage.setItem(CUSTOM_KEY, JSON.stringify(cfg));
+      localStorage.setItem(THEME_KEY, 'custom');
+      fillForm(); updatePreview(); renderGrid(); renderGallery();
+      showToast(`🎨 "${item.name}" 테마 적용됐어요!`);
+    }
+
+    function editFromGallery(id) {
+      const item = loadGallery().find(g => g.id === id);
+      if (!item) return;
+      cfg = { ...DEFAULT_CFG, ...item.cfg };
+      fillForm(); updatePreview();
+      switchTab('mytheme');
+      showToast(`✏️ "${item.name}" 편집 모드`);
+    }
+
+    function deleteFromGallery(id) {
+      if (!confirm('이 테마를 창작마당에서 삭제할까요?')) return;
+      localStorage.setItem(GALLERY_KEY, JSON.stringify(loadGallery().filter(g => g.id !== id)));
+      renderGallery();
+    }
+
+    function renderGallery() {
+      const grid  = document.getElementById('galleryGrid');
+      const empty = document.getElementById('galleryEmpty');
+      if (!grid) return;
+      const gallery = loadGallery();
+      if (gallery.length === 0) {
+        if (empty) empty.style.display = '';
+        grid.style.display = 'none'; return;
+      }
+      if (empty) empty.style.display = 'none';
+      grid.style.display = '';
+      grid.innerHTML = '';
+      gallery.forEach(item => {
+        const c  = item.cfg || {};
+        const c0 = c.bgSolid || '#f0f4ff', c1 = c.accent || '#6c63ff', c2 = c.accent2 || '#a78bfa';
+        const bar = c.accent || '#6c63ff';
+        const div = document.createElement('div');
+        div.className = 'theme-card';
+        div.innerHTML = `
+          <div class="theme-card__preview" style="background:linear-gradient(135deg,${c0},${c1},${c2})">
+            <div class="preview-mock">
+              <div class="preview-mock__bar" style="background:${bar}cc">
+                <div class="preview-mock__dot"></div><div class="preview-mock__dot"></div><div class="preview-mock__dot"></div>
+              </div>
+              <div class="preview-mock__body" style="background:${c0}22">
+                <div class="preview-mock__col preview-mock__col--sm" style="background:${bar}33"></div>
+                <div class="preview-mock__col preview-mock__col--lg"  style="background:${bar}22"></div>
+              </div>
+            </div>
+          </div>
+          <div class="theme-card__body">
+            <div class="theme-card__top">
+              <span class="theme-card__name">${escHtml(item.name || '내 테마')}</span>
+              <button class="gallery-delete-btn" data-gid="${item.id}" title="삭제">🗑</button>
+            </div>
+            <div class="theme-card__desc">${new Date(item.savedAt).toLocaleDateString('ko-KR')} 저장</div>
+            <div class="gallery-card-actions">
+              <button class="theme-card__btn theme-card__btn--apply gallery-apply-btn" data-gid="${item.id}">적용하기</button>
+              <button class="theme-card__btn gallery-edit-btn" data-gid="${item.id}">✏️ 편집</button>
+            </div>
+          </div>`;
+        grid.appendChild(div);
+      });
+    }
+
+    // ── 이벤트 리스너 ──
+    bgTypeTabs?.addEventListener('click', e => {
+      const tab = e.target.closest('.ctrl-tab');
+      if (tab?.dataset.bg) { showBgPanel(tab.dataset.bg); updatePreview(); }
+    });
+
+    [
+      [ctrlBgSolid, v => { cfg.bgSolid = v; }],
+      [ctrlBgGrad1, v => { cfg.bgGrad1 = v; }],
+      [ctrlBgGrad2, v => { cfg.bgGrad2 = v; }],
+      [ctrlSurface, v => { cfg.surface = v; }],
+      [ctrlAccent,  v => { cfg.accent  = v; }],
+      [ctrlAccent2, v => { cfg.accent2 = v; }],
+      [ctrlText,    v => { cfg.text    = v; }],
+      [ctrlTextSub, v => { cfg.textSub = v; }],
+    ].forEach(([el, setter]) => {
+      if (!el) return;
+      el.addEventListener('input', e => { setter(e.target.value); updatePreview(); });
+    });
+
+    ctrlBgGradAngle?.addEventListener('input', e => {
+      cfg.bgGradAngle = parseInt(e.target.value);
+      if (ctrlBgGradAngleVal) ctrlBgGradAngleVal.textContent = cfg.bgGradAngle + '°';
+      updatePreview();
+    });
+
+    ctrlBgImage?.addEventListener('input', e => { cfg.bgImage = e.target.value.trim(); updatePreview(); });
+    nameInput?.addEventListener('input', e => { cfg.name = e.target.value.trim() || '내 테마'; });
+
+    ctrlOBtnFile?.addEventListener('change', e => loadImageFile(e.target.files[0], 'o'));
+    ctrlXBtnFile?.addEventListener('change', e => loadImageFile(e.target.files[0], 'x'));
+
+    document.getElementById('ctrlOBtnClear')?.addEventListener('click', () => {
+      cfg.oBtnData = ''; cfg.oBtnPreset = 'default';
+      setPresetActive('o', 'default');
+      document.getElementById('ctrlOBtnPreview').style.display = 'none';
+      if (ctrlOBtnFile) ctrlOBtnFile.value = '';
+      updatePreview();
+    });
+    document.getElementById('ctrlXBtnClear')?.addEventListener('click', () => {
+      cfg.xBtnData = ''; cfg.xBtnPreset = 'default';
+      setPresetActive('x', 'default');
+      document.getElementById('ctrlXBtnPreview').style.display = 'none';
+      if (ctrlXBtnFile) ctrlXBtnFile.value = '';
+      updatePreview();
+    });
+
+    document.addEventListener('click', e => {
+      const preset = e.target.closest('.ctrl-preset[data-btn]');
+      if (!preset) return;
+      const btn = preset.dataset.btn, val = preset.dataset.preset;
+      if (btn === 'o') {
+        cfg.oBtnPreset = val; setPresetActive('o', val);
+        if (val === 'upload') ctrlOBtnFile?.click();
+      } else {
+        cfg.xBtnPreset = val; setPresetActive('x', val);
+        if (val === 'upload') ctrlXBtnFile?.click();
+      }
+      updatePreview();
+    });
+
+    saveBtn.addEventListener('click', () => {
+      localStorage.setItem(CUSTOM_KEY, JSON.stringify(cfg));
+      localStorage.setItem(THEME_KEY, 'custom');
+      renderGrid();
+      showToast(`🎨 ${cfg.name || '내 테마'} 테마 적용됐어요!`);
+      saveBtn.textContent = '✅ 적용됨!';
+      setTimeout(() => { saveBtn.textContent = '✨ 적용하기'; }, 2200);
+    });
+
+    galleryBtn?.addEventListener('click', saveToGallery);
+
+    resetBtn.addEventListener('click', () => {
+      if (!confirm('커스텀 테마를 기본값으로 초기화할까요?')) return;
+      cfg = { ...DEFAULT_CFG }; fillForm(); updatePreview();
+    });
+
+    document.getElementById('galleryGrid')?.addEventListener('click', e => {
+      const a = e.target.closest('.gallery-apply-btn');
+      const d = e.target.closest('.gallery-edit-btn');
+      const x = e.target.closest('.gallery-delete-btn');
+      if (a) applyFromGallery(a.dataset.gid);
+      if (d) editFromGallery(d.dataset.gid);
+      if (x) deleteFromGallery(x.dataset.gid);
+    });
+
+    fillForm();
+    updatePreview();
+    renderGallery();
+
   })();
 </script>
 </body>

@@ -523,6 +523,7 @@ infoHistoryBtn?.addEventListener('click', () => {
     { id: 'winter',   label: '겨울',          unlockKey: null },
     { id: 'hgd',      label: '한교동',        unlockKey: HGD_UNLOCK_KEY },
     { id: 'starrail', label: '붕괴 스타레일', unlockKey: SR_UNLOCK_KEY  },
+    { id: 'custom',   label: '🎨 내 테마',     unlockKey: null },
   ];
 
   function isUnlocked(t) {
@@ -709,6 +710,46 @@ infoHistoryBtn?.addEventListener('click', () => {
   }
   // ─────────────────────────────────────────────
 
+  // ─── 커스텀 테마 CSS 주입 ─────────────────────
+  function _applyCustomThemeCss(cfg) {
+    if (!cfg) { document.getElementById('custom-theme-css')?.remove(); return; }
+    let bgValue;
+    if (cfg.bgType === 'image' && cfg.bgImage) {
+      bgValue = `url("${cfg.bgImage}") center / cover no-repeat fixed`;
+    } else if (cfg.bgType === 'gradient') {
+      bgValue = `linear-gradient(${cfg.bgGradAngle || 135}deg, ${cfg.bgGrad1 || '#e0e7ff'}, ${cfg.bgGrad2 || '#fdf4ff'})`;
+    } else {
+      bgValue = cfg.bgSolid || '#f4f5fb';
+    }
+    const acc  = cfg.accent  || '#6c63ff';
+    const acc2 = cfg.accent2 || '#a78bfa';
+    const oUrl = cfg.oBtnPreset === 'upload' ? (cfg.oBtnData || null)
+               : cfg.oBtnPreset === 'custom'  ? (cfg.oBtnUrl  || null) : null;
+    const xUrl = cfg.xBtnPreset === 'upload' ? (cfg.xBtnData || null)
+               : cfg.xBtnPreset === 'custom'  ? (cfg.xBtnUrl  || null) : null;
+    const oBtnRule = oUrl ? `\n[data-theme="custom"] .btn-o__img:not(.btn-o__img--no){content:url("${oUrl}")}` : '';
+    const xBtnRule = xUrl ? `\n[data-theme="custom"] .btn-o__img--no{content:url("${xUrl}")}` : '';
+    const css = `[data-theme="custom"]{` +
+      `--bg:${cfg.bgSolid||'#f4f5fb'};` +
+      `--surface:${cfg.surface||'#fff'};` +
+      `--surface-hover:${acc}1a;` +
+      `--accent:${acc};` +
+      `--accent2:${acc2};` +
+      `--text:${cfg.text||'#1e1b4b'};` +
+      `--text-sub:${cfg.textSub||'#6b7280'};` +
+      `--border:${acc}26;` +
+      `--border-strong:${acc}59;` +
+      `--bg-grad1:${acc}14;` +
+      `--bg-grad2:${acc2}11;` +
+      `--shadow:0 4px 20px ${acc}1a;` +
+      `--shadow-lg:0 12px 40px ${acc}2e;` +
+    `}\n[data-theme="custom"] body{background:${bgValue};min-height:100vh}${oBtnRule}${xBtnRule}`;
+    let el = document.getElementById('custom-theme-css');
+    if (!el) { el = document.createElement('style'); el.id = 'custom-theme-css'; document.head.appendChild(el); }
+    el.textContent = css;
+  }
+  window._applyCustomThemeCss = _applyCustomThemeCss;
+
   function applyTheme(theme) {
     if (theme === 'purple' || !theme) {
       document.documentElement.removeAttribute('data-theme');
@@ -724,6 +765,14 @@ infoHistoryBtn?.addEventListener('click', () => {
       spawnWinterEffects();
     } else {
       removeWinterEffects();
+    }
+
+    // 커스텀 테마 CSS 주입/제거
+    if (theme === 'custom') {
+      try { _applyCustomThemeCss(JSON.parse(localStorage.getItem('customTheme_v1') || '{}')); }
+      catch (_) { _applyCustomThemeCss({}); }
+    } else {
+      document.getElementById('custom-theme-css')?.remove();
     }
 
     if (typeof renderWeek === 'function') renderWeek();
@@ -765,6 +814,9 @@ infoHistoryBtn?.addEventListener('click', () => {
     if (e.key === HGD_UNLOCK_KEY || e.key === SR_UNLOCK_KEY || e.key === THEME_KEY) {
       renderSwatchRow();
       if (e.key === THEME_KEY) applyTheme(e.newValue || 'purple');
+    }
+    if (e.key === 'customTheme_v1' && (localStorage.getItem(THEME_KEY) || 'purple') === 'custom') {
+      try { _applyCustomThemeCss(JSON.parse(e.newValue || '{}')); } catch (_) {}
     }
   });
 

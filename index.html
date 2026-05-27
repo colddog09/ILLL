@@ -516,32 +516,42 @@
   <script src="deadline.js?v=1"></script>
   <script src="gcal/gcal.js?v=13"></script>
   <script src="push.js?v=1"></script>
-  <script src="modals.js?v=12"></script>
+  <script src="modals.js?v=13"></script>
   <script src="events.js?v=16"></script>
   <script>
     if ('serviceWorker' in navigator) {
+      function _showUpdateBadge() {
+        document.getElementById('settingsBtn')?.classList.add('icon-btn--update-badge');
+      }
+      function _hideUpdateBadge() {
+        document.getElementById('settingsBtn')?.classList.remove('icon-btn--update-badge');
+      }
+
       navigator.serviceWorker.register('sw.js').then(reg => {
         console.log('Service Worker Registered');
-        // 새 버전 SW가 대기 중이면 즉시 활성화
+
+        // 페이지 로드 시 이미 대기 중인 SW가 있으면 즉시 배지
+        if (reg.waiting && navigator.serviceWorker.controller) {
+          _showUpdateBadge();
+        }
+
+        // 새 SW 설치 완료 → 배지만 표시 (자동 활성화 안 함)
         reg.addEventListener('updatefound', () => {
           const newWorker = reg.installing;
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              newWorker.postMessage({ type: 'SKIP_WAITING' });
+              _showUpdateBadge();
             }
           });
         });
       });
-      // SW 교체 완료 → 설정 버튼에 ! 배지 + 토스트 (자동 reload 금지)
+
+      // SW 교체 완료 → 배지 제거 + 완료 토스트
       let _swReloadPending = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (_swReloadPending) return;
         _swReloadPending = true;
-
-        // 설정 버튼에 ! 배지 표시
-        document.getElementById('settingsBtn')?.classList.add('icon-btn--update-badge');
-
-        // 토스트
+        _hideUpdateBadge();
         const t = document.createElement('div');
         t.style.cssText = [
           'position:fixed','bottom:82px','left:50%','transform:translateX(-50%)',
