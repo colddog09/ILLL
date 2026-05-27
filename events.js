@@ -42,9 +42,12 @@ poolEl.addEventListener('touchend', e => {
 }, { passive: false });
 
 // ──────────────────────────────────────────────
-// 스타레일 — 은하열차 대각선 통과 애니메이션
+// 스타레일 — 일정 칸 열차 출발 애니메이션
 // ──────────────────────────────────────────────
 function triggerStarRailTrain() {
+  // (레거시 호환용 빈 함수)
+}
+function srTrainDepart_UNUSED() {
   if (document.documentElement.dataset.theme !== 'starrail') return;
   if (document.querySelector('.sr-train-overlay')) return; // 중복 방지
 
@@ -172,10 +175,7 @@ function triggerStarRailTrain() {
     }
   }
 
-  animFrame = requestAnimationFrame(animate);
-
-  // 최대 5초 후 강제 제거
-  setTimeout(() => { cancelAnimationFrame(animFrame); overlay.remove(); }, 5000);
+  // (unused)
 }
 
 // ──────────────────────────────────────────────
@@ -187,11 +187,19 @@ dayGrid.addEventListener('click', e => {
 
   const btnO = e.target.closest('.btn-o');
   if (btnO) {
-    // 완료 → X 방향 전환(완료 처리)일 때만 열차 등장
     const schedItem = btnO.closest('.sched-item');
     const isCompleting = schedItem && !schedItem.classList.contains('sched-item--done');
-    toggleStatus(btnO.dataset.date, btnO.dataset.id);
-    if (isCompleting) triggerStarRailTrain();
+
+    // 스타레일 테마 + 완료 처리 → 열차 출발 애니메이션
+    if (isCompleting && document.documentElement.dataset.theme === 'starrail') {
+      schedItem.classList.add('sr-departing');
+      schedItem.style.pointerEvents = 'none';
+      setTimeout(() => {
+        toggleStatus(btnO.dataset.date, btnO.dataset.id);
+      }, 620);
+    } else {
+      toggleStatus(btnO.dataset.date, btnO.dataset.id);
+    }
     return;
   }
 
