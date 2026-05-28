@@ -59,6 +59,19 @@ jobs:
       - name: Copy icon
         run: copy image\icon-512.png electron\icon.png
 
+      - name: Create ICO icon
+        run: |
+          python3 -c "
+          import struct, subprocess, os, sys
+          subprocess.run(['magick', 'image/icon-512.png', '-resize', '256x256', 'electron/icon.ico'], capture_output=True)
+          if not os.path.exists('electron/icon.ico') or os.path.getsize('electron/icon.ico') < 100:
+              with open('image/icon-512.png','rb') as f: png=f.read()
+              hdr=struct.pack('<HHH',0,1,1)
+              ent=struct.pack('<BBBBHHII',0,0,0,0,1,32,len(png),6+16)
+              open('electron/icon.ico','wb').write(hdr+ent+png)
+          print('ICO size:', os.path.getsize('electron/icon.ico'))
+          "
+
       - name: Build Windows
         working-directory: electron
         run: npm run build:win

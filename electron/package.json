@@ -1,7 +1,7 @@
 {
   "name": "o1chu",
   "version": "1.0.0",
-  "description": "오일추 — 드래그앤드롭 일정 관리 앱",
+  "description": "o1chu - Drag & Drop Schedule Manager",
   "main": "main.js",
   "author": "colddog09@gmail.com",
   "license": "MIT",
@@ -13,8 +13,8 @@
   },
   "build": {
     "appId": "my.o1chu.app",
-    "productName": "오일추",
-    "copyright": "Copyright © 2026 오일추",
+    "productName": "o1chu",
+    "copyright": "Copyright © 2026 o1chu",
     "icon": "icon.png",
     "mac": {
       "category": "public.app-category.productivity",
@@ -28,13 +28,15 @@
       "target": [
         { "target": "nsis", "arch": ["x64"] }
       ],
-      "artifactName": "오일추-Setup-${version}.${ext}"
+      "icon": "icon.ico",
+      "artifactName": "o1chu-Setup-${version}.${ext}"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "installerIcon": "icon.png",
-      "installerLanguages": ["ko-KR"]
+      "installerIcon": "icon.ico",
+      "uninstallerIcon": "icon.ico",
+      "unicode": true
     }
   },
   "devDependencies": {
