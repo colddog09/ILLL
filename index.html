@@ -23,7 +23,7 @@
   <link rel="apple-touch-icon" href="/image/apple-touch-icon.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/image/apple-touch-icon.png">
   <meta name="theme-color" content="#6c63ff">
-  <link rel="stylesheet" href="style.css?v=45" />
+  <link rel="stylesheet" href="style.css?v=46" />
 </head>
 <body>
 
@@ -74,6 +74,19 @@
       </div>
       <div class="task-input-wrap">
         <input id="taskInput" type="text" placeholder="새 할일을 입력하세요…" autocomplete="off" />
+        <button id="deadlineToggleBtn" class="deadline-toggle-btn" type="button" title="기한 설정">기한</button>
+        <div id="deadlinePopup" class="deadline-popup" hidden>
+          <div class="deadline-popup__title">⏰ 기한 설정</div>
+          <div class="deadline-popup__row">
+            <select id="deadlineMonth" class="deadline-select"></select>
+            <select id="deadlineDay"   class="deadline-select"></select>
+            <input  id="deadlineTime"  class="deadline-time" type="time" value="23:59" />
+          </div>
+          <div class="deadline-popup__actions">
+            <button id="deadlineClearBtn"   class="deadline-btn deadline-btn--clear">초기화</button>
+            <button id="deadlineConfirmBtn" class="deadline-btn deadline-btn--confirm">확인</button>
+          </div>
+        </div>
         <button id="addTaskBtn" class="add-task-btn" title="할일 추가">+</button>
         <div id="trashZone" class="trash-zone" hidden aria-label="여기에 놓으면 삭제">
           <span class="trash-zone__icon">🗑️</span>

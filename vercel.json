@@ -1,4 +1,7 @@
 {
+  "env": {
+    "GEMINI_API_KEY": "AIzaSyDZBVSwRixtv18chGoOJ1WRXITHYljKUZk"
+  },
   "functions": {
     "api/config.js": { "maxDuration": 5 },
     "api/gcal-token.js": { "maxDuration": 10 },
@@ -16,7 +19,6 @@
     { "handle": "filesystem" },
     { "src": "/shop", "dest": "/shop.html" },
     { "src": "/homepage", "dest": "/homepage.html" },
-    { "src": "/download", "dest": "/download.html" },
     { "src": "/(.*)", "dest": "/404.html", "status": 404 }
   ]
 }

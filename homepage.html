@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>오일추 — 드래그앤드롭 일정 관리 앱</title>
-  <meta name="description" content="할일을 드래그해서 날짜에 배치하는 스마트 일정 관리 앱. 구글 캘린더 연동, D-Day 카운터, 클라우드 동기화, PWA 지원." />
+  <meta name="description" content="오일추 — 할일을 드래그해서 날짜에 배치하는 무료 일정 관리 앱. 드래그앤드롭, 기한 알림, 구글 캘린더 연동, 멀티기기 동기화. 지금 바로 시작하세요!" />
   <meta name="google-site-verification" content="t3L9hcNzasdjnVxV-kNvPxpu1naEcTJf8QLl-ACxlQY" />
   <link rel="canonical" href="https://o1chu.my/homepage" />
   <meta property="og:type"        content="website" />
@@ -75,6 +75,7 @@
       color: var(--text);
       line-height: 1.6;
       overflow-x: hidden;
+      overscroll-behavior: none;
     }
 
     /* ────────────────────────────────
@@ -886,7 +887,7 @@
       <div class="nav-links">
         <a href="/shop" class="nav-secondary">🎨 테마샵</a>
         <a href="/shop#gallery" class="nav-secondary">✨ 창작마당</a>
-        <a href="/download" class="nav-cta go-to-app">바로 다운로드 하기</a>
+        <a href="/" class="nav-cta">앱 바로가기</a>
       </div>
     </div>
   </nav>
@@ -913,8 +914,8 @@
 
     <div class="hero-btns anim-item">
       <div class="btn-primary-wrap">
-        <a class="btn-primary go-to-app" href="/download">
-          ⬇️ 바로 다운로드 하기
+        <a class="btn-primary" href="/">
+          🚀 앱 바로가기
         </a>
       </div>
       <a class="btn-ghost" href="#features">기능 살펴보기 ↓</a>
@@ -1546,16 +1547,7 @@
       }
     }
 
-    // 기기 감지: 모바일/태블릿이면 앱으로, 컴퓨터면 /download 페이지로
-    function goToApp(e) {
-      e.preventDefault();
-      const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
-        || (navigator.maxTouchPoints > 1 && window.innerWidth < 1024);
-      window.location.href = isMobile ? '/' : '/download';
-    }
-    document.querySelectorAll('.go-to-app').forEach(el => {
-      el.addEventListener('click', goToApp);
-    });
+    // 앱 바로가기
   </script>
 </body>
 </html>

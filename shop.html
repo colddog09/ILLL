@@ -33,6 +33,7 @@
       color: var(--text);
       min-height: 100vh;
       overflow-x: hidden;
+      overscroll-behavior: none;
     }
 
     /* ══════════════════════════════════════
@@ -244,7 +245,7 @@
       margin: 0 auto;
       padding: 0 24px 80px;
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      grid-template-columns: repeat(3, 1fr);
       gap: 18px;
     }
     .theme-card {
@@ -312,6 +313,77 @@
     .theme-card__btn--active { background: rgba(108,99,255,0.1); color: var(--accent); cursor: default; }
     .theme-card__btn--locked { background: #fef3c7; color: #b45309; }
     .theme-card__btn--locked:hover { opacity: 0.85; }
+
+    /* 버튼 행 (미리보기 + 적용) */
+    .theme-card__actions { display: flex; gap: 8px; }
+    .theme-card__btn--preview {
+      flex: 0 0 auto;
+      padding: 10px 14px;
+      border-radius: 12px; border: 1.5px solid var(--border);
+      background: transparent; color: var(--text-sub);
+      font-size: 0.82rem; font-weight: 700; cursor: pointer;
+      transition: background 0.15s, color 0.15s; font-family: var(--font);
+      white-space: nowrap;
+    }
+    .theme-card__btn--preview:hover { background: var(--bg); color: var(--text); }
+    .theme-card__btn.theme-card__btn--apply { flex: 1; }
+
+    /* 미리보기 모달 */
+    .preview-modal {
+      display: none; position: fixed; inset: 0; z-index: 800;
+      background: rgba(0,0,0,0.55); backdrop-filter: blur(8px);
+      align-items: center; justify-content: center;
+    }
+    .preview-modal--show { display: flex; }
+    .preview-modal__box {
+      background: #fff; border-radius: 28px; padding: 28px;
+      max-width: 520px; width: 90vw;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.25);
+      animation: popIn 0.28s cubic-bezier(0.34,1.4,0.64,1);
+    }
+    @keyframes popIn { from { opacity:0; transform: scale(0.9); } to { opacity:1; transform: scale(1); } }
+    .preview-modal__header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 18px;
+    }
+    .preview-modal__title { font-size: 1.1rem; font-weight: 900; color: #1e1b4b; }
+    .preview-modal__close {
+      width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid #e5e7eb;
+      background: transparent; cursor: pointer; font-size: 1rem;
+      display: flex; align-items: center; justify-content: center; color: #6b7280;
+      transition: background 0.15s;
+    }
+    .preview-modal__close:hover { background: #f3f4f6; }
+    .preview-modal__mock {
+      border-radius: 16px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+      display: flex; flex-direction: column; min-height: 260px;
+    }
+    .preview-modal__bar {
+      height: 40px; display: flex; align-items: center; gap: 6px; padding: 0 14px;
+    }
+    .preview-modal__dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.55); }
+    .preview-modal__body { flex: 1; padding: 14px; display: flex; gap: 10px; }
+    .preview-modal__col {
+      border-radius: 8px; background: rgba(255,255,255,0.18);
+    }
+    .preview-modal__col--sm { width: 30%; }
+    .preview-modal__col--lg { flex: 1; }
+    .preview-modal__foot {
+      display: flex; gap: 10px; margin-top: 18px;
+    }
+    .preview-modal__apply {
+      flex: 1; padding: 12px 0; border-radius: 14px; border: none;
+      font-size: 0.9rem; font-weight: 700; cursor: pointer;
+      font-family: var(--font); transition: opacity 0.15s;
+      background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff;
+    }
+    .preview-modal__apply:hover { opacity: 0.88; }
+    .preview-modal__cancel {
+      padding: 12px 20px; border-radius: 14px; border: 1.5px solid #e5e7eb;
+      background: transparent; color: #6b7280; font-size: 0.88rem; font-weight: 600;
+      cursor: pointer; font-family: var(--font); transition: background 0.15s;
+    }
+    .preview-modal__cancel:hover { background: #f3f4f6; }
 
     /* ── 로딩 ── */
     .shop-loading {
@@ -573,7 +645,7 @@
         <button class="shop-nav__link shop-nav__link--active" data-tab="shop" onclick="switchTab('shop')">🎨 테마샵</button>
         <button class="shop-nav__link" data-tab="gallery" onclick="switchTab('gallery')">✨ 창작마당</button>
         <button class="shop-tab" data-tab="mytheme" hidden>🎨 내 테마</button>
-        <a href="/download" class="shop-nav__app-btn">다운로드하러 가기</a>
+        <a href="/" class="shop-nav__app-btn">앱 바로가기</a>
       </div>
     </div>
   </nav>
@@ -953,7 +1025,10 @@
         <span class="theme-card__badge ${badgeClass}">${badgeLabel}</span>
       </div>
       <div class="theme-card__desc">${t.desc}</div>
-      <button class="theme-card__btn ${btnClass}" data-id="${t.id}">${btnText}</button>`;
+      <div class="theme-card__actions">
+        <button class="theme-card__btn theme-card__btn--preview" data-preview-id="${t.id}">👁 미리보기</button>
+        <button class="theme-card__btn ${btnClass}" data-id="${t.id}">${btnText}</button>
+      </div>`;
 
     card.appendChild(preview);
     card.appendChild(body);
@@ -1016,6 +1091,13 @@
 
   // 카드 클릭
   document.getElementById('shopGrid').addEventListener('click', e => {
+    // 미리보기 버튼
+    const previewBtn = e.target.closest('.theme-card__btn--preview');
+    if (previewBtn) {
+      const id = previewBtn.dataset.previewId;
+      openPreviewModal(id);
+      return;
+    }
     const btn = e.target.closest('.theme-card__btn');
     if (!btn) return;
     const id = btn.dataset.id;
@@ -1024,6 +1106,33 @@
     if (t.isCustom) { switchTab('mytheme'); return; }
     if (t.badge === 'lock' && !isUnlocked(t)) openPwOverlay(t);
     else applyTheme(id);
+  });
+
+  // 미리보기 모달
+  let previewModalThemeId = null;
+  function openPreviewModal(id) {
+    const t = themes.find(x => x.id === id);
+    if (!t) return;
+    previewModalThemeId = id;
+    document.getElementById('previewModalTitle').textContent = t.name + ' 미리보기';
+    const mock = document.getElementById('previewModalMock');
+    mock.style.background = t.colors[0] + '22';
+    const bar = document.getElementById('previewModalBar');
+    bar.style.background = t.barColor;
+    document.getElementById('previewModal').classList.add('preview-modal--show');
+  }
+  function closePreviewModal() {
+    document.getElementById('previewModal').classList.remove('preview-modal--show');
+    previewModalThemeId = null;
+  }
+  document.getElementById('previewModalClose').addEventListener('click', closePreviewModal);
+  document.getElementById('previewModalCancel').addEventListener('click', closePreviewModal);
+  document.getElementById('previewModalApply').addEventListener('click', () => {
+    if (previewModalThemeId) applyTheme(previewModalThemeId);
+    closePreviewModal();
+  });
+  document.getElementById('previewModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('previewModal')) closePreviewModal();
   });
 
   // ── 로그인 체크 후 렌더 ──
@@ -1389,5 +1498,30 @@
 
   })();
 </script>
+
+<!-- 미리보기 모달 -->
+<div class="preview-modal" id="previewModal">
+  <div class="preview-modal__box">
+    <div class="preview-modal__header">
+      <span class="preview-modal__title" id="previewModalTitle">테마 미리보기</span>
+      <button class="preview-modal__close" id="previewModalClose">✕</button>
+    </div>
+    <div class="preview-modal__mock" id="previewModalMock">
+      <div class="preview-modal__bar" id="previewModalBar">
+        <div class="preview-modal__dot"></div>
+        <div class="preview-modal__dot"></div>
+        <div class="preview-modal__dot"></div>
+      </div>
+      <div class="preview-modal__body">
+        <div class="preview-modal__col preview-modal__col--sm"></div>
+        <div class="preview-modal__col preview-modal__col--lg"></div>
+      </div>
+    </div>
+    <div class="preview-modal__foot">
+      <button class="preview-modal__cancel" id="previewModalCancel">닫기</button>
+      <button class="preview-modal__apply" id="previewModalApply">✨ 이 테마 적용하기</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
