@@ -36,7 +36,11 @@
       position: sticky;
       top: 0;
       z-index: 200;
-      padding: 12px 20px;
+      padding: 10px 20px;
+      background: rgba(245,244,255,0.92);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
     }
     .shop-nav-inner {
       max-width: 1100px;
@@ -44,17 +48,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px 20px;
-      border-radius: 16px;
-      gap: 12px;
-      transition: background 0.3s, border 0.3s, backdrop-filter 0.3s, box-shadow 0.3s;
-    }
-    .shop-nav.scrolled .shop-nav-inner {
-      background: rgba(245,244,255,0.85);
-      border: 1px solid var(--border);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      box-shadow: 0 4px 24px rgba(108,99,255,0.08);
+      padding: 6px 0;
     }
     .shop-nav__logo {
       font-size: 18px;
@@ -62,8 +56,6 @@
       color: var(--text);
       text-decoration: none;
       letter-spacing: -0.3px;
-      white-space: nowrap;
-      flex-shrink: 0;
     }
     .shop-nav__logo span {
       background: linear-gradient(135deg, var(--accent), var(--accent2));
@@ -71,41 +63,10 @@
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
-
-    /* ── 탭 pills ── */
-    .shop-tabs {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      background: rgba(108,99,255,0.07);
-      border: 1px solid rgba(108,99,255,0.13);
-      border-radius: 14px;
-      padding: 4px;
-      flex-shrink: 0;
-    }
-    .shop-tab {
-      padding: 6px 14px;
-      border-radius: 10px;
-      border: none;
-      background: transparent;
-      color: var(--sub);
-      font-size: 0.78rem;
-      font-weight: 700;
-      cursor: pointer;
-      font-family: var(--font);
-      transition: all 0.18s;
-      white-space: nowrap;
-    }
-    .shop-tab:hover { color: var(--text); background: rgba(108,99,255,0.08); }
-    .shop-tab--active {
-      background: var(--accent);
-      color: #fff;
-    }
     .shop-nav__links {
       display: flex;
       align-items: center;
       gap: 4px;
-      flex-shrink: 0;
     }
     .shop-nav__link {
       text-decoration: none;
@@ -114,17 +75,21 @@
       color: var(--sub);
       padding: 7px 14px;
       border-radius: 8px;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      font-family: var(--font);
       transition: color 0.15s, background 0.15s;
       white-space: nowrap;
     }
     .shop-nav__link:hover { color: var(--text); background: var(--surface); }
+    .shop-nav__link--active { color: var(--text); font-weight: 700; }
     .shop-nav__app-btn {
       display: inline-flex;
       align-items: center;
-      justify-content: center;
-      padding: 8px 16px;
+      padding: 8px 18px;
       background: var(--accent);
-      color: #fff;
+      color: #fff !important;
       font-size: 14px;
       font-weight: 600;
       border-radius: 10px;
@@ -134,10 +99,12 @@
     }
     .shop-nav__app-btn:hover { background: var(--accent2); transform: translateY(-1px); }
 
+    /* ── 숨겨진 탭 (내 테마용) ── */
+    .shop-tab { display: none; }
+
     /* ── 모바일 nav ── */
     @media (max-width: 600px) {
-      .shop-nav__links .shop-nav__link { display: none; }
-      .shop-tab { padding: 5px 10px; font-size: 0.72rem; }
+      .shop-nav__link:not(.shop-nav__app-btn) { display: none; }
     }
 
     /* ══════════════════════════════════════
@@ -596,15 +563,10 @@
   <nav class="shop-nav" id="shopNav">
     <div class="shop-nav-inner">
       <a class="shop-nav__logo" href="/homepage"><span>오</span>일추</a>
-
-      <!-- 탭 -->
-      <div class="shop-tabs" id="shopTabs">
-        <button class="shop-tab shop-tab--active" data-tab="shop">🛍 테마샵</button>
-        <button class="shop-tab" data-tab="gallery">✨ 창작마당</button>
+      <div class="shop-nav__links" id="shopTabs">
+        <button class="shop-nav__link shop-nav__link--active" data-tab="shop" onclick="switchTab('shop')">🎨 테마샵</button>
+        <button class="shop-nav__link" data-tab="gallery" onclick="switchTab('gallery')">✨ 창작마당</button>
         <button class="shop-tab" data-tab="mytheme" hidden>🎨 내 테마</button>
-      </div>
-
-      <div class="shop-nav__links">
         <a href="/" class="shop-nav__app-btn">앱 바로가기</a>
       </div>
     </div>
@@ -865,20 +827,14 @@
   // ══════════════════════════════════════
   function switchTab(tabId) {
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('tab-panel--active'));
-    document.querySelectorAll('.shop-tab').forEach(b => b.classList.remove('shop-tab--active'));
+    document.querySelectorAll('.shop-nav__link[data-tab]').forEach(b => b.classList.remove('shop-nav__link--active'));
     const panel = document.getElementById('tab' + tabId.charAt(0).toUpperCase() + tabId.slice(1));
-    const btn   = document.querySelector(`.shop-tab[data-tab="${tabId}"]`);
+    const btn   = document.querySelector(`.shop-nav__link[data-tab="${tabId}"]`);
     if (panel) panel.classList.add('tab-panel--active');
-    if (btn)   btn.classList.add('shop-tab--active');
+    if (btn)   btn.classList.add('shop-nav__link--active');
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    // URL hash 동기화
     history.replaceState(null, '', '#' + tabId);
   }
-
-  document.getElementById('shopTabs').addEventListener('click', e => {
-    const btn = e.target.closest('.shop-tab');
-    if (btn?.dataset.tab) switchTab(btn.dataset.tab);
-  });
 
   // 페이지 로드 시 hash 처리
   const initTab = location.hash.slice(1);
