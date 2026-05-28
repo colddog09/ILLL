@@ -7,6 +7,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
+    @keyframes pageEnter {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    body { animation: pageEnter 0.55s cubic-bezier(0.22,1,0.36,1) both; }
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --accent: #6c63ff;
@@ -293,7 +299,7 @@
       <p class="trouble-desc">개인 개발 앱이라 아직 Apple 인증서가 없어서 표시되는 경고예요.</p>
       <div class="trouble-steps">
         <div class="trouble-step"><span class="step-num">1</span> <span>시스템 설정 → <strong>개인정보 보호 및 보안</strong>으로 이동하세요</span></div>
-        <div class="trouble-step"><span class="step-num">2</span> <span>"쌤핀이(가) 차단되었습니다" 옆의 <strong>"확인 없이 열기"</strong>를 클릭하세요</span></div>
+        <div class="trouble-step"><span class="step-num">2</span> <span>"오일추(가) 차단되었습니다" 옆의 <strong>"확인 없이 열기"</strong>를 클릭하세요</span></div>
         <div class="trouble-step"><span class="step-num">3</span> <span>또는: 앱을 <strong>Control+클릭 → "열기"</strong>를 선택하세요</span></div>
       </div>
       <p class="trouble-note">Apple 코드 서명 인증서를 준비 중이며, 곧 경고 없이 설치하실 수 있게 됩니다.</p>
