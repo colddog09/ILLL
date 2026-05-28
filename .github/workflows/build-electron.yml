@@ -29,13 +29,13 @@ jobs:
         working-directory: electron
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
-        run: npm run build:mac -- --arch arm64
+        run: npm run build:mac -- --arm64
 
       - name: Build macOS (Intel)
         working-directory: electron
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
-        run: npm run build:mac -- --arch x64
+        run: npm run build:mac -- --x64
 
       - name: Upload macOS artifacts
         uses: softprops/action-gh-release@v2
