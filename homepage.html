@@ -1081,6 +1081,92 @@
   </section>
 
   <!-- ─── DOWNLOAD ─── -->
+  <!-- ─── FAQ ─── -->
+  <section style="padding: 80px 24px 100px; background: var(--bg);">
+    <div style="max-width: 680px; margin: 0 auto;">
+      <h2 style="font-size: 2rem; font-weight: 800; color: var(--text); margin-bottom: 48px;">자주 묻는 질문</h2>
+
+      <div class="faq-list">
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            <span>무료인가요?</span><span class="faq-icon">+</span>
+          </button>
+          <div class="faq-a">네, 완전 무료예요. 광고도 없고 숨겨진 요금도 없어요.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            <span>인터넷 없이도 되나요?</span><span class="faq-icon">+</span>
+          </button>
+          <div class="faq-a">오프라인에서도 일정 확인·추가가 가능해요. 인터넷이 연결되면 자동으로 클라우드에 동기화돼요.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            <span>데이터는 어디에 저장되나요?</span><span class="faq-icon">+</span>
+          </button>
+          <div class="faq-a">로그인 시 Supabase 클라우드에 안전하게 저장돼요. 비로그인 시엔 기기 내 로컬에 저장돼요.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            <span>보안 경고가 뜨는데 괜찮은가요?</span><span class="faq-icon">+</span>
+          </button>
+          <div class="faq-a">개인 개발 앱이라 코드 서명 인증서가 아직 없어서 뜨는 경고예요. 악성 코드 없이 안전하고, 곧 해결될 예정이에요. macOS는 Control+클릭 → 열기, Windows는 "추가 정보" → "실행"으로 설치하세요.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            <span>Mac에서도 쓸 수 있나요?</span><span class="faq-icon">+</span>
+          </button>
+          <div class="faq-a">네! Apple Silicon (M1~M4)과 Intel Mac 모두 지원해요. /download 페이지에서 맞는 버전을 받으세요.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            <span>업데이트는 어떻게 하나요?</span><span class="faq-icon">+</span>
+          </button>
+          <div class="faq-a">앱 자체는 웹을 불러오는 방식이라 별도 업데이트 없이 항상 최신 버전이 적용돼요.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            <span>구글 캘린더·드라이브 동기화가 안 돼요</span><span class="faq-icon">+</span>
+          </button>
+          <div class="faq-a">앱 상단의 🗓️ 재연결 버튼을 눌러 Google 계정 권한을 다시 허용해보세요. 그래도 안 되면 문의해 주세요.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            <span>학운위 심의를 받아야 하나요?</span><span class="faq-icon">+</span>
+          </button>
+          <div class="faq-a">오일추는 학교와 무관한 개인 일정 관리 도구예요. 학교 공식 서비스가 아니므로 별도 심의 없이 자유롭게 사용할 수 있어요.</div>
+        </div>
+      </div>
+
+      <!-- 하단 CTA -->
+      <div style="margin-top: 48px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+        <span style="font-size: 15px; color: var(--sub);">더 궁금한 것이 있으신가요?</span>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <a href="/" style="display:inline-flex;align-items:center;gap:6px;padding:10px 18px;background:#ede9fe;color:var(--accent);border-radius:10px;font-size:14px;font-weight:600;text-decoration:none;">💬 앱에서 직접 써보기</a>
+          <a href="https://mail.google.com/mail/?view=cm&to=colddog09@gmail.com" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:10px 18px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:10px;font-size:14px;font-weight:600;text-decoration:none;">📋 건의사항 보내기</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <style>
+    .faq-list { display: flex; flex-direction: column; }
+    .faq-item { border-bottom: 1px solid var(--border); }
+    .faq-q {
+      width: 100%; display: flex; justify-content: space-between; align-items: center;
+      padding: 20px 4px; background: none; border: none; cursor: pointer;
+      font-size: 16px; font-weight: 500; color: var(--text); font-family: var(--font);
+      text-align: left; gap: 16px;
+    }
+    .faq-q:hover { color: var(--accent); }
+    .faq-icon { font-size: 20px; color: var(--sub); flex-shrink: 0; transition: transform 0.2s; }
+    .faq-q.open .faq-icon { transform: rotate(45deg); color: var(--accent); }
+    .faq-a {
+      display: none; padding: 0 4px 20px;
+      font-size: 14px; color: var(--sub); line-height: 1.8;
+    }
+    .faq-a.open { display: block; }
+  </style>
+
   <!-- ─── FOOTER ─── -->
   <footer>
     <div class="footer-inner">
@@ -1265,6 +1351,19 @@
     })();
   </script>
   <script>
+    // FAQ 토글
+    function toggleFaq(btn) {
+      const answer = btn.nextElementSibling;
+      const isOpen = answer.classList.contains('open');
+      // 모두 닫기
+      document.querySelectorAll('.faq-a').forEach(a => a.classList.remove('open'));
+      document.querySelectorAll('.faq-q').forEach(b => b.classList.remove('open'));
+      if (!isOpen) {
+        answer.classList.add('open');
+        btn.classList.add('open');
+      }
+    }
+
     // 기기 감지: 모바일/태블릿이면 앱으로, 컴퓨터면 /download 페이지로
     function goToApp(e) {
       e.preventDefault();

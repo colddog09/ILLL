@@ -145,6 +145,45 @@
     summary { font-size: 13px; color: #9a7800; font-weight: 600; list-style: none; }
     details p { font-size: 13px; color: var(--sub); margin-top: 10px; line-height: 1.7; }
 
+    /* TROUBLE */
+    .trouble-wrap {
+      max-width: 680px; margin: 0 auto; padding: 0 24px 80px;
+      display: flex; flex-direction: column; gap: 20px;
+    }
+    .trouble-card {
+      background: var(--surface); border: 1px solid; border-radius: 16px;
+      padding: 28px 28px 20px;
+    }
+    .trouble-card h3 { font-size: 1.1rem; font-weight: 800; margin-bottom: 6px; }
+    .trouble-desc { font-size: 14px; color: var(--sub); margin-bottom: 20px; }
+    .trouble-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;
+    }
+    .trouble-btn {
+      padding: 14px 12px; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 10px; font-size: 14px; font-weight: 500; color: var(--text);
+      cursor: pointer; text-align: left; transition: background 0.15s;
+      font-family: var(--font);
+    }
+    .trouble-btn:hover { background: #ede9fe; }
+    .trouble-answer {
+      background: #faf9ff; border: 1px solid var(--border); border-radius: 10px;
+      padding: 14px 16px; font-size: 13px; color: var(--sub); line-height: 1.7;
+      margin-bottom: 12px;
+    }
+    .trouble-steps { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+    .trouble-step {
+      display: flex; align-items: flex-start; gap: 12px;
+      background: #faf9f0; border: 1px solid #fde68a; border-radius: 10px;
+      padding: 12px 14px; font-size: 14px; color: var(--text);
+    }
+    .step-num {
+      min-width: 24px; height: 24px; background: #f59e0b; color: #fff;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 800;
+    }
+    .trouble-note { font-size: 12px; color: #b0b8d0; margin-top: 4px; }
+
     /* FOOTER */
     footer {
       text-align: center; padding: 32px 24px;
@@ -214,14 +253,52 @@
     <!-- Web fallback -->
     <a class="web-link" href="/">🌐 바로 웹에서 사용하기 →</a>
 
-    <!-- FAQ -->
-    <details>
-      <summary>⚠️ "개발자를 확인할 수 없음" 경고가 뜨나요?</summary>
-      <p>
-        macOS에서 앱을 <strong>우클릭 → 열기</strong>로 실행하면 경고를 무시할 수 있어요.<br>
-        또는 시스템 설정 → 개인 정보 보호 및 보안 → "확인 없이 열기"를 클릭하세요.
-      </p>
-    </details>
+  </div>
+
+  <!-- ─── 문제 해결 섹션 ─── -->
+  <div class="trouble-wrap">
+
+    <!-- Windows -->
+    <div class="trouble-card" style="border-color:#dbeafe;">
+      <h3 style="color:#1e40af;">🪟 Windows 설치가 안 되시나요?</h3>
+      <p class="trouble-desc">증상을 선택하면 해결 방법을 알려드려요!</p>
+      <div class="trouble-grid">
+        <button class="trouble-btn" onclick="toggleTrouble('win-security')">🛡️ 보안 경고가 떠요</button>
+        <button class="trouble-btn" onclick="toggleTrouble('win-smart')">🚫 스마트 앱 컨트롤</button>
+        <button class="trouble-btn" onclick="toggleTrouble('win-antivirus')">🦠 백신이 차단해요</button>
+        <button class="trouble-btn" onclick="toggleTrouble('win-nothing')">😶 아무 반응이 없어요</button>
+      </div>
+      <div id="win-security" class="trouble-answer" hidden>
+        <strong>Windows Defender SmartScreen 경고</strong><br>
+        "추가 정보" → "실행" 클릭하면 설치할 수 있어요.
+      </div>
+      <div id="win-smart" class="trouble-answer" hidden>
+        <strong>스마트 앱 컨트롤 해제 방법</strong><br>
+        Windows 보안 → 앱 및 브라우저 컨트롤 → 스마트 앱 컨트롤 → "경고" 또는 "끄기"로 변경하세요.
+      </div>
+      <div id="win-antivirus" class="trouble-answer" hidden>
+        <strong>백신 예외 처리</strong><br>
+        백신 프로그램에서 오일추 설치 파일을 예외 목록에 추가하거나, 일시적으로 실시간 보호를 끈 후 설치하세요.
+      </div>
+      <div id="win-nothing" class="trouble-answer" hidden>
+        <strong>반응이 없을 때</strong><br>
+        .exe 파일을 우클릭 → "관리자 권한으로 실행"을 시도해보세요.
+      </div>
+      <p class="trouble-note">코드 서명 인증서를 준비 중이며, 곧 경고 없이 설치하실 수 있게 됩니다.</p>
+    </div>
+
+    <!-- macOS -->
+    <div class="trouble-card" style="border-color:#fde68a;">
+      <h3 style="color:#92400e;">🍎 "개발자를 확인할 수 없음" 경고가 뜨나요?</h3>
+      <p class="trouble-desc">개인 개발 앱이라 아직 Apple 인증서가 없어서 표시되는 경고예요.</p>
+      <div class="trouble-steps">
+        <div class="trouble-step"><span class="step-num">1</span> <span>시스템 설정 → <strong>개인정보 보호 및 보안</strong>으로 이동하세요</span></div>
+        <div class="trouble-step"><span class="step-num">2</span> <span>"쌤핀이(가) 차단되었습니다" 옆의 <strong>"확인 없이 열기"</strong>를 클릭하세요</span></div>
+        <div class="trouble-step"><span class="step-num">3</span> <span>또는: 앱을 <strong>Control+클릭 → "열기"</strong>를 선택하세요</span></div>
+      </div>
+      <p class="trouble-note">Apple 코드 서명 인증서를 준비 중이며, 곧 경고 없이 설치하실 수 있게 됩니다.</p>
+    </div>
+
   </div>
 
   <footer>
@@ -238,6 +315,16 @@
     if (mac && navigator.platform === 'MacIntel' && !navigator.userAgent.includes('ARM')) {
       mac.href = 'https://github.com/colddog09/ILLL/releases/latest/download/오일추-1.0.0-x64.dmg';
       mac.textContent = '🍎 macOS 다운로드 (Intel)';
+    }
+
+    // 문제해결 토글
+    function toggleTrouble(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const hidden = el.hidden;
+      // 같은 카드 내 모든 answer 닫기
+      el.closest('.trouble-card').querySelectorAll('.trouble-answer').forEach(a => a.hidden = true);
+      el.hidden = !hidden;
     }
   </script>
 </body>
