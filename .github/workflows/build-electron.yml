@@ -1,0 +1,66 @@
+name: Build Electron App
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        working-directory: electron
+        run: npm install
+
+      - name: Copy icon
+        run: cp image/icon-512.png electron/icon.png
+
+      - name: Build macOS (Apple Silicon)
+        working-directory: electron
+        run: npm run build:mac -- --arch arm64
+
+      - name: Build macOS (Intel)
+        working-directory: electron
+        run: npm run build:mac -- --arch x64
+
+      - name: Upload macOS artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            electron/dist/*.dmg
+
+  build-win:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        working-directory: electron
+        run: npm install
+
+      - name: Copy icon
+        run: copy image\icon-512.png electron\icon.png
+
+      - name: Build Windows
+        working-directory: electron
+        run: npm run build:win
+
+      - name: Upload Windows artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            electron/dist/*.exe

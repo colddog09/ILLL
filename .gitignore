@@ -15,4 +15,6 @@ Thumbs.db
 
 # 의존성
 node_modules/
+electron/node_modules/
+electron/dist/
 .claude/

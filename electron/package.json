@@ -1,0 +1,43 @@
+{
+  "name": "o1chu",
+  "version": "1.0.0",
+  "description": "오일추 — 드래그앤드롭 일정 관리 앱",
+  "main": "main.js",
+  "author": "colddog09@gmail.com",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "build:mac": "electron-builder --mac",
+    "build:win": "electron-builder --win",
+    "build:all": "electron-builder --mac --win"
+  },
+  "build": {
+    "appId": "my.o1chu.app",
+    "productName": "오일추",
+    "copyright": "Copyright © 2026 오일추",
+    "icon": "icon.png",
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        { "target": "dmg", "arch": ["arm64", "x64"] }
+      ],
+      "artifactName": "오일추-${version}-${arch}.${ext}"
+    },
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ],
+      "artifactName": "오일추-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "icon.png",
+      "installerLanguages": ["ko-KR"]
+    }
+  },
+  "devDependencies": {
+    "electron": "^30.0.0",
+    "electron-builder": "^24.0.0"
+  }
+}
