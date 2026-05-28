@@ -3,7 +3,8 @@
     "api/config.js": { "maxDuration": 5 },
     "api/gcal-token.js": { "maxDuration": 10 },
     "api/push-subscribe.js": { "maxDuration": 10 },
-    "api/push-notify.js": { "maxDuration": 30 }
+    "api/push-notify.js": { "maxDuration": 30 },
+    "api/gemini.js": { "maxDuration": 15 }
   },
   "crons": [
     {
