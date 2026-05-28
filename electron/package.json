@@ -21,7 +21,7 @@
       "target": [
         { "target": "dmg", "arch": ["arm64", "x64"] }
       ],
-      "artifactName": "오일추-${version}-${arch}.${ext}",
+      "artifactName": "o1chu-${version}-${arch}.${ext}",
       "identity": null
     },
     "win": {

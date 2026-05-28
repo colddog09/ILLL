@@ -247,13 +247,13 @@
 
     <!-- macOS -->
     <a class="dl-btn-primary" id="downloadMac"
-      href="https://github.com/colddog09/ILLL/releases/latest/download/오일추-1.0.0-arm64.dmg">
+      href="https://github.com/colddog09/ILLL/releases/latest/download/o1chu-1.0.0-arm64.dmg">
       🍎 macOS 다운로드
     </a>
     <p class="hint">무료 · Apple Silicon (M1/M2/M3/M4) · ~130MB</p>
     <p class="hint-sm">
       Intel Mac을 사용하시나요?
-      <a href="https://github.com/colddog09/ILLL/releases/latest/download/오일추-1.0.0-x64.dmg">Intel 버전 받기 →</a>
+      <a href="https://github.com/colddog09/ILLL/releases/latest/download/o1chu-1.0.0-x64.dmg">Intel 버전 받기 →</a>
     </p>
 
     <!-- Windows -->
@@ -363,7 +363,7 @@
     // Apple Silicon vs Intel 자동 감지
     const mac = document.getElementById('downloadMac');
     if (mac && navigator.platform === 'MacIntel' && !navigator.userAgent.includes('ARM')) {
-      mac.href = 'https://github.com/colddog09/ILLL/releases/latest/download/오일추-1.0.0-x64.dmg';
+      mac.href = 'https://github.com/colddog09/ILLL/releases/latest/download/o1chu-1.0.0-x64.dmg';
       mac.textContent = '🍎 macOS 다운로드 (Intel)';
     }
 
