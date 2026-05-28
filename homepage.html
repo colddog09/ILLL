@@ -851,7 +851,7 @@
       <div class="nav-links">
         <a href="/shop" class="nav-secondary">🎨 테마샵</a>
         <a href="/shop#gallery" class="nav-secondary">✨ 창작마당</a>
-        <a href="/" class="nav-cta">앱 바로가기</a>
+        <a href="/" class="nav-cta go-to-app">앱 바로가기</a>
       </div>
     </div>
   </nav>
@@ -878,7 +878,7 @@
 
     <div class="hero-btns anim-item">
       <div class="btn-primary-wrap">
-        <a class="btn-primary" href="/">
+        <a class="btn-primary go-to-app" href="/">
           📋 지금 시작하기
         </a>
       </div>
@@ -1075,7 +1075,7 @@
       <h2>지금 바로 시작해보세요</h2>
       <p>Google 계정만 있으면 돼요. 완전 무료입니다.</p>
       <div class="cta-btns">
-        <a class="btn-primary" href="/" style="background:#fff;color:var(--accent);box-shadow:0 4px 20px rgba(0,0,0,0.12);">📋 오일추 시작하기 →</a>
+        <a class="btn-primary go-to-app" href="/" style="background:#fff;color:var(--accent);box-shadow:0 4px 20px rgba(0,0,0,0.12);">📋 오일추 시작하기 →</a>
       </div>
     </div>
   </section>
@@ -1319,6 +1319,22 @@
       buildSlider();
       startAutoPlay();
     })();
+  </script>
+  <script>
+    // 기기 감지: 모바일/태블릿이면 앱으로, 컴퓨터면 다운로드 섹션으로
+    function goToApp(e) {
+      e.preventDefault();
+      const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
+        || (navigator.maxTouchPoints > 1 && window.innerWidth < 1024);
+      if (isMobile) {
+        window.location.href = '/';
+      } else {
+        document.getElementById('download').scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+    document.querySelectorAll('.go-to-app').forEach(el => {
+      el.addEventListener('click', goToApp);
+    });
   </script>
 </body>
 </html>
