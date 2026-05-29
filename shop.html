@@ -668,6 +668,31 @@
     </div>
   </div>
 
+  <!-- 미리보기 모달 -->
+  <div class="preview-modal" id="previewModal">
+    <div class="preview-modal__box">
+      <div class="preview-modal__header">
+        <span class="preview-modal__title" id="previewModalTitle">테마 미리보기</span>
+        <button class="preview-modal__close" id="previewModalClose">✕</button>
+      </div>
+      <div class="preview-modal__mock" id="previewModalMock">
+        <div class="preview-modal__bar" id="previewModalBar">
+          <div class="preview-modal__dot"></div>
+          <div class="preview-modal__dot"></div>
+          <div class="preview-modal__dot"></div>
+        </div>
+        <div class="preview-modal__body">
+          <div class="preview-modal__col preview-modal__col--sm"></div>
+          <div class="preview-modal__col preview-modal__col--lg"></div>
+        </div>
+      </div>
+      <div class="preview-modal__foot">
+        <button class="preview-modal__cancel" id="previewModalCancel">닫기</button>
+        <button class="preview-modal__apply" id="previewModalApply">✨ 이 테마 적용하기</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ════════════════════════════════
        탭 1: 테마샵
   ════════════════════════════════ -->
@@ -1499,29 +1524,5 @@
   })();
 </script>
 
-<!-- 미리보기 모달 -->
-<div class="preview-modal" id="previewModal">
-  <div class="preview-modal__box">
-    <div class="preview-modal__header">
-      <span class="preview-modal__title" id="previewModalTitle">테마 미리보기</span>
-      <button class="preview-modal__close" id="previewModalClose">✕</button>
-    </div>
-    <div class="preview-modal__mock" id="previewModalMock">
-      <div class="preview-modal__bar" id="previewModalBar">
-        <div class="preview-modal__dot"></div>
-        <div class="preview-modal__dot"></div>
-        <div class="preview-modal__dot"></div>
-      </div>
-      <div class="preview-modal__body">
-        <div class="preview-modal__col preview-modal__col--sm"></div>
-        <div class="preview-modal__col preview-modal__col--lg"></div>
-      </div>
-    </div>
-    <div class="preview-modal__foot">
-      <button class="preview-modal__cancel" id="previewModalCancel">닫기</button>
-      <button class="preview-modal__apply" id="previewModalApply">✨ 이 테마 적용하기</button>
-    </div>
-  </div>
-</div>
 </body>
 </html>
