@@ -2892,7 +2892,6 @@ body {
     gap: 6px;
     flex-wrap: nowrap;
     flex-shrink: 0;
-    max-width: 55vw;
   }
 
   /* 모바일에서 사용자 이름 숨김 (아이콘만) */
