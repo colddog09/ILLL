@@ -676,109 +676,164 @@ body {
 /* ============================
    LOGIN SCREEN
    ============================ */
-.login-screen {
+/* ============================
+   NEW SPLIT LOGIN SCREEN
+   ============================ */
+.ls-wrap {
   position: fixed;
   inset: 0;
-  background: linear-gradient(145deg, #f0eeff 0%, #e8f0ff 50%, #f5f0ff 100%);
+  background: linear-gradient(135deg, #eff6ff 0%, #eef2ff 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
+  padding: 16px;
   transition: opacity 0.35s ease;
 }
-.login-screen.hidden {
-  opacity: 0;
-  pointer-events: none;
+.ls-wrap.hidden { opacity: 0; pointer-events: none; }
+
+.ls-card {
+  display: flex;
+  width: 100%;
+  max-width: 860px;
+  min-height: 520px;
+  background: #fff;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 24px 80px rgba(37,99,235,0.13), 0 2px 8px rgba(0,0,0,0.05);
+  animation: lsCardIn 0.5s cubic-bezier(0.22,1,0.36,1) both;
 }
-.login-screen__card {
+@keyframes lsCardIn {
+  from { opacity: 0; transform: scale(0.95) translateY(12px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ── 왼쪽 패널 ── */
+.ls-left {
+  display: none;
+  position: relative;
+  width: 50%;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%);
+  border-right: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+@media (min-width: 640px) { .ls-left { display: block; } }
+
+.ls-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.ls-left__overlay {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 52px 40px 44px;
+  justify-content: center;
+  height: 100%;
+  padding: 40px 32px;
   text-align: center;
-  max-width: 400px;
-  width: 100%;
-  background: rgba(255,255,255,0.75);
-  backdrop-filter: blur(24px);
-  border-radius: 32px;
-  border: 1.5px solid rgba(108,99,255,0.12);
-  box-shadow: 0 24px 64px rgba(108,99,255,0.12), 0 2px 8px rgba(0,0,0,0.04);
-  margin: 16px;
 }
-.login-screen__icon {
-  font-size: 2.6rem;
-  width: 80px;
-  height: 80px;
-  background: linear-gradient(135deg, #6c63ff 0%, #8b5cf6 100%);
-  border-radius: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 4px;
-  box-shadow: 0 8px 24px rgba(108,99,255,0.3);
+.ls-left__icon-wrap {
+  width: 56px; height: 56px;
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem;
+  box-shadow: 0 8px 24px rgba(59,130,246,0.35);
+  margin-bottom: 18px;
+  animation: lsIconIn 0.6s 0.3s cubic-bezier(0.22,1,0.36,1) both;
 }
-.login-screen__title {
-  font-size: 1.8rem;
-  font-weight: 800;
-  color: #1e1b4b;
-  margin: 4px 0 0;
-  letter-spacing: -0.02em;
+@keyframes lsIconIn {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-.login-screen__subtitle {
-  font-size: 0.95rem;
-  color: #6b7280;
-  margin: 2px 0 12px;
-  line-height: 1.5;
+.ls-left__title {
+  font-size: 2rem; font-weight: 900; letter-spacing: -0.04em;
+  background: linear-gradient(135deg, #2563eb, #6366f1);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  margin-bottom: 10px;
+  animation: lsIconIn 0.6s 0.4s cubic-bezier(0.22,1,0.36,1) both;
 }
-.login-screen__btn {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: #fff;
-  color: #1f2937;
-  border: 1.5px solid #e5e7eb;
-  border-radius: 14px;
-  padding: 13px 24px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  width: 100%;
-  max-width: 260px;
-  justify-content: center;
-  transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+.ls-left__desc {
+  font-size: 0.88rem; color: #4b5563; line-height: 1.65;
+  margin-bottom: 20px;
+  animation: lsIconIn 0.6s 0.5s cubic-bezier(0.22,1,0.36,1) both;
 }
-.login-screen__btn:hover  { box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
-.login-screen__btn:active { transform: scale(0.97); }
-.login-screen__btn:hover  { border-color: #6c63ff; box-shadow: 0 4px 16px rgba(108,99,255,0.15); }
+.ls-left__chips {
+  display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
+  animation: lsIconIn 0.6s 0.6s cubic-bezier(0.22,1,0.36,1) both;
+}
+.ls-chip {
+  background: rgba(59,130,246,0.1);
+  border: 1px solid rgba(59,130,246,0.2);
+  color: #2563eb; font-size: 0.72rem; font-weight: 600;
+  padding: 4px 10px; border-radius: 99px;
+}
 
-.google-icon {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-}
-.login-screen__note {
-  font-size: 0.78rem;
-  color: #9ca3af;
-  margin: 6px 0 0;
-}
-.login-screen__legal {
+/* ── 오른쪽 패널 ── */
+.ls-right {
+  flex: 1;
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 14px;
-  font-size: 0.75rem;
-  color: #b0b8d0;
+  justify-content: center;
+  padding: 48px 40px;
 }
-.login-screen__legal a {
-  color: #b0b8d0;
-  text-decoration: none;
-  opacity: 0.7;
-  transition: opacity 0.15s;
+.ls-right__inner { width: 100%; max-width: 320px; }
+
+.ls-right__title {
+  font-size: 1.75rem; font-weight: 800; color: #111827;
+  letter-spacing: -0.03em; margin-bottom: 6px;
+  animation: lsRightIn 0.5s 0.15s cubic-bezier(0.22,1,0.36,1) both;
 }
-.login-screen__legal a:hover { opacity: 1; }
-.login-screen__legal span { opacity: 0.4; }
+.ls-right__sub {
+  font-size: 0.9rem; color: #6b7280; margin-bottom: 32px; line-height: 1.5;
+  animation: lsRightIn 0.5s 0.22s cubic-bezier(0.22,1,0.36,1) both;
+}
+@keyframes lsRightIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ls-google-btn {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; padding: 13px 20px;
+  background: #fff; color: #1f2937;
+  border: 1.5px solid #e5e7eb; border-radius: 12px;
+  font-size: 0.95rem; font-weight: 600; cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+  font-family: inherit;
+  animation: lsRightIn 0.5s 0.3s cubic-bezier(0.22,1,0.36,1) both;
+}
+.ls-google-btn:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 16px rgba(59,130,246,0.15);
+}
+.ls-google-btn:active { transform: scale(0.98); }
+.ls-google-icon { width: 20px; height: 20px; flex-shrink: 0; }
+
+.ls-note {
+  font-size: 0.76rem; color: #9ca3af; text-align: center;
+  margin-top: 16px;
+  animation: lsRightIn 0.5s 0.38s cubic-bezier(0.22,1,0.36,1) both;
+}
+.ls-legal {
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px; margin-top: 12px;
+  font-size: 0.73rem; color: #d1d5db;
+  animation: lsRightIn 0.5s 0.44s cubic-bezier(0.22,1,0.36,1) both;
+}
+.ls-legal a { color: #9ca3af; text-decoration: none; transition: color 0.15s; }
+.ls-legal a:hover { color: #3b82f6; }
+.ls-legal span { opacity: 0.5; }
+
+/* ── 레거시 클래스 호환 (테마 오버라이드용) ── */
+.login-screen { display: none !important; }
+.login-screen__starrail-logo { display: none; }
 
 /* ============================
    TOP BAR
