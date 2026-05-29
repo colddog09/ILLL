@@ -644,7 +644,7 @@
   --bg-grad2: rgba(200,223,248,0.07);
 }
 
-html { scroll-behavior: smooth; overflow-x: hidden; }
+html { scroll-behavior: smooth; overflow-x: hidden; overscroll-behavior: none; }
 
 /* 스크롤바 숨기기 (스크롤 동작은 유지) */
 * { scrollbar-width: none !important; }
