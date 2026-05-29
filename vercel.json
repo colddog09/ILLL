@@ -1,7 +1,4 @@
 {
-  "env": {
-    "GEMINI_API_KEY": "AIzaSyDZBVSwRixtv18chGoOJ1WRXITHYljKUZk"
-  },
   "functions": {
     "api/config.js": { "maxDuration": 5 },
     "api/gcal-token.js": { "maxDuration": 10 },
