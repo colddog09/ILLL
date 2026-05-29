@@ -831,6 +831,53 @@ body {
 .ls-legal a:hover { color: #3b82f6; }
 .ls-legal span { opacity: 0.5; }
 
+/* ── 마스코트 캐릭터 ── */
+.ls-mascot-wrap {
+  width: 180px; height: 225px;
+  margin-bottom: 24px;
+  animation: lsMascotFloat 4s ease-in-out infinite;
+  filter: drop-shadow(0 18px 32px rgba(59,130,246,0.22));
+}
+@keyframes lsMascotFloat {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-10px); }
+}
+.ls-mascot {
+  width: 100%; height: 100%;
+  overflow: visible;
+}
+
+/* 메시 그라디언트 배경 (foreignObject 안) */
+.ls-mesh-grad {
+  width: 231px; height: 289px;
+  background:
+    radial-gradient(ellipse at 20% 20%, #FFB3D9 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 15%, #87CEEB 0%, transparent 50%),
+    radial-gradient(ellipse at 55% 60%, #4A90E2 0%, transparent 55%),
+    radial-gradient(ellipse at 15% 80%, #a78bfa 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 75%, #2C3E50 0%, transparent 50%),
+    linear-gradient(135deg, #1A1A2E 0%, #2d2b6b 100%);
+  background-size: 200% 200%;
+  animation: lsMeshMove 8s ease-in-out infinite alternate;
+}
+@keyframes lsMeshMove {
+  0%   { background-position: 0% 0%; }
+  33%  { background-position: 60% 30%; }
+  66%  { background-position: 30% 70%; }
+  100% { background-position: 100% 100%; }
+}
+
+/* 눈 깜빡임 */
+.ls-eye {
+  transform-origin: center;
+  animation: lsBlink 3.5s ease-in-out infinite;
+}
+.ls-eye:nth-of-type(2) { animation-delay: 0.08s; }
+@keyframes lsBlink {
+  0%, 42%, 58%, 100% { ry: 20; }
+  48%, 52%            { ry: 2; }
+}
+
 /* ── 레거시 클래스 호환 (테마 오버라이드용) ── */
 .login-screen { display: none !important; }
 .login-screen__starrail-logo { display: none; }

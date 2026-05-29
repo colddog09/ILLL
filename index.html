@@ -23,7 +23,7 @@
   <link rel="apple-touch-icon" href="/image/apple-touch-icon.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/image/apple-touch-icon.png">
   <meta name="theme-color" content="#6c63ff">
-  <link rel="stylesheet" href="style.css?v=46" />
+  <link rel="stylesheet" href="style.css?v=47" />
 </head>
 <body>
 
@@ -31,13 +31,30 @@
   <div id="loginScreen" class="ls-wrap" style="display:none">
     <div class="ls-card">
 
-      <!-- 왼쪽: 도트맵 + 브랜딩 -->
+      <!-- 왼쪽: 메시 캐릭터 + 브랜딩 -->
       <div class="ls-left">
-        <canvas id="loginMapCanvas" class="ls-canvas"></canvas>
         <div class="ls-left__overlay">
-          <div class="ls-left__icon-wrap">
-            <span class="ls-left__icon">📋</span>
+
+          <!-- 메시 그라디언트 캐릭터 -->
+          <div class="ls-mascot-wrap" id="lsMascotWrap">
+            <svg class="ls-mascot" id="lsMascot"
+                 xmlns="http://www.w3.org/2000/svg"
+                 viewBox="0 0 231 289">
+              <defs>
+                <clipPath id="lsShapeClip">
+                  <path d="M230.809 115.385V249.411C230.809 269.923 214.985 287.282 194.495 288.411C184.544 288.949 175.364 285.718 168.26 280C159.746 273.154 147.769 273.461 139.178 280.23C132.638 285.384 124.381 288.462 115.379 288.462C106.377 288.462 98.1451 285.384 91.6055 280.23C82.912 273.385 70.9353 273.385 62.2415 280.23C55.7532 285.334 47.598 288.411 38.7246 288.462C17.4132 288.615 0 270.667 0 249.359V115.385C0 51.6667 51.6756 0 115.404 0C179.134 0 230.809 51.6667 230.809 115.385Z"/>
+                </clipPath>
+              </defs>
+              <!-- 메시 그라디언트 배경 -->
+              <foreignObject width="231" height="289" clip-path="url(#lsShapeClip)">
+                <div xmlns="http://www.w3.org/1999/xhtml" class="ls-mesh-grad"></div>
+              </foreignObject>
+              <!-- 눈 (마우스 추적) -->
+              <ellipse id="lsEyeL" cx="80"  cy="120" rx="20" ry="30" fill="#1a1a2e" class="ls-eye"/>
+              <ellipse id="lsEyeR" cx="150" cy="120" rx="20" ry="30" fill="#1a1a2e" class="ls-eye"/>
+            </svg>
           </div>
+
           <h2 class="ls-left__title">오일추</h2>
           <p class="ls-left__desc">할일을 드래그해서 날짜에 배치하는<br>스마트 일정 관리 앱</p>
           <div class="ls-left__chips">
@@ -591,101 +608,59 @@
     }
   </script>
 
-  <!-- ─── 로그인 도트맵 캔버스 애니메이션 ─── -->
+  <!-- ─── 로그인 마스코트 눈 트래킹 ─── -->
   <script>
   (function() {
-    const canvas = document.getElementById('loginMapCanvas');
-    if (!canvas) return;
+    const mascotWrap = document.getElementById('lsMascotWrap');
+    if (!mascotWrap) return;
 
-    let W = 0, H = 0, dots = [], raf, startTime = Date.now();
+    const eyeL = document.getElementById('lsEyeL');
+    const eyeR = document.getElementById('lsEyeR');
+    if (!eyeL || !eyeR) return;
 
-    const ROUTES = [
-      { sx:.18, sy:.28, ex:.38, ey:.15, delay:0 },
-      { sx:.38, sy:.15, ex:.50, ey:.23, delay:2.2 },
-      { sx:.08, sy:.10, ex:.28, ey:.34, delay:1 },
-      { sx:.52, sy:.12, ex:.34, ey:.34, delay:0.5 },
-      { sx:.60, sy:.22, ex:.42, ey:.42, delay:1.8 },
-      { sx:.20, sy:.50, ex:.44, ey:.30, delay:3 },
-    ];
+    // 기본 눈 위치 (SVG viewBox 기준)
+    const BASE = { lx: 80, ly: 120, rx: 150, ry: 120 };
+    const MAX_OFFSET = 7; // 최대 이동 픽셀 (SVG 단위)
 
-    function resize() {
-      const p = canvas.parentElement;
-      W = canvas.width  = p.offsetWidth;
-      H = canvas.height = p.offsetHeight;
-      buildDots();
+    function trackEyes(mx, my) {
+      const svg = document.getElementById('lsMascot');
+      if (!svg) return;
+      const rect = svg.getBoundingClientRect();
+      // SVG 중심 (화면 좌표)
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top  + rect.height / 2;
+      // 마우스 방향 벡터 정규화
+      const dx = mx - cx, dy = my - cy;
+      const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+      const nx = dx / dist, ny = dy / dist;
+      const factor = Math.min(dist / 200, 1);
+      const ox = nx * MAX_OFFSET * factor;
+      const oy = ny * MAX_OFFSET * factor;
+      eyeL.setAttribute('cx', BASE.lx + ox);
+      eyeL.setAttribute('cy', BASE.ly + oy);
+      eyeR.setAttribute('cx', BASE.rx + ox);
+      eyeR.setAttribute('cy', BASE.ry + oy);
     }
 
-    function buildDots() {
-      dots = [];
-      const gap = 14, r = 1.2;
-      const regions = [
-        [.05,.10,.24,.38],[.15,.40,.26,.78],
-        [.30,.15,.46,.33],[.35,.35,.50,.63],
-        [.46,.10,.70,.48],[.65,.58,.80,.78],
-      ];
-      for (let x = 0; x < W; x += gap) {
-        for (let y = 0; y < H; y += gap) {
-          const fx = x/W, fy = y/H;
-          const hit = regions.some(([x0,y0,x1,y1]) => fx>x0&&fx<x1&&fy>y0&&fy<y1);
-          if (hit && Math.random() > .28) {
-            dots.push({ x, y, r, o: Math.random()*.45+.15 });
-          }
-        }
-      }
-    }
+    // 마우스 이동
+    document.addEventListener('mousemove', e => trackEyes(e.clientX, e.clientY), { passive: true });
 
-    function draw() {
-      const ctx = canvas.getContext('2d');
-      ctx.clearRect(0, 0, W, H);
-      dots.forEach(d => {
-        ctx.beginPath();
-        ctx.arc(d.x, d.y, d.r, 0, Math.PI*2);
-        ctx.fillStyle = `rgba(37,99,235,${d.o})`;
-        ctx.fill();
-      });
-      const now = (Date.now() - startTime) / 1000;
-      if (now > 16) startTime = Date.now();
-      ROUTES.forEach(rt => {
-        const el = now - rt.delay;
-        if (el <= 0) return;
-        const prog = Math.min(el / 3.2, 1);
-        const sx = rt.sx * W, sy = rt.sy * H;
-        const ex = rt.ex * W, ey = rt.ey * H;
-        const cx = sx + (ex - sx) * prog, cy = sy + (ey - sy) * prog;
-        ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(cx, cy);
-        ctx.strokeStyle = '#2563eb'; ctx.lineWidth = 1.5; ctx.stroke();
-        // 시작점
-        ctx.beginPath(); ctx.arc(sx, sy, 3, 0, Math.PI*2);
-        ctx.fillStyle = '#2563eb'; ctx.fill();
-        // 이동점 + 글로우
-        ctx.beginPath(); ctx.arc(cx, cy, 5.5, 0, Math.PI*2);
-        ctx.fillStyle = 'rgba(59,130,246,0.3)'; ctx.fill();
-        ctx.beginPath(); ctx.arc(cx, cy, 3, 0, Math.PI*2);
-        ctx.fillStyle = '#3b82f6'; ctx.fill();
-        if (prog === 1) {
-          ctx.beginPath(); ctx.arc(ex, ey, 3, 0, Math.PI*2);
-          ctx.fillStyle = '#2563eb'; ctx.fill();
-        }
-      });
-      raf = requestAnimationFrame(draw);
-    }
-
-    // loginScreen이 보일 때만 시작
-    const observer = new MutationObserver(() => {
-      const ls = document.getElementById('loginScreen');
-      if (!ls) return;
-      if (ls.style.display !== 'none') {
-        if (!raf) { resize(); draw(); }
-      } else {
-        cancelAnimationFrame(raf); raf = null;
-      }
-    });
-    const ls = document.getElementById('loginScreen');
-    if (ls) observer.observe(ls, { attributes: true, attributeFilter: ['style'] });
-
-    window.addEventListener('resize', () => {
-      resize();
+    // 터치 지원
+    document.addEventListener('touchmove', e => {
+      if (e.touches.length) trackEyes(e.touches[0].clientX, e.touches[0].clientY);
     }, { passive: true });
+
+    // loginScreen 숨겨지면 눈 초기화
+    const lsEl = document.getElementById('loginScreen');
+    if (lsEl) {
+      new MutationObserver(() => {
+        if (lsEl.style.display === 'none') {
+          eyeL.setAttribute('cx', BASE.lx); eyeL.setAttribute('cy', BASE.ly);
+          eyeR.setAttribute('cx', BASE.rx); eyeR.setAttribute('cy', BASE.ry);
+        }
+      }).observe(lsEl, { attributes: true, attributeFilter: ['style'] });
+    }
+
   })();
   </script>
 </body>
