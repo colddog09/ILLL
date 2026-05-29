@@ -318,12 +318,12 @@
     /* 버튼 행 (미리보기 + 적용) */
     .theme-card__actions { display: flex; gap: 6px; align-items: stretch; }
     .theme-card__btn--preview {
-      flex: 0 0 36px;
-      width: 36px; height: 36px; padding: 0;
+      flex: 0 0 auto;
+      padding: 10px 14px; height: auto;
       border-radius: 10px; border: 1.5px solid var(--border);
       background: transparent; color: var(--text-sub);
-      font-size: 0.9rem; cursor: pointer; display: flex;
-      align-items: center; justify-content: center;
+      font-size: 0.82rem; font-weight: 700; cursor: pointer; display: flex;
+      align-items: center; justify-content: center; white-space: nowrap;
       transition: background 0.15s, color 0.15s, border-color 0.15s;
       font-family: var(--font); flex-shrink: 0;
     }
@@ -1096,7 +1096,7 @@
       </div>
       <div class="theme-card__desc">${t.desc}</div>
       <div class="theme-card__actions">
-        <button class="theme-card__btn theme-card__btn--preview" data-preview-id="${t.id}">👁 미리보기</button>
+        <button class="theme-card__btn theme-card__btn--preview" data-preview-id="${t.id}">미리보기</button>
         <button class="theme-card__btn ${btnClass}" data-id="${t.id}">${btnText}</button>
       </div>`;
 
