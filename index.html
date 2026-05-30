@@ -663,18 +663,22 @@
       if (e.touches.length) onMove(e.touches[0].clientX, e.touches[0].clientY);
     }, { passive: true });
 
-    // 로그인 화면 숨김 시 눈 초기화 + 트래킹 중단
+    // 로그인 화면 숨김 시 눈 초기화 + 트래킹 중단 + 애니메이션 일시정지
     const lsEl = document.getElementById('loginScreen');
     if (lsEl) {
-      new MutationObserver(() => {
+      function syncPause() {
         active = lsEl.style.display !== 'none';
         if (!active) {
+          lsEl.classList.add('ls-paused');
           eyeL.setAttribute('cx', BASE.lx); eyeL.setAttribute('cy', BASE.ly);
           eyeR.setAttribute('cx', BASE.rx); eyeR.setAttribute('cy', BASE.ry);
         } else {
-          cacheRect(); // 화면 다시 표시되면 rect 갱신
+          lsEl.classList.remove('ls-paused');
+          cacheRect();
         }
-      }).observe(lsEl, { attributes: true, attributeFilter: ['style'] });
+      }
+      new MutationObserver(syncPause).observe(lsEl, { attributes: true, attributeFilter: ['style'] });
+      syncPause(); // 초기 상태 반영
     }
 
   })();

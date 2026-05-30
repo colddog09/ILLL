@@ -837,7 +837,13 @@ body {
   margin-bottom: 24px;
   animation: lsMascotFloat 4s ease-in-out infinite;
   filter: drop-shadow(0 18px 32px rgba(59,130,246,0.22));
-  will-change: transform; /* float 애니메이션 GPU 합성 레이어 */
+  will-change: transform;
+}
+/* 로그인 화면 숨김 시 모든 애니메이션 일시정지 */
+.ls-paused .ls-mascot-wrap,
+.ls-paused .ls-mesh-grad,
+.ls-paused .ls-eye {
+  animation-play-state: paused !important;
 }
 @keyframes lsMascotFloat {
   0%, 100% { transform: translateY(0); }
