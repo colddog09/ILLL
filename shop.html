@@ -45,10 +45,8 @@
       top: 0;
       z-index: 200;
       padding: 10px 20px;
-      background: rgba(245,244,255,0.92);
+      background: rgba(245,244,255,0.98);
       border-bottom: 1px solid var(--border);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
     }
     .shop-nav-inner {
       max-width: 1100px;
@@ -315,130 +313,11 @@
     .theme-card__btn--locked { background: #fef3c7; color: #b45309; }
     .theme-card__btn--locked:hover { opacity: 0.85; }
 
-    /* 버튼 행 (미리보기 + 적용) */
-    .theme-card__actions { display: flex; gap: 6px; align-items: stretch; }
-    .theme-card__btn--preview {
-      flex: 0 0 auto;
-      padding: 10px 14px; height: auto;
-      border-radius: 10px; border: 1.5px solid var(--border);
-      background: transparent; color: var(--text-sub);
-      font-size: 0.82rem; font-weight: 700; cursor: pointer; display: flex;
-      align-items: center; justify-content: center; white-space: nowrap;
-      transition: background 0.15s, color 0.15s, border-color 0.15s;
-      font-family: var(--font); flex-shrink: 0;
-    }
-    .theme-card__btn--preview:hover { background: var(--bg); color: var(--text); border-color: var(--accent); }
+    /* 버튼 행 */
+    .theme-card__actions { display: flex; }
     .theme-card__btn.theme-card__btn--apply,
     .theme-card__btn.theme-card__btn--active,
     .theme-card__btn.theme-card__btn--locked { flex: 1; }
-
-    /* 미리보기 모달 */
-    .preview-modal {
-      display: none; position: fixed; inset: 0; z-index: 800;
-      background: rgba(0,0,0,0.55); backdrop-filter: blur(8px);
-      align-items: center; justify-content: center;
-    }
-    .preview-modal--show { display: flex; }
-    .preview-modal__box {
-      background: #fff; border-radius: 28px; padding: 28px;
-      max-width: 520px; width: 90vw;
-      box-shadow: 0 24px 64px rgba(0,0,0,0.25);
-      animation: popIn 0.28s cubic-bezier(0.34,1.4,0.64,1);
-    }
-    @keyframes popIn { from { opacity:0; transform: scale(0.9); } to { opacity:1; transform: scale(1); } }
-    .preview-modal__header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 18px;
-    }
-    .preview-modal__title { font-size: 1.1rem; font-weight: 900; color: #1e1b4b; }
-    .preview-modal__close {
-      width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid #e5e7eb;
-      background: transparent; cursor: pointer; font-size: 1rem;
-      display: flex; align-items: center; justify-content: center; color: #6b7280;
-      transition: background 0.15s;
-    }
-    .preview-modal__close:hover { background: #f3f4f6; }
-    /* 미리보기 모달 앱 목업 */
-    .pm-app {
-      border-radius: 14px; overflow: hidden;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-      display: flex; flex-direction: column;
-      border: 1px solid rgba(0,0,0,0.08);
-    }
-    .pm-topbar {
-      display: flex; align-items: center; gap: 8px;
-      padding: 8px 12px; flex-shrink: 0;
-    }
-    .pm-topbar__logo { font-size: 11px; font-weight: 900; color: #fff; opacity: 0.9; }
-    .pm-topbar__input {
-      flex: 1; height: 20px; border-radius: 6px;
-      background: rgba(255,255,255,0.2); border: none;
-    }
-    .pm-topbar__icon {
-      width: 20px; height: 20px; border-radius: 50%;
-      background: rgba(255,255,255,0.25);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 9px; color: #fff;
-    }
-    .pm-body { display: flex; gap: 0; flex: 1; min-height: 0; }
-    .pm-pool {
-      width: 80px; flex-shrink: 0; padding: 8px 6px;
-      display: flex; flex-direction: column; gap: 4px;
-      border-right: 1px solid rgba(0,0,0,0.07);
-    }
-    .pm-pool__label {
-      font-size: 6px; font-weight: 800; letter-spacing: 0.8px;
-      text-transform: uppercase; opacity: 0.45; margin-bottom: 2px;
-    }
-    .pm-task {
-      border-radius: 5px; padding: 4px 6px;
-      font-size: 7px; font-weight: 600;
-      display: flex; align-items: center; justify-content: space-between; gap: 3px;
-      border: 1px solid rgba(0,0,0,0.08);
-    }
-    .pm-task__dead { font-size: 5.5px; opacity: 0.65; white-space: nowrap; }
-    .pm-days {
-      flex: 1; display: grid; grid-template-columns: repeat(5,1fr);
-      gap: 4px; padding: 8px 8px 8px 6px; min-width: 0;
-    }
-    .pm-day {
-      border-radius: 7px; padding: 4px; display: flex; flex-direction: column; gap: 3px;
-      border: 1px solid rgba(0,0,0,0.07);
-    }
-    .pm-day__label { font-size: 6px; font-weight: 700; opacity: 0.5; text-align: center; }
-    .pm-day.today { border-color: rgba(255,255,255,0.35); }
-    .pm-sched {
-      border-radius: 4px; padding: 3px 4px;
-      display: flex; align-items: center; gap: 3px;
-      font-size: 6.5px; font-weight: 600;
-    }
-    .pm-sched.done { opacity: 0.35; text-decoration: line-through; }
-    .pm-btn {
-      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 5px; font-weight: 900; border: 1.5px solid;
-    }
-    .pm-progress {
-      height: 2px; border-radius: 2px; margin-top: 2px; overflow: hidden;
-      background: rgba(0,0,0,0.08);
-    }
-    .pm-progress__bar { height: 100%; border-radius: 2px; }
-    .preview-modal__foot {
-      display: flex; gap: 10px; margin-top: 18px;
-    }
-    .preview-modal__apply {
-      flex: 1; padding: 12px 0; border-radius: 14px; border: none;
-      font-size: 0.9rem; font-weight: 700; cursor: pointer;
-      font-family: var(--font); transition: opacity 0.15s;
-      background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff;
-    }
-    .preview-modal__apply:hover { opacity: 0.88; }
-    .preview-modal__cancel {
-      padding: 12px 20px; border-radius: 14px; border: 1.5px solid #e5e7eb;
-      background: transparent; color: #6b7280; font-size: 0.88rem; font-weight: 600;
-      cursor: pointer; font-family: var(--font); transition: background 0.15s;
-    }
-    .preview-modal__cancel:hover { background: #f3f4f6; }
 
     /* ── 로딩 ── */
     .shop-loading {
@@ -723,20 +602,6 @@
     </div>
   </div>
 
-  <!-- 미리보기 모달 -->
-  <div class="preview-modal" id="previewModal">
-    <div class="preview-modal__box">
-      <div class="preview-modal__header">
-        <span class="preview-modal__title" id="previewModalTitle">테마 미리보기</span>
-        <button class="preview-modal__close" id="previewModalClose">✕</button>
-      </div>
-      <div id="previewModalApp"></div>
-      <div class="preview-modal__foot">
-        <button class="preview-modal__cancel" id="previewModalCancel">닫기</button>
-        <button class="preview-modal__apply" id="previewModalApply">✨ 이 테마 적용하기</button>
-      </div>
-    </div>
-  </div>
 
   <!-- ════════════════════════════════
        탭 1: 테마샵
@@ -1096,7 +961,6 @@
       </div>
       <div class="theme-card__desc">${t.desc}</div>
       <div class="theme-card__actions">
-        <button class="theme-card__btn theme-card__btn--preview" data-preview-id="${t.id}">미리보기</button>
         <button class="theme-card__btn ${btnClass}" data-id="${t.id}">${btnText}</button>
       </div>`;
 
@@ -1161,13 +1025,6 @@
 
   // 카드 클릭
   document.getElementById('shopGrid').addEventListener('click', e => {
-    // 미리보기 버튼
-    const previewBtn = e.target.closest('.theme-card__btn--preview');
-    if (previewBtn) {
-      const id = previewBtn.dataset.previewId;
-      openPreviewModal(id);
-      return;
-    }
     const btn = e.target.closest('.theme-card__btn');
     if (!btn) return;
     const id = btn.dataset.id;
@@ -1178,86 +1035,6 @@
     else applyTheme(id);
   });
 
-  // 미리보기 모달
-  let previewModalThemeId = null;
-  function openPreviewModal(id) {
-    const t = themes.find(x => x.id === id);
-    if (!t) return;
-    previewModalThemeId = id;
-    document.getElementById('previewModalTitle').textContent = t.name + ' 미리보기';
-
-    const bar  = t.barColor;
-    const bg   = t.colors[0];
-    const acc  = t.colors[1] || t.colors[0];
-    const isDark = id === 'dark' || id === 'starrail';
-    const textC  = isDark ? '#e5e7eb' : '#1e1b4b';
-    const surfC  = isDark ? 'rgba(255,255,255,0.07)' : '#ffffff';
-    const subC   = isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.08)';
-    const grad   = gradStyle(t.colors);
-
-    const DAYS = ['월','화','수','목','금'];
-    const TASKS = [
-      { name:'수학 과제', dead:'~5/31' },
-      { name:'영어 발표', dead:'' },
-      { name:'독후감', dead:'~6/2' },
-    ];
-    const SCHED = [
-      [{ text:'수학 과제', done:false }, { text:'물리 예습', done:true }],
-      [{ text:'영어 발표', done:false }],
-      [{ text:'독후감', done:false }, { text:'수학 과제', done:true }],
-      [],
-      [{ text:'주간 정리', done:false }],
-    ];
-
-    const daysHtml = DAYS.map((d, i) => `
-      <div class="pm-day${i===1?' today':''}" style="background:${i===1 ? bar+'18' : surfC}; border-color:${i===1 ? bar+'55' : 'rgba(0,0,0,0.07)'}">
-        <div class="pm-day__label" style="color:${i===1 ? bar : textC}">${d}</div>
-        ${SCHED[i].map(s => `
-          <div class="pm-sched${s.done?' done':''}" style="background:${bar}18; color:${textC}">
-            <div class="pm-btn" style="background:${s.done ? bar : 'transparent'}; border-color:${bar}; color:${s.done?'#fff':bar};">${s.done?'✓':'○'}</div>
-            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${s.text}</span>
-          </div>`).join('')}
-        ${SCHED[i].length>0 ? `<div class="pm-progress"><div class="pm-progress__bar" style="width:${SCHED[i].filter(s=>s.done).length/SCHED[i].length*100}%;background:${bar}"></div></div>` : ''}
-      </div>`).join('');
-
-    const tasksHtml = TASKS.map(t => `
-      <div class="pm-task" style="background:${surfC}; color:${textC}; border-color:${subC}">
-        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${t.name}</span>
-        ${t.dead ? `<span class="pm-task__dead" style="color:${bar}">⏰${t.dead}</span>` : ''}
-      </div>`).join('');
-
-    document.getElementById('previewModalApp').innerHTML = `
-      <div class="pm-app" style="background:${bg}22">
-        <div class="pm-topbar" style="background:${grad}">
-          <div class="pm-topbar__logo">오일추</div>
-          <div class="pm-topbar__input"></div>
-          <div class="pm-topbar__icon">🔍</div>
-          <div class="pm-topbar__icon">⚙️</div>
-        </div>
-        <div class="pm-body">
-          <div class="pm-pool" style="background:${surfC}">
-            <div class="pm-pool__label" style="color:${textC}">할일 목록</div>
-            ${tasksHtml}
-          </div>
-          <div class="pm-days">${daysHtml}</div>
-        </div>
-      </div>`;
-
-    document.getElementById('previewModal').classList.add('preview-modal--show');
-  }
-  function closePreviewModal() {
-    document.getElementById('previewModal').classList.remove('preview-modal--show');
-    previewModalThemeId = null;
-  }
-  document.getElementById('previewModalClose').addEventListener('click', closePreviewModal);
-  document.getElementById('previewModalCancel').addEventListener('click', closePreviewModal);
-  document.getElementById('previewModalApply').addEventListener('click', () => {
-    if (previewModalThemeId) applyTheme(previewModalThemeId);
-    closePreviewModal();
-  });
-  document.getElementById('previewModal').addEventListener('click', e => {
-    if (e.target === document.getElementById('previewModal')) closePreviewModal();
-  });
 
   // ── 로그인 체크 후 렌더 ──
   (async function initShop() {
