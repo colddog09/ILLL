@@ -52,7 +52,8 @@ async function startGoogleLogin() {
   const { error } = await supabaseClient.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: window.location.origin
+      redirectTo: window.location.origin,
+      queryParams: { prompt: 'select_account' }   // 항상 계정 선택 화면 표시
     }
   });
   if (error) {
