@@ -837,6 +837,7 @@ body {
   margin-bottom: 24px;
   animation: lsMascotFloat 4s ease-in-out infinite;
   filter: drop-shadow(0 18px 32px rgba(59,130,246,0.22));
+  will-change: transform; /* float 애니메이션 GPU 합성 레이어 */
 }
 @keyframes lsMascotFloat {
   0%, 100% { transform: translateY(0); }
@@ -848,6 +849,7 @@ body {
 }
 
 /* 메시 그라디언트 배경 (foreignObject 안) */
+/* hue-rotate는 filter → compositor에서 처리 → paint 없음 (GPU 가속) */
 .ls-mesh-grad {
   width: 231px; height: 289px;
   background:
@@ -857,14 +859,13 @@ body {
     radial-gradient(ellipse at 15% 80%, #a78bfa 0%, transparent 50%),
     radial-gradient(ellipse at 85% 75%, #2C3E50 0%, transparent 50%),
     linear-gradient(135deg, #1A1A2E 0%, #2d2b6b 100%);
-  background-size: 200% 200%;
-  animation: lsMeshMove 8s ease-in-out infinite alternate;
+  animation: lsMeshHue 10s linear infinite;
+  will-change: filter;
 }
-@keyframes lsMeshMove {
-  0%   { background-position: 0% 0%; }
-  33%  { background-position: 60% 30%; }
-  66%  { background-position: 30% 70%; }
-  100% { background-position: 100% 100%; }
+@keyframes lsMeshHue {
+  0%   { filter: hue-rotate(0deg)   brightness(1); }
+  50%  { filter: hue-rotate(40deg)  brightness(1.08); }
+  100% { filter: hue-rotate(0deg)   brightness(1); }
 }
 
 /* 눈 깜빡임 */

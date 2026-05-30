@@ -618,45 +618,61 @@
     const eyeR = document.getElementById('lsEyeR');
     if (!eyeL || !eyeR) return;
 
+    const svg = document.getElementById('lsMascot');
+    if (!svg) return;
+
     // 기본 눈 위치 (SVG viewBox 기준)
     const BASE = { lx: 80, ly: 120, rx: 150, ry: 120 };
-    const MAX_OFFSET = 7; // 최대 이동 픽셀 (SVG 단위)
+    const MAX_OFFSET = 7;
 
-    function trackEyes(mx, my) {
-      const svg = document.getElementById('lsMascot');
-      if (!svg) return;
-      const rect = svg.getBoundingClientRect();
-      // SVG 중심 (화면 좌표)
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top  + rect.height / 2;
-      // 마우스 방향 벡터 정규화
-      const dx = mx - cx, dy = my - cy;
+    // SVG 중심 캐시 (resize 때만 재계산)
+    let svgCX = 0, svgCY = 0;
+    function cacheRect() {
+      const r = svg.getBoundingClientRect();
+      svgCX = r.left + r.width / 2;
+      svgCY = r.top  + r.height / 2;
+    }
+    cacheRect();
+    window.addEventListener('resize', cacheRect, { passive: true });
+
+    // rAF throttle — mousemove가 초당 수백번 발생해도 1프레임에 1번만 처리
+    let rafPending = false, pendingX = 0, pendingY = 0;
+    let active = true; // 로그인 화면 표시 중일 때만 처리
+
+    function applyEyes() {
+      rafPending = false;
+      if (!active) return;
+      const dx = pendingX - svgCX, dy = pendingY - svgCY;
       const dist = Math.sqrt(dx*dx + dy*dy) || 1;
-      const nx = dx / dist, ny = dy / dist;
       const factor = Math.min(dist / 200, 1);
-      const ox = nx * MAX_OFFSET * factor;
-      const oy = ny * MAX_OFFSET * factor;
+      const ox = (dx / dist) * MAX_OFFSET * factor;
+      const oy = (dy / dist) * MAX_OFFSET * factor;
       eyeL.setAttribute('cx', BASE.lx + ox);
       eyeL.setAttribute('cy', BASE.ly + oy);
       eyeR.setAttribute('cx', BASE.rx + ox);
       eyeR.setAttribute('cy', BASE.ry + oy);
     }
 
-    // 마우스 이동
-    document.addEventListener('mousemove', e => trackEyes(e.clientX, e.clientY), { passive: true });
+    function onMove(mx, my) {
+      pendingX = mx; pendingY = my;
+      if (!rafPending) { rafPending = true; requestAnimationFrame(applyEyes); }
+    }
 
-    // 터치 지원
+    document.addEventListener('mousemove', e => onMove(e.clientX, e.clientY), { passive: true });
     document.addEventListener('touchmove', e => {
-      if (e.touches.length) trackEyes(e.touches[0].clientX, e.touches[0].clientY);
+      if (e.touches.length) onMove(e.touches[0].clientX, e.touches[0].clientY);
     }, { passive: true });
 
-    // loginScreen 숨겨지면 눈 초기화
+    // 로그인 화면 숨김 시 눈 초기화 + 트래킹 중단
     const lsEl = document.getElementById('loginScreen');
     if (lsEl) {
       new MutationObserver(() => {
-        if (lsEl.style.display === 'none') {
+        active = lsEl.style.display !== 'none';
+        if (!active) {
           eyeL.setAttribute('cx', BASE.lx); eyeL.setAttribute('cy', BASE.ly);
           eyeR.setAttribute('cx', BASE.rx); eyeR.setAttribute('cy', BASE.ry);
+        } else {
+          cacheRect(); // 화면 다시 표시되면 rect 갱신
         }
       }).observe(lsEl, { attributes: true, attributeFilter: ['style'] });
     }
