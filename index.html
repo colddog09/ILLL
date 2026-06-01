@@ -658,6 +658,26 @@
       if (!rafPending) { rafPending = true; requestAnimationFrame(applyEyes); }
     }
 
+    // 호버 시 튕기기
+    mascotWrap.addEventListener('mouseenter', () => {
+      if (!active) return;
+      mascotWrap.classList.remove('ls-wiggle');
+      void mascotWrap.offsetWidth; // reflow → 애니메이션 재시작
+      mascotWrap.classList.add('ls-wiggle');
+    });
+    mascotWrap.addEventListener('animationend', e => {
+      if (e.animationName === 'lsMascotWiggle') {
+        mascotWrap.classList.remove('ls-wiggle');
+      }
+    });
+    // 터치 탭도 지원
+    mascotWrap.addEventListener('touchstart', () => {
+      if (!active) return;
+      mascotWrap.classList.remove('ls-wiggle');
+      void mascotWrap.offsetWidth;
+      mascotWrap.classList.add('ls-wiggle');
+    }, { passive: true });
+
     document.addEventListener('mousemove', e => onMove(e.clientX, e.clientY), { passive: true });
     document.addEventListener('touchmove', e => {
       if (e.touches.length) onMove(e.touches[0].clientX, e.touches[0].clientY);

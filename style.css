@@ -855,6 +855,23 @@ body {
   93%  { transform: translateY(-4px)  scaleX(0.98) scaleY(1.02); } /* 작은 튕김 */
   100% { transform: translateY(0)     scaleX(1)    scaleY(1); }
 }
+/* 호버 시 튕기기 — float 애니메이션을 일시 교체 */
+.ls-mascot-wrap.ls-wiggle {
+  animation: lsMascotWiggle 0.55s cubic-bezier(0.36,0.07,0.19,0.97) forwards;
+  cursor: pointer;
+}
+@keyframes lsMascotWiggle {
+  0%   { transform: translateY(0)    scaleX(1)    scaleY(1); }
+  12%  { transform: translateY(6px)  scaleX(1.12) scaleY(0.88); } /* 찌그러짐 */
+  28%  { transform: translateY(-20px) scaleX(0.88) scaleY(1.15); } /* 튕겨 오름 */
+  45%  { transform: translateY(-26px) scaleX(0.92) scaleY(1.1);  } /* 정점 */
+  62%  { transform: translateY(4px)  scaleX(1.09) scaleY(0.92); } /* 착지 */
+  74%  { transform: translateY(-10px) scaleX(0.95) scaleY(1.06); } /* 2차 튕김 */
+  85%  { transform: translateY(2px)  scaleX(1.04) scaleY(0.97); } /* 착지2 */
+  93%  { transform: translateY(-4px) scaleX(0.99) scaleY(1.01); }
+  100% { transform: translateY(0)    scaleX(1)    scaleY(1); }
+}
+
 .ls-mascot {
   width: 100%; height: 100%;
   overflow: visible;
