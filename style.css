@@ -835,7 +835,7 @@ body {
 .ls-mascot-wrap {
   width: 180px; height: 225px;
   margin-bottom: 24px;
-  animation: lsMascotFloat 4s ease-in-out infinite;
+  animation: lsMascotFloat 2.4s cubic-bezier(0.36,0.07,0.19,0.97) infinite;
   filter: drop-shadow(0 18px 32px rgba(59,130,246,0.22));
   will-change: transform;
 }
@@ -846,8 +846,14 @@ body {
   animation-play-state: paused !important;
 }
 @keyframes lsMascotFloat {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-10px); }
+  0%   { transform: translateY(0)     scaleX(1)    scaleY(1); }
+  10%  { transform: translateY(2px)   scaleX(1.08) scaleY(0.92); } /* 눌림 */
+  30%  { transform: translateY(-14px) scaleX(0.92) scaleY(1.1);  } /* 떠오름 + 세로 늘어남 */
+  50%  { transform: translateY(-18px) scaleX(0.95) scaleY(1.06); } /* 정점 */
+  70%  { transform: translateY(-6px)  scaleX(0.97) scaleY(1.03); } /* 내려오는 중 */
+  85%  { transform: translateY(3px)   scaleX(1.06) scaleY(0.94); } /* 착지 충격 */
+  93%  { transform: translateY(-4px)  scaleX(0.98) scaleY(1.02); } /* 작은 튕김 */
+  100% { transform: translateY(0)     scaleX(1)    scaleY(1); }
 }
 .ls-mascot {
   width: 100%; height: 100%;
