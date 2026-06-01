@@ -148,6 +148,7 @@ async function bootstrapSupabase() {
   } catch (err) {
     console.error('Supabase 초기화 실패:', err);
     showLoginScreen();
+    showNetworkHint(); // 네트워크 오류 → 즉시 안내
     renderPool();
     renderWeek();
   }
@@ -157,6 +158,31 @@ bootstrapSupabase();
 
 // 5초 안에 로그인 안 되면 로그인 화면 표시
 setTimeout(() => { if (!currentUser) showLoginScreen(); }, 5000);
+
+// 12초 후에도 로그인 안 되면 재시도 안내
+setTimeout(() => { if (!currentUser) showNetworkHint(); }, 12000);
+
+function showNetworkHint() {
+  if (document.getElementById('networkHint')) return; // 중복 방지
+  const el = document.createElement('div');
+  el.id = 'networkHint';
+  el.style.cssText = [
+    'position:fixed', 'bottom:24px', 'left:50%', 'transform:translateX(-50%)',
+    'background:#1e1b4b', 'color:#fff', 'font-size:0.82rem', 'font-weight:600',
+    'padding:12px 20px', 'border-radius:14px', 'z-index:99999',
+    'box-shadow:0 8px 24px rgba(0,0,0,0.25)', 'text-align:center',
+    'max-width:88vw', 'line-height:1.5', 'opacity:0',
+    'transition:opacity 0.3s ease'
+  ].join(';');
+  el.innerHTML = '📶 앱이 로딩되지 않으면 앱을 껐다 켜거나<br>새로고침 해보세요.';
+  document.body.appendChild(el);
+  requestAnimationFrame(() => { el.style.opacity = '1'; });
+  // 8초 후 자동 제거
+  setTimeout(() => {
+    el.style.opacity = '0';
+    setTimeout(() => el.remove(), 350);
+  }, 8000);
+}
 
 // ──────────────────────────────────────────────
 // 인증 UI

@@ -841,7 +841,7 @@ body {
 }
 /* 로그인 화면 숨김 시 모든 애니메이션 일시정지 */
 .ls-paused .ls-mascot-wrap,
-.ls-paused .ls-mesh-grad,
+.ls-paused .ls-mesh-body,
 .ls-paused .ls-eye {
   animation-play-state: paused !important;
 }
@@ -855,46 +855,21 @@ body {
   93%  { transform: translateY(-4px)  scaleX(0.98) scaleY(1.02); } /* 작은 튕김 */
   100% { transform: translateY(0)     scaleX(1)    scaleY(1); }
 }
-/* 호버 시 튕기기 — float 애니메이션을 일시 교체 */
-.ls-mascot-wrap.ls-wiggle {
-  animation: lsMascotWiggle 0.55s cubic-bezier(0.36,0.07,0.19,0.97) forwards;
-  cursor: pointer;
-}
-@keyframes lsMascotWiggle {
-  0%   { transform: translateY(0)    scaleX(1)    scaleY(1); }
-  12%  { transform: translateY(6px)  scaleX(1.12) scaleY(0.88); } /* 찌그러짐 */
-  28%  { transform: translateY(-20px) scaleX(0.88) scaleY(1.15); } /* 튕겨 오름 */
-  45%  { transform: translateY(-26px) scaleX(0.92) scaleY(1.1);  } /* 정점 */
-  62%  { transform: translateY(4px)  scaleX(1.09) scaleY(0.92); } /* 착지 */
-  74%  { transform: translateY(-10px) scaleX(0.95) scaleY(1.06); } /* 2차 튕김 */
-  85%  { transform: translateY(2px)  scaleX(1.04) scaleY(0.97); } /* 착지2 */
-  93%  { transform: translateY(-4px) scaleX(0.99) scaleY(1.01); }
-  100% { transform: translateY(0)    scaleX(1)    scaleY(1); }
-}
 
 .ls-mascot {
   width: 100%; height: 100%;
   overflow: visible;
 }
 
-/* 메시 그라디언트 배경 (foreignObject 안) */
-/* hue-rotate는 filter → compositor에서 처리 → paint 없음 (GPU 가속) */
-.ls-mesh-grad {
-  width: 231px; height: 289px;
-  background:
-    radial-gradient(ellipse at 20% 20%, #FFB3D9 0%, transparent 55%),
-    radial-gradient(ellipse at 80% 15%, #87CEEB 0%, transparent 50%),
-    radial-gradient(ellipse at 55% 60%, #4A90E2 0%, transparent 55%),
-    radial-gradient(ellipse at 15% 80%, #a78bfa 0%, transparent 50%),
-    radial-gradient(ellipse at 85% 75%, #2C3E50 0%, transparent 50%),
-    linear-gradient(135deg, #1A1A2E 0%, #2d2b6b 100%);
+/* 메시 그라디언트 배경 (순수 SVG — iPad foreignObject 버그 회피) */
+.ls-mesh-body {
   animation: lsMeshHue 10s linear infinite;
   will-change: filter;
 }
 @keyframes lsMeshHue {
-  0%   { filter: hue-rotate(0deg)   brightness(1); }
-  50%  { filter: hue-rotate(40deg)  brightness(1.08); }
-  100% { filter: hue-rotate(0deg)   brightness(1); }
+  0%   { filter: hue-rotate(0deg)  brightness(1); }
+  50%  { filter: hue-rotate(40deg) brightness(1.08); }
+  100% { filter: hue-rotate(0deg)  brightness(1); }
 }
 
 /* 눈 깜빡임 */
