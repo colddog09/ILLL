@@ -97,6 +97,9 @@ ILLL/
 
 ---
 
-## 라이선스
+## 저작권
 
-MIT © 2025 [colddog09](https://github.com/colddog09)
+© 2025 colddog09. All Rights Reserved.
+
+이 프로젝트의 소스코드 및 디자인에 대한 모든 권리는 저작자에게 있습니다.
+무단 복사·배포·상업적 이용을 금지합니다.
