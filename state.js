@@ -196,13 +196,58 @@ function flushToSupabase() {
   supabaseClient
     .from('user_states')
     .upsert(_supabaseSavePayload(), { onConflict: 'user_id' })
-    .then(({ error }) => { if (!error) setSyncSaved(); });
+    .then(({ error }) => {
+      if (!error) { _localChangePending = false; setSyncSaved(); }
+    });
+}
+
+// 다른 기기 변경사항 체크 (앱 foreground 복귀 시)
+let _lastVisibleAt = 0;
+const RE_SYNC_COOLDOWN = 30 * 1000; // 30초 이내 재진입 무시
+
+function _reSyncFromCloud() {
+  if (!currentUser || !supabaseClient || !dataLoaded) return;
+  if (_localChangePending) { flushToSupabase(); return; } // 로컬 변경 있으면 업로드 우선
+  const now = Date.now();
+  if (now - _lastVisibleAt < RE_SYNC_COOLDOWN) return;
+  _lastVisibleAt = now;
+
+  setSyncStatus('☁️ 동기화 확인 중...');
+  supabaseClient
+    .from('user_states')
+    .select('pool, schedule, links, updated_at')
+    .eq('user_id', currentUser.id)
+    .maybeSingle()
+    .then(({ data: remote, error }) => {
+      if (error || !remote) { setSyncStatus('⚠️ 클라우드 동기화 실패'); return; }
+      const remoteTs = remote.updated_at ? new Date(remote.updated_at).getTime() : 0;
+      const localTs  = parseInt(localStorage.getItem(LS_BACKUP_TS) || '0', 10);
+      if (remoteTs > localTs + 1000 && _remoteHasData(remote)) {
+        // 다른 기기에서 변경된 최신 데이터 적용
+        console.log('[sync] foreground re-sync: 클라우드 최신 적용');
+        applyPersistedState(remote);
+        lastSavedSnapshot = stateSnapshot();
+        _saveLocal();
+        autoReturnExpiredTasks();
+        renderApp();
+        setSyncSaved();
+      } else {
+        setSyncSaved();
+      }
+    })
+    .catch(() => setSyncStatus('⚠️ 클라우드 동기화 실패'));
 }
 
 window.addEventListener('beforeunload', flushToSupabase);
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden') flushToSupabase();
+  if (document.visibilityState === 'hidden') {
+    flushToSupabase();
+  } else {
+    // foreground 복귀 — 다른 기기 변경사항 체크
+    _reSyncFromCloud();
+  }
 });
+// 10분마다 백그라운드 sync (탭을 오래 열어둔 경우)
 setInterval(flushToSupabase, 10 * 60 * 1000);
 
 // ──────────────────────────────────────────────
@@ -246,6 +291,8 @@ function loadState() {
   }
   if (loadInProgress) return;
   loadInProgress = true;
+  // 안전 타임아웃: 15초 후에도 끝나지 않으면 잠금 해제
+  const _loadGuard = setTimeout(() => { loadInProgress = false; }, 15000);
 
   // ── Phase 1: localStorage 즉시 복원 ──
   const local = _loadLocal();
@@ -272,6 +319,7 @@ function loadState() {
   )
   .then(({ data: remote, error }) => {
     loadInProgress = false;
+    clearTimeout(_loadGuard);
 
     if (error) {
       console.error('Supabase 읽기 에러:', error);
@@ -287,7 +335,7 @@ function loadState() {
     const remoteTs = remote?.updated_at ? new Date(remote.updated_at).getTime() : 0;
     const localTs  = local?.ts || 0;
 
-    if (remote && remoteTs > localTs + 3000) {
+    if (remote && remoteTs > localTs + 1000) {
       // 로컬에 미업로드 변경사항이 있으면 원격 덮어쓰기 방지
       if (_localChangePending) {
         console.warn('[sync] 로컬 미업로드 변경사항 보호 — 원격 우선 적용 생략, 로컬을 업로드');
@@ -348,6 +396,7 @@ function loadState() {
   })
   .catch(err => {
     loadInProgress = false;
+    clearTimeout(_loadGuard);
     console.error('Supabase 로드 실패:', err.message);
     if (!local) {
       // 로컬 데이터도 없고 타임아웃/에러 → 재시도 버튼
