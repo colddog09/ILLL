@@ -414,6 +414,10 @@ function renderGcalSheet() {
 // 날짜 카드 렌더링
 // ──────────────────────────────────────────────
 function renderWeek() {
+  // 스크롤 위치 보존 (일정 추가/수정 후 초기화 방지)
+  const schedArea = document.querySelector('.schedule-area');
+  const savedScroll = schedArea ? schedArea.scrollTop : 0;
+
   dayGrid.innerHTML = '';
   const d     = currentDay();
   const key   = dateKey(d);
@@ -456,6 +460,10 @@ function renderWeek() {
   renderDayTasks(key);
   setupDayDropZone(card, key);
 
+  // 스크롤 위치 복원 (DOM 페인트 후)
+  if (savedScroll > 0 && schedArea) {
+    requestAnimationFrame(() => { schedArea.scrollTop = savedScroll; });
+  }
 }
 
 function renderDayTasks(key) {
