@@ -309,7 +309,7 @@ function loadState() {
     setSyncStatus('☁️ 불러오는 중...');
   }
 
-  // ── Phase 2: Supabase 백그라운드 체크 (타임아웃 8초) ──
+  // ── Phase 2: Supabase에서 항상 최신 데이터 가져오기 ──
   _supabaseWithTimeout(
     supabaseClient
       .from('user_states')
@@ -323,76 +323,31 @@ function loadState() {
 
     if (error) {
       console.error('Supabase 읽기 에러:', error);
-      if (!local) {
-        dataLoaded = true;
-        renderApp();
-        _showRetryButton();
-      }
+      if (!local) { dataLoaded = true; renderApp(); _showRetryButton(); }
       setSyncStatus('⚠️ 클라우드 동기화 실패');
       return;
     }
 
-    const remoteTs = remote?.updated_at ? new Date(remote.updated_at).getTime() : 0;
-    const localTs  = local?.ts || 0;
-
-    if (remote && remoteTs > localTs + 1000) {
-      // 로컬에 미업로드 변경사항이 있으면 원격 덮어쓰기 방지
-      if (_localChangePending) {
-        console.warn('[sync] 로컬 미업로드 변경사항 보호 — 원격 우선 적용 생략, 로컬을 업로드');
-        if (currentUser && supabaseClient) {
-          supabaseClient.from('user_states')
-            .upsert(_supabaseSavePayload(), { onConflict: 'user_id' })
-            .then(({ error }) => {
-              if (!error) { _localChangePending = false; setSyncSaved(); }
-              else { setSyncStatus('⚠️ 클라우드 저장 실패'); }
-            });
-        }
-      } else if (!_remoteHasData(remote) && hasAnyTaskData()) {
-        // 원격이 비어있고 로컬에 데이터 있음 → 로컬 보호 후 원격에 업로드
-        console.warn('[sync] 원격 데이터 없음, 로컬 데이터 보호하여 업로드');
-        if (currentUser && supabaseClient) {
-          supabaseClient.from('user_states')
-            .upsert(_supabaseSavePayload(), { onConflict: 'user_id' })
-            .then(({ error }) => {
-              if (!error) setSyncSaved();
-              else setSyncStatus('⚠️ 클라우드 저장 실패');
-            });
-        }
-      } else {
-        // 다른 기기에서 더 최신 데이터 → 덮어쓰기 (원격에 실제 데이터 있을 때만)
-        console.log(`☁️ 클라우드 최신 적용 (remote: ${new Date(remoteTs).toLocaleTimeString()}, local: ${new Date(localTs).toLocaleTimeString()})`);
-        applyPersistedState(remote);
-        lastSavedSnapshot = stateSnapshot();
-        _saveLocal();
-        dataLoaded = true;
-        autoReturnExpiredTasks();
-        renderApp();
-        showLastSavedTime();
-        setSyncSaved();
-      }
-    } else if (!local) {
-      // 로컬 없음 (첫 기기 or 캐시 삭제)
-      if (remote) {
-        applyPersistedState(remote);
-        lastSavedSnapshot = stateSnapshot();
-        _saveLocal();
-      }
-      dataLoaded = true;
-      autoReturnExpiredTasks();
-      renderApp();
-      showLastSavedTime();
-      checkFirstVisit();
-      setSyncSaved();
-    } else {
-      // 로컬이 최신 → 클라우드 업로드만 (이미 렌더 완료)
-      if (hasAnyTaskData()) {
-        supabaseClient.from('user_states')
-          .upsert(_supabaseSavePayload(), { onConflict: 'user_id' })
-          .then(({ error }) => { if (!error) setSyncSaved(); });
-      } else {
-        setSyncSaved();
-      }
+    if (_remoteHasData(remote)) {
+      // 클라우드에 데이터 있음 → 항상 클라우드 우선 적용
+      applyPersistedState(remote);
+      lastSavedSnapshot = stateSnapshot();
+      _localChangePending = false;
+      _saveLocal();
+    } else if (hasAnyTaskData()) {
+      // 클라우드 비어있고 로컬에 데이터 있음 → 로컬 보호 후 업로드
+      console.warn('[sync] 클라우드 비어있음 — 로컬 데이터 업로드');
+      supabaseClient.from('user_states')
+        .upsert(_supabaseSavePayload(), { onConflict: 'user_id' })
+        .then(({ error }) => { if (!error) { _localChangePending = false; setSyncSaved(); } });
     }
+
+    dataLoaded = true;
+    autoReturnExpiredTasks();
+    renderApp();
+    showLastSavedTime();
+    checkFirstVisit();
+    setSyncSaved();
   })
   .catch(err => {
     loadInProgress = false;
