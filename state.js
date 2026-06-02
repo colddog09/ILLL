@@ -6,6 +6,55 @@
 'use strict';
 
 // ──────────────────────────────────────────────
+// 오프라인 감지 + 배너
+// ──────────────────────────────────────────────
+(function _initOfflineGuard() {
+  function showOfflineBanner() {
+    if (document.getElementById('offlineBanner')) return;
+    const el = document.createElement('div');
+    el.id = 'offlineBanner';
+    el.style.cssText = [
+      'position:fixed','top:0','left:0','right:0','z-index:999999',
+      'background:#1e1b4b','color:#fff','text-align:center',
+      'padding:10px 16px','font-size:0.85rem','font-weight:600',
+      'display:flex','align-items:center','justify-content:center','gap:8px',
+      'box-shadow:0 2px 12px rgba(0,0,0,0.3)',
+      'animation:offlineSlideIn 0.25s ease'
+    ].join(';');
+    el.innerHTML = '📶 인터넷 연결이 없어요. Wi-Fi나 데이터를 연결해 주세요.';
+
+    // 슬라이드인 키프레임 주입 (1회)
+    if (!document.getElementById('offlineStyle')) {
+      const s = document.createElement('style');
+      s.id = 'offlineStyle';
+      s.textContent = '@keyframes offlineSlideIn{from{transform:translateY(-100%)}to{transform:translateY(0)}}';
+      document.head.appendChild(s);
+    }
+    document.body.prepend(el);
+  }
+
+  function hideOfflineBanner() {
+    const el = document.getElementById('offlineBanner');
+    if (!el) return;
+    el.style.animation = 'offlineSlideIn 0.2s ease reverse';
+    setTimeout(() => el.remove(), 200);
+  }
+
+  // 초기 상태 체크
+  if (!navigator.onLine) showOfflineBanner();
+
+  window.addEventListener('offline', showOfflineBanner);
+  window.addEventListener('online',  () => {
+    hideOfflineBanner();
+    // 온라인 복귀 시 자동 재로드 (데이터 최신화)
+    if (typeof loadState === 'function' && !loadInProgress) {
+      loadInProgress = false;
+      loadState();
+    }
+  });
+})();
+
+// ──────────────────────────────────────────────
 // 초기 상태
 // ──────────────────────────────────────────────
 const DEFAULT_STATE = {
@@ -128,6 +177,7 @@ let _saveTimer = null;
 
 function saveState() {
   if (!dataLoaded) return;
+  if (!navigator.onLine) { setSyncStatus('📶 오프라인 — 연결 후 자동 저장'); return; }
 
   const snap = stateSnapshot();
   if (!lastSavedSnapshot && !hasAnyTaskData()) return; // 빈 state 저장 방지
@@ -235,6 +285,10 @@ function loadState() {
     return;
   }
   if (loadInProgress) return;
+  if (!navigator.onLine) {
+    setSyncStatus('📶 오프라인 — 연결 후 자동 로드');
+    return;
+  }
   loadInProgress = true;
   const _loadGuard = setTimeout(() => { loadInProgress = false; }, 15000);
 
