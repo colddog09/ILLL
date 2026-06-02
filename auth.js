@@ -15,9 +15,44 @@ let supabaseReady  = false;
 // ──────────────────────────────────────────────
 // 동기화 상태 표시
 // ──────────────────────────────────────────────
+let _mobileToastTimer = null;
+
 function setSyncStatus(message) {
+  // 데스크탑: 헤더 인라인 표시
   const el = document.getElementById('syncStatus');
   if (el) el.textContent = message;
+
+  // 모바일(768px 이하): 중요한 상태만 하단 토스트로 표시
+  if (window.innerWidth > 768) return;
+  const isIdle = message.includes('저장됨'); // 저장됨은 토스트 불필요
+  if (isIdle) return;
+
+  clearTimeout(_mobileToastTimer);
+  let toast = document.getElementById('syncToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'syncToast';
+    toast.style.cssText = [
+      'position:fixed','bottom:72px','left:50%','transform:translateX(-50%)',
+      'background:rgba(30,27,75,0.92)','color:#fff',
+      'font-size:0.78rem','font-weight:600',
+      'padding:8px 16px','border-radius:20px','z-index:9998',
+      'white-space:nowrap','pointer-events:none',
+      'transition:opacity 0.25s ease','opacity:0'
+    ].join(';');
+    document.body.appendChild(toast);
+    requestAnimationFrame(() => { toast.style.opacity = '1'; });
+  }
+  toast.textContent = message;
+  toast.style.opacity = '1';
+
+  // 오류가 아닌 일시 상태(동기화 중 등)는 3초 후 자동 제거
+  if (!message.includes('실패') && !message.includes('오프라인')) {
+    _mobileToastTimer = setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => toast.remove(), 260);
+    }, 3000);
+  }
 }
 
 let _lastSavedLabel = '';
