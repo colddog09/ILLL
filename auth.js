@@ -20,16 +20,16 @@ function setSyncStatus(message) {
   if (el) el.textContent = message;
 }
 
+let _lastSavedLabel = '';
+
 function setSyncSaved() {
-  const now   = new Date();
-  const label = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-  localStorage.setItem('lastSavedLabel', label);
-  setSyncStatus(`☁️ ${label} 저장됨`);
+  const now = new Date();
+  _lastSavedLabel = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  setSyncStatus(`☁️ ${_lastSavedLabel} 저장됨`);
 }
 
 function showLastSavedTime() {
-  const label = localStorage.getItem('lastSavedLabel');
-  if (label) setSyncStatus(`☁️ ${label} 저장됨`);
+  if (_lastSavedLabel) setSyncStatus(`☁️ ${_lastSavedLabel} 저장됨`);
 }
 
 // ──────────────────────────────────────────────
