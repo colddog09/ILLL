@@ -847,12 +847,12 @@ body {
 }
 @keyframes lsMascotFloat {
   0%   { transform: translateY(0)     scaleX(1)    scaleY(1); }
-  10%  { transform: translateY(2px)   scaleX(1.08) scaleY(0.92); } /* 눌림 */
-  30%  { transform: translateY(-14px) scaleX(0.92) scaleY(1.1);  } /* 떠오름 + 세로 늘어남 */
-  50%  { transform: translateY(-18px) scaleX(0.95) scaleY(1.06); } /* 정점 */
-  70%  { transform: translateY(-6px)  scaleX(0.97) scaleY(1.03); } /* 내려오는 중 */
-  85%  { transform: translateY(3px)   scaleX(1.06) scaleY(0.94); } /* 착지 충격 */
-  93%  { transform: translateY(-4px)  scaleX(0.98) scaleY(1.02); } /* 작은 튕김 */
+  10%  { transform: translateY(2px)   scaleX(1.04) scaleY(0.96); } /* 눌림 */
+  30%  { transform: translateY(-12px) scaleX(0.96) scaleY(1.05); } /* 떠오름 */
+  50%  { transform: translateY(-16px) scaleX(0.97) scaleY(1.03); } /* 정점 */
+  70%  { transform: translateY(-5px)  scaleX(0.98) scaleY(1.02); } /* 내려오는 중 */
+  85%  { transform: translateY(2px)   scaleX(1.03) scaleY(0.97); } /* 착지 */
+  93%  { transform: translateY(-3px)  scaleX(0.99) scaleY(1.01); } /* 작은 튕김 */
   100% { transform: translateY(0)     scaleX(1)    scaleY(1); }
 }
 
@@ -879,7 +879,7 @@ body {
 }
 .ls-eye:nth-of-type(2) { animation-delay: 0.08s; }
 @keyframes lsBlink {
-  0%, 42%, 58%, 100% { ry: 20; }
+  0%, 42%, 58%, 100% { ry: 22; }
   48%, 52%            { ry: 2; }
 }
 
