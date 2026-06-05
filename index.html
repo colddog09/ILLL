@@ -634,6 +634,11 @@
     let svgCX = 0, svgCY = 0;
     function cacheRect() {
       const r = svg.getBoundingClientRect();
+      if (r.width === 0) {
+        // 아직 레이아웃 안 됨 — 다음 프레임에 재시도
+        requestAnimationFrame(cacheRect);
+        return;
+      }
       svgCX = r.left + r.width / 2;
       svgCY = r.top  + r.height / 2;
     }

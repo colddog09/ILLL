@@ -174,6 +174,7 @@ function _supabaseSavePayload() {
 // 저장: Supabase 디바운스 2초
 // ──────────────────────────────────────────────
 let _saveTimer = null;
+let _pendingSave = false; // 로컬에서 변경됐지만 아직 Supabase에 안 올라간 상태
 
 function saveState() {
   if (!dataLoaded) return;
@@ -184,6 +185,7 @@ function saveState() {
   if (snap === lastSavedSnapshot) { showLastSavedTime(); return; } // 변경 없음
 
   lastSavedSnapshot = snap;
+  _pendingSave = true; // 로컬 변경 발생
   showLastSavedTime();
 
   if (!currentUser || !supabaseClient) return;
@@ -196,6 +198,7 @@ function saveState() {
       .upsert(_supabaseSavePayload(), { onConflict: 'user_id' })
       .then(({ error }) => {
         if (error) { setSyncStatus('⚠️ 클라우드 저장 실패'); return; }
+        _pendingSave = false; // 저장 완료
         setSyncSaved();
       });
   }, 2000);
@@ -203,14 +206,18 @@ function saveState() {
 
 // ──────────────────────────────────────────────
 // 즉시 플러시 (페이지 종료 / 백그라운드 전환)
+// _pendingSave 가 true일 때만 업로드 — 다른 기기 데이터 덮어쓰기 방지
 // ──────────────────────────────────────────────
 function flushToSupabase() {
   if (!currentUser || !supabaseClient || !dataLoaded) return;
-  if (!lastSavedSnapshot && !hasAnyTaskData()) return;
+  if (!_pendingSave) return; // 변경사항 없으면 업로드 생략
+  clearTimeout(_saveTimer);
   supabaseClient
     .from('user_states')
     .upsert(_supabaseSavePayload(), { onConflict: 'user_id' })
-    .then(({ error }) => { if (!error) setSyncSaved(); });
+    .then(({ error }) => {
+      if (!error) { _pendingSave = false; setSyncSaved(); }
+    });
 }
 
 // ──────────────────────────────────────────────
