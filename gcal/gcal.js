@@ -515,7 +515,6 @@ function updateGcalUI() {
   const dot = document.getElementById('gcalStatusDot');
   const txt = document.getElementById('gcalStatusText');
   const connectBtn = document.getElementById('gcalConnectBtn');
-  const syncBtn = document.getElementById('gcalSyncBtn');
   const disconnectBtn = document.getElementById('gcalDisconnectBtn');
   if (!dot) return;
 
@@ -523,7 +522,6 @@ function updateGcalUI() {
     dot.className = 'gcal-dot gcal-dot--on';
     txt.textContent = '연결됨';
     connectBtn.hidden = true;
-    syncBtn.hidden = false;
     disconnectBtn.hidden = false;
     // 캘린더 필터 UI 갱신
     renderGcalCalendarSettings();
@@ -531,7 +529,6 @@ function updateGcalUI() {
     dot.className = 'gcal-dot gcal-dot--off';
     txt.textContent = everConnected ? '재연결 필요' : '연결되지 않음';
     connectBtn.hidden = false;
-    syncBtn.hidden = true;
     disconnectBtn.hidden = !everConnected;
   }
 }

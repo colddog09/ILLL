@@ -412,7 +412,6 @@ document.getElementById('nextWeekBtn').addEventListener('click', () => { state.d
 // ──────────────────────────────────────────────
 const gcalSyncResult    = document.getElementById('gcalSyncResult');
 const gcalConnectBtn    = document.getElementById('gcalConnectBtn');
-const gcalSyncBtn       = document.getElementById('gcalSyncBtn');
 const gcalReconnectBtn  = document.getElementById('gcalReconnectBtn');
 const gcalDisconnectBtn = document.getElementById('gcalDisconnectBtn');
 
@@ -440,23 +439,7 @@ gcalConnectBtn?.addEventListener('click', async () => {
   }
 });
 
-gcalSyncBtn?.addEventListener('click', async () => {
-  gcalSyncBtn.disabled    = true;
-  gcalSyncBtn.textContent = '동기화 중...';
-  try {
-    const { created, failed } = await gcalSyncAll();
-    const msg = created > 0
-      ? `✅ ${created}개 일정 추가${failed > 0 ? ` (${failed}개 실패)` : ''}`
-      : failed > 0 ? `❌ 동기화 실패 (${failed}개)` : '이미 동기화되어 있습니다.';
-    showGcalResult(msg, failed > 0 && created === 0);
-  } catch (err) {
-    showGcalResult('❌ ' + (err.message || '동기화 오류'), true);
-    updateGcalUI();
-  } finally {
-    gcalSyncBtn.disabled    = false;
-    gcalSyncBtn.textContent = '☁️ 전체 동기화';
-  }
-});
+
 
 gcalReconnectBtn?.addEventListener('click', async () => {
   gcalReconnectBtn.disabled    = true;
