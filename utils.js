@@ -8,22 +8,53 @@ const DAYS_KO   = ['일','월','화','수','목','금','토'];
 const DAYS_FULL = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
 
 // ── 기한 유틸 (render.js, deadline.js보다 먼저 로드되어야 함) ──
+// 마감일 → Date 변환. dl.year 있으면 사용, 없으면(레거시) 올해 기준.
+// 레거시 데이터가 6개월 이상 과거면 연말 경계로 보고 내년으로 보정.
+function deadlineToDate(dl) {
+  if (!dl) return null;
+  const [hh, mm] = (dl.time || '23:59').split(':').map(Number);
+  const year = dl.year ? parseInt(dl.year) : new Date().getFullYear();
+  const d = new Date(year, parseInt(dl.month) - 1, parseInt(dl.day), hh || 0, mm || 0);
+  if (!dl.year) {
+    const now = new Date();
+    if (d < now && (now - d) > 183 * 24 * 60 * 60 * 1000) d.setFullYear(year + 1);
+  }
+  return d;
+}
+
 function formatDeadlineText(dl) {
   if (!dl) return '';
-  return `${dl.month}월 ${dl.day}일 ${dl.time}까지`;
+  const base = `${dl.month}월 ${dl.day}일 ${dl.time}까지`;
+  return isDeadlinePast(dl) ? `${base} (지남)` : base;
 }
 
 function isDeadlineUrgent(dl) {
-  if (!dl) return false;
-  const now    = new Date();
-  const year   = now.getFullYear();
-  const target = new Date(year, parseInt(dl.month) - 1, parseInt(dl.day), ...dl.time.split(':').map(Number));
-  if (target < now) target.setFullYear(year + 1);
-  const diffMs = target - now;
+  const target = deadlineToDate(dl);
+  if (!target) return false;
+  const diffMs = target - new Date();
   return diffMs >= 0 && diffMs <= 24 * 60 * 60 * 1000;
 }
 
-function uid() { return '_' + Math.random().toString(36).slice(2, 9); }
+// 마감 지남 여부
+function isDeadlinePast(dl) {
+  const target = deadlineToDate(dl);
+  return !!target && target < new Date();
+}
+
+// 고유 ID — 충돌 거의 없는 UUID (구형 브라우저 폴백 포함)
+function uid() {
+  try {
+    if (window.crypto && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  } catch (_) {}
+  return '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+}
+
+// 안전한 URL만 허용 (javascript:, data: 등 차단)
+function safeUrl(url) {
+  if (typeof url !== 'string') return '#';
+  const u = url.trim();
+  return /^https?:\/\//i.test(u) ? u : '#';
+}
 
 function currentDay() {
   const d = new Date();
@@ -56,6 +87,8 @@ function formatHistoryDateLabel(date) {
 }
 
 function escHtml(str) {
+  if (str === null || str === undefined) return '';
+  str = String(str);
   return str
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')

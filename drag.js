@@ -317,18 +317,75 @@ function initDrag() {
 
     if (dragInfo.type === 'pool') {
       if (dragInfo.fromGcal) { endDrag(); return; } // 캘린더 일정은 앱에서 삭제 불가
+      const idx = state.pool.findIndex(t => t.id === dragInfo.taskId);
+      const removed = idx !== -1 ? state.pool[idx] : null;
       removeTaskFromPool(dragInfo.taskId);
       saveState();
       endDrag();
       renderPool();
+      if (removed) _showUndoToast(`'${removed.text}' 삭제됨`, () => {
+        const at = Math.min(idx, state.pool.length);
+        if (!state.pool.find(t => t.id === removed.id)) state.pool.splice(at, 0, removed);
+        saveState(); renderPool();
+      });
     } else if (dragInfo.type === 'day') {
       const key = dragInfo.dateKey;
+      const arr = state.schedule[key] || [];
+      const idx = arr.findIndex(it => it.id === dragInfo.itemId);
+      const removed = idx !== -1 ? arr[idx] : null;
       removeScheduleItem(key, dragInfo.itemId);
       saveState();
       endDrag();
       renderDayTasks(key);
+      if (removed) _showUndoToast(`'${removed.text}' 삭제됨`, () => {
+        if (!state.schedule[key]) state.schedule[key] = [];
+        const at = Math.min(idx, state.schedule[key].length);
+        if (!state.schedule[key].find(it => it.id === removed.id)) state.schedule[key].splice(at, 0, removed);
+        saveState(); renderDayTasks(key);
+      });
     }
   });
+}
+
+// 삭제 후 되돌리기 토스트
+let _undoTimer = null;
+function _showUndoToast(label, onUndo) {
+  let toast = document.getElementById('undoToast');
+  if (toast) toast.remove();
+  toast = document.createElement('div');
+  toast.id = 'undoToast';
+  toast.style.cssText = [
+    'position:fixed','bottom:24px','left:50%','transform:translateX(-50%)',
+    'background:#1e1b4b','color:#fff','font-size:0.85rem','font-weight:600',
+    'padding:10px 14px 10px 18px','border-radius:14px','z-index:99999',
+    'display:flex','align-items:center','gap:12px','max-width:90vw',
+    'box-shadow:0 8px 24px rgba(0,0,0,0.3)','opacity:0','transition:opacity 0.2s ease'
+  ].join(';');
+  const text = document.createElement('span');
+  text.textContent = '🗑️ ' + label;
+  text.style.cssText = 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+  const btn = document.createElement('button');
+  btn.textContent = '되돌리기';
+  btn.style.cssText = [
+    'background:rgba(255,255,255,0.18)','color:#fff','border:none',
+    'padding:6px 12px','border-radius:10px','font-weight:700','cursor:pointer',
+    'font-family:inherit','flex-shrink:0','font-size:0.82rem'
+  ].join(';');
+  btn.addEventListener('click', () => {
+    clearTimeout(_undoTimer);
+    onUndo();
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), 220);
+  });
+  toast.appendChild(text);
+  toast.appendChild(btn);
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => { toast.style.opacity = '1'; });
+  clearTimeout(_undoTimer);
+  _undoTimer = setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), 220);
+  }, 5000);
 }
 
 // 초기화는 events.js 하단에서 실행 (모든 스크립트 로드 완료 후)

@@ -23,7 +23,7 @@
   <link rel="apple-touch-icon" href="/image/apple-touch-icon.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/image/apple-touch-icon.png">
   <meta name="theme-color" content="#6c63ff">
-  <link rel="stylesheet" href="style.css?v=47" />
+  <link rel="stylesheet" href="style.css?v=48" />
 </head>
 <body>
 
@@ -118,7 +118,7 @@
         </div>
       </div>
       <div class="task-input-wrap">
-        <input id="taskInput" type="text" placeholder="새 할일을 입력하세요…" autocomplete="off" />
+        <input id="taskInput" type="text" placeholder="새 할일을 입력하세요…" autocomplete="off" maxlength="120" />
         <button id="deadlineToggleBtn" class="deadline-toggle-btn" type="button" title="기한 설정">기한</button>
         <div id="deadlinePopup" class="deadline-popup" hidden>
           <div class="deadline-popup__title">⏰ 기한 설정</div>
@@ -552,16 +552,16 @@
   <!-- ─── Supabase SDK ─── -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <script src="utils.js?v=2"></script>
+  <script src="utils.js?v=3"></script>
   <script src="state.js?v=7"></script>
   <script src="auth.js?v=5"></script>
-  <script src="render.js?v=17"></script>
-  <script src="drag.js?v=6"></script>
-  <script src="deadline.js?v=1"></script>
+  <script src="render.js?v=18"></script>
+  <script src="drag.js?v=7"></script>
+  <script src="deadline.js?v=2"></script>
   <script src="gcal/gcal.js?v=13"></script>
   <script src="push.js?v=1"></script>
-  <script src="modals.js?v=14"></script>
-  <script src="events.js?v=17"></script>
+  <script src="modals.js?v=15"></script>
+  <script src="events.js?v=18"></script>
   <script>
     if ('serviceWorker' in navigator) {
       function _showUpdateBadge() {

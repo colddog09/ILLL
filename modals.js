@@ -60,7 +60,7 @@ function renderInfoLinks() {
     const item = document.createElement('div');
     item.className = 'user-link-item user-link-item--default';
     item.innerHTML = `
-      <a href="${escHtml(link.url)}" target="_blank" rel="noopener noreferrer" class="info-link user-link-a">
+      <a href="${escHtml(safeUrl(link.url))}" target="_blank" rel="noopener noreferrer" class="info-link user-link-a">
         <span class="user-link-icon">${escHtml(link.icon || '🔗')}</span>
         <span>${escHtml(link.name)}</span>
       </a>
@@ -72,7 +72,7 @@ function renderInfoLinks() {
     const item = document.createElement('div');
     item.className = 'user-link-item';
     item.innerHTML = `
-      <a href="${escHtml(link.url)}" target="_blank" rel="noopener noreferrer" class="info-link user-link-a">
+      <a href="${escHtml(safeUrl(link.url))}" target="_blank" rel="noopener noreferrer" class="info-link user-link-a">
         <span class="user-link-icon">${escHtml(link.icon || '🔗')}</span>
         <span>${escHtml(link.name)}</span>
       </a>

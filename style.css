@@ -1234,6 +1234,7 @@ body {
 }
 .pool-card__clock:hover { opacity: 1; transform: scale(1.15); }
 .pool-card__clock--urgent { filter: sepia(1) saturate(5) hue-rotate(-20deg); opacity: 1; animation: clock-pulse 1.5s ease-in-out infinite; }
+.pool-card__clock--past { filter: grayscale(1); opacity: 0.5; }
 @keyframes clock-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.2); } }
 
 .pool-card__clock-tooltip {
@@ -2421,6 +2422,12 @@ body {
   border-color: rgba(220,38,38,0.25);
   animation: clock-pulse 1.5s ease-in-out infinite;
 }
+.sched-item__deadline--past {
+  color: #9ca3af;
+  background: rgba(156,163,175,0.12);
+  border-color: rgba(156,163,175,0.3);
+  text-decoration: line-through;
+}
 .sched-item.done .sched-item__deadline {
   opacity: 0.4;
 }
@@ -2652,6 +2659,12 @@ body {
   background: rgba(220,38,38,0.08);
   border-color: rgba(220,38,38,0.25);
   animation: clock-pulse 1.5s ease-in-out infinite;
+}
+.list-view__deadline--past {
+  color: #9ca3af;
+  background: rgba(156,163,175,0.12);
+  border-color: rgba(156,163,175,0.3);
+  text-decoration: line-through;
 }
 
 /* ============================

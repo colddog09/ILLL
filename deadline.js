@@ -57,11 +57,16 @@ deadlineToggleBtn.addEventListener('click', e => {
 });
 
 deadlineConfirmBtn.addEventListener('click', () => {
-  pendingDeadline = {
-    month: deadlineMonth.value,
-    day:   deadlineDay.value,
-    time:  deadlineTime.value || '23:59'
-  };
+  const month = parseInt(deadlineMonth.value);
+  const day   = parseInt(deadlineDay.value);
+  const time  = deadlineTime.value || '23:59';
+  // 연도 추론: 선택한 월/일이 오늘보다 과거면 내년으로 (연말 경계 대응)
+  const now = new Date();
+  const [hh, mm] = time.split(':').map(Number);
+  let year = now.getFullYear();
+  const candidate = new Date(year, month - 1, day, hh || 0, mm || 0);
+  if (candidate < now) year += 1;
+  pendingDeadline = { year, month: String(month), day: String(day), time };
   updateDeadlineBtn();
   deadlinePopup.hidden = true;
 });

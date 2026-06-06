@@ -382,7 +382,7 @@ function deferTasks(targetDateKey) {
 // ──────────────────────────────────────────────
 function addTaskFromInput() {
   if (!requireLogin('로그인이 필요합니다.')) return;
-  const text = taskInput.value.trim();
+  const text = taskInput.value.trim().slice(0, 120);
   if (!text) return;
   const task = { id: uid(), text };
   if (pendingDeadline) task.deadline = { ...pendingDeadline };

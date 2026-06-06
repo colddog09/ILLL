@@ -100,8 +100,10 @@ function createPoolCard(task) {
 
   if (task.deadline) {
     const urgent = isDeadlineUrgent(task.deadline);
+    const past   = isDeadlinePast(task.deadline);
     const clock = document.createElement('button');
-    clock.className = 'pool-card__clock' + (urgent ? ' pool-card__clock--urgent' : '');
+    clock.className = 'pool-card__clock'
+      + (past ? ' pool-card__clock--past' : (urgent ? ' pool-card__clock--urgent' : ''));
     clock.textContent = '⏰';
     clock.title = formatDeadlineText(task.deadline);
 
@@ -499,7 +501,7 @@ function renderDayTasks(key) {
     el.dataset.text = item.text;
     el.draggable = !!currentUser;
     const deadlineBadge = item.deadline
-      ? `<span class="sched-item__deadline${isDeadlineUrgent(item.deadline) ? ' sched-item__deadline--urgent' : ''}" title="${escHtml(formatDeadlineText(item.deadline))}">⏰ ${escHtml(formatDeadlineText(item.deadline))}</span>`
+      ? `<span class="sched-item__deadline${isDeadlinePast(item.deadline) ? ' sched-item__deadline--past' : (isDeadlineUrgent(item.deadline) ? ' sched-item__deadline--urgent' : '')}" title="${escHtml(formatDeadlineText(item.deadline))}">⏰ ${escHtml(formatDeadlineText(item.deadline))}</span>`
       : '';
     const gcalBadge = item.fromGcal ? '<span class="sched-item__gcal-badge" title="구글 캘린더 일정">📅</span>' : '';
     el.innerHTML = `
@@ -742,7 +744,7 @@ function renderListView() {
           ${item.status === 'O' ? '✅' : '⬜'}
         </button>
         <span class="list-view__item-text">${escHtml(item.text)}</span>
-        ${item.deadline ? `<span class="list-view__deadline${isDeadlineUrgent(item.deadline) ? ' list-view__deadline--urgent' : ''}">⏰ ${escHtml(formatDeadlineText(item.deadline))}</span>` : ''}
+        ${item.deadline ? `<span class="list-view__deadline${isDeadlinePast(item.deadline) ? ' list-view__deadline--past' : (isDeadlineUrgent(item.deadline) ? ' list-view__deadline--urgent' : '')}">⏰ ${escHtml(formatDeadlineText(item.deadline))}</span>` : ''}
       `;
       list.appendChild(row);
     });
