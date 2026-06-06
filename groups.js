@@ -66,30 +66,67 @@ async function gmShowList() {
           <span class="gm-group-row__name">${escHtml(g.name)}</span>
           <span class="gm-group-row__role">${g.role === 'owner' ? '👑 그룹장' : g.role === 'announcer' ? '📢 공지' : '멤버'}</span>
         </button>`).join('')
-    : `<div class="gm-empty">아직 속한 그룹이 없어요.<br>아래에서 만들거나 초대 코드로 참여하세요.</div>`;
+    : `<div class="gm-empty">아직 속한 그룹이 없어요.<br>+ 버튼으로 만들거나 참여하세요.</div>`;
 
   body.innerHTML = `
-    <div class="gm-list">${listHtml}</div>
-    <hr class="modal-divider">
-    <div class="gm-forms">
-      <div class="gm-form">
-        <p class="section-eyebrow">➕ 새 그룹 만들기</p>
-        <div class="gm-form__row">
-          <input id="gmCreateName" class="gm-input" type="text" maxlength="40" placeholder="그룹 이름 (예: 3학년 2반)" />
-          <button id="gmCreateBtn" class="gm-btn gm-btn--primary">만들기</button>
+    <div class="gm-list-header">
+      <span class="gm-list-count">${gmGroups.length ? `그룹 ${gmGroups.length}개` : '내 그룹'}</span>
+      <div class="gm-add-wrap">
+        <button class="gm-add-trigger" id="gmAddTrigger" title="그룹 추가">+</button>
+        <div class="gm-add-dropdown" id="gmAddDropdown" hidden>
+          <button class="gm-add-option" id="gmOptCreate">➕ 새 그룹 만들기</button>
+          <button class="gm-add-option" id="gmOptJoin">🔑 초대 코드로 참여</button>
         </div>
       </div>
-      <div class="gm-form">
-        <p class="section-eyebrow">🔑 초대 코드로 참여</p>
-        <div class="gm-form__row">
-          <input id="gmJoinCode" class="gm-input gm-input--code" type="text" maxlength="6" placeholder="코드 6자리" />
-          <button id="gmJoinBtn" class="gm-btn">참여</button>
-        </div>
+    </div>
+
+    <div class="gm-list">${listHtml}</div>
+
+    <div class="gm-sheet" id="gmCreateSheet" hidden>
+      <p class="gm-sheet__title">새 그룹 만들기</p>
+      <div class="gm-form__row">
+        <input id="gmCreateName" class="gm-input" type="text" maxlength="40" placeholder="그룹 이름 (예: 3학년 2반)" />
+        <button id="gmCreateBtn" class="gm-btn gm-btn--primary">만들기</button>
+      </div>
+    </div>
+
+    <div class="gm-sheet" id="gmJoinSheet" hidden>
+      <p class="gm-sheet__title">초대 코드로 참여</p>
+      <div class="gm-form__row">
+        <input id="gmJoinCode" class="gm-input gm-input--code" type="text" maxlength="6" placeholder="코드 6자리" />
+        <button id="gmJoinBtn" class="gm-btn gm-btn--primary">참여</button>
       </div>
     </div>`;
 
+  // 그룹 열기
   body.querySelectorAll('[data-open]').forEach(b =>
     b.addEventListener('click', () => gmOpenGroup(b.dataset.open)));
+
+  // + 드롭다운 토글
+  const trigger  = document.getElementById('gmAddTrigger');
+  const dropdown = document.getElementById('gmAddDropdown');
+  const createSheet = document.getElementById('gmCreateSheet');
+  const joinSheet   = document.getElementById('gmJoinSheet');
+
+  trigger?.addEventListener('click', e => {
+    e.stopPropagation();
+    dropdown.hidden = !dropdown.hidden;
+  });
+  document.getElementById('gmOptCreate')?.addEventListener('click', () => {
+    dropdown.hidden = true;
+    joinSheet.hidden = true;
+    createSheet.hidden = !createSheet.hidden;
+    if (!createSheet.hidden) document.getElementById('gmCreateName')?.focus();
+  });
+  document.getElementById('gmOptJoin')?.addEventListener('click', () => {
+    dropdown.hidden = true;
+    createSheet.hidden = true;
+    joinSheet.hidden = !joinSheet.hidden;
+    if (!joinSheet.hidden) document.getElementById('gmJoinCode')?.focus();
+  });
+  // 바깥 클릭 시 드롭다운 닫기
+  body.addEventListener('click', () => { dropdown.hidden = true; }, { once: false });
+
   document.getElementById('gmCreateBtn')?.addEventListener('click', gmCreateGroup);
   document.getElementById('gmJoinBtn')?.addEventListener('click', gmJoinGroup);
   document.getElementById('gmJoinCode')?.addEventListener('keydown', e => { if (e.key === 'Enter') gmJoinGroup(); });
@@ -207,7 +244,10 @@ async function gmOpenGroup(groupId) {
 
   body.innerHTML = `
     <div class="gm-hero">
-      <button class="gm-back-btn" id="gmBackBtn">← 목록</button>
+      <div class="gm-hero__toprow">
+        <button class="gm-back-btn" id="gmBackBtn">← 목록</button>
+        ${isOwner ? `<button class="gm-settings-btn" id="gmSettingsBtn" title="그룹 설정">⚙️</button>` : ''}
+      </div>
       <div class="gm-hero__content">
         <h2 class="gm-hero__name">${escHtml(gmCurrent.name)}</h2>
         <div class="gm-hero__badge">${isOwner ? '👑 그룹장' : canAnnounce ? '📢 공지자' : '멤버'}</div>
@@ -228,21 +268,18 @@ async function gmOpenGroup(groupId) {
       <div class="gm-anns">${annHtml}</div>
     </div>
 
-    ${ownerPanel}
-
-    <button class="gm-leave-btn ${isOwner ? 'gm-leave-btn--danger' : ''}" id="gmLeaveBtn">
-      ${isOwner ? '🗑️ 그룹 삭제' : '그룹 나가기'}
-    </button>`;
+    ${!isOwner ? `<button class="gm-leave-btn" id="gmLeaveBtn">그룹 나가기</button>` : ''}`;
 
   // 이벤트 바인딩
   document.getElementById('gmBackBtn')?.addEventListener('click', gmShowList);
+  document.getElementById('gmSettingsBtn')?.addEventListener('click', () => gmShowSettings(groupId));
   document.getElementById('gmCopyCode')?.addEventListener('click', () => {
     navigator.clipboard?.writeText(gmCurrent.invite_code).then(() => {
       const b = document.getElementById('gmCopyCode'); if (b) { b.textContent = '복사됨'; setTimeout(() => b.textContent = '복사', 1500); }
     });
   });
   document.getElementById('gmPostBtn')?.addEventListener('click', () => gmPostAnnouncement(groupId));
-  document.getElementById('gmLeaveBtn')?.addEventListener('click', () => gmLeaveOrDelete(groupId, isOwner));
+  document.getElementById('gmLeaveBtn')?.addEventListener('click', () => gmLeaveOrDelete(groupId, false));
 
   body.querySelectorAll('[data-add]').forEach(b =>
     b.addEventListener('click', () => gmAddToMyList(anns.find(a => a.id === b.dataset.add), b)));
@@ -252,6 +289,93 @@ async function gmOpenGroup(groupId) {
     b.addEventListener('click', () => gmSetRole(groupId, b.dataset.grant, 'announcer')));
   body.querySelectorAll('[data-revoke]').forEach(b =>
     b.addEventListener('click', () => gmSetRole(groupId, b.dataset.revoke, 'member')));
+}
+
+// ──────────────────────────────────────────────
+// 그룹 설정 화면 (그룹장 전용)
+// ──────────────────────────────────────────────
+async function gmShowSettings(groupId) {
+  const body = document.getElementById('groupModalBody');
+  if (!body) return;
+  body.innerHTML = `<div class="gm-loading">불러오는 중…</div>`;
+
+  const group = gmGroups.find(g => g.id === groupId) || gmCurrent;
+  if (!group) { gmShowList(); return; }
+
+  const { data: members, error } = await supabaseClient
+    .from('group_members')
+    .select('user_id, role, display_name')
+    .eq('group_id', groupId);
+
+  if (error) { body.innerHTML = `<div class="gm-empty">불러오지 못했어요.</div>`; return; }
+
+  const memberRows = (members || []).map(m => {
+    const meTag = m.user_id === currentUser.id ? ' <span class="gm-me-tag">나</span>' : '';
+    const nm = escHtml(m.display_name || '멤버');
+    if (m.role === 'owner') return `
+      <div class="gm-member">
+        <span class="gm-member__name">${nm}${meTag}</span>
+        <span class="gm-member__role">👑 그룹장</span>
+      </div>`;
+    const grant = m.role === 'announcer'
+      ? `<button class="gm-role-btn" data-revoke="${m.user_id}">공지 해제</button>`
+      : `<button class="gm-role-btn gm-role-btn--grant" data-grant="${m.user_id}">공지 권한</button>`;
+    return `
+      <div class="gm-member">
+        <span class="gm-member__name">${nm}${meTag}</span>
+        ${grant}
+      </div>`;
+  }).join('');
+
+  body.innerHTML = `
+    <div class="gm-settings-header">
+      <button class="gm-back-btn gm-back-btn--dark" id="gmSettingsBackBtn">← 돌아가기</button>
+      <span class="gm-settings-title">그룹 설정</span>
+    </div>
+
+    <div class="gm-settings-section">
+      <p class="gm-section-title">그룹 이름 변경</p>
+      <div class="gm-form__row">
+        <input id="gmRenameInput" class="gm-input" type="text" maxlength="40"
+          placeholder="새 그룹 이름" value="${escHtml(group.name)}" />
+        <button id="gmRenameBtn" class="gm-btn gm-btn--primary">저장</button>
+      </div>
+    </div>
+
+    <div class="gm-settings-section">
+      <p class="gm-section-title">멤버 권한 관리 (${(members||[]).length}명)</p>
+      <div class="gm-members">${memberRows}</div>
+    </div>
+
+    <div class="gm-settings-section gm-settings-section--danger">
+      <p class="gm-section-title">위험 구역</p>
+      <button class="gm-danger-btn" id="gmDeleteBtn">🗑️ 그룹 삭제</button>
+    </div>`;
+
+  document.getElementById('gmSettingsBackBtn')?.addEventListener('click', () => gmOpenGroup(groupId));
+  document.getElementById('gmRenameBtn')?.addEventListener('click', () => gmRenameGroup(groupId));
+  document.getElementById('gmRenameInput')?.addEventListener('keydown', e => { if (e.key === 'Enter') gmRenameGroup(groupId); });
+  document.getElementById('gmDeleteBtn')?.addEventListener('click', () => gmLeaveOrDelete(groupId, true));
+  body.querySelectorAll('[data-grant]').forEach(b =>
+    b.addEventListener('click', () => gmSetRole(groupId, b.dataset.grant, 'announcer')));
+  body.querySelectorAll('[data-revoke]').forEach(b =>
+    b.addEventListener('click', () => gmSetRole(groupId, b.dataset.revoke, 'member')));
+}
+
+async function gmRenameGroup(groupId) {
+  if (gmBusy) return;
+  const name = (document.getElementById('gmRenameInput')?.value || '').trim();
+  if (!name) { alert('이름을 입력하세요.'); return; }
+  gmBusy = true;
+  const { error } = await supabaseClient.from('groups').update({ name }).eq('id', groupId);
+  gmBusy = false;
+  if (error) { alert('이름 변경 실패: ' + error.message); return; }
+  // 로컬 캐시 갱신
+  const g = gmGroups.find(g => g.id === groupId);
+  if (g) g.name = name;
+  if (gmCurrent?.id === groupId) gmCurrent.name = name;
+  const btn = document.getElementById('gmRenameBtn');
+  if (btn) { btn.textContent = '저장됨 ✓'; setTimeout(() => { btn.textContent = '저장'; }, 1500); }
 }
 
 // ──────────────────────────────────────────────
