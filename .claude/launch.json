@@ -2,10 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "Python HTTP Server",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8080"],
-      "port": 8080
+      "name": "vercel dev",
+      "runtimeExecutable": "/Users/sunjaechung/.npm-global/bin/vercel",
+      "runtimeArgs": ["dev", "--listen", "3000"],
+      "port": 3000
     }
   ]
 }

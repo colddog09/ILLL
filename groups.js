@@ -173,45 +173,66 @@ async function gmOpenGroup(groupId) {
 
   const postForm = canAnnounce ? `
     <div class="gm-post">
-      <p class="section-eyebrow">📢 일정 공지하기</p>
+      <p class="gm-section-title">📢 일정 공지하기</p>
       <input id="gmPostText" class="gm-input" type="text" maxlength="200" placeholder="일정 내용 (예: 수학 수행평가)" />
       <div class="gm-post__row">
-        <input id="gmPostDate" class="gm-input" type="date" />
-        <button id="gmPostBtn" class="gm-btn gm-btn--primary">공지 올리기</button>
+        <input id="gmPostDate" class="gm-input gm-input--date" type="date" />
+        <button id="gmPostBtn" class="gm-btn gm-btn--primary">공지</button>
       </div>
-      <p class="gm-hint">날짜를 비우면 멤버 '할일 풀'로, 날짜를 넣으면 멤버의 구글 캘린더(미연결 시 해당 날짜)로 추가돼요.</p>
     </div>` : '';
 
   const ownerPanel = isOwner ? `
-    <details class="gm-manage">
-      <summary>👑 멤버 · 권한 관리 (${members.length}명)</summary>
+    <div class="gm-members-wrap">
+      <p class="gm-section-title">👥 멤버 (${members.length}명)</p>
       <div class="gm-members">
         ${members.map(m => {
-          const meTag = m.user_id === currentUser.id ? ' (나)' : '';
-          const nm = escHtml((m.display_name || '멤버') + meTag);
-          if (m.role === 'owner') return `<div class="gm-member"><span>${nm}</span><span class="gm-member__role">👑 그룹장</span></div>`;
+          const meTag = m.user_id === currentUser.id ? ' <span class="gm-me-tag">나</span>' : '';
+          const nm = escHtml(m.display_name || '멤버');
+          if (m.role === 'owner') return `
+            <div class="gm-member">
+              <span class="gm-member__name">${nm}${meTag}</span>
+              <span class="gm-member__role">👑 그룹장</span>
+            </div>`;
           const grant = m.role === 'announcer'
-            ? `<button class="gm-role-btn" data-revoke="${m.user_id}">공지권한 해제</button>`
-            : `<button class="gm-role-btn gm-role-btn--grant" data-grant="${m.user_id}">공지권한 부여</button>`;
-          return `<div class="gm-member"><span>${nm}</span>${grant}</div>`;
+            ? `<button class="gm-role-btn" data-revoke="${m.user_id}">공지 해제</button>`
+            : `<button class="gm-role-btn gm-role-btn--grant" data-grant="${m.user_id}">공지 권한</button>`;
+          return `
+            <div class="gm-member">
+              <span class="gm-member__name">${nm}${meTag}</span>
+              ${grant}
+            </div>`;
         }).join('')}
       </div>
-    </details>` : '';
+    </div>` : '';
 
   body.innerHTML = `
-    <button class="gm-back" id="gmBackBtn">← 그룹 목록</button>
-    <div class="gm-detail-head">
-      <h3 class="gm-detail-name">${escHtml(gmCurrent.name)}</h3>
-      <div class="gm-code">초대 코드 <b>${escHtml(gmCurrent.invite_code)}</b>
-        <button class="gm-copy" id="gmCopyCode" title="복사">복사</button></div>
+    <div class="gm-hero">
+      <button class="gm-back-btn" id="gmBackBtn">← 목록</button>
+      <div class="gm-hero__content">
+        <h2 class="gm-hero__name">${escHtml(gmCurrent.name)}</h2>
+        <div class="gm-hero__badge">${isOwner ? '👑 그룹장' : canAnnounce ? '📢 공지자' : '멤버'}</div>
+      </div>
+      <div class="gm-hero__code-row">
+        <div class="gm-hero__code-wrap">
+          <span class="gm-hero__code-label">초대 코드</span>
+          <span class="gm-hero__code">${escHtml(gmCurrent.invite_code)}</span>
+        </div>
+        <button class="gm-copy-btn" id="gmCopyCode">복사</button>
+      </div>
     </div>
+
     ${postForm}
-    <hr class="modal-divider">
-    <p class="section-eyebrow">🗓️ 공지된 일정</p>
-    <div class="gm-anns">${annHtml}</div>
+
+    <div class="gm-anns-wrap">
+      <p class="gm-section-title">🗓️ 공지된 일정</p>
+      <div class="gm-anns">${annHtml}</div>
+    </div>
+
     ${ownerPanel}
-    <hr class="modal-divider">
-    <button class="gm-leave" id="gmLeaveBtn">${isOwner ? '그룹 삭제' : '그룹 나가기'}</button>`;
+
+    <button class="gm-leave-btn ${isOwner ? 'gm-leave-btn--danger' : ''}" id="gmLeaveBtn">
+      ${isOwner ? '🗑️ 그룹 삭제' : '그룹 나가기'}
+    </button>`;
 
   // 이벤트 바인딩
   document.getElementById('gmBackBtn')?.addEventListener('click', gmShowList);
@@ -405,7 +426,7 @@ function _gmAddToSchedule(ann) {
     }
   }
 
-  // 닫기 이벤트 핸들링 (해시를 #home으로 돌려서 handleHashChange에 의해 모달이 닫히도록 유도)
+  // 닫기 버튼 → #home으로
   document.getElementById('groupCloseBtn')?.addEventListener('click', () => { window.location.hash = '#home'; });
   document.getElementById('settingsCloseBtn')?.addEventListener('click', () => { window.location.hash = '#home'; });
 
@@ -415,9 +436,6 @@ function _gmAddToSchedule(ann) {
     });
   });
 
-  // 이벤트 리스너 등록
   window.addEventListener('hashchange', handleHashChange);
-  
-  // 페이지 로드 시 초기 해시 상태 처리 (로그인 체크 완료 대응 지연)
   setTimeout(handleHashChange, 350);
 })();

@@ -11,6 +11,7 @@
 let supabaseClient = null;
 let currentUser    = null;
 let supabaseReady  = false;
+window.authResolved = false;
 
 // ──────────────────────────────────────────────
 // 동기화 상태 표시
@@ -182,6 +183,7 @@ async function bootstrapSupabase() {
 
   } catch (err) {
     console.error('Supabase 초기화 실패:', err);
+    window.authResolved = true;
     showLoginScreen();
     showNetworkHint(); // 네트워크 오류 → 즉시 안내
     renderPool();
@@ -260,7 +262,10 @@ function updateAuthUi(user) {
 
   if (loginBtn)  loginBtn.hidden  = !!user;
   if (userInfo)  userInfo.hidden  = !user;
-  if (userPhoto) userPhoto.src    = user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '';
+  if (userPhoto) {
+    userPhoto.style.display = '';
+    userPhoto.src = user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '';
+  }
   if (userName)  userName.textContent = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email || '사용자';
 
   setTaskInputEnabled(!!user);
