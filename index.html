@@ -23,7 +23,7 @@
   <link rel="apple-touch-icon" href="/image/apple-touch-icon.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/image/apple-touch-icon.png">
   <meta name="theme-color" content="#6c63ff">
-  <link rel="stylesheet" href="style.css?v=48" />
+  <link rel="stylesheet" href="style.css?v=51" />
 </head>
 <body>
 
@@ -154,6 +154,7 @@
         <span id="weekLabel" class="week-label"></span>
         <button id="nextWeekBtn" class="week-nav-btn" aria-label="다음 날">▶</button>
         <button id="infoBtn" class="icon-btn" aria-label="정보" title="정보/링크">📌</button>
+        <button id="groupBtn" class="icon-btn" aria-label="그룹" title="그룹 일정">👥</button>
         <button id="suhaengBtn" class="icon-btn" aria-label="수행평가 일정" title="수행평가 일정">📋</button>
         <button id="gcalViewBtn" class="icon-btn" aria-label="구글 캘린더 보기" title="구글 캘린더 보기" hidden>📅</button>
         <!-- 모바일 전용: 캘린더 일정 바텀시트 열기 -->
@@ -316,6 +317,17 @@
         <!-- 과거 내역 -->
         <button id="infoHistoryBtn" class="history-btn history-btn--full">📂 과거 내역</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ─── 그룹 모달 ─── -->
+  <div id="groupModal" class="modal-overlay" hidden>
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2>👥 그룹 일정</h2>
+        <button id="groupCloseBtn" class="modal-close">&times;</button>
+      </div>
+      <div id="groupModalBody" class="modal-body modal-body--col"></div>
     </div>
   </div>
 
@@ -549,6 +561,19 @@
   </div>
 
 
+  <!-- ─── 모바일 하단 탭바 (홈 / 모임 / 설정) ─── -->
+  <nav id="mobileTabBar" class="mobile-tabbar" aria-label="하단 탭">
+    <button id="tabHome" class="tabbar-item is-active" type="button">
+      <span class="tabbar-item__icon">🏠</span><span class="tabbar-item__label">홈</span>
+    </button>
+    <button id="tabGroup" class="tabbar-item" type="button">
+      <span class="tabbar-item__icon">👥</span><span class="tabbar-item__label">모임</span>
+    </button>
+    <button id="tabSettings" class="tabbar-item" type="button">
+      <span class="tabbar-item__icon">⚙️</span><span class="tabbar-item__label">설정</span>
+    </button>
+  </nav>
+
   <!-- ─── Supabase SDK ─── -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -559,6 +584,7 @@
   <script src="drag.js?v=7"></script>
   <script src="deadline.js?v=2"></script>
   <script src="gcal/gcal.js?v=13"></script>
+  <script src="groups.js?v=3"></script>
   <script src="push.js?v=1"></script>
   <script src="modals.js?v=15"></script>
   <script src="events.js?v=18"></script>

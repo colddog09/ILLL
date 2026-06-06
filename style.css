@@ -4590,3 +4590,132 @@ a.settings-tab {
 /* (광물은 btn-o 버튼 영역에만 표시) */
 
 /* 미완료: 곡괭이 아이콘 */
+
+/* ============================================================
+   그룹 기능 (groups.js)
+   ============================================================ */
+.gm-loading, .gm-empty { text-align:center; color:var(--text-sub); padding:24px 8px; font-size:0.9rem; line-height:1.6; }
+.gm-list { display:flex; flex-direction:column; gap:8px; }
+.gm-group-row {
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:13px 15px; border-radius:var(--radius-sm); border:1.5px solid var(--border);
+  background:var(--surface); cursor:pointer; font-family:var(--font); width:100%;
+  transition:border-color .15s, background .15s, transform .1s;
+}
+.gm-group-row:hover { border-color:var(--accent); background:var(--surface-hover); }
+.gm-group-row:active { transform:scale(0.99); }
+.gm-group-row__name { font-weight:700; color:var(--text); font-size:0.95rem; }
+.gm-group-row__role { font-size:0.74rem; color:var(--text-sub); font-weight:600; flex-shrink:0; }
+
+.gm-forms { display:flex; flex-direction:column; gap:16px; }
+.gm-form__row { display:flex; gap:8px; }
+.gm-input {
+  flex:1; min-width:0; padding:10px 12px; border-radius:var(--radius-sm);
+  border:1.5px solid var(--border); background:var(--surface); color:var(--text);
+  font-family:var(--font); font-size:0.9rem;
+}
+.gm-input:focus { outline:none; border-color:var(--accent); }
+.gm-input--code { text-transform:uppercase; letter-spacing:2px; font-weight:700; text-align:center; }
+.gm-btn {
+  flex-shrink:0; padding:10px 16px; border-radius:var(--radius-sm); border:1.5px solid var(--border);
+  background:var(--surface); color:var(--text); font-weight:700; cursor:pointer;
+  font-family:var(--font); font-size:0.88rem; transition:opacity .15s, border-color .15s;
+}
+.gm-btn:hover { border-color:var(--accent); }
+.gm-btn--primary { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; border:none; }
+.gm-btn--primary:hover { opacity:0.9; }
+
+.gm-back {
+  background:none; border:none; color:var(--accent); font-weight:700; cursor:pointer;
+  font-family:var(--font); font-size:0.85rem; padding:0 0 4px; align-self:flex-start;
+}
+.gm-detail-head { display:flex; flex-direction:column; gap:6px; }
+.gm-detail-name { font-size:1.15rem; font-weight:800; color:var(--text); margin:0; }
+.gm-code { font-size:0.8rem; color:var(--text-sub); display:flex; align-items:center; gap:8px; }
+.gm-code b { color:var(--accent); letter-spacing:2px; font-size:0.95rem; }
+.gm-copy { font-size:0.72rem; padding:3px 9px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text-sub); cursor:pointer; font-family:var(--font); }
+.gm-copy:hover { border-color:var(--accent); color:var(--accent); }
+
+.gm-post { display:flex; flex-direction:column; gap:8px; }
+.gm-post__row { display:flex; gap:8px; }
+.gm-hint { font-size:0.72rem; color:var(--text-sub); line-height:1.5; opacity:0.85; }
+
+.gm-anns { display:flex; flex-direction:column; gap:8px; }
+.gm-ann {
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:11px 13px; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--surface);
+}
+.gm-ann__main { min-width:0; flex:1; }
+.gm-ann__text { display:block; font-weight:600; color:var(--text); font-size:0.9rem; word-break:break-word; }
+.gm-ann__meta { display:flex; gap:10px; align-items:center; margin-top:3px; flex-wrap:wrap; }
+.gm-ann__date { font-size:0.74rem; color:var(--accent); font-weight:600; }
+.gm-ann__date--none { color:var(--text-sub); }
+.gm-ann__author { font-size:0.72rem; color:var(--text-sub); }
+.gm-ann__actions { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+.gm-add-btn {
+  padding:7px 11px; border-radius:9px; border:none; cursor:pointer; white-space:nowrap;
+  background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff;
+  font-weight:700; font-size:0.78rem; font-family:var(--font); transition:opacity .15s;
+}
+.gm-add-btn:hover { opacity:0.9; }
+.gm-add-btn--done { background:var(--surface-hover); color:var(--text-sub); cursor:default; }
+.gm-ann__del { background:none; border:none; cursor:pointer; font-size:0.9rem; opacity:0.6; padding:2px; }
+.gm-ann__del:hover { opacity:1; }
+
+.gm-manage { border:1px solid var(--border); border-radius:var(--radius-sm); padding:8px 12px; }
+.gm-manage summary { cursor:pointer; font-weight:700; font-size:0.85rem; color:var(--text); }
+.gm-members { display:flex; flex-direction:column; gap:6px; margin-top:10px; }
+.gm-member { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:0.85rem; color:var(--text); }
+.gm-member__role { font-size:0.76rem; color:var(--text-sub); }
+.gm-role-btn { font-size:0.74rem; padding:5px 10px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text-sub); cursor:pointer; font-family:var(--font); }
+.gm-role-btn--grant { border-color:var(--accent); color:var(--accent); }
+.gm-leave { background:none; border:none; color:var(--danger); font-weight:600; cursor:pointer; font-family:var(--font); font-size:0.82rem; padding:4px; align-self:center; }
+
+/* ============================================================
+   모바일 하단 탭바 (홈 / 모임 / 설정) — 데스크톱 숨김
+   ============================================================ */
+.mobile-tabbar { display: none; }
+@media (max-width: 768px) {
+  .mobile-tabbar {
+    display: flex;
+    position: fixed;
+    left: 0; right: 0;
+    bottom: 0;
+    z-index: 150;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: rgba(255,255,255,0.96);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-top: 1.5px solid var(--border);
+    box-shadow: 0 -4px 20px rgba(108,99,255,0.08);
+  }
+  .tabbar-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 8px 0 7px;
+    border: none;
+    background: none;
+    color: var(--text-sub);
+    font-family: var(--font);
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: color 0.15s, transform 0.1s;
+  }
+  .tabbar-item:active { transform: scale(0.94); }
+  .tabbar-item__icon { font-size: 1.35rem; line-height: 1; filter: grayscale(0.4); opacity: 0.7; transition: filter 0.15s, opacity 0.15s; }
+  .tabbar-item__label { line-height: 1; white-space: nowrap; }
+  .tabbar-item.is-active { color: var(--accent); }
+  .tabbar-item.is-active .tabbar-item__icon { filter: none; opacity: 1; }
+  /* 탭바에 가리지 않도록 스크롤 영역 여백 확보 */
+  .schedule-area {
+    padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+/* 다크 계열 테마 대응 */
+[data-theme="dark"] .mobile-tabbar,
+[data-theme="starrail"] .mobile-tabbar { background: rgba(30,27,75,0.92); }

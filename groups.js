@@ -1,0 +1,386 @@
+/* ============================================================
+   groups.js — 그룹 기능 (초대코드 참여 / 일정 공지 / 내 리스트로 추가)
+   gcal.js, state.js, utils.js 이후에 로드
+   ============================================================ */
+'use strict';
+
+let gmGroups   = [];     // 내가 속한 그룹 [{id,name,invite_code,owner_id,role}]
+let gmCurrent  = null;   // 현재 열람 중인 그룹 객체
+let gmBusy     = false;
+
+function _gmDisplayName() {
+  const u = currentUser;
+  return (u?.user_metadata?.full_name || u?.user_metadata?.name || u?.email || '사용자').slice(0, 40);
+}
+
+// 이미 내 리스트에 추가한 공지 id 기록 (기기별 UX용)
+function _gmAddedKey() { return 'gm_added_' + (currentUser?.id || 'anon'); }
+function _gmAddedSet() {
+  try { return new Set(JSON.parse(localStorage.getItem(_gmAddedKey()) || '[]')); }
+  catch { return new Set(); }
+}
+function _gmMarkAdded(id) {
+  const s = _gmAddedSet(); s.add(id);
+  try { localStorage.setItem(_gmAddedKey(), JSON.stringify([...s])); } catch (_) {}
+}
+
+// ──────────────────────────────────────────────
+// 모달 열기/닫기
+// ──────────────────────────────────────────────
+function gmOpenModal() {
+  if (!requireLogin('그룹 기능은 로그인 후 이용 가능합니다.')) return;
+  const modal = document.getElementById('groupModal');
+  if (!modal) return;
+  modal.hidden = false;
+  gmShowList();
+}
+function gmCloseModal() {
+  const modal = document.getElementById('groupModal');
+  if (modal) modal.hidden = true;
+  gmCurrent = null;
+}
+
+// ──────────────────────────────────────────────
+// 목록 화면
+// ──────────────────────────────────────────────
+async function gmShowList() {
+  gmCurrent = null;
+  const body = document.getElementById('groupModalBody');
+  if (!body) return;
+  body.innerHTML = `<div class="gm-loading">불러오는 중…</div>`;
+
+  const { data, error } = await supabaseClient
+    .from('group_members')
+    .select('role, groups(id, name, invite_code, owner_id)')
+    .eq('user_id', currentUser.id);
+
+  if (error) { body.innerHTML = `<div class="gm-empty">목록을 불러오지 못했어요. 잠시 후 다시 시도해주세요.</div>`; return; }
+
+  gmGroups = (data || [])
+    .filter(r => r.groups)
+    .map(r => ({ ...r.groups, role: r.role }));
+
+  const listHtml = gmGroups.length
+    ? gmGroups.map(g => `
+        <button class="gm-group-row" data-open="${g.id}">
+          <span class="gm-group-row__name">${escHtml(g.name)}</span>
+          <span class="gm-group-row__role">${g.role === 'owner' ? '👑 그룹장' : g.role === 'announcer' ? '📢 공지' : '멤버'}</span>
+        </button>`).join('')
+    : `<div class="gm-empty">아직 속한 그룹이 없어요.<br>아래에서 만들거나 초대 코드로 참여하세요.</div>`;
+
+  body.innerHTML = `
+    <div class="gm-list">${listHtml}</div>
+    <hr class="modal-divider">
+    <div class="gm-forms">
+      <div class="gm-form">
+        <p class="section-eyebrow">➕ 새 그룹 만들기</p>
+        <div class="gm-form__row">
+          <input id="gmCreateName" class="gm-input" type="text" maxlength="40" placeholder="그룹 이름 (예: 3학년 2반)" />
+          <button id="gmCreateBtn" class="gm-btn gm-btn--primary">만들기</button>
+        </div>
+      </div>
+      <div class="gm-form">
+        <p class="section-eyebrow">🔑 초대 코드로 참여</p>
+        <div class="gm-form__row">
+          <input id="gmJoinCode" class="gm-input gm-input--code" type="text" maxlength="6" placeholder="코드 6자리" />
+          <button id="gmJoinBtn" class="gm-btn">참여</button>
+        </div>
+      </div>
+    </div>`;
+
+  body.querySelectorAll('[data-open]').forEach(b =>
+    b.addEventListener('click', () => gmOpenGroup(b.dataset.open)));
+  document.getElementById('gmCreateBtn')?.addEventListener('click', gmCreateGroup);
+  document.getElementById('gmJoinBtn')?.addEventListener('click', gmJoinGroup);
+  document.getElementById('gmJoinCode')?.addEventListener('keydown', e => { if (e.key === 'Enter') gmJoinGroup(); });
+  document.getElementById('gmCreateName')?.addEventListener('keydown', e => { if (e.key === 'Enter') gmCreateGroup(); });
+}
+
+async function gmCreateGroup() {
+  if (gmBusy) return;
+  const name = (document.getElementById('gmCreateName')?.value || '').trim();
+  if (!name) { alert('그룹 이름을 입력하세요.'); return; }
+  gmBusy = true;
+  const { data, error } = await supabaseClient.rpc('create_group', { p_name: name, p_display: _gmDisplayName() });
+  gmBusy = false;
+  if (error) { alert('그룹 생성 실패: ' + error.message); return; }
+  await gmShowList();
+  if (data?.id) gmOpenGroup(data.id);
+}
+
+async function gmJoinGroup() {
+  if (gmBusy) return;
+  const code = (document.getElementById('gmJoinCode')?.value || '').trim();
+  if (code.length < 4) { alert('초대 코드를 정확히 입력하세요.'); return; }
+  gmBusy = true;
+  const { data, error } = await supabaseClient.rpc('join_group_by_code', { p_code: code, p_display: _gmDisplayName() });
+  gmBusy = false;
+  if (error) {
+    alert(error.message === 'invalid_code' || /invalid_code/.test(error.message)
+      ? '존재하지 않는 초대 코드예요.' : '참여 실패: ' + error.message);
+    return;
+  }
+  await gmShowList();
+  if (data?.id) gmOpenGroup(data.id);
+}
+
+// ──────────────────────────────────────────────
+// 그룹 상세 화면
+// ──────────────────────────────────────────────
+async function gmOpenGroup(groupId) {
+  const body = document.getElementById('groupModalBody');
+  if (!body) return;
+  body.innerHTML = `<div class="gm-loading">불러오는 중…</div>`;
+
+  gmCurrent = gmGroups.find(g => g.id === groupId) || null;
+  if (!gmCurrent) {
+    // 목록 갱신 후 재시도
+    await gmShowList();
+    gmCurrent = gmGroups.find(g => g.id === groupId) || null;
+    if (!gmCurrent) return;
+  }
+
+  const isOwner    = gmCurrent.role === 'owner';
+  const canAnnounce = gmCurrent.role === 'owner' || gmCurrent.role === 'announcer';
+
+  const [annRes, memRes] = await Promise.all([
+    supabaseClient.from('group_announcements').select('*').eq('group_id', groupId).order('created_at', { ascending: false }),
+    supabaseClient.from('group_members').select('user_id, role, display_name').eq('group_id', groupId)
+  ]);
+
+  const anns    = annRes.data || [];
+  const members = memRes.data || [];
+  const added   = _gmAddedSet();
+
+  const annHtml = anns.length ? anns.map(a => {
+    const dateLabel = a.date
+      ? `<span class="gm-ann__date">📅 ${escHtml(a.date)}</span>`
+      : (a.deadline ? `<span class="gm-ann__date">⏰ ${escHtml(formatDeadlineText(a.deadline))}</span>` : `<span class="gm-ann__date gm-ann__date--none">날짜 없음</span>`);
+    const isAdded = added.has(a.id);
+    const canDelete = isOwner || a.author_id === currentUser.id;
+    return `
+      <div class="gm-ann" data-ann="${a.id}">
+        <div class="gm-ann__main">
+          <span class="gm-ann__text">${escHtml(a.text)}</span>
+          <div class="gm-ann__meta">${dateLabel}<span class="gm-ann__author">${escHtml(a.author_name || '익명')}</span></div>
+        </div>
+        <div class="gm-ann__actions">
+          <button class="gm-add-btn ${isAdded ? 'gm-add-btn--done' : ''}" data-add="${a.id}" ${isAdded ? 'disabled' : ''}>${isAdded ? '추가됨' : '+ 내 리스트'}</button>
+          ${canDelete ? `<button class="gm-ann__del" data-del="${a.id}" title="공지 삭제">🗑️</button>` : ''}
+        </div>
+      </div>`;
+  }).join('') : `<div class="gm-empty">아직 공지된 일정이 없어요.</div>`;
+
+  const postForm = canAnnounce ? `
+    <div class="gm-post">
+      <p class="section-eyebrow">📢 일정 공지하기</p>
+      <input id="gmPostText" class="gm-input" type="text" maxlength="200" placeholder="일정 내용 (예: 수학 수행평가)" />
+      <div class="gm-post__row">
+        <input id="gmPostDate" class="gm-input" type="date" />
+        <button id="gmPostBtn" class="gm-btn gm-btn--primary">공지 올리기</button>
+      </div>
+      <p class="gm-hint">날짜를 비우면 멤버 '할일 풀'로, 날짜를 넣으면 멤버의 구글 캘린더(미연결 시 해당 날짜)로 추가돼요.</p>
+    </div>` : '';
+
+  const ownerPanel = isOwner ? `
+    <details class="gm-manage">
+      <summary>👑 멤버 · 권한 관리 (${members.length}명)</summary>
+      <div class="gm-members">
+        ${members.map(m => {
+          const meTag = m.user_id === currentUser.id ? ' (나)' : '';
+          const nm = escHtml((m.display_name || '멤버') + meTag);
+          if (m.role === 'owner') return `<div class="gm-member"><span>${nm}</span><span class="gm-member__role">👑 그룹장</span></div>`;
+          const grant = m.role === 'announcer'
+            ? `<button class="gm-role-btn" data-revoke="${m.user_id}">공지권한 해제</button>`
+            : `<button class="gm-role-btn gm-role-btn--grant" data-grant="${m.user_id}">공지권한 부여</button>`;
+          return `<div class="gm-member"><span>${nm}</span>${grant}</div>`;
+        }).join('')}
+      </div>
+    </details>` : '';
+
+  body.innerHTML = `
+    <button class="gm-back" id="gmBackBtn">← 그룹 목록</button>
+    <div class="gm-detail-head">
+      <h3 class="gm-detail-name">${escHtml(gmCurrent.name)}</h3>
+      <div class="gm-code">초대 코드 <b>${escHtml(gmCurrent.invite_code)}</b>
+        <button class="gm-copy" id="gmCopyCode" title="복사">복사</button></div>
+    </div>
+    ${postForm}
+    <hr class="modal-divider">
+    <p class="section-eyebrow">🗓️ 공지된 일정</p>
+    <div class="gm-anns">${annHtml}</div>
+    ${ownerPanel}
+    <hr class="modal-divider">
+    <button class="gm-leave" id="gmLeaveBtn">${isOwner ? '그룹 삭제' : '그룹 나가기'}</button>`;
+
+  // 이벤트 바인딩
+  document.getElementById('gmBackBtn')?.addEventListener('click', gmShowList);
+  document.getElementById('gmCopyCode')?.addEventListener('click', () => {
+    navigator.clipboard?.writeText(gmCurrent.invite_code).then(() => {
+      const b = document.getElementById('gmCopyCode'); if (b) { b.textContent = '복사됨'; setTimeout(() => b.textContent = '복사', 1500); }
+    });
+  });
+  document.getElementById('gmPostBtn')?.addEventListener('click', () => gmPostAnnouncement(groupId));
+  document.getElementById('gmLeaveBtn')?.addEventListener('click', () => gmLeaveOrDelete(groupId, isOwner));
+
+  body.querySelectorAll('[data-add]').forEach(b =>
+    b.addEventListener('click', () => gmAddToMyList(anns.find(a => a.id === b.dataset.add), b)));
+  body.querySelectorAll('[data-del]').forEach(b =>
+    b.addEventListener('click', () => gmDeleteAnnouncement(b.dataset.del, groupId)));
+  body.querySelectorAll('[data-grant]').forEach(b =>
+    b.addEventListener('click', () => gmSetRole(groupId, b.dataset.grant, 'announcer')));
+  body.querySelectorAll('[data-revoke]').forEach(b =>
+    b.addEventListener('click', () => gmSetRole(groupId, b.dataset.revoke, 'member')));
+}
+
+// ──────────────────────────────────────────────
+// 공지 작성 / 삭제
+// ──────────────────────────────────────────────
+async function gmPostAnnouncement(groupId) {
+  if (gmBusy) return;
+  const text = (document.getElementById('gmPostText')?.value || '').trim().slice(0, 200);
+  const date = document.getElementById('gmPostDate')?.value || null;
+  if (!text) { alert('일정 내용을 입력하세요.'); return; }
+  gmBusy = true;
+  const { error } = await supabaseClient.from('group_announcements').insert({
+    group_id: groupId, author_id: currentUser.id, author_name: _gmDisplayName(),
+    text, date: date || null
+  });
+  gmBusy = false;
+  if (error) { alert('공지 등록 실패: ' + error.message); return; }
+  gmOpenGroup(groupId);
+}
+
+async function gmDeleteAnnouncement(id, groupId) {
+  if (!confirm('이 공지를 삭제할까요?')) return;
+  const { error } = await supabaseClient.from('group_announcements').delete().eq('id', id);
+  if (error) { alert('삭제 실패: ' + error.message); return; }
+  gmOpenGroup(groupId);
+}
+
+// ──────────────────────────────────────────────
+// 권한 부여/해제 (owner)
+// ──────────────────────────────────────────────
+async function gmSetRole(groupId, userId, role) {
+  const { error } = await supabaseClient.from('group_members')
+    .update({ role }).eq('group_id', groupId).eq('user_id', userId);
+  if (error) { alert('권한 변경 실패: ' + error.message); return; }
+  gmOpenGroup(groupId);
+}
+
+// ──────────────────────────────────────────────
+// 그룹 나가기 / 삭제
+// ──────────────────────────────────────────────
+async function gmLeaveOrDelete(groupId, isOwner) {
+  if (isOwner) {
+    if (!confirm('그룹을 삭제하면 모든 공지와 멤버가 사라집니다. 삭제할까요?')) return;
+    const { error } = await supabaseClient.from('groups').delete().eq('id', groupId);
+    if (error) { alert('삭제 실패: ' + error.message); return; }
+  } else {
+    if (!confirm('이 그룹에서 나갈까요?')) return;
+    const { error } = await supabaseClient.from('group_members')
+      .delete().eq('group_id', groupId).eq('user_id', currentUser.id);
+    if (error) { alert('나가기 실패: ' + error.message); return; }
+  }
+  gmShowList();
+}
+
+// ──────────────────────────────────────────────
+// 공지 일정 → 내 리스트로 추가
+//   날짜 없음 → 할일 풀
+//   날짜 있음 → 구글 캘린더(연결 시) / 미연결 시 해당 날짜 스케줄
+// ──────────────────────────────────────────────
+async function gmAddToMyList(ann, btn) {
+  if (!ann) return;
+  if (btn) { btn.disabled = true; btn.textContent = '추가 중…'; }
+
+  try {
+    if (!ann.date) {
+      // 할일 풀로
+      const task = { id: uid(), text: ann.text };
+      if (ann.deadline) task.deadline = ann.deadline;
+      state.pool.push(task);
+      saveState();
+      renderPool();
+    } else if (typeof gcalTokenValid === 'function' && gcalTokenValid()) {
+      // 구글 캘린더로
+      try {
+        await gcalCreateEvent(ann.text, ann.date);
+        if (typeof gcalImportCurrentDate === 'function') gcalImportCurrentDate();
+      } catch (e) {
+        // 캘린더 실패 시 앱 스케줄로 폴백
+        _gmAddToSchedule(ann);
+      }
+    } else {
+      // 캘린더 미연결 → 앱 스케줄
+      _gmAddToSchedule(ann);
+    }
+
+    _gmMarkAdded(ann.id);
+    if (btn) { btn.textContent = '추가됨'; btn.classList.add('gm-add-btn--done'); }
+  } catch (e) {
+    if (btn) { btn.disabled = false; btn.textContent = '+ 내 리스트'; }
+    alert('추가 실패: ' + (e?.message || '오류'));
+  }
+}
+
+function _gmAddToSchedule(ann) {
+  if (!state.schedule[ann.date]) state.schedule[ann.date] = [];
+  const item = { id: uid(), taskId: uid(), text: ann.text, status: null };
+  if (ann.deadline) item.deadline = ann.deadline;
+  state.schedule[ann.date].push(item);
+  saveState();
+  renderApp();
+}
+
+// ──────────────────────────────────────────────
+// 바인딩
+// ──────────────────────────────────────────────
+(function initGroups() {
+  document.getElementById('groupBtn')?.addEventListener('click', gmOpenModal);
+  document.getElementById('groupCloseBtn')?.addEventListener('click', gmCloseModal);
+  const modal = document.getElementById('groupModal');
+  modal?.addEventListener('click', e => { if (e.target === modal) gmCloseModal(); });
+
+  // ── 모바일 하단 탭바 (홈 / 모임 / 설정) ──
+  const tabHome     = document.getElementById('tabHome');
+  const tabGroup    = document.getElementById('tabGroup');
+  const tabSettings = document.getElementById('tabSettings');
+  const settingsModal = document.getElementById('settingsModal');
+  const groupModal    = document.getElementById('groupModal');
+
+  function setActiveTab(name) {
+    tabHome?.classList.toggle('is-active', name === 'home');
+    tabGroup?.classList.toggle('is-active', name === 'group');
+    tabSettings?.classList.toggle('is-active', name === 'settings');
+  }
+
+  tabHome?.addEventListener('click', () => {
+    // 열린 화면(모달) 닫고 앱(홈)으로
+    gmCloseModal();
+    if (settingsModal) settingsModal.hidden = true;
+    setActiveTab('home');
+  });
+  tabGroup?.addEventListener('click', () => {
+    if (settingsModal) settingsModal.hidden = true;
+    gmOpenModal();
+    setActiveTab('group');
+  });
+  tabSettings?.addEventListener('click', () => {
+    gmCloseModal();
+    document.getElementById('settingsBtn')?.click();
+    setActiveTab('settings');
+  });
+
+  // 모달이 닫히면 홈 탭으로 자동 복귀 (× 버튼·배경 클릭 포함)
+  function syncTabsToModals() {
+    const groupOpen    = groupModal    && !groupModal.hidden;
+    const settingsOpen = settingsModal && !settingsModal.hidden;
+    if (groupOpen)        setActiveTab('group');
+    else if (settingsOpen) setActiveTab('settings');
+    else                   setActiveTab('home');
+  }
+  [groupModal, settingsModal].forEach(m => {
+    if (m) new MutationObserver(syncTabsToModals).observe(m, { attributes: true, attributeFilter: ['hidden'] });
+  });
+})();
