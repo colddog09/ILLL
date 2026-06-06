@@ -337,11 +337,6 @@ function _gmAddToSchedule(ann) {
 // 바인딩
 // ──────────────────────────────────────────────
 (function initGroups() {
-  document.getElementById('groupBtn')?.addEventListener('click', gmOpenModal);
-  document.getElementById('groupCloseBtn')?.addEventListener('click', gmCloseModal);
-  const modal = document.getElementById('groupModal');
-  modal?.addEventListener('click', e => { if (e.target === modal) gmCloseModal(); });
-
   // ── 모바일 하단 탭바 (홈 / 모임 / 설정) ──
   const tabHome     = document.getElementById('tabHome');
   const tabGroup    = document.getElementById('tabGroup');
@@ -355,32 +350,74 @@ function _gmAddToSchedule(ann) {
     tabSettings?.classList.toggle('is-active', name === 'settings');
   }
 
-  tabHome?.addEventListener('click', () => {
-    // 열린 화면(모달) 닫고 앱(홈)으로
-    gmCloseModal();
-    if (settingsModal) settingsModal.hidden = true;
-    setActiveTab('home');
+  // 탭 클릭 시 해시만 변경
+  tabHome?.addEventListener('click', () => { window.location.hash = '#home'; });
+  tabGroup?.addEventListener('click', () => { window.location.hash = '#group'; });
+  tabSettings?.addEventListener('click', () => { window.location.hash = '#settings'; });
+
+  // 헤더 버튼 클릭 시 해시 변경
+  document.getElementById('groupBtn')?.addEventListener('click', e => {
+    e.preventDefault();
+    window.location.hash = '#group';
   });
-  tabGroup?.addEventListener('click', () => {
-    if (settingsModal) settingsModal.hidden = true;
-    gmOpenModal();
-    setActiveTab('group');
-  });
-  tabSettings?.addEventListener('click', () => {
-    gmCloseModal();
-    document.getElementById('settingsBtn')?.click();
-    setActiveTab('settings');
+  document.getElementById('settingsBtn')?.addEventListener('click', e => {
+    e.preventDefault();
+    window.location.hash = '#settings';
   });
 
-  // 모달이 닫히면 홈 탭으로 자동 복귀 (× 버튼·배경 클릭 포함)
-  function syncTabsToModals() {
-    const groupOpen    = groupModal    && !groupModal.hidden;
-    const settingsOpen = settingsModal && !settingsModal.hidden;
-    if (groupOpen)        setActiveTab('group');
-    else if (settingsOpen) setActiveTab('settings');
-    else                   setActiveTab('home');
+  // 해시 변경 감지 핸들러
+  function handleHashChange() {
+    const hash = window.location.hash;
+
+    if (hash === '#group') {
+      if (!currentUser) {
+        alert('그룹 기능은 로그인 후 이용 가능합니다.');
+        window.location.hash = '#home';
+        return;
+      }
+      if (settingsModal) settingsModal.hidden = true;
+      const modal = document.getElementById('groupModal');
+      if (modal) {
+        modal.hidden = false;
+        gmShowList();
+      }
+      setActiveTab('group');
+    } else if (hash === '#settings') {
+      if (!currentUser) {
+        alert('로그인 후 이용 가능합니다.');
+        window.location.hash = '#home';
+        return;
+      }
+      gmCloseModal();
+      if (settingsModal) {
+        if (settingsModal.hidden) {
+          document.getElementById('settingsBtn')?.click();
+        } else {
+          settingsModal.hidden = false;
+        }
+      }
+      setActiveTab('settings');
+    } else {
+      // #home, # 혹은 해시 없음
+      gmCloseModal();
+      if (settingsModal) settingsModal.hidden = true;
+      setActiveTab('home');
+    }
   }
+
+  // 닫기 이벤트 핸들링 (해시를 #home으로 돌려서 handleHashChange에 의해 모달이 닫히도록 유도)
+  document.getElementById('groupCloseBtn')?.addEventListener('click', () => { window.location.hash = '#home'; });
+  document.getElementById('settingsCloseBtn')?.addEventListener('click', () => { window.location.hash = '#home'; });
+
   [groupModal, settingsModal].forEach(m => {
-    if (m) new MutationObserver(syncTabsToModals).observe(m, { attributes: true, attributeFilter: ['hidden'] });
+    m?.addEventListener('click', e => {
+      if (e.target === m) window.location.hash = '#home';
+    });
   });
+
+  // 이벤트 리스너 등록
+  window.addEventListener('hashchange', handleHashChange);
+  
+  // 페이지 로드 시 초기 해시 상태 처리 (로그인 체크 완료 대응 지연)
+  setTimeout(handleHashChange, 350);
 })();
