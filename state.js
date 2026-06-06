@@ -46,11 +46,14 @@
   window.addEventListener('offline', showOfflineBanner);
   window.addEventListener('online',  () => {
     hideOfflineBanner();
-    // 온라인 복귀 시 자동 재로드 (데이터 최신화)
-    if (typeof loadState === 'function' && !loadInProgress) {
-      loadInProgress = false;
-      loadState();
-    }
+    // 온라인 복귀:
+    //  - 아직 로드 전이면 정식 로드
+    //  - 미저장 변경 있으면 업로드 우선 (덮어쓰기 방지)
+    //  - 그 외엔 최신 데이터만 가볍게 가져오기
+    if (typeof loadState !== 'function') return;
+    if (!dataLoaded) { loadState(); return; }
+    if (_pendingSave) { flushToSupabase(); }
+    else { _pullRemote(); }
   });
 })();
 
@@ -157,107 +160,212 @@ function _remoteHasData(remote) {
   return false;
 }
 
+
 // ──────────────────────────────────────────────
-// Supabase 저장 공통 페이로드
+// 동기화 상태 추적
+//   _pendingSave   : 로컬 변경이 아직 클라우드에 안 올라감
+//   _lastRemoteTs  : 우리가 마지막으로 적용/기록한 remote updated_at (ms)
+//   _lastWrittenTs : 우리가 마지막으로 업로드한 updated_at 문자열 (에코 무시용)
 // ──────────────────────────────────────────────
-function _supabaseSavePayload() {
+let _saveTimer    = null;
+let _pendingSave  = false;
+let _lastRemoteTs = 0;
+let _lastWrittenTs = '';
+let _uploading    = false;
+let _pulling      = false;
+
+const SAVE_DEBOUNCE_MS = 1500;
+
+// pruning 적용된 로컬 스냅샷 (remote 와 동일 형태로 비교하기 위함)
+function prunedSnapshot() {
+  return JSON.stringify({
+    pool: state.pool,
+    schedule: pruneScheduleForSave(state.schedule),
+    links: state.links || []
+  });
+}
+// remote 행을 동일 형태 스냅샷으로 정규화
+function _remoteSnapshot(remote) {
+  return JSON.stringify({
+    pool: remote.pool || [],
+    schedule: remote.schedule || {},
+    links: remote.links || []
+  });
+}
+
+// updated_at 을 명시적으로 받아 페이로드 생성
+function _supabaseSavePayloadAt(ts) {
   return {
     user_id:    currentUser.id,
     pool:       state.pool,
     schedule:   pruneScheduleForSave(state.schedule),
     links:      state.links || [],
-    updated_at: new Date().toISOString()
+    updated_at: ts
   };
 }
 
-// ──────────────────────────────────────────────
-// 저장: Supabase 디바운스 2초
-// ──────────────────────────────────────────────
-let _saveTimer = null;
-let _pendingSave = false; // 로컬에서 변경됐지만 아직 Supabase에 안 올라간 상태
-
-function saveState() {
-  if (!dataLoaded) return;
-  if (!navigator.onLine) { setSyncStatus('📶 오프라인 — 연결 후 자동 저장'); return; }
-
-  const snap = stateSnapshot();
-  if (!lastSavedSnapshot && !hasAnyTaskData()) return; // 빈 state 저장 방지
-  if (snap === lastSavedSnapshot) { showLastSavedTime(); return; } // 변경 없음
-
-  lastSavedSnapshot = snap;
-  _pendingSave = true; // 로컬 변경 발생
-  showLastSavedTime();
-
-  if (!currentUser || !supabaseClient) return;
+// 단일 업로드 경로 (디바운스 저장 / 플러시 공용)
+function _uploadNow() {
+  if (!currentUser || !supabaseClient) return Promise.resolve(false);
+  if (!navigator.onLine) { setSyncStatus('📶 오프라인 — 연결 후 자동 저장'); return Promise.resolve(false); }
   clearTimeout(_saveTimer);
-  setSyncStatus('📝 동기화 중...');
-  _saveTimer = setTimeout(() => {
-    if (!currentUser || !supabaseClient) return;
-    supabaseClient
-      .from('user_states')
-      .upsert(_supabaseSavePayload(), { onConflict: 'user_id' })
-      .then(({ error }) => {
-        if (error) { setSyncStatus('⚠️ 클라우드 저장 실패'); return; }
-        _pendingSave = false; // 저장 완료
-        setSyncSaved();
-      });
-  }, 2000);
-}
-
-// ──────────────────────────────────────────────
-// 즉시 플러시 (페이지 종료 / 백그라운드 전환)
-// _pendingSave 가 true일 때만 업로드 — 다른 기기 데이터 덮어쓰기 방지
-// ──────────────────────────────────────────────
-function flushToSupabase() {
-  if (!currentUser || !supabaseClient || !dataLoaded) return;
-  if (!_pendingSave) return; // 변경사항 없으면 업로드 생략
-  clearTimeout(_saveTimer);
-  supabaseClient
+  const ts = new Date().toISOString();
+  const snapAtUpload = stateSnapshot();
+  _lastWrittenTs = ts;
+  _uploading = true;
+  return supabaseClient
     .from('user_states')
-    .upsert(_supabaseSavePayload(), { onConflict: 'user_id' })
+    .upsert(_supabaseSavePayloadAt(ts), { onConflict: 'user_id' })
     .then(({ error }) => {
-      if (!error) { _pendingSave = false; setSyncSaved(); }
+      _uploading = false;
+      if (error) { console.warn('[sync] 저장 실패:', error.message); setSyncStatus('⚠️ 클라우드 저장 실패'); return false; }
+      // 업로드 사이에 추가 변경이 없었을 때만 pending 해제
+      if (stateSnapshot() === snapAtUpload) _pendingSave = false;
+      lastSavedSnapshot = snapAtUpload;
+      _lastRemoteTs = Date.parse(ts) || Date.now();
+      setSyncSaved();
+      return true;
+    })
+    .catch(err => {
+      _uploading = false;
+      console.warn('[sync] 저장 예외:', err?.message);
+      setSyncStatus('⚠️ 클라우드 저장 실패');
+      return false;
     });
 }
 
-// ──────────────────────────────────────────────
-// foreground 복귀 시 re-sync (다른 기기 변경 반영)
-// ──────────────────────────────────────────────
-let _lastVisibleAt = 0;
-const RE_SYNC_COOLDOWN = 30 * 1000;
+function saveState() {
+  if (!dataLoaded) return;
 
-function _reSyncFromCloud() {
+  const snap = stateSnapshot();
+  if (!lastSavedSnapshot && !hasAnyTaskData()) return; // 빈 state 저장 방지
+  if (snap === lastSavedSnapshot && !_pendingSave) { showLastSavedTime(); return; }
+
+  _pendingSave = true;
+  showLastSavedTime();
+
+  if (!navigator.onLine) { setSyncStatus('📶 오프라인 — 연결 후 자동 저장'); return; }
+  if (!currentUser || !supabaseClient) return;
+
+  clearTimeout(_saveTimer);
+  setSyncStatus('📝 동기화 중...');
+  _saveTimer = setTimeout(_uploadNow, SAVE_DEBOUNCE_MS);
+}
+
+// 즉시 플러시 (페이지 종료 / 백그라운드 전환) — pending 있을 때만
+function flushToSupabase() {
   if (!currentUser || !supabaseClient || !dataLoaded) return;
-  const now = Date.now();
-  if (now - _lastVisibleAt < RE_SYNC_COOLDOWN) return;
-  _lastVisibleAt = now;
+  if (!_pendingSave || _uploading) return;
+  _uploadNow();
+}
 
-  setSyncStatus('☁️ 동기화 확인 중...');
+// ──────────────────────────────────────────────
+// remote 적용 (충돌 안전)
+// ──────────────────────────────────────────────
+function _applyRemote(remote, remoteTsMs) {
+  applyPersistedState(remote);
+  lastSavedSnapshot = stateSnapshot();
+  _lastRemoteTs = remoteTsMs;
+  _pendingSave = false;
+  autoReturnExpiredTasks();
+  renderApp();
+  setSyncSaved();
+}
+
+// 클라우드에서 최신 데이터 가져오기 (타임스탬프 비교 후 더 최신일 때만 반영)
+function _pullRemote() {
+  if (!currentUser || !supabaseClient || !dataLoaded) return;
+  if (!navigator.onLine || _pulling) return;
+  // 미저장 로컬 변경이 있으면 덮어쓰지 말고 업로드 우선
+  if (_pendingSave) { flushToSupabase(); return; }
+  _pulling = true;
   supabaseClient
     .from('user_states')
     .select('pool, schedule, links, updated_at')
     .eq('user_id', currentUser.id)
     .maybeSingle()
     .then(({ data: remote, error }) => {
-      if (error || !_remoteHasData(remote)) { setSyncSaved(); return; }
-      applyPersistedState(remote);
-      lastSavedSnapshot = stateSnapshot();
-      autoReturnExpiredTasks();
-      renderApp();
-      setSyncSaved();
+      _pulling = false;
+      if (error || !remote || !_remoteHasData(remote)) return;
+      // 내용이 실제로 다를 때만 적용 (clock skew·pruning 차이에 강인)
+      if (_remoteSnapshot(remote) !== prunedSnapshot()) {
+        console.log('[sync] 다른 기기 변경 감지 → 적용');
+        _applyRemote(remote, Date.parse(remote.updated_at) || Date.now());
+      }
     })
-    .catch(() => setSyncStatus('⚠️ 클라우드 동기화 실패'));
+    .catch(() => { _pulling = false; });
 }
 
+// ──────────────────────────────────────────────
+// Supabase Realtime — 다른 기기 변경 즉시 수신
+// (Realtime 미활성 시 조용히 무시됨 → 폴링이 폴백)
+// ──────────────────────────────────────────────
+let _realtimeChannel = null;
+
+function _subscribeRealtime() {
+  if (!currentUser || !supabaseClient || _realtimeChannel) return;
+  try {
+    _realtimeChannel = supabaseClient
+      .channel('user_states_rt_' + currentUser.id)
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'user_states', filter: 'user_id=eq.' + currentUser.id },
+        payload => {
+          const remote = payload.new;
+          if (!remote || !remote.updated_at) return;
+          if (remote.updated_at === _lastWrittenTs) return; // 내 변경 에코 무시
+          if (_pendingSave || _uploading) return;            // 내 미저장 변경 우선
+          if (!_remoteHasData(remote)) return;
+          // 다른 기기가 실제로 다른 내용을 기록한 경우에만 적용
+          if (_remoteSnapshot(remote) !== prunedSnapshot()) {
+            _applyRemote(remote, Date.parse(remote.updated_at) || Date.now());
+            setSyncStatus('🔄 다른 기기에서 업데이트됨');
+          }
+        })
+      .subscribe();
+  } catch (e) {
+    console.warn('[sync] realtime 구독 실패:', e?.message);
+  }
+}
+
+function _teardownSync() {
+  clearTimeout(_saveTimer);
+  _stopPolling();
+  if (_realtimeChannel) {
+    try { supabaseClient.removeChannel(_realtimeChannel); } catch (_) {}
+    _realtimeChannel = null;
+  }
+}
+
+// ──────────────────────────────────────────────
+// 폴링 폴백 — visible 상태에서 45초마다 최신 확인
+// ──────────────────────────────────────────────
+let _pollTimer = null;
+function _startPolling() {
+  _stopPolling();
+  _pollTimer = setInterval(() => {
+    if (document.visibilityState === 'visible') _pullRemote();
+  }, 45 * 1000);
+}
+function _stopPolling() {
+  if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
+}
+
+// ──────────────────────────────────────────────
+// 페이지 종료 / 가시성 전환 / 네트워크 이벤트
+// ──────────────────────────────────────────────
 window.addEventListener('beforeunload', flushToSupabase);
+window.addEventListener('pagehide', flushToSupabase);
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') {
     flushToSupabase();
   } else {
-    _reSyncFromCloud();
+    // foreground 복귀: pending 있으면 업로드, 없으면 최신 확인
+    if (_pendingSave) flushToSupabase();
+    else _pullRemote();
   }
 });
-setInterval(flushToSupabase, 10 * 60 * 1000);
+// 5분마다 안전 플러시
+setInterval(flushToSupabase, 5 * 60 * 1000);
 
 // ──────────────────────────────────────────────
 // 데이터 불러오기 — Supabase에서 항상 최신 데이터
@@ -286,8 +394,12 @@ function _showRetryButton() {
 
 function loadState() {
   if (!currentUser || !supabaseClient) {
+    _teardownSync();
     resetScheduleState();
     dataLoaded = false;
+    _pendingSave = false;
+    _lastRemoteTs = 0;
+    _lastWrittenTs = '';
     renderApp();
     return;
   }
@@ -321,26 +433,40 @@ function loadState() {
       return;
     }
 
+    const remoteTs = remote?.updated_at ? Date.parse(remote.updated_at) : 0;
+
+    // 이미 로드된 상태에서 재호출(토큰 갱신 등)인데 미저장 변경이 있으면 보호
+    if (dataLoaded && _pendingSave) {
+      console.warn('[sync] 로드 중 미저장 변경 감지 → 로컬 보호, 업로드');
+      flushToSupabase();
+      _subscribeRealtime();
+      _startPolling();
+      return;
+    }
+
     if (_remoteHasData(remote)) {
       applyPersistedState(remote);
-    } else if (!hasAnyTaskData()) {
-      // 신규 유저 — 빈 상태로 시작
-      applyPersistedState({});
-    }
-    // 클라우드 비어있고 현재 state에 데이터 있으면 업로드
-    if (!_remoteHasData(remote) && hasAnyTaskData()) {
-      supabaseClient.from('user_states')
-        .upsert(_supabaseSavePayload(), { onConflict: 'user_id' })
-        .then(({ error }) => { if (!error) setSyncSaved(); });
+      _lastRemoteTs = remoteTs;
+    } else if (hasAnyTaskData()) {
+      // 클라우드 비어있고 로컬에 데이터 있음 → 로컬 보호 후 업로드
+      _pendingSave = true;
+      _uploadNow();
+    } else {
+      applyPersistedState({}); // 신규 유저
     }
 
     lastSavedSnapshot = stateSnapshot();
+    _pendingSave = false;
     dataLoaded = true;
     autoReturnExpiredTasks();
     renderApp();
     showLastSavedTime();
     checkFirstVisit();
     setSyncSaved();
+
+    // 실시간 구독 + 폴링 폴백 시작
+    _subscribeRealtime();
+    _startPolling();
   })
   .catch(err => {
     loadInProgress = false;

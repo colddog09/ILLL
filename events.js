@@ -681,15 +681,10 @@ updateDday();
 })();
 
 // ─────────────────────────────────────────────────────────────
-// 즉시 로컬 렌더 — bootstrapSupabase()가 완료되기 전 빈 화면 방지
-// auth 완료 후 loadState()가 정식으로 덮어쓰므로 데이터 무결성 보장
+// 부팅 시 빈 그리드만 렌더 (데이터는 loadState()가 Supabase에서 채움)
+// localStorage 미사용 — 옛 로컬 캐시를 읽지 않음
 // ─────────────────────────────────────────────────────────────
-(function _eagerLocalRender() {
-  if (dataLoaded) return; // 이미 loadState 완료된 경우 스킵
-  try {
-    const snap = localStorage.getItem(LS_BACKUP_KEY);
-    if (!snap) return;
-    applyPersistedState(JSON.parse(snap));
-    renderApp();
-  } catch (_) {}
+(function _eagerEmptyRender() {
+  if (dataLoaded) return;
+  try { renderApp(); } catch (_) {}
 })();
