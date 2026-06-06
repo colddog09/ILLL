@@ -2796,6 +2796,11 @@ body {
 
 .modal-body {
   padding: 24px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 .help-content section {
   margin-bottom: 20px;
@@ -4680,11 +4685,14 @@ a.settings-tab {
   display:flex; align-items:center; gap:12px; margin-bottom:20px;
 }
 .gm-back-btn--dark {
-  background:none; border:1px solid var(--border); color:var(--text);
-  padding:7px 13px; border-radius:20px;
-  font-size:0.82rem; font-weight:700;
+  background: var(--surface-hover);
+  border: 1.5px solid var(--border-strong);
+  color: var(--accent);
+  padding: 8px 15px; border-radius: 20px;
+  font-size: 0.85rem; font-weight: 800;
+  transition: background .15s, border-color .15s;
 }
-.gm-back-btn--dark:hover { border-color:var(--accent); color:var(--accent); }
+.gm-back-btn--dark:hover { background: var(--surface); border-color: var(--accent); }
 .gm-settings-title { font-size:1.05rem; font-weight:800; color:var(--text); }
 .gm-settings-section {
   border:1.5px solid var(--border); border-radius:var(--radius-sm);
