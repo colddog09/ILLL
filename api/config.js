@@ -10,10 +10,11 @@ function isAllowedOrigin(origin) {
   if (!origin) return true; // 서버-to-서버 요청 허용
   try {
     const url = new URL(origin);
+    const host = url.hostname;
     return ALLOWED_ORIGINS.some(a => {
       const allowed = new URL(a);
-      return url.hostname === allowed.hostname;
-    }) || url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+      return host === allowed.hostname;
+    }) || host === 'localhost' || host === '127.0.0.1' || host.endsWith('.vercel.app');
   } catch { return false; }
 }
 
