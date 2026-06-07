@@ -343,8 +343,13 @@ async function gmShowSettings(groupId) {
     </div>
 
     <div class="gm-settings-section">
-      <p class="gm-section-title">멤버 권한 관리 (${(members||[]).length}명)</p>
-      <div class="gm-members">${memberRows}</div>
+      <div class="gm-members-header">
+        <p class="gm-section-title">멤버 권한 관리</p>
+        <button class="gm-members-toggle" id="gmMembersToggle">
+          ${(members||[]).length}명 더보기 ›
+        </button>
+      </div>
+      <div class="gm-members gm-members--collapsed" id="gmMembersList">${memberRows}</div>
     </div>
 
     <div class="gm-settings-section gm-settings-section--danger">
@@ -353,6 +358,25 @@ async function gmShowSettings(groupId) {
     </div>`;
 
   document.getElementById('gmSettingsBackBtn')?.addEventListener('click', () => gmOpenGroup(groupId));
+
+  // 멤버 더보기 토글
+  document.getElementById('gmMembersToggle')?.addEventListener('click', function() {
+    const list = document.getElementById('gmMembersList');
+    const isOpen = !list.classList.contains('gm-members--collapsed');
+    if (isOpen) {
+      list.classList.add('gm-members--collapsed');
+      this.textContent = `${(members||[]).length}명 더보기 ›`;
+    } else {
+      list.classList.remove('gm-members--collapsed');
+      // 각 멤버 행 순서대로 애니메이션
+      list.querySelectorAll('.gm-member').forEach((el, i) => {
+        el.style.animationDelay = `${i * 0.05}s`;
+        el.classList.add('gm-member--appear');
+      });
+      this.textContent = '접기 ‹';
+    }
+  });
+
   document.getElementById('gmRenameBtn')?.addEventListener('click', () => gmRenameGroup(groupId));
   document.getElementById('gmRenameInput')?.addEventListener('keydown', e => { if (e.key === 'Enter') gmRenameGroup(groupId); });
   document.getElementById('gmDeleteBtn')?.addEventListener('click', () => gmLeaveOrDelete(groupId, true));

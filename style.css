@@ -4807,7 +4807,20 @@ a.settings-tab {
 
 /* 멤버 관리 */
 .gm-members-wrap { border:1.5px solid var(--border); border-radius:var(--radius-sm); padding:14px 16px; margin-top:4px; }
+.gm-members-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; }
+.gm-members-toggle {
+  background:none; border:none; cursor:pointer; font-family:var(--font);
+  font-size:0.8rem; font-weight:700; color:var(--accent);
+  padding:4px 0; transition:opacity .15s;
+}
+.gm-members-toggle:hover { opacity:.7; }
 .gm-members { display:flex; flex-direction:column; gap:10px; }
+.gm-members--collapsed { display:none; }
+@keyframes gmMemberIn {
+  from { opacity:0; transform:translateY(-6px); }
+  to   { opacity:1; transform:none; }
+}
+.gm-member--appear { animation: gmMemberIn 0.22s ease both; }
 .gm-member { display:flex; align-items:center; justify-content:space-between; gap:8px; }
 .gm-member__name { font-size:0.9rem; color:var(--text); font-weight:700; }
 .gm-member__role { font-size:0.76rem; color:var(--text-sub); }
