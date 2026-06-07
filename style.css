@@ -2796,6 +2796,11 @@ body {
 
 .modal-body {
   padding: 24px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 .help-content section {
   margin-bottom: 20px;
@@ -4595,13 +4600,7 @@ a.settings-tab {
    그룹 기능 (groups.js)
    ============================================================ */
 .gm-loading, .gm-empty { text-align:center; color:var(--text-sub); padding:24px 8px; font-size:0.9rem; line-height:1.6; }
-.gm-list {
-  display:flex; flex-direction:column; gap:8px;
-  max-height: min(320px, 38vh);
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-}
+.gm-list { display:flex; flex-direction:column; gap:8px; }
 .gm-group-row {
   display:flex; align-items:center; justify-content:space-between; gap:10px;
   padding:13px 15px; border-radius:var(--radius-sm); border:1.5px solid var(--border);
@@ -4671,6 +4670,11 @@ a.settings-tab {
 .gm-btn--primary:hover { opacity:0.9; }
 
 /* ── 그룹 상세 히어로 ── */
+.gm-hero {
+  position: sticky;
+  top: -24px;   /* modal-body padding 상쇄 → 스크롤 시 모달 상단에 밀착 */
+  z-index: 2;
+}
 .gm-hero__toprow {
   display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;
 }
@@ -4774,10 +4778,6 @@ a.settings-tab {
 .gm-anns-wrap { display:flex; flex-direction:column; }
 .gm-anns {
   display:flex; flex-direction:column; gap:8px;
-  max-height: min(320px, 38vh);
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
 }
 .gm-ann {
   display:flex; align-items:center; gap:12px;
