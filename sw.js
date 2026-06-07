@@ -55,20 +55,34 @@ self.addEventListener('message', e => {
 self.addEventListener('push', e => {
   let data = { title: '일정 알림', body: '기한이 다가온 할일이 있어요!' };
   try { if (e.data) data = e.data.json(); } catch {}
+  // 그룹 알림과 기한 알림 태그 분리
+  const tag = data.data?.url?.includes('group') ? 'group-alert' : 'deadline-alert';
   e.waitUntil(
     self.registration.showNotification(data.title, {
-      body: data.body,
-      icon: '/image/icon-192.png',
-      badge: '/image/icon-192.png',
-      tag: 'deadline-alert',
-      renotify: true,
+      body:      data.body,
+      icon:      '/image/icon-192.png',
+      badge:     '/image/icon-192.png',
+      tag,
+      renotify:  true,
+      data:      data.data || {},
     })
   );
 });
 
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  e.waitUntil(clients.openWindow('/'));
+  const url = e.notification.data?.url || '/';
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      // 이미 열린 창이 있으면 포커스 후 URL 이동
+      for (const client of list) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          return client.focus().then(c => c.navigate(url));
+        }
+      }
+      return clients.openWindow(url);
+    })
+  );
 });
 
 /* ── 요청 처리 ── */

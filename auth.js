@@ -289,6 +289,14 @@ function updateAuthUi(user) {
 
   setTaskInputEnabled(!!user);
   updateStandaloneAuthHint(user);
+
+  // 로그인 시 푸시 구독 자동 처리
+  if (user) {
+    if (typeof requestPushPermission === 'function') {
+      // 이미 허용됐으면 조용히 구독, 아직 미결정이면 권한 요청
+      requestPushPermission();
+    }
+  }
   loadState();
 
   // 캘린더 토큰 복원
