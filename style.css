@@ -4133,11 +4133,7 @@ body {
 }
 
 /* 모달 바디: 세로 플렉스 */
-.modal-body--col {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
+.modal-body--col > * + * { margin-top: 12px; }
 
 /* 모달 구분선 */
 .modal-divider {
@@ -4670,11 +4666,6 @@ a.settings-tab {
 .gm-btn--primary:hover { opacity:0.9; }
 
 /* ── 그룹 상세 히어로 ── */
-.gm-hero {
-  position: sticky;
-  top: -24px;   /* modal-body padding 상쇄 → 스크롤 시 모달 상단에 밀착 */
-  z-index: 2;
-}
 .gm-hero__toprow {
   display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;
 }
