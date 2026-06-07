@@ -4866,6 +4866,27 @@ a.settings-tab {
 
 @media (max-width: 768px) {
   #settingsBtn { display: none !important; }
+  /* 그룹 버튼: 탭바로 대체 → 헤더에서 숨김 */
+  #groupBtn { display: none !important; }
+
+  /* 수행평가 버튼: 탭바 위 우측 FAB으로 이동 */
+  #suhaengBtn {
+    position: fixed !important;
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    right: 14px;
+    z-index: 145;
+    width: 46px; height: 46px;
+    border-radius: 50% !important;
+    background: var(--surface) !important;
+    border: 1.5px solid var(--border) !important;
+    box-shadow: 0 4px 16px rgba(108,99,255,0.18) !important;
+    display: flex !important;
+    align-items: center; justify-content: center;
+    font-size: 1.25rem;
+    padding: 0 !important;
+    transition: transform .15s, box-shadow .15s !important;
+  }
+  #suhaengBtn:active { transform: scale(0.92); }
 
   .mobile-tabbar {
     display: flex;
