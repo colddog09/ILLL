@@ -47,7 +47,7 @@ export default async function handler(req, res) {
     // ── 그룹 이름 + 수신 멤버 + 구독 병렬 조회 ──
     const [{ data: group }, { data: members }] = await Promise.all([
       admin.from('groups').select('name').eq('id', group_id).single(),
-      admin.from('group_members').select('user_id').eq('group_id', group_id).neq('user_id', user.id),
+      admin.from('group_members').select('user_id').eq('group_id', group_id).neq('user_id', user.id).neq('notifications_enabled', false),
     ]);
 
     if (!members?.length) return res.status(200).json({ ok: true, sent: 0 });

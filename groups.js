@@ -51,14 +51,14 @@ async function gmShowList() {
 
   const { data, error } = await supabaseClient
     .from('group_members')
-    .select('role, groups(id, name, invite_code, owner_id)')
+    .select('role, notifications_enabled, groups(id, name, invite_code, owner_id)')
     .eq('user_id', currentUser.id);
 
   if (error) { body.innerHTML = `<div class="gm-empty">목록을 불러오지 못했어요. 잠시 후 다시 시도해주세요.</div>`; return; }
 
   gmGroups = (data || [])
     .filter(r => r.groups)
-    .map(r => ({ ...r.groups, role: r.role }));
+    .map(r => ({ ...r.groups, role: r.role, notifications_enabled: r.notifications_enabled !== false }));
 
   const listHtml = gmGroups.length
     ? gmGroups.map(g => `
@@ -259,6 +259,13 @@ async function gmOpenGroup(groupId) {
         </div>
         <button class="gm-copy-btn" id="gmCopyCode">복사</button>
       </div>
+      <div class="gm-hero__notif-row">
+        <span class="gm-hero__notif-label">🔔 공지 알림</span>
+        <button class="gm-notif-toggle ${gmCurrent.notifications_enabled ? 'gm-notif-toggle--on' : 'gm-notif-toggle--off'}"
+                id="gmNotifToggle">
+          ${gmCurrent.notifications_enabled ? 'ON' : 'OFF'}
+        </button>
+      </div>
     </div>
 
     ${postForm}
@@ -273,6 +280,7 @@ async function gmOpenGroup(groupId) {
   // 이벤트 바인딩
   document.getElementById('gmBackBtn')?.addEventListener('click', gmShowList);
   document.getElementById('gmSettingsBtn')?.addEventListener('click', () => gmShowSettings(groupId));
+  document.getElementById('gmNotifToggle')?.addEventListener('click', () => gmToggleNotifications(groupId));
   document.getElementById('gmCopyCode')?.addEventListener('click', () => {
     navigator.clipboard?.writeText(gmCurrent.invite_code).then(() => {
       const b = document.getElementById('gmCopyCode'); if (b) { b.textContent = '복사됨'; setTimeout(() => b.textContent = '복사', 1500); }
@@ -384,6 +392,42 @@ async function gmShowSettings(groupId) {
     b.addEventListener('click', () => gmSetRole(groupId, b.dataset.grant, 'announcer')));
   body.querySelectorAll('[data-revoke]').forEach(b =>
     b.addEventListener('click', () => gmSetRole(groupId, b.dataset.revoke, 'member')));
+}
+
+async function gmToggleNotifications(groupId) {
+  if (gmBusy) return;
+  const current = gmCurrent?.notifications_enabled !== false;
+  const next = !current;
+
+  // 즉시 UI 업데이트
+  const btn = document.getElementById('gmNotifToggle');
+  if (btn) {
+    btn.textContent = next ? 'ON' : 'OFF';
+    btn.className = `gm-notif-toggle ${next ? 'gm-notif-toggle--on' : 'gm-notif-toggle--off'}`;
+  }
+
+  gmBusy = true;
+  const { error } = await supabaseClient
+    .from('group_members')
+    .update({ notifications_enabled: next })
+    .eq('group_id', groupId)
+    .eq('user_id', currentUser.id);
+  gmBusy = false;
+
+  if (error) {
+    // 실패 시 롤백
+    if (btn) {
+      btn.textContent = current ? 'ON' : 'OFF';
+      btn.className = `gm-notif-toggle ${current ? 'gm-notif-toggle--on' : 'gm-notif-toggle--off'}`;
+    }
+    console.error('알림 설정 실패:', error.message);
+    return;
+  }
+
+  // 로컬 캐시 갱신
+  if (gmCurrent) gmCurrent.notifications_enabled = next;
+  const g = gmGroups.find(g => g.id === groupId);
+  if (g) g.notifications_enabled = next;
 }
 
 async function gmRenameGroup(groupId) {

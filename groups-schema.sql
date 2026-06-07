@@ -153,3 +153,7 @@ drop policy if exists ps_delete on public.push_subscriptions;
 create policy ps_select on public.push_subscriptions for select using (user_id = auth.uid());
 create policy ps_upsert on public.push_subscriptions for insert with check (user_id = auth.uid());
 create policy ps_delete on public.push_subscriptions for delete using (user_id = auth.uid());
+
+-- ── 그룹별 알림 수신 설정 ────────────────────────────────────
+alter table public.group_members
+  add column if not exists notifications_enabled boolean not null default true;
