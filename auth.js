@@ -201,23 +201,42 @@ setTimeout(() => { if (!currentUser) showNetworkHint(); }, 12000);
 
 function showNetworkHint() {
   if (document.getElementById('networkHint')) return; // 중복 방지
+
+  // 상호작용 차단 오버레이
+  const backdrop = document.createElement('div');
+  backdrop.id = 'networkBackdrop';
+  backdrop.style.cssText = [
+    'position:fixed', 'inset:0', 'z-index:99998',
+    'background:rgba(0,0,0,0.45)', 'backdrop-filter:blur(3px)',
+    '-webkit-backdrop-filter:blur(3px)',
+    'opacity:0', 'transition:opacity 0.3s ease'
+  ].join(';');
+  document.body.appendChild(backdrop);
+
   const el = document.createElement('div');
   el.id = 'networkHint';
   el.style.cssText = [
-    'position:fixed', 'bottom:24px', 'left:50%', 'transform:translateX(-50%)',
-    'background:#1e1b4b', 'color:#fff', 'font-size:0.82rem', 'font-weight:600',
-    'padding:12px 20px', 'border-radius:14px', 'z-index:99999',
-    'box-shadow:0 8px 24px rgba(0,0,0,0.25)', 'text-align:center',
-    'max-width:88vw', 'line-height:1.5', 'opacity:0',
+    'position:fixed', 'bottom:50%', 'left:50%',
+    'transform:translate(-50%,50%)',
+    'background:#1e1b4b', 'color:#fff', 'font-size:0.88rem', 'font-weight:600',
+    'padding:18px 24px', 'border-radius:16px', 'z-index:99999',
+    'box-shadow:0 8px 32px rgba(0,0,0,0.4)', 'text-align:center',
+    'max-width:88vw', 'line-height:1.6', 'opacity:0',
     'transition:opacity 0.3s ease'
   ].join(';');
-  el.innerHTML = '📶 앱이 로딩되지 않으면 앱을 껐다 켜거나<br>새로고침 해보세요.';
+  el.innerHTML = '📶 앱이 로딩되지 않으면<br>앱을 껐다 켜거나 새로고침 해보세요.';
   document.body.appendChild(el);
-  requestAnimationFrame(() => { el.style.opacity = '1'; });
+
+  requestAnimationFrame(() => {
+    backdrop.style.opacity = '1';
+    el.style.opacity = '1';
+  });
+
   // 8초 후 자동 제거
   setTimeout(() => {
+    backdrop.style.opacity = '0';
     el.style.opacity = '0';
-    setTimeout(() => el.remove(), 350);
+    setTimeout(() => { backdrop.remove(); el.remove(); }, 350);
   }, 8000);
 }
 
