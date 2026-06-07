@@ -23,7 +23,7 @@
   <link rel="apple-touch-icon" href="/image/apple-touch-icon.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/image/apple-touch-icon.png">
   <meta name="theme-color" content="#6c63ff">
-  <link rel="stylesheet" href="style.css?v=63" />
+  <link rel="stylesheet" href="style.css?v=64" />
 </head>
 <body>
 
@@ -566,14 +566,20 @@
 
   <!-- ─── 모바일 하단 탭바 (홈 / 모임 / 설정) ─── -->
   <nav id="mobileTabBar" class="mobile-tabbar" aria-label="하단 탭">
+    <div class="tabbar-track" aria-hidden="true">
+      <div class="tabbar-slider" id="tabSlider"></div>
+    </div>
     <button id="tabHome" class="tabbar-item is-active" type="button">
-      <span class="tabbar-item__icon">🏠</span><span class="tabbar-item__label">홈</span>
+      <span class="tabbar-item__icon">🏠</span>
+      <span class="tabbar-item__label">홈</span>
     </button>
     <button id="tabGroup" class="tabbar-item" type="button">
-      <span class="tabbar-item__icon">👥</span><span class="tabbar-item__label">모임</span>
+      <span class="tabbar-item__icon">👥</span>
+      <span class="tabbar-item__label">모임</span>
     </button>
     <button id="tabSettings" class="tabbar-item" type="button">
-      <span class="tabbar-item__icon">⚙️</span><span class="tabbar-item__label">설정</span>
+      <span class="tabbar-item__icon">⚙️</span>
+      <span class="tabbar-item__label">설정</span>
     </button>
   </nav>
 
@@ -587,7 +593,7 @@
   <script src="drag.js?v=7"></script>
   <script src="deadline.js?v=2"></script>
   <script src="gcal/gcal.js?v=13"></script>
-  <script src="groups.js?v=8"></script>
+  <script src="groups.js?v=9"></script>
   <script src="push.js?v=1"></script>
   <script src="modals.js?v=15"></script>
   <script src="events.js?v=18"></script>

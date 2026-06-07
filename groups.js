@@ -564,84 +564,162 @@ function _gmAddToSchedule(ann) {
 // 바인딩
 // ──────────────────────────────────────────────
 (function initGroups() {
-  // ── 모바일 하단 탭바 (홈 / 모임 / 설정) ──
-  const tabHome     = document.getElementById('tabHome');
-  const tabGroup    = document.getElementById('tabGroup');
-  const tabSettings = document.getElementById('tabSettings');
+  const tabBar        = document.getElementById('mobileTabBar');
+  const slider        = document.getElementById('tabSlider');
   const settingsModal = document.getElementById('settingsModal');
   const groupModal    = document.getElementById('groupModal');
 
-  function setActiveTab(name) {
-    tabHome?.classList.toggle('is-active', name === 'home');
-    tabGroup?.classList.toggle('is-active', name === 'group');
-    tabSettings?.classList.toggle('is-active', name === 'settings');
+  const tabEls  = ['Home','Group','Settings'].map(id => document.getElementById('tab'+id));
+  const N = 3;
+
+  // ── 슬라이더 이동 ──────────────────────────────
+  function moveSlider(index, animate = true) {
+    if (!slider || !tabBar) return;
+    const w = tabBar.offsetWidth / N;
+    slider.style.transition = animate
+      ? 'left 0.42s cubic-bezier(0.34,1.56,0.64,1), width 0.28s ease'
+      : 'none';
+    slider.style.left  = (w * index + 4) + 'px';
+    slider.style.width = (w - 8) + 'px';
   }
 
-  // 탭 클릭 시 해시만 변경
-  tabHome?.addEventListener('click', () => { window.location.hash = '#home'; });
-  tabGroup?.addEventListener('click', () => { window.location.hash = '#group'; });
-  tabSettings?.addEventListener('click', () => { window.location.hash = '#settings'; });
-
-  // 헤더 버튼 클릭 시 해시 변경
-  document.getElementById('groupBtn')?.addEventListener('click', e => {
-    e.preventDefault();
-    window.location.hash = '#group';
-  });
-  document.getElementById('settingsBtn')?.addEventListener('click', e => {
-    e.preventDefault();
-    window.location.hash = '#settings';
-  });
-
-  // 해시 변경 감지 핸들러
-  function handleHashChange() {
-    const hash = window.location.hash;
-
-    if (hash === '#group') {
-      if (!currentUser) {
-        alert('그룹 기능은 로그인 후 이용 가능합니다.');
-        window.location.hash = '#home';
-        return;
-      }
-      if (settingsModal) settingsModal.hidden = true;
-      const modal = document.getElementById('groupModal');
-      if (modal) {
-        modal.hidden = false;
-        gmShowList();
-      }
-      setActiveTab('group');
-    } else if (hash === '#settings') {
-      if (!currentUser) {
-        alert('로그인 후 이용 가능합니다.');
-        window.location.hash = '#home';
-        return;
-      }
-      gmCloseModal();
-      if (settingsModal) {
-        if (settingsModal.hidden) {
-          document.getElementById('settingsBtn')?.click();
-        } else {
-          settingsModal.hidden = false;
+  // ── 탭 활성화 ──────────────────────────────────
+  let _activeIdx = 0;
+  function activateTab(index) {
+    tabEls.forEach((el, i) => {
+      if (!el) return;
+      const wasActive = el.classList.contains('is-active');
+      el.classList.toggle('is-active', i === index);
+      if (i === index && !wasActive) {
+        const icon = el.querySelector('.tabbar-item__icon');
+        if (icon) {
+          icon.classList.remove('tabbar-bounce');
+          void icon.offsetWidth;
+          icon.classList.add('tabbar-bounce');
         }
       }
-      setActiveTab('settings');
-    } else {
-      // #home, # 혹은 해시 없음
-      gmCloseModal();
-      if (settingsModal) settingsModal.hidden = true;
-      setActiveTab('home');
-    }
+    });
+    moveSlider(index);
+    _activeIdx = index;
   }
 
-  // 닫기 버튼 → #home으로
-  document.getElementById('groupCloseBtn')?.addEventListener('click', () => { window.location.hash = '#home'; });
-  document.getElementById('settingsCloseBtn')?.addEventListener('click', () => { window.location.hash = '#home'; });
+  const nameToIdx = { home: 0, group: 1, settings: 2 };
+  function setActiveTab(name) { activateTab(nameToIdx[name] ?? 0); }
 
-  [groupModal, settingsModal].forEach(m => {
-    m?.addEventListener('click', e => {
-      if (e.target === m) window.location.hash = '#home';
-    });
+  // 초기 슬라이더 위치
+  requestAnimationFrame(() => moveSlider(0, false));
+  window.addEventListener('resize', () => moveSlider(_activeIdx, false));
+
+  // ── 모달 열기/닫기 ────────────────────────────
+  function openGroupTab() {
+    if (!currentUser) { alert('그룹 기능은 로그인 후 이용 가능합니다.'); return; }
+    if (settingsModal) settingsModal.hidden = true;
+    gmOpenModal();
+    setActiveTab('group');
+  }
+
+  function closeAll() {
+    gmCloseModal();
+    if (settingsModal) settingsModal.hidden = true;
+    setActiveTab('home');
+  }
+
+  // ── 탭 클릭 ──────────────────────────────────
+  tabEls[0]?.addEventListener('click', closeAll);
+  tabEls[1]?.addEventListener('click', openGroupTab);
+  tabEls[2]?.addEventListener('click', () => {
+    if (!currentUser) { alert('로그인 후 이용 가능합니다.'); return; }
+    gmCloseModal();
+    document.getElementById('settingsBtn')?.click();
+    setActiveTab('settings');
   });
 
-  window.addEventListener('hashchange', handleHashChange);
-  setTimeout(handleHashChange, 350);
+  // 헤더 버튼
+  document.getElementById('groupBtn')?.addEventListener('click', e => { e.preventDefault(); openGroupTab(); });
+  document.getElementById('settingsBtn')?.addEventListener('click', () => setActiveTab('settings'));
+
+  // 닫기 버튼 → 홈
+  document.getElementById('groupCloseBtn')?.addEventListener('click', () => setActiveTab('home'));
+  document.getElementById('settingsCloseBtn')?.addEventListener('click', () => setActiveTab('home'));
+  groupModal?.addEventListener('click', e => { if (e.target === groupModal) setActiveTab('home'); });
+  settingsModal?.addEventListener('click', e => { if (e.target === settingsModal) setActiveTab('home'); });
+
+  // 뒤로가기(#home) 지원
+  window.addEventListener('hashchange', () => {
+    if (!window.location.hash || window.location.hash === '#home') closeAll();
+  });
+
+  // ── 슬라이더 드래그 ──────────────────────────
+  let dragActive = false, hasDragged = false, dragStartX = 0;
+
+  tabBar?.addEventListener('pointerdown', e => {
+    dragActive = true; hasDragged = false; dragStartX = e.clientX;
+    tabBar.setPointerCapture(e.pointerId);
+  });
+
+  tabBar?.addEventListener('pointermove', e => {
+    if (!dragActive) return;
+    if (Math.abs(e.clientX - dragStartX) > 8) hasDragged = true;
+    if (!hasDragged) return;
+    const rect = tabBar.getBoundingClientRect();
+    const relX = Math.max(0, Math.min(e.clientX - rect.left, rect.width - 1));
+    moveSlider(Math.floor(relX / (rect.width / N)), false);
+  });
+
+  tabBar?.addEventListener('pointerup', e => {
+    if (!dragActive) return;
+    dragActive = false;
+    if (!hasDragged) return;
+    const rect = tabBar.getBoundingClientRect();
+    const relX = Math.max(0, Math.min(e.clientX - rect.left, rect.width - 1));
+    const index = Math.floor(relX / (rect.width / N));
+    // 드래그 완료 → 해당 탭 활성화
+    activateTab(index);
+    if (index === 0) closeAll();
+    else if (index === 1) openGroupTab();
+    else if (index === 2) tabEls[2]?.click();
+  });
+
+  // ── 스와이프 다운 → 모달 닫기 ───────────────
+  function addSwipeToDismiss(modal, onDismiss) {
+    const box = modal?.querySelector('.modal-box');
+    if (!box) return;
+    let startY = 0, dy = 0, active = false;
+
+    box.addEventListener('touchstart', e => {
+      const body = box.querySelector('.modal-body');
+      if (body && body.scrollTop > 5) return;
+      startY = e.touches[0].clientY; dy = 0; active = true;
+    }, { passive: true });
+
+    box.addEventListener('touchmove', e => {
+      if (!active) return;
+      dy = e.touches[0].clientY - startY;
+      if (dy > 0) {
+        box.style.transition = 'none';
+        box.style.transform  = `translateY(${Math.min(dy, 280)}px)`;
+      } else {
+        active = false; box.style.transform = '';
+      }
+    }, { passive: true });
+
+    box.addEventListener('touchend', () => {
+      if (!active) return;
+      active = false;
+      if (dy > 90) {
+        box.style.transition = 'transform 0.22s ease-in';
+        box.style.transform  = 'translateY(110%)';
+        setTimeout(() => { box.style.transform = ''; box.style.transition = ''; onDismiss(); }, 220);
+      } else {
+        box.style.transition = 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1)';
+        box.style.transform  = '';
+        setTimeout(() => { box.style.transition = ''; }, 350);
+      }
+    }, { passive: true });
+  }
+
+  addSwipeToDismiss(groupModal,    () => { gmCloseModal(); setActiveTab('home'); });
+  addSwipeToDismiss(settingsModal, () => { if (settingsModal) settingsModal.hidden = true; setActiveTab('home'); });
+
+  setTimeout(() => setActiveTab('home'), 350);
 })();
