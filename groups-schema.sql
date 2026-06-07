@@ -132,3 +132,24 @@ create policy ga_delete on public.group_announcements for delete
 
 -- ── 실시간(선택): 공지 즉시 반영하려면 아래도 실행 ─────────────
 -- alter publication supabase_realtime add table public.group_announcements;
+
+-- ============================================================
+-- 푸시 구독 테이블 (Firestore 대체)
+-- ============================================================
+
+create table if not exists public.push_subscriptions (
+  user_id      uuid primary key references auth.users(id) on delete cascade,
+  subscription jsonb not null,
+  updated_at   timestamptz default now()
+);
+
+-- RLS: 본인 구독만 읽기/쓰기, 서비스 롤은 전체 접근
+alter table public.push_subscriptions enable row level security;
+
+drop policy if exists ps_select on public.push_subscriptions;
+drop policy if exists ps_upsert on public.push_subscriptions;
+drop policy if exists ps_delete on public.push_subscriptions;
+
+create policy ps_select on public.push_subscriptions for select using (user_id = auth.uid());
+create policy ps_upsert on public.push_subscriptions for insert with check (user_id = auth.uid());
+create policy ps_delete on public.push_subscriptions for delete using (user_id = auth.uid());

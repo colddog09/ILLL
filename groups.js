@@ -393,6 +393,20 @@ async function gmPostAnnouncement(groupId) {
   });
   gmBusy = false;
   if (error) { alert('공지 등록 실패: ' + error.message); return; }
+
+  // 그룹 멤버에게 푸시 알림 (fire-and-forget)
+  supabaseClient.auth.getSession().then(({ data: { session } }) => {
+    if (!session?.access_token) return;
+    fetch('/api/group-notify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ group_id: groupId, text, date: date || null }),
+    }).catch(() => {});
+  });
+
   gmOpenGroup(groupId);
 }
 
