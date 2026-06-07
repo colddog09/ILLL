@@ -907,7 +907,7 @@
 
     <p class="hero-desc anim-item">
       할일 목록을 만들고 원하는 날짜에 드래그해서 배치하세요.<br>
-      구글 캘린더 연동, D-Day 카운터, 멀티 기기 동기화까지.
+      구글 캘린더 연동, 그룹 일정 공유, D-Day 카운터, 멀티 기기 동기화까지.
     </p>
 
     <div class="hero-btns anim-item">
@@ -1018,6 +1018,11 @@
         <p>할일을 원하는 날짜로 드래그해서 배치하세요. 모바일에서는 더블탭하면 오늘에 바로 추가돼요.</p>
       </div>
       <div class="feature-card">
+        <div class="feature-icon">👥</div>
+        <h3>그룹 일정 공유</h3>
+        <p>초대 코드로 그룹을 만들고 친구들과 일정을 공유하세요. 공지된 일정을 한 번에 내 리스트로!</p>
+      </div>
+      <div class="feature-card">
         <div class="feature-icon">☁️</div>
         <h3>실시간 클라우드 동기화</h3>
         <p>어느 기기에서 접속해도 데이터가 자동으로 동기화돼요. 변경하면 2초 후 자동으로 백업.</p>
@@ -1033,6 +1038,11 @@
         <p>시험, 수행평가까지 남은 날을 상단에 항상 표시해요. 설정에서 원하는 날짜로 변경 가능.</p>
       </div>
       <div class="feature-card">
+        <div class="feature-icon">🔔</div>
+        <h3>푸시 알림</h3>
+        <p>PWA 설치 후 매일 아침 알림으로 하루를 시작하세요. 기한 임박 일정도 놓치지 않아요.</p>
+      </div>
+      <div class="feature-card">
         <div class="feature-icon">📱</div>
         <h3>PWA 설치</h3>
         <p>홈 화면에 추가하면 앱처럼 사용할 수 있어요. iOS, Android, 데스크탑 모두 지원.</p>
@@ -1040,7 +1050,7 @@
       <div class="feature-card">
         <div class="feature-icon">🎨</div>
         <h3>테마 변경</h3>
-        <p>보라, 블루, 그린, 다크, 리퀴드 글라스, 그리고 특별한 스타레일 테마까지!</p>
+        <p>보라, 블루, 그린, 다크, 리퀴드 글라스, 젤리, 스타레일 테마까지 취향대로 바꿔요.</p>
       </div>
     </div>
   </section>
@@ -1095,7 +1105,7 @@
     <div class="shop-banner-inner">
       <div class="shop-banner-left">
         <h3>🎨 테마샵에서 나만의 테마를</h3>
-        <p>보라, 블루, 그린, 다크, 리퀴드 글라스, 스타레일까지 — 취향껏 앱을 꾸며보세요.</p>
+        <p>보라, 블루, 그린, 다크, 리퀴드 글라스, 젤리, 스타레일까지 — 취향껏 앱을 꾸며보세요.</p>
       </div>
       <div class="shop-banner-right">
         <a href="/shop">🛍️ 테마샵 열기 →</a>
@@ -1151,6 +1161,12 @@
             <span>아이폰 · 안드로이드에서도 쓸 수 있나요?</span><span class="faq-icon">+</span>
           </button>
           <div class="faq-a">앱 설치 없이 모바일 브라우저로 바로 사용 가능해요. 홈 화면에 추가하면 앱처럼 쓸 수 있어요. iPhone은 Safari → 공유 → 홈 화면에 추가, Android는 Chrome → 메뉴 → 앱 설치를 눌러주세요.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            <span>그룹 기능은 어떻게 사용하나요?</span><span class="faq-icon">+</span>
+          </button>
+          <div class="faq-a">하단 탭바 👥 버튼 또는 헤더 그룹 버튼을 누르면 진입할 수 있어요. + 버튼으로 새 그룹을 만들거나 초대 코드 6자리로 기존 그룹에 참여할 수 있어요. 공지된 일정은 '+ 내 리스트' 버튼으로 바로 내 할일 목록에 추가할 수 있어요. 그룹장은 ⚙️ 버튼에서 이름 변경, 멤버 권한 관리, 그룹 삭제를 할 수 있어요.</div>
         </div>
         <div class="faq-item">
           <button class="faq-q" onclick="toggleFaq(this)">
