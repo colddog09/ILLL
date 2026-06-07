@@ -4690,14 +4690,17 @@ a.settings-tab {
   display:flex; align-items:center; gap:12px; margin-bottom:20px;
 }
 .gm-back-btn--dark {
-  background: var(--surface-hover);
-  border: 1.5px solid var(--border-strong);
-  color: var(--accent);
-  padding: 8px 15px; border-radius: 20px;
-  font-size: 0.85rem; font-weight: 800;
-  transition: background .15s, border-color .15s;
+  background: linear-gradient(135deg, var(--accent), var(--accent2)) !important;
+  border: none !important;
+  color: #fff !important;
+  padding: 9px 18px !important;
+  border-radius: 20px !important;
+  font-size: 0.85rem !important; font-weight: 800 !important;
+  box-shadow: 0 2px 10px rgba(108,99,255,0.25);
+  transition: opacity .15s, transform .15s;
+  margin-bottom: 0 !important;
 }
-.gm-back-btn--dark:hover { background: var(--surface); border-color: var(--accent); }
+.gm-back-btn--dark:hover { opacity: .85; transform: translateY(-1px); }
 .gm-settings-title { font-size:1.05rem; font-weight:800; color:var(--text); }
 .gm-settings-section {
   border:1.5px solid var(--border); border-radius:var(--radius-sm);
