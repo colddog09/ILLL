@@ -4842,6 +4842,7 @@ a.settings-tab {
    ============================================================ */
 .mobile-tabbar { display: none; }
 @media (max-width: 768px) {
+  #settingsBtn { display: none !important; }
   .mobile-tabbar {
     display: flex;
     position: fixed;
