@@ -309,7 +309,8 @@ async function gmOpenGroup(groupId) {
   document.getElementById('gmNotifToggle')?.addEventListener('click', () => gmToggleNotifications(groupId));
   document.getElementById('gmCopyCode')?.addEventListener('click', () => {
     const link = `${location.origin}/?join=${gmCurrent.invite_code}`;
-    navigator.clipboard?.writeText(link).then(() => {
+    const msg = `👥 '${gmCurrent.name}' 그룹에 초대합니다!\n\n아래 링크를 눌러 바로 참여하세요 👇\n${link}\n\n📋 o1chu.my — 일정 관리, 그룹 공지, 기한 알림까지 한 번에!`;
+    navigator.clipboard?.writeText(msg).then(() => {
       const b = document.getElementById('gmCopyCode'); if (b) { b.textContent = '복사됨!'; setTimeout(() => b.textContent = '링크 복사', 1500); }
     });
   });
