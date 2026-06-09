@@ -133,10 +133,18 @@ async function gmShowList() {
   document.getElementById('gmCreateName')?.addEventListener('keydown', e => { if (e.key === 'Enter') gmCreateGroup(); });
 }
 
+const GROUP_MAX        = 10;   // 유저당 최대 그룹 수
+const GROUP_MEMBER_MAX = 50;   // 그룹당 최대 멤버 수
+const ANNOUNCE_MAX     = 100;  // 그룹당 최대 공지 수
+
 async function gmCreateGroup() {
   if (gmBusy) return;
   const name = (document.getElementById('gmCreateName')?.value || '').trim();
   if (!name) { alert('그룹 이름을 입력하세요.'); return; }
+  if (gmGroups.length >= GROUP_MAX) {
+    alert(`그룹은 최대 ${GROUP_MAX}개까지 참여할 수 있어요.`);
+    return;
+  }
   gmBusy = true;
   const { data, error } = await supabaseClient.rpc('create_group', { p_name: name, p_display: _gmDisplayName() });
   gmBusy = false;
@@ -149,7 +157,24 @@ async function gmJoinGroup() {
   if (gmBusy) return;
   const code = (document.getElementById('gmJoinCode')?.value || '').trim();
   if (code.length < 4) { alert('초대 코드를 정확히 입력하세요.'); return; }
+  if (gmGroups.length >= GROUP_MAX) {
+    alert(`그룹은 최대 ${GROUP_MAX}개까지 참여할 수 있어요.`);
+    return;
+  }
   gmBusy = true;
+  // 멤버 수 사전 확인
+  const { data: targetGroup } = await supabaseClient
+    .from('groups').select('id').eq('invite_code', code.toUpperCase()).single();
+  if (targetGroup?.id) {
+    const { count } = await supabaseClient
+      .from('group_members').select('*', { count: 'exact', head: true })
+      .eq('group_id', targetGroup.id);
+    if (count >= GROUP_MEMBER_MAX) {
+      gmBusy = false;
+      alert(`이 그룹은 멤버가 가득 찼어요. (최대 ${GROUP_MEMBER_MAX}명)`);
+      return;
+    }
+  }
   const { data, error } = await supabaseClient.rpc('join_group_by_code', { p_code: code, p_display: _gmDisplayName() });
   gmBusy = false;
   if (error) {
@@ -455,6 +480,15 @@ async function gmPostAnnouncement(groupId) {
   const date = document.getElementById('gmPostDate')?.value || null;
   if (!text) { alert('일정 내용을 입력하세요.'); return; }
   gmBusy = true;
+  // 공지 수 확인
+  const { count: announceCount } = await supabaseClient
+    .from('group_announcements').select('*', { count: 'exact', head: true })
+    .eq('group_id', groupId);
+  if (announceCount >= ANNOUNCE_MAX) {
+    gmBusy = false;
+    alert(`공지는 최대 ${ANNOUNCE_MAX}개까지 등록할 수 있어요. 오래된 공지를 삭제해 주세요.`);
+    return;
+  }
   const { error } = await supabaseClient.from('group_announcements').insert({
     group_id: groupId, author_id: currentUser.id, author_name: _gmDisplayName(),
     text, date: date || null

@@ -41,8 +41,14 @@ function scheduleGcalEventToDay(ev, gcalDateKey, targetKey) {
   return true;
 }
 
+const DAY_MAX = 20;
+
 function schedulePoolTask(key, taskId, text) {
   if ((state.schedule[key] || []).some(it => it.taskId === taskId)) return false;
+  if ((state.schedule[key] || []).length >= DAY_MAX) {
+    alert(`하루에 최대 ${DAY_MAX}개까지 배치할 수 있어요.`);
+    return false;
+  }
   const poolTask = state.pool.find(t => t.id === taskId);
   state.pool = state.pool.filter(t => t.id !== taskId);
   if (!state.schedule[key]) state.schedule[key] = [];

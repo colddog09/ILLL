@@ -65,6 +65,10 @@ function moveSchedItemToDay(fromKey, itemId, toKey) {
   const fromArr = state.schedule[fromKey] || [];
   const idx = fromArr.findIndex(it => it.id === itemId);
   if (idx === -1) return;
+  if ((state.schedule[toKey] || []).length >= DAY_MAX) {
+    alert(`하루에 최대 ${DAY_MAX}개까지 배치할 수 있어요.`);
+    return;
+  }
   const [moved] = fromArr.splice(idx, 1);
   state.schedule[fromKey] = fromArr;
   if (!state.schedule[toKey]) state.schedule[toKey] = [];

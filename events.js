@@ -380,10 +380,16 @@ function deferTasks(targetDateKey) {
 // ──────────────────────────────────────────────
 // 할일 추가 (인풋)
 // ──────────────────────────────────────────────
+const POOL_MAX = 100;
+
 function addTaskFromInput() {
   if (!requireLogin('로그인이 필요합니다.')) return;
   const text = taskInput.value.trim().slice(0, 120);
   if (!text) return;
+  if (state.pool.length >= POOL_MAX) {
+    alert(`할일은 최대 ${POOL_MAX}개까지 추가할 수 있어요. 완료된 항목을 삭제해 주세요.`);
+    return;
+  }
   const task = { id: uid(), text };
   if (pendingDeadline) task.deadline = { ...pendingDeadline };
   state.pool.push(task);
