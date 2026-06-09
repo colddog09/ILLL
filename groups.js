@@ -639,10 +639,10 @@ function _gmAddToSchedule(ann) {
   document.getElementById('settingsBtn')?.addEventListener('click', () => setActiveTab('settings'));
 
   // 닫기 버튼 → 홈
-  document.getElementById('groupCloseBtn')?.addEventListener('click', () => setActiveTab('home'));
-  document.getElementById('settingsCloseBtn')?.addEventListener('click', () => setActiveTab('home'));
-  groupModal?.addEventListener('click', e => { if (e.target === groupModal) setActiveTab('home'); });
-  settingsModal?.addEventListener('click', e => { if (e.target === settingsModal) setActiveTab('home'); });
+  document.getElementById('groupCloseBtn')?.addEventListener('click', closeAll);
+  document.getElementById('settingsCloseBtn')?.addEventListener('click', closeAll);
+  groupModal?.addEventListener('click', e => { if (e.target === groupModal) closeAll(); });
+  settingsModal?.addEventListener('click', e => { if (e.target === settingsModal) closeAll(); });
 
   // 뒤로가기(#home) 지원
   window.addEventListener('hashchange', () => {
