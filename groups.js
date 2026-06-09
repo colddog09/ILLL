@@ -277,13 +277,14 @@ async function gmOpenGroup(groupId) {
         <h2 class="gm-hero__name">${escHtml(gmCurrent.name)}</h2>
         <div class="gm-hero__badge">${isOwner ? '👑 그룹장' : canAnnounce ? '📢 공지자' : '멤버'}</div>
       </div>
+      ${isOwner ? `
       <div class="gm-hero__code-row">
         <div class="gm-hero__code-wrap">
-          <span class="gm-hero__code-label">초대 코드</span>
+          <span class="gm-hero__code-label">초대 링크</span>
           <span class="gm-hero__code">${escHtml(gmCurrent.invite_code)}</span>
         </div>
-        <button class="gm-copy-btn" id="gmCopyCode">복사</button>
-      </div>
+        <button class="gm-copy-btn" id="gmCopyCode">링크 복사</button>
+      </div>` : ''}
       <div class="gm-hero__notif-row">
         <span class="gm-hero__notif-label">🔔 공지 알림</span>
         <button class="gm-notif-toggle ${gmCurrent.notifications_enabled ? 'gm-notif-toggle--on' : 'gm-notif-toggle--off'}"
@@ -307,8 +308,9 @@ async function gmOpenGroup(groupId) {
   document.getElementById('gmSettingsBtn')?.addEventListener('click', () => gmShowSettings(groupId));
   document.getElementById('gmNotifToggle')?.addEventListener('click', () => gmToggleNotifications(groupId));
   document.getElementById('gmCopyCode')?.addEventListener('click', () => {
-    navigator.clipboard?.writeText(gmCurrent.invite_code).then(() => {
-      const b = document.getElementById('gmCopyCode'); if (b) { b.textContent = '복사됨'; setTimeout(() => b.textContent = '복사', 1500); }
+    const link = `${location.origin}/?join=${gmCurrent.invite_code}`;
+    navigator.clipboard?.writeText(link).then(() => {
+      const b = document.getElementById('gmCopyCode'); if (b) { b.textContent = '복사됨!'; setTimeout(() => b.textContent = '링크 복사', 1500); }
     });
   });
   document.getElementById('gmPostBtn')?.addEventListener('click', () => gmPostAnnouncement(groupId));
@@ -757,3 +759,44 @@ function _gmAddToSchedule(ann) {
 
   setTimeout(() => setActiveTab('home'), 350);
 })();
+
+// ── ?join=CODE URL 자동 참여 ──────────────────────────────────
+async function gmAutoJoinFromUrl() {
+  const code = new URLSearchParams(location.search).get('join');
+  if (!code || !currentUser) return;
+
+  // URL 파라미터 제거 (뒤로가기 시 재진입 방지)
+  history.replaceState(null, '', location.pathname);
+
+  // 이미 참여한 그룹인지 확인
+  await gmShowList();
+  const already = gmGroups.find(g => g.invite_code === code.toUpperCase());
+  if (already) {
+    // 이미 멤버면 그냥 그룹 열기
+    const modal = document.getElementById('groupModal');
+    if (modal) modal.hidden = false;
+    gmOpenGroup(already.id);
+    return;
+  }
+
+  // 자동 참여
+  if (gmGroups.length >= GROUP_MAX) {
+    alert(`그룹은 최대 ${GROUP_MAX}개까지 참여할 수 있어요.`);
+    return;
+  }
+  const { data, error } = await supabaseClient.rpc('join_group_by_code', {
+    p_code: code,
+    p_display: _gmDisplayName(),
+  });
+  if (error) {
+    alert(error.message.includes('invalid_code')
+      ? '유효하지 않은 초대 링크예요.' : '참여 실패: ' + error.message);
+    return;
+  }
+  await gmShowList();
+  if (data?.id) {
+    const modal = document.getElementById('groupModal');
+    if (modal) modal.hidden = false;
+    gmOpenGroup(data.id);
+  }
+}
