@@ -297,7 +297,10 @@ async function gmOpenGroup(groupId) {
     <div class="gm-hero">
       <div class="gm-hero__toprow">
         <button class="gm-back-btn" id="gmBackBtn">← 목록</button>
-        ${isOwner ? `<button class="gm-settings-btn" id="gmSettingsBtn" title="그룹 설정">⚙️</button>` : ''}
+        <div class="gm-hero__toprow-right">
+          <button class="gm-settings-btn" id="gmLinksBtn" title="그룹 링크">🔗</button>
+          ${isOwner ? `<button class="gm-settings-btn" id="gmSettingsBtn" title="그룹 설정">⚙️</button>` : ''}
+        </div>
       </div>
       <div class="gm-hero__content">
         <h2 class="gm-hero__name">${escHtml(gmCurrent.name)}</h2>
@@ -338,6 +341,16 @@ async function gmOpenGroup(groupId) {
   // 이벤트 바인딩
   document.getElementById('gmBackBtn')?.addEventListener('click', gmShowList);
   document.getElementById('gmSettingsBtn')?.addEventListener('click', () => gmShowSettings(groupId));
+  document.getElementById('gmLinksBtn')?.addEventListener('click', () => {
+    document.querySelector('.gm-links-wrap')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  // 시작일 변경 시 종료일 자동 동기화
+  document.getElementById('gmPostDate')?.addEventListener('change', e => {
+    const endEl = document.getElementById('gmPostDateEnd');
+    if (endEl && (!endEl.value || endEl.value < e.target.value)) {
+      endEl.value = e.target.value;
+    }
+  });
   document.getElementById('gmNotifToggle')?.addEventListener('click', () => gmToggleNotifications(groupId));
   document.getElementById('gmCopyCode')?.addEventListener('click', () => {
     const link = `${location.origin}/?join=${gmCurrent.invite_code}`;
