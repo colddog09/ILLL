@@ -249,25 +249,6 @@ async function gmOpenGroup(groupId) {
       </div>
     </div>` : '';
 
-  const linkForm = `
-    <div class="gm-post">
-      <p class="gm-section-title">🔗 링크 추가하기</p>
-      <input id="gmLinkTitle" class="gm-input" type="text" maxlength="80" placeholder="링크 제목 (예: 과제 안내 문서)" />
-      <div class="gm-post__row">
-        <input id="gmLinkUrl" class="gm-input" type="url" placeholder="https://..." />
-        <button id="gmLinkAddBtn" class="gm-btn gm-btn--primary">추가</button>
-      </div>
-    </div>`;
-
-  const linksHtml = links.length ? links.map(l => {
-    const canDel = isOwner || l.author_id === currentUser.id;
-    return `
-      <a class="gm-link-card" href="${escHtml(l.url)}" target="_blank" rel="noopener">
-        <span class="gm-link-card__icon">🔗</span>
-        <span class="gm-link-card__title">${escHtml(l.title)}</span>
-        ${canDel ? `<button class="gm-link-card__del" data-link-del="${l.id}" title="링크 삭제">✕</button>` : ''}
-      </a>`;
-  }).join('') : `<div class="gm-empty">등록된 링크가 없어요.</div>`;
 
   const ownerPanel = isOwner ? `
     <div class="gm-members-wrap">
@@ -324,16 +305,10 @@ async function gmOpenGroup(groupId) {
     </div>
 
     ${postForm}
-    ${linkForm}
 
     <div class="gm-anns-wrap">
       <p class="gm-section-title">🗓️ 공지된 일정</p>
       <div class="gm-anns">${annHtml}</div>
-    </div>
-
-    <div class="gm-links-wrap">
-      <p class="gm-section-title">🔗 그룹 링크</p>
-      <div class="gm-links">${linksHtml}</div>
     </div>
 
     ${!isOwner ? `<button class="gm-leave-btn" id="gmLeaveBtn">그룹 나가기</button>` : ''}`;
@@ -342,7 +317,8 @@ async function gmOpenGroup(groupId) {
   document.getElementById('gmBackBtn')?.addEventListener('click', gmShowList);
   document.getElementById('gmSettingsBtn')?.addEventListener('click', () => gmShowSettings(groupId));
   document.getElementById('gmLinksBtn')?.addEventListener('click', () => {
-    document.querySelector('.gm-links-wrap')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    history.pushState(null, '', '#group-links');
+    gmShowLinks(groupId);
   });
   // 시작일 변경 시 종료일 자동 동기화
   document.getElementById('gmPostDate')?.addEventListener('change', e => {
@@ -361,15 +337,10 @@ async function gmOpenGroup(groupId) {
   });
   document.getElementById('gmPostBtn')?.addEventListener('click', () => gmPostAnnouncement(groupId));
   document.getElementById('gmLeaveBtn')?.addEventListener('click', () => gmLeaveOrDelete(groupId, false));
-  document.getElementById('gmLinkAddBtn')?.addEventListener('click', () => gmAddLink(groupId));
-  document.getElementById('gmLinkUrl')?.addEventListener('keydown', e => { if (e.key === 'Enter') gmAddLink(groupId); });
-
   body.querySelectorAll('[data-add]').forEach(b =>
     b.addEventListener('click', () => gmAddToMyList(anns.find(a => a.id === b.dataset.add), b)));
   body.querySelectorAll('[data-del]').forEach(b =>
     b.addEventListener('click', () => gmDeleteAnnouncement(b.dataset.del, groupId)));
-  body.querySelectorAll('[data-link-del]').forEach(b =>
-    b.addEventListener('click', e => { e.preventDefault(); gmDeleteLink(b.dataset.linkDel, groupId); }));
   body.querySelectorAll('[data-grant]').forEach(b =>
     b.addEventListener('click', () => gmSetRole(groupId, b.dataset.grant, 'announcer')));
   body.querySelectorAll('[data-revoke]').forEach(b =>
@@ -377,6 +348,72 @@ async function gmOpenGroup(groupId) {
 }
 
 // ──────────────────────────────────────────────
+// ──────────────────────────────────────────────
+// 그룹 링크 화면
+// ──────────────────────────────────────────────
+async function gmShowLinks(groupId) {
+  const body = document.getElementById('groupModalBody');
+  if (!body) return;
+  body.innerHTML = `<div class="gm-loading">불러오는 중…</div>`;
+
+  const isMember = !!gmGroups.find(g => g.id === groupId);
+  if (!isMember) { gmShowList(); return; }
+
+  const { data: links } = await supabaseClient
+    .from('group_links').select('*').eq('group_id', groupId).order('created_at', { ascending: false });
+
+  const isOwner = gmCurrent?.role === 'owner';
+  const linksHtml = (links || []).length
+    ? (links || []).map(l => {
+        const canDel = isOwner || l.author_id === currentUser.id;
+        return `
+          <a class="gm-link-card" href="${escHtml(l.url)}" target="_blank" rel="noopener">
+            <span class="gm-link-card__icon">🔗</span>
+            <span class="gm-link-card__title">${escHtml(l.title)}</span>
+            ${canDel ? `<button class="gm-link-card__del" data-link-del="${l.id}" title="링크 삭제">✕</button>` : ''}
+          </a>`;
+      }).join('')
+    : `<div class="gm-empty">등록된 링크가 없어요.</div>`;
+
+  body.innerHTML = `
+    <div class="gm-settings-header">
+      <button class="gm-back-btn gm-back-btn--dark" id="gmLinksBackBtn">← 돌아가기</button>
+      <span class="gm-settings-title">그룹 링크</span>
+    </div>
+
+    <div class="gm-settings-section">
+      <p class="gm-section-title">🔗 링크 추가</p>
+      <input id="gmLinkTitle" class="gm-input" type="text" maxlength="80" placeholder="링크 제목 (예: 과제 안내 문서)" />
+      <div class="gm-post__row" style="margin-top:8px">
+        <input id="gmLinkUrl" class="gm-input" type="url" placeholder="https://..." />
+        <button id="gmLinkAddBtn" class="gm-btn gm-btn--primary">추가</button>
+      </div>
+    </div>
+
+    <div class="gm-settings-section">
+      <p class="gm-section-title">등록된 링크</p>
+      <div class="gm-links" id="gmLinksList">${linksHtml}</div>
+    </div>`;
+
+  document.getElementById('gmLinksBackBtn')?.addEventListener('click', () => {
+    history.back();
+    gmOpenGroup(groupId);
+  });
+  document.getElementById('gmLinkAddBtn')?.addEventListener('click', async () => {
+    await gmAddLink(groupId);
+    gmShowLinks(groupId);
+  });
+  document.getElementById('gmLinkUrl')?.addEventListener('keydown', async e => {
+    if (e.key === 'Enter') { await gmAddLink(groupId); gmShowLinks(groupId); }
+  });
+  body.querySelectorAll('[data-link-del]').forEach(b =>
+    b.addEventListener('click', async e => {
+      e.preventDefault();
+      await gmDeleteLink(b.dataset.linkDel, groupId);
+      gmShowLinks(groupId);
+    }));
+}
+
 // 그룹 설정 화면 (그룹장 전용)
 // ──────────────────────────────────────────────
 async function gmShowSettings(groupId) {
@@ -613,14 +650,12 @@ async function gmAddLink(groupId) {
     group_id: groupId, author_id: currentUser.id, title, url,
   });
   if (error) { alert('링크 추가 실패: ' + error.message); return; }
-  gmOpenGroup(groupId);
 }
 
 async function gmDeleteLink(id, groupId) {
   if (!confirm('이 링크를 삭제할까요?')) return;
   const { error } = await supabaseClient.from('group_links').delete().eq('id', id);
-  if (error) { alert('삭제 실패: ' + error.message); return; }
-  gmOpenGroup(groupId);
+  if (error) { alert('삭제 실패: ' + error.message); }
 }
 
 // 공지 일정 → 내 리스트로 추가
