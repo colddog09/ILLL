@@ -297,7 +297,8 @@ function initDrag() {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     trashZone.classList.add('danger');
-    if (trashLabel) trashLabel.textContent = dragInfo.fromGcal ? '캘린더에서도 삭제됨' : '여기에 놓으면 삭제';
+    const isGcalItem = dragInfo.fromGcal || dragInfo.type === 'gcal-side';
+    if (trashLabel) trashLabel.textContent = isGcalItem ? '캘린더에서도 삭제됨' : '여기에 놓으면 삭제';
   });
   trashZone.addEventListener('dragleave', e => {
     if (!trashZone.contains(e.relatedTarget)) {
@@ -311,7 +312,16 @@ function initDrag() {
     if (trashLabel) trashLabel.textContent = '여기에 놓으면 삭제';
     if (!dragInfo) return;
 
-    if (dragInfo.type === 'pool') {
+    if (dragInfo.type === 'gcal-side') {
+      // 캘린더 사이드패널 항목 → 구글 캘린더에서 삭제
+      if (typeof gcalDeleteEvent === 'function') {
+        gcalDeleteEvent(dragInfo.gcalId).then(() => {
+          if (typeof gcalImportCurrentDate === 'function') gcalImportCurrentDate();
+        }).catch(() => {});
+      }
+      endDrag();
+      return;
+    } else if (dragInfo.type === 'pool') {
       const idx = state.pool.findIndex(t => t.id === dragInfo.taskId);
       const removed = idx !== -1 ? state.pool[idx] : null;
       // 캘린더 항목이면 구글 캘린더에서도 삭제

@@ -186,6 +186,6 @@ drop policy if exists gl_delete on public.group_links;
 create policy gl_select on public.group_links for select
   using (public.is_group_member(group_id, auth.uid()));
 create policy gl_insert on public.group_links for insert
-  with check (public.can_announce(group_id, auth.uid()) and author_id = auth.uid());
+  with check (public.is_group_member(group_id, auth.uid()) and author_id = auth.uid());
 create policy gl_delete on public.group_links for delete
   using (author_id = auth.uid() or public.is_group_owner(group_id, auth.uid()));

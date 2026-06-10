@@ -247,7 +247,9 @@ async function gmOpenGroup(groupId) {
       <div class="gm-post__row">
         <button id="gmPostBtn" class="gm-btn gm-btn--primary" style="width:100%">공지</button>
       </div>
-    </div>
+    </div>` : '';
+
+  const linkForm = `
     <div class="gm-post">
       <p class="gm-section-title">🔗 링크 추가하기</p>
       <input id="gmLinkTitle" class="gm-input" type="text" maxlength="80" placeholder="링크 제목 (예: 과제 안내 문서)" />
@@ -255,7 +257,7 @@ async function gmOpenGroup(groupId) {
         <input id="gmLinkUrl" class="gm-input" type="url" placeholder="https://..." />
         <button id="gmLinkAddBtn" class="gm-btn gm-btn--primary">추가</button>
       </div>
-    </div>` : '';
+    </div>`;
 
   const linksHtml = links.length ? links.map(l => {
     const canDel = isOwner || l.author_id === currentUser.id;
@@ -319,6 +321,7 @@ async function gmOpenGroup(groupId) {
     </div>
 
     ${postForm}
+    ${linkForm}
 
     <div class="gm-anns-wrap">
       <p class="gm-section-title">🗓️ 공지된 일정</p>
