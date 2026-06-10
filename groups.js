@@ -218,7 +218,7 @@ async function gmOpenGroup(groupId) {
 
   const annHtml = anns.length ? anns.map(a => {
     const dateLabel = a.date
-      ? `<span class="gm-ann__date">📅 ${escHtml(a.date)}</span>`
+      ? `<span class="gm-ann__date">📅 ${escHtml(a.date)}${a.date_end ? ` ~ ${escHtml(a.date_end)}` : ''}</span>`
       : (a.deadline ? `<span class="gm-ann__date">⏰ ${escHtml(formatDeadlineText(a.deadline))}</span>` : `<span class="gm-ann__date gm-ann__date--none">날짜 없음</span>`);
     const isAdded = added.has(a.id);
     const canDelete = isOwner || a.author_id === currentUser.id;
@@ -239,9 +239,13 @@ async function gmOpenGroup(groupId) {
     <div class="gm-post">
       <p class="gm-section-title">📢 일정 공지하기</p>
       <input id="gmPostText" class="gm-input" type="text" maxlength="200" placeholder="일정 내용 (예: 수학 수행평가)" />
-      <div class="gm-post__row">
+      <div class="gm-post__date-row">
         <input id="gmPostDate" class="gm-input gm-input--date" type="date" />
-        <button id="gmPostBtn" class="gm-btn gm-btn--primary">공지</button>
+        <span class="gm-post__tilde">~</span>
+        <input id="gmPostDateEnd" class="gm-input gm-input--date" type="date" placeholder="종료일 (선택)" />
+      </div>
+      <div class="gm-post__row">
+        <button id="gmPostBtn" class="gm-btn gm-btn--primary" style="width:100%">공지</button>
       </div>
     </div>
     <div class="gm-post">
@@ -508,9 +512,11 @@ async function gmRenameGroup(groupId) {
 // ──────────────────────────────────────────────
 async function gmPostAnnouncement(groupId) {
   if (gmBusy) return;
-  const text = (document.getElementById('gmPostText')?.value || '').trim().slice(0, 200);
-  const date = document.getElementById('gmPostDate')?.value || null;
+  const text     = (document.getElementById('gmPostText')?.value    || '').trim().slice(0, 200);
+  const date     = document.getElementById('gmPostDate')?.value    || null;
+  const dateEnd  = document.getElementById('gmPostDateEnd')?.value || null;
   if (!text) { alert('일정 내용을 입력하세요.'); return; }
+  if (dateEnd && date && dateEnd < date) { alert('종료일이 시작일보다 앞에 있어요.'); return; }
   gmBusy = true;
   // 공지 수 확인
   const { count: announceCount } = await supabaseClient
@@ -523,7 +529,7 @@ async function gmPostAnnouncement(groupId) {
   }
   const { error } = await supabaseClient.from('group_announcements').insert({
     group_id: groupId, author_id: currentUser.id, author_name: _gmDisplayName(),
-    text, date: date || null
+    text, date: date || null, date_end: dateEnd || null
   });
   gmBusy = false;
   if (error) { alert('공지 등록 실패: ' + error.message); return; }
@@ -620,16 +626,18 @@ async function gmAddToMyList(ann, btn) {
       destination = '📥 할일 풀에 추가됐어요!';
     } else if (typeof gcalTokenValid === 'function' && gcalTokenValid()) {
       try {
-        await gcalCreateEvent(ann.text, ann.date);
+        await gcalCreateEvent(ann.text, ann.date, ann.date_end || undefined);
         if (typeof gcalImportCurrentDate === 'function') gcalImportCurrentDate();
-        destination = `📅 구글 캘린더 (${ann.date})에 추가됐어요!`;
+        const range = ann.date_end ? `${ann.date} ~ ${ann.date_end}` : ann.date;
+        destination = `📅 구글 캘린더 (${range})에 추가됐어요!`;
       } catch (e) {
         _gmAddToSchedule(ann);
         destination = `📅 앱 스케줄 (${ann.date})에 추가됐어요!`;
       }
     } else {
       _gmAddToSchedule(ann);
-      destination = `📅 앱 스케줄 (${ann.date})에 추가됐어요!`;
+      const range = ann.date_end ? `${ann.date} ~ ${ann.date_end}` : ann.date;
+      destination = `📅 앱 스케줄 (${range})에 추가됐어요!`;
     }
 
     _gmMarkAdded(ann.id);

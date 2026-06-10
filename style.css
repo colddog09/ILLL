@@ -4859,6 +4859,13 @@ a.settings-tab {
 .gm-leave-btn--danger { color: var(--danger); border-color: rgba(220,38,38,0.3); }
 .gm-leave-btn--danger:hover { border-color: var(--danger); background: rgba(220,38,38,0.05); }
 
+/* ── 공지 날짜 범위 입력 ── */
+.gm-post__date-row {
+  display:flex; align-items:center; gap:6px; margin-bottom:8px;
+}
+.gm-post__date-row .gm-input { flex:1; min-width:0; }
+.gm-post__tilde { font-size:0.9rem; color:var(--text-sub); flex-shrink:0; }
+
 /* ── 그룹 링크 ── */
 .gm-links-wrap { display:flex; flex-direction:column; margin-top:4px; }
 .gm-links { display:flex; flex-direction:column; gap:8px; }

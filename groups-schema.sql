@@ -158,6 +158,10 @@ create policy ps_delete on public.push_subscriptions for delete using (user_id =
 alter table public.group_members
   add column if not exists notifications_enabled boolean not null default true;
 
+-- ── 공지 종료일 컬럼 ─────────────────────────────────────────
+alter table public.group_announcements
+  add column if not exists date_end date;
+
 -- ============================================================
 -- 그룹 링크 테이블
 -- ============================================================
