@@ -296,12 +296,8 @@ function initDrag() {
     if (!dragInfo) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    if (dragInfo.fromGcal) {
-      trashZone.classList.add('gcal-warn');
-      if (trashLabel) trashLabel.textContent = '캘린더에서 제거해주세요';
-    } else {
-      trashZone.classList.add('danger');
-    }
+    trashZone.classList.add('danger');
+    if (trashLabel) trashLabel.textContent = dragInfo.fromGcal ? '캘린더에서도 삭제됨' : '여기에 놓으면 삭제';
   });
   trashZone.addEventListener('dragleave', e => {
     if (!trashZone.contains(e.relatedTarget)) {
@@ -316,9 +312,14 @@ function initDrag() {
     if (!dragInfo) return;
 
     if (dragInfo.type === 'pool') {
-      if (dragInfo.fromGcal) { endDrag(); return; } // 캘린더 일정은 앱에서 삭제 불가
       const idx = state.pool.findIndex(t => t.id === dragInfo.taskId);
       const removed = idx !== -1 ? state.pool[idx] : null;
+      // 캘린더 항목이면 구글 캘린더에서도 삭제
+      if (dragInfo.fromGcal && removed?.gcalEventId) {
+        if (typeof gcalDeleteEvent === 'function') {
+          gcalDeleteEvent(removed.gcalEventId).catch(() => {});
+        }
+      }
       removeTaskFromPool(dragInfo.taskId);
       saveState();
       endDrag();
@@ -333,6 +334,10 @@ function initDrag() {
       const arr = state.schedule[key] || [];
       const idx = arr.findIndex(it => it.id === dragInfo.itemId);
       const removed = idx !== -1 ? arr[idx] : null;
+      // 캘린더 항목이면 구글 캘린더에서도 삭제
+      if (removed?.gcalEventId && typeof gcalDeleteEvent === 'function') {
+        gcalDeleteEvent(removed.gcalEventId).catch(() => {});
+      }
       removeScheduleItem(key, dragInfo.itemId);
       saveState();
       endDrag();
