@@ -205,13 +205,15 @@ async function gmOpenGroup(groupId) {
   const isOwner    = gmCurrent.role === 'owner';
   const canAnnounce = gmCurrent.role === 'owner' || gmCurrent.role === 'announcer';
 
-  const [annRes, memRes] = await Promise.all([
+  const [annRes, memRes, linkRes] = await Promise.all([
     supabaseClient.from('group_announcements').select('*').eq('group_id', groupId).order('created_at', { ascending: false }),
-    supabaseClient.from('group_members').select('user_id, role, display_name').eq('group_id', groupId)
+    supabaseClient.from('group_members').select('user_id, role, display_name').eq('group_id', groupId),
+    supabaseClient.from('group_links').select('*').eq('group_id', groupId).order('created_at', { ascending: false }),
   ]);
 
-  const anns    = annRes.data || [];
-  const members = memRes.data || [];
+  const anns    = annRes.data  || [];
+  const members = memRes.data  || [];
+  const links   = linkRes.data || [];
   const added   = _gmAddedSet();
 
   const annHtml = anns.length ? anns.map(a => {
@@ -241,7 +243,25 @@ async function gmOpenGroup(groupId) {
         <input id="gmPostDate" class="gm-input gm-input--date" type="date" />
         <button id="gmPostBtn" class="gm-btn gm-btn--primary">공지</button>
       </div>
+    </div>
+    <div class="gm-post">
+      <p class="gm-section-title">🔗 링크 추가하기</p>
+      <input id="gmLinkTitle" class="gm-input" type="text" maxlength="80" placeholder="링크 제목 (예: 과제 안내 문서)" />
+      <div class="gm-post__row">
+        <input id="gmLinkUrl" class="gm-input" type="url" placeholder="https://..." />
+        <button id="gmLinkAddBtn" class="gm-btn gm-btn--primary">추가</button>
+      </div>
     </div>` : '';
+
+  const linksHtml = links.length ? links.map(l => {
+    const canDel = isOwner || l.author_id === currentUser.id;
+    return `
+      <a class="gm-link-card" href="${escHtml(l.url)}" target="_blank" rel="noopener">
+        <span class="gm-link-card__icon">🔗</span>
+        <span class="gm-link-card__title">${escHtml(l.title)}</span>
+        ${canDel ? `<button class="gm-link-card__del" data-link-del="${l.id}" title="링크 삭제">✕</button>` : ''}
+      </a>`;
+  }).join('') : `<div class="gm-empty">등록된 링크가 없어요.</div>`;
 
   const ownerPanel = isOwner ? `
     <div class="gm-members-wrap">
@@ -301,6 +321,11 @@ async function gmOpenGroup(groupId) {
       <div class="gm-anns">${annHtml}</div>
     </div>
 
+    <div class="gm-links-wrap">
+      <p class="gm-section-title">🔗 그룹 링크</p>
+      <div class="gm-links">${linksHtml}</div>
+    </div>
+
     ${!isOwner ? `<button class="gm-leave-btn" id="gmLeaveBtn">그룹 나가기</button>` : ''}`;
 
   // 이벤트 바인딩
@@ -316,11 +341,15 @@ async function gmOpenGroup(groupId) {
   });
   document.getElementById('gmPostBtn')?.addEventListener('click', () => gmPostAnnouncement(groupId));
   document.getElementById('gmLeaveBtn')?.addEventListener('click', () => gmLeaveOrDelete(groupId, false));
+  document.getElementById('gmLinkAddBtn')?.addEventListener('click', () => gmAddLink(groupId));
+  document.getElementById('gmLinkUrl')?.addEventListener('keydown', e => { if (e.key === 'Enter') gmAddLink(groupId); });
 
   body.querySelectorAll('[data-add]').forEach(b =>
     b.addEventListener('click', () => gmAddToMyList(anns.find(a => a.id === b.dataset.add), b)));
   body.querySelectorAll('[data-del]').forEach(b =>
     b.addEventListener('click', () => gmDeleteAnnouncement(b.dataset.del, groupId)));
+  body.querySelectorAll('[data-link-del]').forEach(b =>
+    b.addEventListener('click', e => { e.preventDefault(); gmDeleteLink(b.dataset.linkDel, groupId); }));
   body.querySelectorAll('[data-grant]').forEach(b =>
     b.addEventListener('click', () => gmSetRole(groupId, b.dataset.grant, 'announcer')));
   body.querySelectorAll('[data-revoke]').forEach(b =>
@@ -550,6 +579,28 @@ async function gmLeaveOrDelete(groupId, isOwner) {
 }
 
 // ──────────────────────────────────────────────
+// ── 그룹 링크 추가 / 삭제 ─────────────────────────────────────
+async function gmAddLink(groupId) {
+  const title = (document.getElementById('gmLinkTitle')?.value || '').trim().slice(0, 80);
+  let   url   = (document.getElementById('gmLinkUrl')?.value   || '').trim().slice(0, 500);
+  if (!title) { alert('링크 제목을 입력하세요.'); return; }
+  if (!url)   { alert('URL을 입력하세요.'); return; }
+  if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+
+  const { error } = await supabaseClient.from('group_links').insert({
+    group_id: groupId, author_id: currentUser.id, title, url,
+  });
+  if (error) { alert('링크 추가 실패: ' + error.message); return; }
+  gmOpenGroup(groupId);
+}
+
+async function gmDeleteLink(id, groupId) {
+  if (!confirm('이 링크를 삭제할까요?')) return;
+  const { error } = await supabaseClient.from('group_links').delete().eq('id', id);
+  if (error) { alert('삭제 실패: ' + error.message); return; }
+  gmOpenGroup(groupId);
+}
+
 // 공지 일정 → 내 리스트로 추가
 //   날짜 없음 → 할일 풀
 //   날짜 있음 → 구글 캘린더(연결 시) / 미연결 시 해당 날짜 스케줄
@@ -559,33 +610,53 @@ async function gmAddToMyList(ann, btn) {
   if (btn) { btn.disabled = true; btn.textContent = '추가 중…'; }
 
   try {
+    let destination = '';
     if (!ann.date) {
-      // 할일 풀로
       const task = { id: uid(), text: ann.text };
       if (ann.deadline) task.deadline = ann.deadline;
       state.pool.push(task);
       saveState();
       renderPool();
+      destination = '📥 할일 풀에 추가됐어요!';
     } else if (typeof gcalTokenValid === 'function' && gcalTokenValid()) {
-      // 구글 캘린더로
       try {
         await gcalCreateEvent(ann.text, ann.date);
         if (typeof gcalImportCurrentDate === 'function') gcalImportCurrentDate();
+        destination = `📅 구글 캘린더 (${ann.date})에 추가됐어요!`;
       } catch (e) {
-        // 캘린더 실패 시 앱 스케줄로 폴백
         _gmAddToSchedule(ann);
+        destination = `📅 앱 스케줄 (${ann.date})에 추가됐어요!`;
       }
     } else {
-      // 캘린더 미연결 → 앱 스케줄
       _gmAddToSchedule(ann);
+      destination = `📅 앱 스케줄 (${ann.date})에 추가됐어요!`;
     }
 
     _gmMarkAdded(ann.id);
     if (btn) { btn.textContent = '추가됨'; btn.classList.add('gm-add-btn--done'); }
+    _gmToast(destination);
   } catch (e) {
     if (btn) { btn.disabled = false; btn.textContent = '+ 내 리스트'; }
     alert('추가 실패: ' + (e?.message || '오류'));
   }
+}
+
+function _gmToast(msg) {
+  let t = document.getElementById('gmToast');
+  if (t) t.remove();
+  t = document.createElement('div');
+  t.id = 'gmToast';
+  t.textContent = msg;
+  t.style.cssText = [
+    'position:fixed','bottom:88px','left:50%','transform:translateX(-50%)',
+    'background:rgba(30,27,75,0.92)','color:#fff','font-size:0.85rem',
+    'font-weight:600','padding:10px 18px','border-radius:999px',
+    'z-index:9999','pointer-events:none','white-space:nowrap',
+    'box-shadow:0 4px 18px rgba(0,0,0,0.25)',
+    'animation:fadeIn 0.2s ease',
+  ].join(';');
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2800);
 }
 
 function _gmAddToSchedule(ann) {

@@ -157,3 +157,31 @@ create policy ps_delete on public.push_subscriptions for delete using (user_id =
 -- ── 그룹별 알림 수신 설정 ────────────────────────────────────
 alter table public.group_members
   add column if not exists notifications_enabled boolean not null default true;
+
+-- ============================================================
+-- 그룹 링크 테이블
+-- ============================================================
+
+create table if not exists public.group_links (
+  id         uuid primary key default gen_random_uuid(),
+  group_id   uuid not null references public.groups(id) on delete cascade,
+  author_id  uuid references auth.users(id) on delete set null,
+  title      text not null check (char_length(title) between 1 and 80),
+  url        text not null check (char_length(url) between 1 and 500),
+  created_at timestamptz default now()
+);
+
+create index if not exists idx_gl_group on public.group_links(group_id, created_at desc);
+
+alter table public.group_links enable row level security;
+
+drop policy if exists gl_select on public.group_links;
+drop policy if exists gl_insert on public.group_links;
+drop policy if exists gl_delete on public.group_links;
+
+create policy gl_select on public.group_links for select
+  using (public.is_group_member(group_id, auth.uid()));
+create policy gl_insert on public.group_links for insert
+  with check (public.can_announce(group_id, auth.uid()) and author_id = auth.uid());
+create policy gl_delete on public.group_links for delete
+  using (author_id = auth.uid() or public.is_group_owner(group_id, auth.uid()));

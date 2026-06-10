@@ -4859,6 +4859,27 @@ a.settings-tab {
 .gm-leave-btn--danger { color: var(--danger); border-color: rgba(220,38,38,0.3); }
 .gm-leave-btn--danger:hover { border-color: var(--danger); background: rgba(220,38,38,0.05); }
 
+/* ── 그룹 링크 ── */
+.gm-links-wrap { display:flex; flex-direction:column; margin-top:4px; }
+.gm-links { display:flex; flex-direction:column; gap:8px; }
+.gm-link-card {
+  display:flex; align-items:center; gap:10px;
+  padding:11px 14px; border-radius:14px;
+  background:var(--surface); border:1.5px solid var(--border);
+  text-decoration:none; color:var(--text);
+  transition:background 0.15s, border-color 0.15s;
+}
+.gm-link-card:hover { background:var(--surface-hover); border-color:var(--accent); }
+.gm-link-card__icon { font-size:1rem; flex-shrink:0; }
+.gm-link-card__title { flex:1; font-size:0.9rem; font-weight:600; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.gm-link-card__del {
+  background:none; border:none; cursor:pointer;
+  font-size:0.8rem; color:var(--text-sub); opacity:0.5;
+  padding:4px 6px; border-radius:6px; flex-shrink:0;
+  transition:opacity 0.15s;
+}
+.gm-link-card__del:hover { opacity:1; background:var(--surface-hover); }
+
 /* ============================================================
    모바일 하단 탭바 — 리퀴드 글래스 슬라이더
    ============================================================ */
