@@ -1,5 +1,6 @@
 import { webcrypto } from 'node:crypto';
-const { subtle, getRandomValues } = webcrypto;
+const subtle = webcrypto.subtle;
+const getRandomValues = (arr) => webcrypto.getRandomValues(arr);
 
 export async function deriveKey(userId) {
   const raw = await subtle.importKey(
