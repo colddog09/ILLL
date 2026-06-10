@@ -218,7 +218,7 @@ async function gmOpenGroup(groupId) {
 
   const annHtml = anns.length ? anns.map(a => {
     const dateLabel = a.date
-      ? `<span class="gm-ann__date">📅 ${escHtml(a.date)}${a.date_end ? ` ~ ${escHtml(a.date_end)}` : ''}</span>`
+      ? `<span class="gm-ann__date">📅 ${escHtml(a.date)}${a.date_end && a.date_end !== a.date ? ` ~ ${escHtml(a.date_end)}` : ''}</span>`
       : (a.deadline ? `<span class="gm-ann__date">⏰ ${escHtml(formatDeadlineText(a.deadline))}</span>` : `<span class="gm-ann__date gm-ann__date--none">날짜 없음</span>`);
     const isAdded = added.has(a.id);
     const canDelete = isOwner || a.author_id === currentUser.id;
