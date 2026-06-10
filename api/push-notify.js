@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import webpush from 'web-push';
+import { deriveKey, decryptJson } from './_crypto.js';
 
 webpush.setVapidDetails(
   'mailto:admin@o1chu.my',
@@ -27,15 +28,27 @@ export default async function handler(req, res) {
     // 모든 구독 + 사용자 상태 병렬 조회
     const [{ data: subs }, { data: states }] = await Promise.all([
       supabase.from('push_subscriptions').select('user_id, subscription'),
-      supabase.from('user_states').select('user_id, pool'),
+      supabase.from('user_states').select('user_id, data_enc, pool'),
     ]);
 
     if (!subs?.length) return res.status(200).json({ ok: true, sent: 0 });
 
     // user_id → subscription 맵
     const subMap = Object.fromEntries(subs.map(s => [s.user_id, s.subscription]));
-    // user_id → pool 맵
-    const poolMap = Object.fromEntries((states || []).map(s => [s.user_id, s.pool || []]));
+
+    // user_id → pool 맵 (암호화 → 복호화, 폴백: plaintext pool)
+    const poolMap = {};
+    await Promise.all((states || []).map(async s => {
+      if (s.data_enc) {
+        try {
+          const key = await deriveKey(s.user_id);
+          const obj = await decryptJson(key, s.data_enc);
+          poolMap[s.user_id] = obj.pool || [];
+          return;
+        } catch { /* fall through to plaintext */ }
+      }
+      poolMap[s.user_id] = s.pool || [];
+    }));
 
     let sent = 0;
     const tasks = [];
