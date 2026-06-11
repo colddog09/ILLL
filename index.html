@@ -272,8 +272,9 @@
           <div class="settings-card__eyebrow">알림</div>
           <h3 class="settings-card__title">푸시 알림</h3>
           <p class="settings-card__desc">기한 임박 알림 및 그룹 공지 알림을 받아요.</p>
-          <div style="display:flex;align-items:center;gap:10px;margin-top:10px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap;">
             <button id="notifyPermBtn" class="auth-btn settings-save-btn">🔔 알림 허용</button>
+            <button id="notifyTestBtn" class="auth-btn settings-save-btn" style="background:rgba(255,255,255,0.08);" hidden>테스트 전송</button>
             <span id="notifyStatus" style="font-size:0.82rem;color:var(--text-sub);"></span>
           </div>
         </section>

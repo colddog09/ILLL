@@ -53,17 +53,52 @@ async function requestPushPermission() {
 const notifyPermBtn = document.getElementById('notifyPermBtn');
 const notifyStatus  = document.getElementById('notifyStatus');
 
+const notifyTestBtn = document.getElementById('notifyTestBtn');
+
 function updateNotifyStatus() {
   if (!notifyStatus) return;
   const perm = Notification?.permission;
   if (perm === 'granted')  {
     notifyStatus.textContent = '✅ 알림 허용됨';
     if (notifyPermBtn) notifyPermBtn.disabled = true;
+    if (notifyTestBtn) notifyTestBtn.hidden = false;
   } else if (perm === 'denied') {
     notifyStatus.textContent = '❌ 알림 차단됨 — 브라우저 설정에서 직접 허용해주세요';
+    if (notifyTestBtn) notifyTestBtn.hidden = true;
   } else {
     notifyStatus.textContent = '';
+    if (notifyTestBtn) notifyTestBtn.hidden = true;
   }
+}
+
+if (notifyTestBtn) {
+  notifyTestBtn.addEventListener('click', async () => {
+    if (!currentUser) return;
+    notifyTestBtn.disabled = true;
+    notifyStatus.textContent = '전송 중...';
+    try {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      const res = await fetch('/api/push-test', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${session?.access_token}` },
+      });
+      if (res.ok) {
+        notifyStatus.textContent = '✅ 테스트 알림 전송됨!';
+      } else if (res.status === 404) {
+        notifyStatus.textContent = '⚠️ 구독 정보 없음 — 알림 허용 버튼을 다시 눌러주세요';
+      } else if (res.status === 410) {
+        notifyStatus.textContent = '⚠️ 구독 만료됨 — 알림 허용 버튼을 다시 눌러주세요';
+        if (notifyPermBtn) notifyPermBtn.disabled = false;
+      } else {
+        notifyStatus.textContent = '❌ 전송 실패 — 잠시 후 다시 시도해주세요';
+      }
+    } catch {
+      notifyStatus.textContent = '❌ 네트워크 오류';
+    } finally {
+      notifyTestBtn.disabled = false;
+      setTimeout(() => { if (notifyStatus) updateNotifyStatus(); }, 4000);
+    }
+  });
 }
 
 if (notifyPermBtn) {
