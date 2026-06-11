@@ -157,7 +157,17 @@ async function _gcalFetch(method, path, body) {
   const res = await fetch(`${GCAL_BASE}${path}`, options);
 
   if (res.status === 401) {
+    // 1회 자동 재갱신 시도 후 재요청
+    const refreshed = await gcalRefreshFromServer().catch(() => false);
+    if (refreshed) {
+      const retry = await fetch(`${GCAL_BASE}${path}`, {
+        ...options,
+        headers: { ...options.headers, Authorization: `Bearer ${_gcalToken}` }
+      });
+      if (retry.ok) return retry.status === 204 ? null : retry.json();
+    }
     gcalClearToken();
+    if (typeof updateGcalUI === 'function') updateGcalUI();
     throw new Error('캘린더 인증이 만료되었습니다. 재연결 버튼을 눌러주세요.');
   }
   if (res.status === 204 || (res.status === 404 && method === 'DELETE')) return null;
@@ -448,27 +458,53 @@ function gcalImportCurrentDate() {
 // 서버 refresh 우선 → GIS silent 폴백
 function _scheduleTokenRefresh() {
   clearTimeout(_gcalRefreshTimer);
+  if (!isGcalConnected()) return;
   const remaining = _gcalTokenExpiry - Date.now() - 5 * 60 * 1000; // 만료 5분 전
-  if (remaining <= 0) return;
+  if (remaining <= 0) {
+    // 이미 만료됐거나 곧 만료 → 즉시 재갱신 시도
+    gcalRefreshFromServer().catch(() => false).then(ok => {
+      if (typeof updateGcalUI === 'function') updateGcalUI();
+      if (ok) _scheduleTokenRefresh();
+    });
+    return;
+  }
   _gcalRefreshTimer = setTimeout(async () => {
     if (!isGcalConnected()) return;
-    // 서버 refresh 시도 (popup 없음)
-    const ok = await gcalRefreshFromServer().catch(() => false) ||
-               await gcalSilentConnect().catch(() => false);
+    const ok = await gcalRefreshFromServer().catch(() => false);
     if (ok) {
       _scheduleTokenRefresh();
-      if (typeof updateGcalUI === 'function') updateGcalUI();
-    } else {
-      if (typeof updateGcalUI === 'function') updateGcalUI();
     }
-  }, remaining);
+    if (typeof updateGcalUI === 'function') updateGcalUI();
+  }, Math.min(remaining, 2147483647)); // setTimeout 최대값 초과 방지
 }
+
+// 페이지 foreground 복귀 / 네트워크 복구 시 토큰 재확인
+function _gcalCheckOnResume() {
+  if (!isGcalConnected()) return;
+  if (!gcalTokenValid()) {
+    gcalRefreshFromServer().catch(() => false).then(ok => {
+      if (typeof updateGcalUI === 'function') updateGcalUI();
+      if (ok) {
+        _scheduleTokenRefresh();
+        if (typeof gcalImportCurrentDate === 'function') gcalImportCurrentDate();
+      }
+    });
+  }
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') _gcalCheckOnResume();
+});
+window.addEventListener('online', _gcalCheckOnResume);
 
 function gcalStartPolling() {
   if (_gcalPollInterval) return;
   _scheduleTokenRefresh(); // 토큰 자동 갱신 예약
-  _gcalPollInterval = setInterval(() => {
-    if (!gcalTokenValid()) { gcalStopPolling(); return; }
+  _gcalPollInterval = setInterval(async () => {
+    if (!gcalTokenValid()) {
+      const ok = await gcalRefreshFromServer().catch(() => false);
+      if (!ok) { gcalStopPolling(); if (typeof updateGcalUI === 'function') updateGcalUI(); return; }
+    }
     const today = new Date();
     const endDate = new Date();
     endDate.setDate(today.getDate() + 100);
