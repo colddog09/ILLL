@@ -314,10 +314,31 @@ function renderGcalSidePanel() {
         });
       }
 
-      // 모바일 더블탭 → 오늘 날짜에 추가
+      // 모바일: 롱프레스 → 휴지통 드래그 삭제 / 더블탭 → 오늘 날짜에 추가
       if (currentUser) {
         let lastTap = 0;
+        let longPressTimer = null;
+
+        el.addEventListener('touchstart', e => {
+          if (e.target.closest('.btn-gcal-done')) return;
+          const t = e.touches[0];
+          longPressTimer = setTimeout(() => {
+            longPressTimer = null;
+            lastTap = 0; // 더블탭 방지
+            if (typeof startGcalSideTouchDrag === 'function') {
+              startGcalSideTouchDrag(el, ev.id, ev.summary, dk, t);
+            }
+          }, 400);
+        }, { passive: true });
+
+        el.addEventListener('touchmove', () => {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }, { passive: true });
+
         el.addEventListener('touchend', e => {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
           if (e.target.closest('.btn-gcal-done')) return;
           const now = Date.now();
           if (now - lastTap < 400) {

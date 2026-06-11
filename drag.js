@@ -403,4 +403,58 @@ function _showUndoToast(label, onUndo) {
   }, 5000);
 }
 
+// ── gcal-side 터치 드래그 → 휴지통 삭제 ──
+let _gcalTouchDrag = null;
+
+function startGcalSideTouchDrag(el, gcalId, text, dk, startTouch) {
+  if (_gcalTouchDrag) return;
+  const rect = el.getBoundingClientRect();
+
+  const clone = el.cloneNode(true);
+  clone.style.cssText = `position:fixed;width:${rect.width}px;top:${rect.top}px;left:${rect.left}px;margin:0;z-index:9999;opacity:0.92;pointer-events:none;border-radius:10px;`;
+  document.body.appendChild(clone);
+
+  el.style.opacity = '0.25';
+  trashZone.hidden = false;
+  const lbl = trashZone.querySelector('.trash-zone__label');
+  if (lbl) lbl.textContent = '캘린더에서도 삭제됨';
+
+  _gcalTouchDrag = { el, clone, gcalId, text, dk, overTrash: false };
+
+  function onMove(e) {
+    if (!_gcalTouchDrag) return;
+    e.preventDefault();
+    const t = e.touches[0];
+    clone.style.top  = (t.clientY - rect.height / 2) + 'px';
+    clone.style.left = (t.clientX - rect.width  / 2) + 'px';
+    const tz = trashZone.getBoundingClientRect();
+    _gcalTouchDrag.overTrash = t.clientX >= tz.left && t.clientX <= tz.right
+                             && t.clientY >= tz.top  && t.clientY <= tz.bottom;
+    trashZone.classList.toggle('danger', _gcalTouchDrag.overTrash);
+  }
+
+  function onEnd() {
+    document.removeEventListener('touchmove',   onMove);
+    document.removeEventListener('touchend',    onEnd);
+    document.removeEventListener('touchcancel', onEnd);
+    if (!_gcalTouchDrag) return;
+    const { el, clone, gcalId, overTrash } = _gcalTouchDrag;
+    _gcalTouchDrag = null;
+    clone.remove();
+    el.style.opacity = '';
+    trashZone.classList.remove('danger');
+    trashZone.hidden = true;
+
+    if (overTrash && typeof gcalDeleteEvent === 'function') {
+      gcalDeleteEvent(gcalId)
+        .then(() => { if (typeof gcalImportCurrentDate === 'function') gcalImportCurrentDate(); })
+        .catch(() => {});
+    }
+  }
+
+  document.addEventListener('touchmove',   onMove,  { passive: false });
+  document.addEventListener('touchend',    onEnd);
+  document.addEventListener('touchcancel', onEnd);
+}
+
 // 초기화는 events.js 하단에서 실행 (모든 스크립트 로드 완료 후)
