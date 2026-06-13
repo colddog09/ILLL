@@ -4,8 +4,6 @@
 
 'use strict';
 
-const VAPID_PUBLIC_KEY = 'BLNNKocRm0zVNeOc-yJE7ldi3oLvQrsKrGNGRc_Mvo4n5F0t5Jp8djLBq-JxzoXGBD4G1zs8DFjS4FOsy9q2sGw';
-
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
   const base64  = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -20,14 +18,22 @@ async function subscribePush() {
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session?.access_token) return;
 
+    // 서버에서 VAPID 공개키를 받아와 항상 일치 보장
+    const vapidRes = await fetch('/api/push-vapid');
+    if (!vapidRes.ok) return;
+    const { publicKey } = await vapidRes.json();
+
     const reg = await navigator.serviceWorker.ready;
-    let sub   = await reg.pushManager.getSubscription();
-    if (!sub) {
-      sub = await reg.pushManager.subscribe({
-        userVisibleOnly:      true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-      });
-    }
+
+    // 기존 구독 삭제 후 새로 구독 (키 불일치 방지)
+    const existing = await reg.pushManager.getSubscription();
+    if (existing) await existing.unsubscribe();
+
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly:      true,
+      applicationServerKey: urlBase64ToUint8Array(publicKey),
+    });
+
     await fetch('/api/push-subscribe', {
       method:  'POST',
       headers: {
