@@ -48,8 +48,9 @@ export default async function handler(req, res) {
     );
     return res.status(200).json({ ok: true });
   } catch (err) {
-    console.error('[push-test] sendNotification error:', err.statusCode, err.message);
-    if (err.statusCode === 410 || err.statusCode === 403) {
+    console.error('[push-test] sendNotification error:', err.statusCode, err.message, '| body:', err.body, '| endpoint:', (row.subscription.endpoint || '').slice(0, 40));
+    // 4xx(400/401/403/404/410) → 구독이 무효(보통 오래된 VAPID 키로 생성됨) → 삭제 후 재구독 유도
+    if (err.statusCode >= 400 && err.statusCode < 500) {
       await admin.from('push_subscriptions').delete().eq('user_id', user.id);
       return res.status(410).json({ error: 'SUBSCRIPTION_EXPIRED' });
     }
