@@ -77,23 +77,33 @@ function updateNotifyStatus() {
   }
 }
 
+async function _sendPushTest() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  return fetch('/api/push-test', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${session?.access_token}` },
+  });
+}
+
 if (notifyTestBtn) {
   notifyTestBtn.addEventListener('click', async () => {
     if (!currentUser) return;
     notifyTestBtn.disabled = true;
     notifyStatus.textContent = '전송 중...';
     try {
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      const res = await fetch('/api/push-test', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${session?.access_token}` },
-      });
+      let res = await _sendPushTest();
+
+      // 구독 만료/없음(보통 이전 VAPID 키) → 새 키로 자동 재구독 후 1회 재시도
+      if (res.status === 410 || res.status === 404) {
+        notifyStatus.textContent = '🔄 구독 갱신 중...';
+        await subscribePush();          // 기존 구독 해제 + 새 키로 재구독
+        res = await _sendPushTest();    // 자동 재시도
+      }
+
       if (res.ok) {
         notifyStatus.textContent = '✅ 테스트 알림 전송됨!';
-      } else if (res.status === 404) {
-        notifyStatus.textContent = '⚠️ 구독 정보 없음 — 알림 허용 버튼을 다시 눌러주세요';
-      } else if (res.status === 410) {
-        notifyStatus.textContent = '⚠️ 구독 만료됨 — 알림 허용 버튼을 다시 눌러주세요';
+      } else if (res.status === 410 || res.status === 404) {
+        notifyStatus.textContent = '⚠️ 재구독 실패 — 알림 권한을 확인해주세요';
         if (notifyPermBtn) notifyPermBtn.disabled = false;
       } else {
         notifyStatus.textContent = '❌ 전송 실패 — 잠시 후 다시 시도해주세요';
