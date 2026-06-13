@@ -4271,6 +4271,37 @@ body {
 }
 .gcal-sheet__event__add:active { opacity: 0.7; }
 
+/* 완료된 gcal 시트 이벤트 */
+.gcal-sheet__event.done {
+  opacity: 0.45;
+  background: var(--surface, #f0f0f0);
+}
+.gcal-sheet__event.done .gcal-sheet__event__text {
+  text-decoration: line-through;
+  color: var(--text-sub);
+}
+.gcal-sheet__event.done .gcal-sheet__event__add {
+  display: none;
+}
+
+/* gcal 사이드 헤더 체크박스 */
+.gcal-side-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.gcal-done-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  color: var(--text-sub);
+  cursor: pointer;
+  user-select: none;
+  font-weight: 500;
+}
+.gcal-done-toggle input { cursor: pointer; accent-color: var(--accent); }
+
 .gcal-sheet__empty {
   text-align: center;
   color: var(--text-sub);

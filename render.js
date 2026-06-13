@@ -232,7 +232,25 @@ function renderGcalSidePanel() {
 
   const header = document.createElement('div');
   header.className = 'gcal-side-header';
-  header.textContent = '📅 캘린더';
+
+  const headerTitle = document.createElement('span');
+  headerTitle.textContent = '📅 캘린더';
+  header.appendChild(headerTitle);
+
+  const toggleLabel = document.createElement('label');
+  toggleLabel.className = 'gcal-done-toggle';
+  const toggleCb = document.createElement('input');
+  toggleCb.type = 'checkbox';
+  const _gcalShowDone = localStorage.getItem('gcal_show_done') !== 'false';
+  toggleCb.checked = _gcalShowDone;
+  toggleCb.addEventListener('change', () => {
+    localStorage.setItem('gcal_show_done', toggleCb.checked ? 'true' : 'false');
+    renderGcalSidePanel();
+  });
+  toggleLabel.appendChild(toggleCb);
+  toggleLabel.appendChild(document.createTextNode('완료 표시'));
+  header.appendChild(toggleLabel);
+
   panel.appendChild(header);
 
   // 캘린더 미연결 상태
@@ -268,7 +286,8 @@ function renderGcalSidePanel() {
     dateEl.textContent = dateLabel;
     list.appendChild(dateEl);
 
-    (gcalEvents[dk] || []).filter(ev => !scheduledGcalIds.has(ev.id)).forEach(ev => {
+    const showDone = localStorage.getItem('gcal_show_done') !== 'false';
+    (gcalEvents[dk] || []).filter(ev => !scheduledGcalIds.has(ev.id) && (showDone || !ev.done)).forEach(ev => {
       const el = document.createElement('div');
       el.className = 'gcal-side-event' + (ev.done ? ' done' : '');
       el.draggable = !!currentUser;
@@ -404,8 +423,9 @@ function renderGcalSheet() {
 
     (gcalEvents[dk] || []).filter(ev => !scheduledGcalIds.has(ev.id)).forEach(ev => {
       const row = document.createElement('div');
-      row.className = 'gcal-sheet__event';
+      row.className = 'gcal-sheet__event' + (ev.done ? ' done' : '');
       row.innerHTML = `
+        ${ev.done ? '<span style="font-size:0.75rem;color:var(--text-sub);flex-shrink:0">✅</span>' : ''}
         ${ev.timeLabel ? `<span class="gcal-sheet__event__time">${escHtml(ev.timeLabel)}</span>` : ''}
         <span class="gcal-sheet__event__text">${escHtml(ev.summary)}</span>
         <button class="gcal-sheet__event__add" data-gcal-id="${ev.id}" data-gcal-date="${dk}" data-gcal-text="${escHtml(ev.summary)}">+ 오늘</button>
