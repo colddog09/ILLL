@@ -554,6 +554,20 @@ document.addEventListener('keydown', e => {
   ].forEach(m => setModalOpen(m, false));
 });
 
+// 강력 새로고침(Ctrl+Shift+R / Cmd+Shift+R) 경고
+document.addEventListener('keydown', e => {
+  const isHardRefresh = e.shiftKey && (e.ctrlKey || e.metaKey) && (e.key === 'r' || e.key === 'R');
+  if (!isHardRefresh) return;
+  e.preventDefault();
+  const ok = confirm(
+    '⚠️ 강력 새로고침 주의!\n\n' +
+    '저장되지 않은 일정이 있으면 초기화될 수 있어요.\n\n' +
+    '계속 진행하시겠어요?\n' +
+    '(일반 새로고침은 F5를 이용하세요)'
+  );
+  if (ok) window.location.reload();
+});
+
 // 빈 곳 탭 → 일정 아이템 선택 해제
 document.addEventListener('touchend', e => {
   if (touchReorder) return;
