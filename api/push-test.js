@@ -49,7 +49,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: true });
   } catch (err) {
     console.error('[push-test] sendNotification error:', err.statusCode, err.message);
-    if (err.statusCode === 410) {
+    if (err.statusCode === 410 || err.statusCode === 403) {
       await admin.from('push_subscriptions').delete().eq('user_id', user.id);
       return res.status(410).json({ error: 'SUBSCRIPTION_EXPIRED' });
     }

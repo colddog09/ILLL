@@ -81,7 +81,7 @@ export default async function handler(req, res) {
           .catch(async err => {
             console.warn(`push failed uid=${uid}:`, err.statusCode);
             // 구독 만료(410) 시 삭제
-            if (err.statusCode === 410) {
+            if (err.statusCode === 410 || err.statusCode === 403) {
               await supabase.from('push_subscriptions').delete().eq('user_id', uid);
             }
           })

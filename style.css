@@ -4897,6 +4897,8 @@ a.settings-tab {
   #settingsBtn { display: none !important; }
   /* 그룹 버튼: 탭바로 대체 → 헤더에서 숨김 */
   #groupBtn { display: none !important; }
+  /* 일정/캘린더 간격 조정 핸들 숨김 */
+  .gcal-resize-handle { display: none !important; }
 
   /* 수행평가 버튼: 탭바 위 우측 FAB으로 이동 */
   #suhaengBtn {
