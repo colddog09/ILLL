@@ -328,6 +328,7 @@ function _subscribeRealtime() {
           console.log('[sync] 다른 기기 변경 감지 → pull');
           setSyncStatus('🔄 다른 기기에서 업데이트됨');
           _pullRemote();
+          _showRemoteUpdateToast();
         })
       .subscribe();
   } catch (e) {
@@ -342,6 +343,55 @@ function _teardownSync() {
     try { supabaseClient.removeChannel(_realtimeChannel); } catch (_) {}
     _realtimeChannel = null;
   }
+}
+
+// 다른 기기 업데이트 감지 토스트
+let _remoteToastTimer = null;
+function _showRemoteUpdateToast() {
+  let toast = document.getElementById('remoteUpdateToast');
+  if (toast) { clearTimeout(_remoteToastTimer); toast.remove(); }
+
+  toast = document.createElement('div');
+  toast.id = 'remoteUpdateToast';
+  toast.style.cssText = [
+    'position:fixed','bottom:calc(80px + env(safe-area-inset-bottom,0px))','left:50%',
+    'transform:translateX(-50%) translateY(10px)',
+    'background:#1e3a5f','color:#89c4ff',
+    'font-size:0.85rem','font-weight:600',
+    'padding:10px 14px 10px 18px','border-radius:14px','z-index:99999',
+    'display:flex','align-items:center','gap:12px','max-width:90vw',
+    'box-shadow:0 8px 24px rgba(0,0,0,0.35)',
+    'border:1px solid rgba(137,196,255,0.2)',
+    'opacity:0','transition:opacity 0.2s ease, transform 0.2s ease',
+    'white-space:nowrap'
+  ].join(';');
+
+  const text = document.createElement('span');
+  text.textContent = '🔄 다른 기기에서 업데이트됨';
+
+  const btn = document.createElement('button');
+  btn.textContent = '새로고침';
+  btn.style.cssText = [
+    'background:rgba(137,196,255,0.18)','color:#89c4ff','border:1px solid rgba(137,196,255,0.3)',
+    'padding:5px 12px','border-radius:10px','font-weight:700','cursor:pointer',
+    'font-family:inherit','flex-shrink:0','font-size:0.82rem'
+  ].join(';');
+  btn.addEventListener('click', () => window.location.reload());
+
+  toast.appendChild(text);
+  toast.appendChild(btn);
+  document.body.appendChild(toast);
+
+  requestAnimationFrame(() => {
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateX(-50%) translateY(0)';
+  });
+
+  _remoteToastTimer = setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(-50%) translateY(10px)';
+    setTimeout(() => toast.remove(), 220);
+  }, 6000);
 }
 
 // ──────────────────────────────────────────────
