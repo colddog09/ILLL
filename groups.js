@@ -401,7 +401,7 @@ async function gmOpenGroup(groupId) {
   document.getElementById('gmPostBtn')?.addEventListener('click', () => gmPostAnnouncement(groupId));
   document.getElementById('gmLeaveBtn')?.addEventListener('click', () => gmLeaveOrDelete(groupId, false));
   body.querySelectorAll('[data-add]').forEach(b =>
-    b.addEventListener('click', () => gmAddToMyList(anns.find(a => a.id === b.dataset.add), b)));
+    b.addEventListener('click', () => gmAddToMyList(anns.find(a => a.id === b.dataset.add), b, groupId)));
   body.querySelectorAll('[data-del]').forEach(b =>
     b.addEventListener('click', () => gmDeleteAnnouncement(b.dataset.del, groupId)));
 
@@ -931,7 +931,7 @@ async function gmDeleteLink(id, groupId) {
 //   날짜 없음 → 할일 풀
 //   날짜 있음 → 구글 캘린더(연결 시) / 미연결 시 해당 날짜 스케줄
 // ──────────────────────────────────────────────
-async function gmAddToMyList(ann, btn) {
+async function gmAddToMyList(ann, btn, groupId) {
   if (!ann) return;
   if (btn) { btn.disabled = true; btn.textContent = '추가 중…'; }
 
@@ -940,6 +940,7 @@ async function gmAddToMyList(ann, btn) {
     if (!ann.date) {
       const task = { id: uid(), text: ann.text };
       if (ann.deadline) task.deadline = ann.deadline;
+      if (groupId) { task.groupId = groupId; task.annId = ann.id; }
       state.pool.push(task);
       saveState();
       renderPool();
@@ -951,11 +952,11 @@ async function gmAddToMyList(ann, btn) {
         const range = ann.date_end ? `${ann.date} ~ ${ann.date_end}` : ann.date;
         destination = `📅 구글 캘린더 (${range})에 추가됐어요!`;
       } catch (e) {
-        _gmAddToSchedule(ann);
+        _gmAddToSchedule(ann, groupId);
         destination = `📅 앱 스케줄 (${ann.date})에 추가됐어요!`;
       }
     } else {
-      _gmAddToSchedule(ann);
+      _gmAddToSchedule(ann, groupId);
       const range = ann.date_end ? `${ann.date} ~ ${ann.date_end}` : ann.date;
       destination = `📅 앱 스케줄 (${range})에 추가됐어요!`;
     }
@@ -987,13 +988,157 @@ function _gmToast(msg) {
   setTimeout(() => t.remove(), 2800);
 }
 
-function _gmAddToSchedule(ann) {
+function _gmAddToSchedule(ann, groupId) {
   if (!state.schedule[ann.date]) state.schedule[ann.date] = [];
   const item = { id: uid(), taskId: uid(), text: ann.text, status: null };
   if (ann.deadline) item.deadline = ann.deadline;
+  if (groupId) { item.groupId = groupId; item.annId = ann.id; }
   state.schedule[ann.date].push(item);
   saveState();
   renderApp();
+}
+
+// ──────────────────────────────────────────────
+// 공지 피드백 채팅 오버레이 (일정에서 💬 버튼 누를 때)
+// ──────────────────────────────────────────────
+let _annChatPollTimer = null;
+function _gmStopAnnChatPoll() {
+  if (_annChatPollTimer) { clearInterval(_annChatPollTimer); _annChatPollTimer = null; }
+}
+
+function gmOpenAnnChat({ groupId, annId, text }) {
+  _gmStopAnnChatPoll();
+
+  let overlay = document.getElementById('annChatOverlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'annChatOverlay';
+    overlay.className = 'ann-chat-overlay';
+    document.body.appendChild(overlay);
+  }
+
+  overlay.innerHTML = `
+    <div class="ann-chat-panel">
+      <div class="ann-chat-toprow">
+        <button class="gm-back-btn" id="annChatClose">← 닫기</button>
+      </div>
+      <div class="ann-chat-hero">
+        <p class="ann-chat-label">💬 그룹 피드백</p>
+        <h2 class="ann-chat-title">${escHtml(text)}</h2>
+      </div>
+      <div class="gm-chat-msgs" id="annChatMsgs">
+        <div class="gm-loading">불러오는 중…</div>
+      </div>
+      <div class="gm-chat-bar">
+        <input id="annChatInput" class="gm-input" type="text" maxlength="500"
+               placeholder="피드백 / 질문을 입력하세요…" autocomplete="off" />
+        <button id="annChatSend" class="gm-btn gm-btn--primary">전송</button>
+      </div>
+    </div>`;
+
+  overlay.hidden = false;
+  document.body.style.overflow = 'hidden';
+
+  const closeFn = () => {
+    _gmStopAnnChatPoll();
+    overlay.hidden = true;
+    document.body.style.overflow = '';
+  };
+  document.getElementById('annChatClose')?.addEventListener('click', closeFn);
+
+  const sendFn = () => _gmSendAnnChat(groupId, annId);
+  document.getElementById('annChatSend')?.addEventListener('click', sendFn);
+  document.getElementById('annChatInput')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendFn(); }
+  });
+
+  _gmLoadAnnChat(groupId, annId, false);
+  _annChatPollTimer = setInterval(() => _gmLoadAnnChat(groupId, annId, true), 10000);
+}
+
+async function _gmLoadAnnChat(groupId, annId, silent = false) {
+  const msgsEl = document.getElementById('annChatMsgs');
+  if (!msgsEl) { _gmStopAnnChatPoll(); return; }
+
+  const { data, error } = await supabaseClient
+    .from('group_comments')
+    .select('*')
+    .eq('group_id', groupId)
+    .eq('announcement_id', annId)
+    .order('created_at', { ascending: true })
+    .limit(300);
+
+  if (error) {
+    if (!silent) msgsEl.innerHTML = '<div class="gm-empty">불러오기 실패. 그룹 멤버인지 확인해주세요.</div>';
+    return;
+  }
+
+  const msgs = data || [];
+  const atBottom = !silent || (msgsEl.scrollHeight - msgsEl.scrollTop - msgsEl.clientHeight < 80);
+
+  if (!msgs.length) {
+    msgsEl.innerHTML = '<div class="gm-empty gm-chat-empty">아직 피드백이 없어요.<br>첫 의견을 남겨보세요! 💬</div>';
+    return;
+  }
+
+  let lastDay = '';
+  const html = msgs.map(m => {
+    const isMine = m.author_id === currentUser.id;
+    const dt = new Date(m.created_at);
+    const dayKey = dt.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
+    const time = dt.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+    const divider = dayKey !== lastDay
+      ? `<div class="gm-chat-divider"><span>${escHtml(dayKey)}</span></div>` : '';
+    lastDay = dayKey;
+    return divider + `
+      <div class="gm-bubble${isMine ? ' gm-bubble--mine' : ' gm-bubble--other'}" data-msgid="${m.id}">
+        ${!isMine ? `<span class="gm-bubble__author">${escHtml(m.author_name || '익명')}</span>` : ''}
+        <div class="gm-bubble__row">
+          ${isMine ? `<button class="gm-bubble__del" data-delannchat="${m.id}">🗑</button>` : ''}
+          <span class="gm-bubble__text">${escHtml(m.text)}</span>
+        </div>
+        <span class="gm-bubble__time">${time}</span>
+      </div>`;
+  }).join('');
+
+  msgsEl.innerHTML = html;
+  msgsEl.querySelectorAll('[data-delannchat]').forEach(b =>
+    b.addEventListener('click', () => _gmDeleteAnnChat(groupId, annId, b.dataset.delannchat)));
+
+  if (atBottom) msgsEl.scrollTop = msgsEl.scrollHeight;
+}
+
+async function _gmSendAnnChat(groupId, annId) {
+  const inp = document.getElementById('annChatInput');
+  const text = (inp?.value || '').trim().slice(0, 500);
+  if (!text) return;
+
+  const sendBtn = document.getElementById('annChatSend');
+  if (sendBtn) sendBtn.disabled = true;
+  if (inp) inp.value = '';
+
+  const { error } = await supabaseClient.from('group_comments').insert({
+    group_id: groupId,
+    announcement_id: annId,
+    author_id: currentUser.id,
+    author_name: _gmDisplayName(),
+    text,
+  });
+
+  if (sendBtn) sendBtn.disabled = false;
+  if (error) {
+    alert('전송 실패: ' + error.message);
+    if (inp) inp.value = text;
+    return;
+  }
+  await _gmLoadAnnChat(groupId, annId, false);
+}
+
+async function _gmDeleteAnnChat(groupId, annId, msgId) {
+  if (!confirm('이 메시지를 삭제할까요?')) return;
+  const { error } = await supabaseClient.from('group_comments').delete().eq('id', msgId);
+  if (error) { alert('삭제 실패: ' + error.message); return; }
+  _gmLoadAnnChat(groupId, annId, true);
 }
 
 // ──────────────────────────────────────────────
