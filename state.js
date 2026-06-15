@@ -255,7 +255,12 @@ function _supabaseSavePayloadAt(ts) {
 
 // 단일 업로드 경로 (디바운스 저장 / 플러시 공용)
 async function _getToken() {
-  const { data: { session } } = await supabaseClient.auth.getSession();
+  let { data: { session } } = await supabaseClient.auth.getSession();
+  // 토큰 만료 60초 이내면 선제 갱신 (401 저장 실패 방지)
+  if (session?.expires_at && Date.now() > session.expires_at * 1000 - 60_000) {
+    const { data } = await supabaseClient.auth.refreshSession().catch(() => ({ data: {} }));
+    if (data?.session) session = data.session;
+  }
   return session?.access_token || null;
 }
 
@@ -324,7 +329,12 @@ function _removeManualRetryBtn() {
 async function _uploadNow() {
   if (!currentUser || !supabaseClient) return false;
   if (!navigator.onLine) { setSyncStatus('📶 오프라인 — 연결 후 자동 저장'); return false; }
-  if (_uploading) return false; // 동시 업로드 방지
+  if (_uploading) {
+    // 이미 업로드 중 — 완료 후 재시도 예약 (조용히 드롭하지 않음)
+    clearTimeout(_saveTimer);
+    _saveTimer = setTimeout(_uploadNow, SAVE_DEBOUNCE_MS);
+    return false;
+  }
   clearTimeout(_saveTimer);
   const ts = new Date().toISOString();
   const snapAtUpload = stateSnapshot();
@@ -355,12 +365,20 @@ async function _uploadNow() {
       _scheduleSaveRetry();
       return false;
     }
-    // 성공 → 재시도 카운터 리셋 + 에러 토스트 정리
+    // 성공 → 재시도 카운터 리셋
     _resetRetry();
-    if (stateSnapshot() === snapAtUpload) _pendingSave = false;
     lastSavedSnapshot = snapAtUpload;
     _lastRemoteTs = Date.parse(ts) || Date.now();
-    setSyncSaved();
+    if (stateSnapshot() === snapAtUpload) {
+      // 업로드 중 새 변경 없음 → 완료
+      _pendingSave = false;
+      setSyncSaved();
+    } else {
+      // 업로드 중 새 변경 발생 → 즉시 후속 업로드 예약
+      setSyncStatus('📝 동기화 중...');
+      clearTimeout(_saveTimer);
+      _saveTimer = setTimeout(_uploadNow, SAVE_DEBOUNCE_MS);
+    }
     return true;
   } catch (err) {
     _uploading = false;
