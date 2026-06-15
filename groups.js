@@ -287,13 +287,6 @@ async function gmOpenGroup(groupId) {
           ${canEdit ? `<button class="gm-ann__icon" data-edit="${a.id}" title="수정">✏️</button>` : ''}
           ${canEdit ? `<button class="gm-ann__del" data-del="${a.id}" title="공지 삭제">🗑️</button>` : ''}
         </div>
-        <div class="gm-comments" id="gmComments-${a.id}" hidden>
-          ${commentRows}
-          <div class="gm-comment-form">
-            <input class="gm-input gm-comment-input" data-cinput="${a.id}" type="text" maxlength="300" placeholder="댓글 / 질문…" />
-            <button class="gm-btn gm-btn--primary gm-comment-send" data-csend="${a.id}">등록</button>
-          </div>
-        </div>
       </div>`;
   }).join('') : `<div class="gm-empty">아직 공지된 일정이 없어요.</div>`;
 
@@ -405,18 +398,12 @@ async function gmOpenGroup(groupId) {
   body.querySelectorAll('[data-del]').forEach(b =>
     b.addEventListener('click', () => gmDeleteAnnouncement(b.dataset.del, groupId)));
 
-  // 댓글 토글 / 작성 / 삭제
+  // 💬 버튼 → 공지 피드백 채팅 오버레이 열기
   body.querySelectorAll('[data-comments]').forEach(b =>
     b.addEventListener('click', () => {
-      const el = document.getElementById('gmComments-' + b.dataset.comments);
-      if (el) el.hidden = !el.hidden;
+      const ann = anns.find(a => a.id === b.dataset.comments);
+      if (ann) gmOpenAnnChat({ groupId, annId: ann.id, text: ann.text });
     }));
-  body.querySelectorAll('[data-csend]').forEach(b =>
-    b.addEventListener('click', () => gmAddComment(groupId, b.dataset.csend)));
-  body.querySelectorAll('[data-cinput]').forEach(inp =>
-    inp.addEventListener('keydown', e => { if (e.key === 'Enter') gmAddComment(groupId, inp.dataset.cinput); }));
-  body.querySelectorAll('[data-delcomment]').forEach(b =>
-    b.addEventListener('click', () => gmDeleteComment(groupId, b.dataset.delcomment)));
 
   // 공지 수정 / 고정 / 독촉
   body.querySelectorAll('[data-edit]').forEach(b =>

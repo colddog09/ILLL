@@ -559,24 +559,14 @@ function renderDayTasks(key) {
       ? `<span class="sched-item__deadline${isDeadlinePast(item.deadline) ? ' sched-item__deadline--past' : (isDeadlineUrgent(item.deadline) ? ' sched-item__deadline--urgent' : '')}" title="${escHtml(formatDeadlineText(item.deadline))}">⏰ ${escHtml(formatDeadlineText(item.deadline))}</span>`
       : '';
     const gcalBadge = item.fromGcal ? '<span class="sched-item__gcal-badge" title="구글 캘린더 일정">📅</span>' : '';
-    const chatBadge = item.groupId ? `<button class="sched-item__chat-btn" title="그룹 피드백 채팅">💬</button>` : '';
     el.innerHTML = `
       <span class="sched-item__handle" title="드래그로 순서 변경">⠿</span>
       ${gcalBadge}
       <span class="sched-item__text" title="${escHtml(item.text)}">${escHtml(item.text)}</span>
       ${deadlineBadge}
       <div class="sched-item__ox">
-        ${chatBadge}
         <button class="btn-o${item.status==='O'?' active':''}" data-date="${key}" data-id="${item.id}" title="완료(O)"><img class="btn-o__img" src="${item.status==='O'?'/image/pompomyes.webp':'/image/pompomno.webp'}" alt=""><span class="btn-o__text">O</span></button>
       </div>`;
-    // ── 그룹 피드백 채팅 버튼 ──
-    el.querySelector('.sched-item__chat-btn')?.addEventListener('click', e => {
-      e.stopPropagation();
-      if (typeof gmOpenAnnChat === 'function') {
-        gmOpenAnnChat({ groupId: item.groupId, annId: item.annId, text: item.text });
-      }
-    });
-
     fragment.appendChild(el);
 
     // ── 데스크톱 드래그로 같은 날 순서 바꾸기 ──
