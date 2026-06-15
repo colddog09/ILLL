@@ -37,5 +37,6 @@ export default function handler(req, res) {
     supabaseUrl:     process.env.SUPABASE_URL,
     supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
     googleClientId:  process.env.GOOGLE_OAUTH_CLIENT_ID,
+    vapidPublicKey:  process.env.VAPID_PUBLIC_KEY,
   });
 }

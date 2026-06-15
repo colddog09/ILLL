@@ -19,9 +19,10 @@ async function subscribePush() {
     if (!session?.access_token) return;
 
     // 서버에서 VAPID 공개키를 받아와 항상 일치 보장
-    const vapidRes = await fetch('/api/push-vapid');
+    const vapidRes = await fetch('/api/config');
     if (!vapidRes.ok) return;
-    const { publicKey } = await vapidRes.json();
+    const { vapidPublicKey: publicKey } = await vapidRes.json();
+    if (!publicKey) return;
 
     const reg = await navigator.serviceWorker.ready;
 

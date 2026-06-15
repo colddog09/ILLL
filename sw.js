@@ -1,4 +1,4 @@
-const CACHE_NAME = 'illl-v121';
+const CACHE_NAME = 'illl-v122';
 const CORE_FILES = [
   '/',
   '/index.html',
@@ -10,7 +10,7 @@ const CORE_FILES = [
   '/render.js?v=20',
   '/drag.js?v=8',
   '/deadline.js?v=2',
-  '/push.js?v=2',
+  '/push.js?v=3',
   '/gcal/gcal.js?v=14',
   '/groups.js?v=13',
   '/modals.js?v=16',
