@@ -49,6 +49,8 @@ returns boolean language sql security definer stable set search_path = public as
 $$;
 
 -- ── 가입(초대코드) RPC — 비공개면 pending ────────────────────
+-- 반환 타입 변경(groups → json) 위해 기존 함수 먼저 제거
+drop function if exists public.join_group_by_code(text, text);
 create or replace function public.join_group_by_code(p_code text, p_display text)
 returns json language plpgsql security definer set search_path = public as $$
 declare g public.groups; v_status text; v_existing text;
