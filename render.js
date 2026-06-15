@@ -274,7 +274,14 @@ function renderGcalSidePanel() {
     return;
   }
 
+  const showDone = localStorage.getItem('gcal_show_done') !== 'false';
+  let _renderedCount = 0;
   allDates.forEach(dk => {
+    // 보이는 이벤트를 먼저 계산 → 비어 있으면 날짜 헤더도 건너뜀
+    const visible = (gcalEvents[dk] || []).filter(ev => !scheduledGcalIds.has(ev.id) && (showDone || !ev.done));
+    if (!visible.length) return;
+    _renderedCount += visible.length;
+
     const [y, m, d] = dk.split('-').map(Number);
     const date = new Date(y, m - 1, d);
     const dow  = date.getDay();
@@ -286,8 +293,7 @@ function renderGcalSidePanel() {
     dateEl.textContent = dateLabel;
     list.appendChild(dateEl);
 
-    const showDone = localStorage.getItem('gcal_show_done') !== 'false';
-    (gcalEvents[dk] || []).filter(ev => !scheduledGcalIds.has(ev.id) && (showDone || !ev.done)).forEach(ev => {
+    visible.forEach(ev => {
       const el = document.createElement('div');
       el.className = 'gcal-side-event' + (ev.done ? ' done' : '');
       el.draggable = !!currentUser;
@@ -372,6 +378,14 @@ function renderGcalSidePanel() {
       list.appendChild(el);
     });
   });
+
+  // 보이는 일정이 하나도 없으면 안내
+  if (!_renderedCount) {
+    const empty = document.createElement('div');
+    empty.className = 'gcal-side-empty';
+    empty.textContent = showDone ? '예정된 일정이 없어요' : '표시할 미완료 일정이 없어요';
+    list.appendChild(empty);
+  }
 
   // 사이드 패널 O 버튼 클릭 위임 (한 번만 등록)
   if (!panel._gcalBtnBound) {

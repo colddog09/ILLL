@@ -525,6 +525,22 @@ function _showRetryButton() {
   document.body.appendChild(btn);
 }
 
+// 일정 로딩 오버레이
+function _setLoadingOverlay(on) {
+  let ov = document.getElementById('appLoadingOverlay');
+  if (on) {
+    if (ov) return;
+    ov = document.createElement('div');
+    ov.id = 'appLoadingOverlay';
+    ov.className = 'app-loading-overlay';
+    ov.innerHTML = '<div class="app-loading-spinner"></div><div class="app-loading-text">일정 불러오는 중…</div>';
+    document.body.appendChild(ov);
+  } else if (ov) {
+    ov.classList.add('app-loading-overlay--out');
+    setTimeout(() => ov.remove(), 250);
+  }
+}
+
 function loadState() {
   if (!currentUser || !supabaseClient) {
     _teardownSync();
@@ -542,7 +558,8 @@ function loadState() {
     return;
   }
   loadInProgress = true;
-  const _loadGuard = setTimeout(() => { loadInProgress = false; }, 15000);
+  if (!dataLoaded) _setLoadingOverlay(true); // 첫 로드만 오버레이
+  const _loadGuard = setTimeout(() => { loadInProgress = false; _setLoadingOverlay(false); }, 15000);
 
   setSyncStatus('☁️ 불러오는 중...');
 
@@ -556,6 +573,7 @@ function loadState() {
   .then(remote => {
     loadInProgress = false;
     clearTimeout(_loadGuard);
+    _setLoadingOverlay(false);
 
     const remoteTs = remote?.updated_at ? Date.parse(remote.updated_at) : 0;
 
@@ -592,6 +610,7 @@ function loadState() {
   .catch(err => {
     loadInProgress = false;
     clearTimeout(_loadGuard);
+    _setLoadingOverlay(false);
     console.error('state 로드 실패:', err.message);
     dataLoaded = true;
     renderApp();
