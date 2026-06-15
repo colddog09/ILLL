@@ -1,9 +1,9 @@
-const CACHE_NAME = 'illl-v128';
+const CACHE_NAME = 'illl-v129';
 const CORE_FILES = [
   '/',
   '/index.html',
   '/supabase.js?v=1',
-  '/style.css?v=70',
+  '/style.css?v=71',
   '/utils.js?v=3',
   '/state.js?v=13',
   '/auth.js?v=7',
@@ -12,7 +12,7 @@ const CORE_FILES = [
   '/deadline.js?v=2',
   '/push.js?v=3',
   '/gcal/gcal.js?v=14',
-  '/groups.js?v=16',
+  '/groups.js?v=17',
   '/modals.js?v=16',
   '/events.js?v=19',
   '/manifest.json',
