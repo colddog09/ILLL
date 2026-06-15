@@ -210,17 +210,30 @@ async function _getToken() {
   return session?.access_token || null;
 }
 
+// 저장 실패 시 자동 재시도 예약 (pending이 남아 있는 한)
+let _retryTimer = null;
+function _scheduleSaveRetry(delay = 5000) {
+  clearTimeout(_retryTimer);
+  _retryTimer = setTimeout(() => {
+    if (_pendingSave && !_uploading && navigator.onLine) _uploadNow();
+  }, delay);
+}
+
 async function _uploadNow() {
   if (!currentUser || !supabaseClient) return false;
   if (!navigator.onLine) { setSyncStatus('📶 오프라인 — 연결 후 자동 저장'); return false; }
+  if (_uploading) return false; // 동시 업로드 방지
   clearTimeout(_saveTimer);
   const ts = new Date().toISOString();
   const snapAtUpload = stateSnapshot();
   _lastWrittenTs = ts;
   _uploading = true;
+  // fetch가 멈춰도 _uploading이 영구히 true로 막히지 않도록 타임아웃
+  const ctrl = new AbortController();
+  const killer = setTimeout(() => ctrl.abort(), 15000);
   try {
     const token = await _getToken();
-    if (!token) { _uploading = false; return false; }
+    if (!token) { _uploading = false; clearTimeout(killer); _scheduleSaveRetry(); return false; }
     const res = await fetch('/api/state', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -231,9 +244,16 @@ async function _uploadNow() {
         updated_at: ts,
       }),
       keepalive: true,
+      signal: ctrl.signal,
     });
     _uploading = false;
-    if (!res.ok) { console.warn('[sync] 저장 실패:', res.status); setSyncStatus('⚠️ 클라우드 저장 실패'); return false; }
+    clearTimeout(killer);
+    if (!res.ok) {
+      console.warn('[sync] 저장 실패:', res.status);
+      setSyncStatus('⚠️ 클라우드 저장 실패 — 재시도 중');
+      _scheduleSaveRetry();
+      return false;
+    }
     if (stateSnapshot() === snapAtUpload) _pendingSave = false;
     lastSavedSnapshot = snapAtUpload;
     _lastRemoteTs = Date.parse(ts) || Date.now();
@@ -241,8 +261,10 @@ async function _uploadNow() {
     return true;
   } catch (err) {
     _uploading = false;
+    clearTimeout(killer);
     console.warn('[sync] 저장 예외:', err?.message);
-    setSyncStatus('⚠️ 클라우드 저장 실패');
+    setSyncStatus('⚠️ 클라우드 저장 실패 — 재시도 중');
+    _scheduleSaveRetry();
     return false;
   }
 }
