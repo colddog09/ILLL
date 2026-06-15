@@ -286,7 +286,7 @@ function _applyRemote(remote, remoteTsMs) {
 }
 
 // 클라우드에서 최신 데이터 가져오기 (타임스탬프 비교 후 더 최신일 때만 반영)
-async function _pullRemote() {
+async function _pullRemote(showToast = false) {
   if (!currentUser || !supabaseClient || !dataLoaded) return;
   if (!navigator.onLine || _pulling) return;
   if (_pendingSave) { flushToSupabase(); return; }
@@ -299,9 +299,14 @@ async function _pullRemote() {
     if (!res.ok) return;
     const remote = await res.json();
     if (!_remoteHasData(remote)) return;
+    // 실제 내용이 다를 때만 적용 + 알림 (내 저장은 로컬=원격이라 동일 → 무시)
     if (_remoteSnapshot(remote) !== prunedSnapshot()) {
       console.log('[sync] 다른 기기 변경 감지 → 적용');
       _applyRemote(remote, Date.parse(remote.updated_at) || Date.now());
+      if (showToast) {
+        setSyncStatus('🔄 다른 기기에서 업데이트됨');
+        _showRemoteUpdateToast();
+      }
     }
   } catch { _pulling = false; }
 }
@@ -322,13 +327,11 @@ function _subscribeRealtime() {
         payload => {
           const newRow = payload.new;
           if (!newRow || !newRow.updated_at) return;
-          if (newRow.updated_at === _lastWrittenTs) return; // 내 변경 에코 무시
+          if (newRow.updated_at === _lastWrittenTs) return; // 내 변경 에코 무시(빠른 차단)
           if (_pendingSave || _uploading) return;           // 내 미저장 변경 우선
-          // data_enc 저장 후 payload.new에 pool/schedule이 없으므로 직접 pull
-          console.log('[sync] 다른 기기 변경 감지 → pull');
-          setSyncStatus('🔄 다른 기기에서 업데이트됨');
-          _pullRemote();
-          _showRemoteUpdateToast();
+          // 토스트/상태는 pull에서 "내용이 실제로 다를 때만" 표시 (오탐 방지)
+          console.log('[sync] 변경 감지 → pull (내용 비교 후 적용)');
+          _pullRemote(true);
         })
       .subscribe();
   } catch (e) {
