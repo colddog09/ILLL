@@ -4952,6 +4952,47 @@ a.settings-tab {
 .gm-leave-btn--danger { color: var(--danger); border-color: rgba(220,38,38,0.3); }
 .gm-leave-btn--danger:hover { border-color: var(--danger); background: rgba(220,38,38,0.05); }
 
+/* ── 그룹 채팅 ── */
+.gm-chat-wrap { display:flex; flex-direction:column; height:100%; min-height:0; }
+.gm-chat-title { font-size:0.95rem; font-weight:700; color:var(--text); flex:1; text-align:center; margin-right:32px; }
+.gm-chat-msgs {
+  flex:1; overflow-y:auto; padding:12px 14px;
+  display:flex; flex-direction:column; gap:8px;
+  min-height:0; max-height:calc(100dvh - 260px);
+}
+.gm-chat-empty { text-align:center; margin-top:28px; line-height:1.6; }
+.gm-chat-bar {
+  display:flex; gap:8px; padding:10px 12px 12px;
+  border-top:1.5px solid var(--border); background:var(--surface);
+  position:sticky; bottom:0;
+}
+.gm-chat-bar .gm-input { flex:1; }
+.gm-chat-divider {
+  display:flex; align-items:center; gap:8px;
+  margin:6px 0; font-size:0.72rem; color:var(--text-sub);
+}
+.gm-chat-divider::before, .gm-chat-divider::after {
+  content:''; flex:1; height:1px; background:var(--border);
+}
+.gm-bubble { display:flex; flex-direction:column; gap:3px; max-width:78%; }
+.gm-bubble--mine { align-self:flex-end; align-items:flex-end; }
+.gm-bubble--other { align-self:flex-start; align-items:flex-start; }
+.gm-bubble__author { font-size:0.72rem; color:var(--text-sub); font-weight:600; padding-left:2px; }
+.gm-bubble__row { display:flex; align-items:flex-end; gap:4px; }
+.gm-bubble__text {
+  padding:8px 12px; border-radius:16px; font-size:0.88rem;
+  line-height:1.45; word-break:break-word; max-width:100%;
+}
+.gm-bubble--mine .gm-bubble__text { background:var(--accent); color:#fff; border-bottom-right-radius:4px; }
+.gm-bubble--other .gm-bubble__text { background:var(--surface-hover); color:var(--text); border-bottom-left-radius:4px; }
+.gm-bubble__time { font-size:0.67rem; color:var(--text-sub); padding:0 2px; }
+.gm-bubble__del {
+  background:none; border:none; cursor:pointer; font-size:0.78rem;
+  color:var(--text-sub); padding:2px 3px; opacity:0; transition:opacity 0.15s; flex-shrink:0;
+}
+.gm-bubble:hover .gm-bubble__del { opacity:0.7; }
+.gm-bubble__del:hover { opacity:1 !important; color:#e5567a; }
+
 /* ── 공지 날짜 범위 입력 ── */
 .gm-post__date-row {
   display:flex; align-items:center; gap:6px; margin-bottom:8px;

@@ -35,6 +35,7 @@ function gmOpenModal() {
   gmShowList();
 }
 function gmCloseModal() {
+  _gmStopChatPoll();
   const modal = document.getElementById('groupModal');
   if (modal) modal.hidden = true;
   gmCurrent = null;
@@ -337,6 +338,7 @@ async function gmOpenGroup(groupId) {
       <div class="gm-hero__toprow">
         <button class="gm-back-btn" id="gmBackBtn">← 목록</button>
         <div class="gm-hero__toprow-right">
+          <button class="gm-settings-btn" id="gmChatBtn" title="그룹 채팅">💬</button>
           <button class="gm-settings-btn" id="gmLinksBtn" title="그룹 링크">🔗</button>
           ${isAdmin ? `<button class="gm-settings-btn" id="gmSettingsBtn" title="그룹 설정">⚙️</button>` : ''}
         </div>
@@ -375,6 +377,7 @@ async function gmOpenGroup(groupId) {
 
   // 이벤트 바인딩
   document.getElementById('gmBackBtn')?.addEventListener('click', gmShowList);
+  document.getElementById('gmChatBtn')?.addEventListener('click', () => gmShowChat(groupId));
   document.getElementById('gmSettingsBtn')?.addEventListener('click', () => gmShowSettings(groupId));
   document.getElementById('gmLinksBtn')?.addEventListener('click', () => {
     history.pushState(null, '', '#group-links');
@@ -991,6 +994,144 @@ function _gmAddToSchedule(ann) {
   state.schedule[ann.date].push(item);
   saveState();
   renderApp();
+}
+
+// ──────────────────────────────────────────────
+// 그룹 채팅
+// ──────────────────────────────────────────────
+let _chatPollTimer = null;
+function _gmStopChatPoll() {
+  if (_chatPollTimer) { clearInterval(_chatPollTimer); _chatPollTimer = null; }
+}
+
+async function gmShowChat(groupId) {
+  _gmStopChatPoll();
+  const body = document.getElementById('groupModalBody');
+  if (!body) return;
+  const groupName = gmCurrent?.name || '그룹';
+
+  body.innerHTML = `
+    <div class="gm-chat-wrap">
+      <div class="gm-hero">
+        <div class="gm-hero__toprow">
+          <button class="gm-back-btn" id="gmChatBack">← 뒤로</button>
+          <span class="gm-chat-title">💬 ${escHtml(groupName)}</span>
+        </div>
+      </div>
+      <div class="gm-chat-msgs" id="gmChatMsgs">
+        <div class="gm-loading">불러오는 중…</div>
+      </div>
+      <div class="gm-chat-bar">
+        <input id="gmChatInput" class="gm-input" type="text" maxlength="500"
+               placeholder="메시지를 입력하세요…" autocomplete="off" />
+        <button id="gmChatSend" class="gm-btn gm-btn--primary">전송</button>
+      </div>
+    </div>`;
+
+  document.getElementById('gmChatBack')?.addEventListener('click', () => {
+    _gmStopChatPoll();
+    gmOpenGroup(groupId);
+  });
+
+  const sendFn = () => _gmSendChatMsg(groupId);
+  document.getElementById('gmChatSend')?.addEventListener('click', sendFn);
+  document.getElementById('gmChatInput')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendFn(); }
+  });
+
+  await _gmLoadChat(groupId, false);
+  _chatPollTimer = setInterval(() => _gmLoadChat(groupId, true), 10000);
+}
+
+async function _gmLoadChat(groupId, silent = false) {
+  const msgsEl = document.getElementById('gmChatMsgs');
+  if (!msgsEl) { _gmStopChatPoll(); return; }
+
+  const isAdmin = gmCurrent && (gmCurrent.role === 'owner' || gmCurrent.role === 'coowner');
+
+  const { data, error } = await supabaseClient
+    .from('group_comments')
+    .select('*')
+    .eq('group_id', groupId)
+    .is('announcement_id', null)
+    .order('created_at', { ascending: true })
+    .limit(300);
+
+  if (error) {
+    if (!silent) msgsEl.innerHTML = '<div class="gm-empty">메시지를 불러오지 못했어요.</div>';
+    return;
+  }
+
+  const msgs = data || [];
+  const atBottom = !silent ||
+    (msgsEl.scrollHeight - msgsEl.scrollTop - msgsEl.clientHeight < 80);
+
+  if (!msgs.length) {
+    msgsEl.innerHTML = '<div class="gm-empty gm-chat-empty">아직 메시지가 없어요.<br>첫 메시지를 보내보세요! 👋</div>';
+    return;
+  }
+
+  // 날짜 구분선 삽입
+  let lastDay = '';
+  const html = msgs.map(m => {
+    const isMine = m.author_id === currentUser.id;
+    const dt = new Date(m.created_at);
+    const dayKey = dt.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
+    const time = dt.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+    const canDel = isMine || isAdmin;
+    const divider = dayKey !== lastDay
+      ? `<div class="gm-chat-divider"><span>${escHtml(dayKey)}</span></div>` : '';
+    lastDay = dayKey;
+    return divider + `
+      <div class="gm-bubble${isMine ? ' gm-bubble--mine' : ' gm-bubble--other'}" data-msgid="${m.id}">
+        ${!isMine ? `<span class="gm-bubble__author">${escHtml(m.author_name || '익명')}</span>` : ''}
+        <div class="gm-bubble__row">
+          ${isMine && canDel ? `<button class="gm-bubble__del" data-delmsg="${m.id}">🗑</button>` : ''}
+          <span class="gm-bubble__text">${escHtml(m.text)}</span>
+          ${!isMine && canDel ? `<button class="gm-bubble__del" data-delmsg="${m.id}">🗑</button>` : ''}
+        </div>
+        <span class="gm-bubble__time">${time}</span>
+      </div>`;
+  }).join('');
+
+  msgsEl.innerHTML = html;
+  msgsEl.querySelectorAll('[data-delmsg]').forEach(b =>
+    b.addEventListener('click', () => _gmDeleteChatMsg(groupId, b.dataset.delmsg)));
+
+  if (atBottom) msgsEl.scrollTop = msgsEl.scrollHeight;
+}
+
+async function _gmSendChatMsg(groupId) {
+  const inp = document.getElementById('gmChatInput');
+  const text = (inp?.value || '').trim().slice(0, 500);
+  if (!text) return;
+
+  const sendBtn = document.getElementById('gmChatSend');
+  if (sendBtn) sendBtn.disabled = true;
+  if (inp) inp.value = '';
+
+  const { error } = await supabaseClient.from('group_comments').insert({
+    group_id: groupId,
+    announcement_id: null,
+    author_id: currentUser.id,
+    author_name: _gmDisplayName(),
+    text,
+  });
+
+  if (sendBtn) sendBtn.disabled = false;
+  if (error) {
+    alert('전송 실패: ' + error.message);
+    if (inp) inp.value = text;
+    return;
+  }
+  await _gmLoadChat(groupId, false);
+}
+
+async function _gmDeleteChatMsg(groupId, msgId) {
+  if (!confirm('이 메시지를 삭제할까요?')) return;
+  const { error } = await supabaseClient.from('group_comments').delete().eq('id', msgId);
+  if (error) { alert('삭제 실패: ' + error.message); return; }
+  _gmLoadChat(groupId, true);
 }
 
 // ──────────────────────────────────────────────
