@@ -569,6 +569,7 @@ async function gmPostAnnouncement(groupId) {
   const date     = document.getElementById('gmPostDate')?.value    || null;
   const dateEnd  = document.getElementById('gmPostDateEnd')?.value || null;
   if (!text) { alert('일정 내용을 입력하세요.'); return; }
+  if (!date) { alert('날짜를 선택해주세요.'); document.getElementById('gmPostDate')?.focus(); return; }
   if (dateEnd && date && dateEnd < date) { alert('종료일이 시작일보다 앞에 있어요.'); return; }
   gmBusy = true;
   // 공지 수 확인
