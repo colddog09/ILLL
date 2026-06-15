@@ -434,6 +434,11 @@ infoHistoryBtn?.addEventListener('click', () => {
   function closeDemo() { demoModal.hidden = true; stopTyping(); }
 
   demoBtn.addEventListener('click', openDemo);
+
+  // 일정 복구 버튼 (❗) — 로컬 백업에서 복구
+  document.getElementById('recoverBtn')?.addEventListener('click', () => {
+    if (typeof restoreFromLocalBackup === 'function') restoreFromLocalBackup();
+  });
   closeBtn.addEventListener('click', closeDemo);
   demoModal.addEventListener('click', e => { if (e.target === demoModal) closeDemo(); });
   prevBtn.addEventListener('click', () => { if (current > 0) goTo(current - 1); });

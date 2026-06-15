@@ -109,6 +109,7 @@
             <button id="loginBtn" class="login-btn" hidden>Google 로그인</button>
             <div id="userInfo" class="user-info" hidden>
               <img id="userPhoto" class="user-photo" src="" alt="프로필" referrerpolicy="no-referrer" onerror="this.style.display='none'" />
+              <button id="recoverBtn" class="icon-btn" aria-label="일정 복구" title="일정이 사라졌나요? 복구하기">❗</button>
               <button id="demoBtn" class="icon-btn" aria-label="사용법 보기" title="사용법 데모">🔍</button>
               <button id="gcalReconnectBtn" class="gcal-reconnect-btn" title="캘린더 재연결" hidden>🗓️ 재연결</button>
               <button id="settingsBtn" class="icon-btn" aria-label="내 정보 수정" title="내 정보 수정">⚙️</button>
@@ -588,7 +589,7 @@
   <script src="supabase.js?v=1"></script>
 
   <script src="utils.js?v=3"></script>
-  <script src="state.js?v=10"></script>
+  <script src="state.js?v=11"></script>
   <script src="auth.js?v=7"></script>
   <script src="render.js?v=19"></script>
   <script src="drag.js?v=8"></script>
@@ -596,7 +597,7 @@
   <script src="gcal/gcal.js?v=14"></script>
   <script src="groups.js?v=12"></script>
   <script src="push.js?v=2"></script>
-  <script src="modals.js?v=15"></script>
+  <script src="modals.js?v=16"></script>
   <script src="events.js?v=19"></script>
   <script>
     if ('serviceWorker' in navigator) {

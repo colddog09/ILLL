@@ -115,6 +115,55 @@ function stateSnapshot() {
 }
 
 // ──────────────────────────────────────────────
+// 로컬 안전망 백업 (localStorage) — 클라우드 저장 실패 대비
+// 사용자 편집 시에만 기록(클라우드 로드 시엔 덮어쓰지 않음)
+// ──────────────────────────────────────────────
+const LOCAL_BACKUP_PREFIX = 'o1chu_backup_v1_';
+function _backupKey() {
+  return currentUser ? LOCAL_BACKUP_PREFIX + currentUser.id : null;
+}
+function _writeLocalBackup() {
+  const k = _backupKey();
+  if (!k || !hasAnyTaskData()) return; // 빈 상태로 덮어쓰지 않음
+  try {
+    localStorage.setItem(k, JSON.stringify({
+      pool: state.pool, schedule: state.schedule, links: state.links || [], ts: Date.now()
+    }));
+  } catch (_) { /* 용량 초과 등 무시 */ }
+}
+function readLocalBackup() {
+  const k = _backupKey();
+  if (!k) return null;
+  try { const raw = localStorage.getItem(k); return raw ? JSON.parse(raw) : null; }
+  catch (_) { return null; }
+}
+
+// "!" 버튼에서 호출 — 로컬 백업으로 복구
+function restoreFromLocalBackup() {
+  if (!currentUser) { alert('로그인 후 이용해주세요.'); return; }
+  const b = readLocalBackup();
+  const poolN = (b?.pool || []).length;
+  const itemN = Object.values(b?.schedule || {}).reduce((n, a) => n + (a?.length || 0), 0);
+  if (!b || (poolN === 0 && itemN === 0)) {
+    alert('😢 이 기기에 저장된 백업이 없어요.\n\n백업은 이 기기에서 일정을 추가·수정할 때 자동으로 만들어져요. 다른 기기에서 쓰던 일정은 이 기기 백업으로는 복구할 수 없어요.');
+    return;
+  }
+  const when = b.ts ? new Date(b.ts).toLocaleString('ko-KR') : '알 수 없음';
+  const ok = confirm(
+    `이 기기에 저장된 백업으로 되돌릴까요?\n\n` +
+    `🗓️ 백업 시각: ${when}\n📋 할일 ${poolN}개 · 일정 ${itemN}개\n\n` +
+    `⚠️ 지금 화면의 일정은 이 백업으로 덮어써지고, 클라우드에도 저장됩니다.`
+  );
+  if (!ok) return;
+  applyPersistedState({ pool: b.pool, schedule: b.schedule, links: b.links });
+  lastSavedSnapshot = null;   // 강제로 다름 처리 → 업로드 보장
+  _pendingSave = true;
+  renderApp();
+  _uploadNow();
+  alert('✅ 백업에서 복구했어요! 클라우드에도 저장됩니다.');
+}
+
+// ──────────────────────────────────────────────
 // 오래된 일정 압축 (최근 60일 유지, 이전은 미완료만)
 // ──────────────────────────────────────────────
 const SCHEDULE_KEEP_DAYS = 60;
@@ -277,6 +326,7 @@ function saveState() {
   if (snap === lastSavedSnapshot && !_pendingSave) { showLastSavedTime(); return; }
 
   _pendingSave = true;
+  _writeLocalBackup();   // 로컬 안전망 (클라우드 저장 실패 대비)
   showLastSavedTime();
 
   if (!navigator.onLine) { setSyncStatus('📶 오프라인 — 연결 후 자동 저장'); return; }
