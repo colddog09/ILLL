@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1779872363559,
+  "lastScanned": 1781446159755,
   "projectRoot": "/Users/sunjaechung/Desktop/경기북과학고등학교/일정관리",
   "techStack": {
     "languages": [],
@@ -35,30 +35,54 @@
     "api": {
       "path": "api",
       "purpose": "API routes",
-      "fileCount": 9,
-      "lastAccessed": 1779872363552,
+      "fileCount": 16,
+      "lastAccessed": 1781446159742,
       "keyFiles": [
+        "_crypto.js",
         "config.js",
         "gcal-auth.js",
         "gcal-callback.js",
-        "gcal-client-id.js",
-        "gcal-token.js"
+        "gcal-client-id.js"
+      ]
+    },
+    "electron": {
+      "path": "electron",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1781446159743,
+      "keyFiles": [
+        "icon.ico",
+        "main.js",
+        "package.json"
       ]
     },
     "gcal": {
       "path": "gcal",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1779872363552,
+      "lastAccessed": 1781446159743,
       "keyFiles": [
         "gcal.js"
+      ]
+    },
+    "image": {
+      "path": "image",
+      "purpose": null,
+      "fileCount": 47,
+      "lastAccessed": 1781446159743,
+      "keyFiles": [
+        "HGD.png",
+        "apple-touch-icon.png",
+        "hgd1.png",
+        "hgd2.png",
+        "hgd3.png"
       ]
     },
     "suhaeng": {
       "path": "suhaeng",
       "purpose": null,
       "fileCount": 7,
-      "lastAccessed": 1779872363552,
+      "lastAccessed": 1781446159743,
       "keyFiles": [
         "icon-192.png",
         "icon-512.png",
@@ -66,85 +90,129 @@
         "manifest.json",
         "script.js"
       ]
+    },
+    "api/node_modules": {
+      "path": "api/node_modules",
+      "purpose": "Dependencies",
+      "fileCount": 1,
+      "lastAccessed": 1781446159744,
+      "keyFiles": []
+    },
+    "electron/build": {
+      "path": "electron/build",
+      "purpose": "Build output",
+      "fileCount": 0,
+      "lastAccessed": 1781446159744,
+      "keyFiles": []
     }
   },
   "hotPaths": [
     {
-      "path": "shop.html",
-      "accessCount": 33,
-      "lastAccessed": 1779895952246,
+      "path": "groups.js",
+      "accessCount": 25,
+      "lastAccessed": 1781509823504,
       "type": "file"
     },
     {
-      "path": "modals.js",
-      "accessCount": 28,
-      "lastAccessed": 1779879364706,
-      "type": "file"
-    },
-    {
-      "path": "index.html",
-      "accessCount": 23,
-      "lastAccessed": 1779896411739,
-      "type": "file"
-    },
-    {
-      "path": "style.css",
-      "accessCount": 18,
-      "lastAccessed": 1779896474938,
-      "type": "file"
-    },
-    {
-      "path": "sw.js",
-      "accessCount": 14,
-      "lastAccessed": 1779878672788,
-      "type": "file"
-    },
-    {
-      "path": "homepage.html",
-      "accessCount": 10,
-      "lastAccessed": 1779872758278,
-      "type": "file"
-    },
-    {
-      "path": "events.js",
-      "accessCount": 5,
-      "lastAccessed": 1779877537204,
+      "path": "state.js",
+      "accessCount": 17,
+      "lastAccessed": 1781510138102,
       "type": "file"
     },
     {
       "path": "render.js",
-      "accessCount": 2,
-      "lastAccessed": 1779877513287,
+      "accessCount": 6,
+      "lastAccessed": 1781510069052,
       "type": "file"
     },
     {
-      "path": "terms.html",
-      "accessCount": 2,
-      "lastAccessed": 1779896213462,
+      "path": "api/state.js",
+      "accessCount": 5,
+      "lastAccessed": 1781507313142,
       "type": "file"
     },
     {
-      "path": "privacy.html",
-      "accessCount": 2,
-      "lastAccessed": 1779896213878,
+      "path": "sw.js",
+      "accessCount": 4,
+      "lastAccessed": 1781505782713,
       "type": "file"
     },
     {
-      "path": ".claude/settings.json",
-      "accessCount": 2,
-      "lastAccessed": 1779896238526,
+      "path": "index.html",
+      "accessCount": 4,
+      "lastAccessed": 1781507499560,
       "type": "file"
     },
     {
-      "path": "drag.js",
+      "path": "style.css",
+      "accessCount": 3,
+      "lastAccessed": 1781510151635,
+      "type": "file"
+    },
+    {
+      "path": "modals.js",
+      "accessCount": 2,
+      "lastAccessed": 1781507524171,
+      "type": "file"
+    },
+    {
+      "path": "groups-schema-v2.sql",
+      "accessCount": 2,
+      "lastAccessed": 1781510216924,
+      "type": "file"
+    },
+    {
+      "path": "api/config.js",
+      "accessCount": 2,
+      "lastAccessed": 1781511940398,
+      "type": "file"
+    },
+    {
+      "path": "events.js",
       "accessCount": 1,
-      "lastAccessed": 1779872601769,
+      "lastAccessed": 1781505432605,
       "type": "file"
     },
     {
-      "path": "auth.js",
+      "path": "deadline.js",
       "accessCount": 1,
-      "lastAccessed": 1779877242027,
+      "lastAccessed": 1781505441591,
+      "type": "file"
+    },
+    {
+      "path": "groups-schema.sql",
+      "accessCount": 1,
+      "lastAccessed": 1781509090202,
+      "type": "file"
+    },
+    {
+      "path": "api/group-notify.js",
+      "accessCount": 1,
+      "lastAccessed": 1781509837456,
+      "type": "file"
+    },
+    {
+      "path": "api/group-nudge.js",
+      "accessCount": 1,
+      "lastAccessed": 1781509854989,
+      "type": "file"
+    },
+    {
+      "path": "vercel.json",
+      "accessCount": 1,
+      "lastAccessed": 1781509863319,
+      "type": "file"
+    },
+    {
+      "path": "api/gcal-client-id.js",
+      "accessCount": 1,
+      "lastAccessed": 1781511923193,
+      "type": "file"
+    },
+    {
+      "path": "push.js",
+      "accessCount": 1,
+      "lastAccessed": 1781511957472,
       "type": "file"
     }
   ],

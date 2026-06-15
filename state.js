@@ -259,13 +259,66 @@ async function _getToken() {
   return session?.access_token || null;
 }
 
-// 저장 실패 시 자동 재시도 예약 (pending이 남아 있는 한)
+// 저장 실패 시 자동 재시도 — 지수 백오프 (3s → 6s → 12s → 24s → 48s)
 let _retryTimer = null;
-function _scheduleSaveRetry(delay = 5000) {
+let _retryCount = 0;
+const _MAX_RETRIES   = 5;
+const _BASE_RETRY_MS = 3000;
+
+function _scheduleSaveRetry() {
   clearTimeout(_retryTimer);
+  if (_retryCount >= _MAX_RETRIES) {
+    setSyncStatus('❌ 저장 실패 — 탭해서 재시도');
+    _showManualRetryBtn();
+    return;
+  }
+  const delay = _BASE_RETRY_MS * Math.pow(2, _retryCount);
+  _retryCount++;
+  const delaySec = Math.round(delay / 1000);
+  setSyncStatus(`⚠️ 저장 실패 — ${delaySec}초 후 재시도 (${_retryCount}/${_MAX_RETRIES})`);
   _retryTimer = setTimeout(() => {
     if (_pendingSave && !_uploading && navigator.onLine) _uploadNow();
   }, delay);
+}
+
+function _resetRetry() {
+  _retryCount = 0;
+  clearTimeout(_retryTimer);
+  _removeManualRetryBtn();
+}
+
+function _showManualRetryBtn() {
+  if (document.getElementById('syncRetryBtn')) return;
+  const btn = document.createElement('button');
+  btn.id = 'syncRetryBtn';
+  btn.textContent = '🔄 다시 저장하기';
+  btn.style.cssText = [
+    'position:fixed','bottom:72px','left:50%','transform:translateX(-50%)',
+    'z-index:9999','padding:10px 22px','border-radius:20px',
+    'background:#1e3a5f','color:#89c4ff','border:1.5px solid rgba(137,196,255,0.4)',
+    'font-size:0.88rem','font-weight:700','cursor:pointer',
+    'box-shadow:0 4px 20px rgba(0,0,0,0.5)',
+    'animation:syncRetryPulse 2s ease-in-out infinite'
+  ].join(';');
+  // 펄스 애니메이션 주입
+  if (!document.getElementById('syncRetryStyle')) {
+    const s = document.createElement('style');
+    s.id = 'syncRetryStyle';
+    s.textContent = '@keyframes syncRetryPulse{0%,100%{opacity:1;transform:translateX(-50%) scale(1)}50%{opacity:.85;transform:translateX(-50%) scale(1.03)}}';
+    document.head.appendChild(s);
+  }
+  btn.addEventListener('click', () => {
+    _removeManualRetryBtn();
+    _retryCount = 0;
+    setSyncStatus('📝 동기화 중...');
+    _uploadNow();
+  });
+  document.body.appendChild(btn);
+}
+
+function _removeManualRetryBtn() {
+  const btn = document.getElementById('syncRetryBtn');
+  if (btn) btn.remove();
 }
 
 async function _uploadNow() {
@@ -299,10 +352,11 @@ async function _uploadNow() {
     clearTimeout(killer);
     if (!res.ok) {
       console.warn('[sync] 저장 실패:', res.status);
-      setSyncStatus('⚠️ 클라우드 저장 실패 — 재시도 중');
       _scheduleSaveRetry();
       return false;
     }
+    // 성공 → 재시도 카운터 리셋 + 에러 토스트 정리
+    _resetRetry();
     if (stateSnapshot() === snapAtUpload) _pendingSave = false;
     lastSavedSnapshot = snapAtUpload;
     _lastRemoteTs = Date.parse(ts) || Date.now();
@@ -312,7 +366,6 @@ async function _uploadNow() {
     _uploading = false;
     clearTimeout(killer);
     console.warn('[sync] 저장 예외:', err?.message);
-    setSyncStatus('⚠️ 클라우드 저장 실패 — 재시도 중');
     _scheduleSaveRetry();
     return false;
   }

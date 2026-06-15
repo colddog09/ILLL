@@ -26,7 +26,17 @@ function setSyncStatus(message) {
   // 모바일(768px 이하): 중요한 상태만 하단 토스트로 표시
   if (window.innerWidth > 768) return;
   const isIdle = message.includes('저장됨'); // 저장됨은 토스트 불필요
-  if (isIdle) return;
+
+  // 저장 성공 시 에러 토스트가 남아있으면 제거
+  if (isIdle) {
+    clearTimeout(_mobileToastTimer);
+    const oldToast = document.getElementById('syncToast');
+    if (oldToast) {
+      oldToast.style.opacity = '0';
+      setTimeout(() => oldToast.remove(), 260);
+    }
+    return;
+  }
 
   clearTimeout(_mobileToastTimer);
   let toast = document.getElementById('syncToast');

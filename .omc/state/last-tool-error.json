@@ -1,7 +1,0 @@
-{
-  "tool_name": "Read",
-  "tool_input_preview": "{\"file_path\":\"/Users/sunjaechung/Desktop/경기북과학고등학교/일정관리/.claude/settings.json\"}",
-  "error": "File does not exist. Note: your current working directory is /Users/sunjaechung/Desktop/경기북과학고등학교/일정관리.",
-  "timestamp": "2026-05-27T15:37:11.143Z",
-  "retry_count": 1
-}

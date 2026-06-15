@@ -2,10 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "vercel dev",
-      "runtimeExecutable": "/Users/sunjaechung/.npm-global/bin/vercel",
-      "runtimeArgs": ["dev", "--listen", "3000"],
-      "port": 3000
+      "name": "vibe-class-react",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "/Users/sunjaechung/멘토링/vibe-coding-class", "run", "dev", "--", "--port", "5188", "--strictPort"],
+      "port": 5188
     }
   ]
 }
