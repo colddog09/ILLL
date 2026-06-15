@@ -5,6 +5,7 @@
     "api/push-subscribe.js": { "maxDuration": 10 },
     "api/push-notify.js": { "maxDuration": 30 },
     "api/group-notify.js": { "maxDuration": 15 },
+    "api/group-nudge.js": { "maxDuration": 15 },
     "api/gemini.js": { "maxDuration": 15 },
     "api/state.js": { "maxDuration": 15 },
     "api/push-test.js": { "maxDuration": 10 }

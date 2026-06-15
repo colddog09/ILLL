@@ -51,21 +51,29 @@ async function gmShowList() {
 
   const { data, error } = await supabaseClient
     .from('group_members')
-    .select('role, notifications_enabled, groups(id, name, invite_code, owner_id)')
+    .select('role, status, notifications_enabled, groups(id, name, invite_code, owner_id, is_private)')
     .eq('user_id', currentUser.id);
 
   if (error) { body.innerHTML = `<div class="gm-empty">목록을 불러오지 못했어요. 잠시 후 다시 시도해주세요.</div>`; return; }
 
-  gmGroups = (data || [])
+  const allRows = (data || [])
     .filter(r => r.groups)
-    .map(r => ({ ...r.groups, role: r.role, notifications_enabled: r.notifications_enabled !== false }));
+    .map(r => ({ ...r.groups, role: r.role, status: r.status || 'active', notifications_enabled: r.notifications_enabled !== false }));
+  gmGroups = allRows.filter(g => g.status !== 'pending');
+  const pendingGroups = allRows.filter(g => g.status === 'pending');
 
-  const listHtml = gmGroups.length
+  const roleBadge = r => r === 'owner' ? '👑 그룹장' : r === 'coowner' ? '🤝 공동그룹장' : r === 'announcer' ? '📢 공지' : '멤버';
+  const pendingHtml = pendingGroups.map(g => `
+        <div class="gm-group-row gm-group-row--pending">
+          <span class="gm-group-row__name">${escHtml(g.name)}</span>
+          <span class="gm-group-row__role">⏳ 승인 대기 중</span>
+        </div>`).join('');
+  const listHtml = (gmGroups.length || pendingGroups.length)
     ? gmGroups.map(g => `
         <button class="gm-group-row" data-open="${g.id}">
           <span class="gm-group-row__name">${escHtml(g.name)}</span>
-          <span class="gm-group-row__role">${g.role === 'owner' ? '👑 그룹장' : g.role === 'announcer' ? '📢 공지' : '멤버'}</span>
-        </button>`).join('')
+          <span class="gm-group-row__role">${roleBadge(g.role)}</span>
+        </button>`).join('') + pendingHtml
     : `<div class="gm-empty">아직 속한 그룹이 없어요.<br>+ 버튼으로 만들거나 참여하세요.</div>`;
 
   body.innerHTML = `
@@ -183,6 +191,10 @@ async function gmJoinGroup() {
     return;
   }
   await gmShowList();
+  if (data?.status === 'pending') {
+    alert(`'${data.name || '비공개'}' 그룹은 가입 승인이 필요해요.\n그룹장이 승인하면 참여됩니다. ⏳`);
+    return;
+  }
   if (data?.id) gmOpenGroup(data.id);
 }
 
@@ -203,17 +215,24 @@ async function gmOpenGroup(groupId) {
   }
 
   const isOwner    = gmCurrent.role === 'owner';
-  const canAnnounce = gmCurrent.role === 'owner' || gmCurrent.role === 'announcer';
+  const isAdmin    = gmCurrent.role === 'owner' || gmCurrent.role === 'coowner';
+  const canAnnounce = isAdmin || gmCurrent.role === 'announcer';
 
-  const [annRes, memRes, linkRes] = await Promise.all([
-    supabaseClient.from('group_announcements').select('*').eq('group_id', groupId).order('created_at', { ascending: false }),
-    supabaseClient.from('group_members').select('user_id, role, display_name').eq('group_id', groupId),
+  const [annRes, memRes, linkRes, comRes] = await Promise.all([
+    supabaseClient.from('group_announcements').select('*').eq('group_id', groupId)
+      .order('pinned', { ascending: false }).order('created_at', { ascending: false }),
+    supabaseClient.from('group_members').select('user_id, role, display_name, status').eq('group_id', groupId),
     supabaseClient.from('group_links').select('*').eq('group_id', groupId).order('created_at', { ascending: false }),
+    supabaseClient.from('group_comments').select('*').eq('group_id', groupId).order('created_at', { ascending: true }),
   ]);
 
-  const allAnns = annRes.data  || [];
-  const members = memRes.data  || [];
-  const links   = linkRes.data || [];
+  const allAnns    = annRes.data  || [];
+  const allMembers = memRes.data  || [];
+  const members    = allMembers.filter(m => m.status !== 'pending');
+  const pending    = allMembers.filter(m => m.status === 'pending');
+  const links      = linkRes.data || [];
+  const commentsByAnn = {};
+  (comRes.data || []).forEach(c => { (commentsByAnn[c.announcement_id] ||= []).push(c); });
   const added   = _gmAddedSet();
 
   // 날짜 지난 공지 자동 삭제 (종료일/날짜 기준, 오늘 이전이면 만료)
@@ -231,21 +250,48 @@ async function gmOpenGroup(groupId) {
       .then(() => {}, () => {});
   }
 
+  const GM_CAT = {
+    exam:  { label: '🔴 시험', cls: 'gm-cat--exam' },
+    hw:    { label: '🟡 과제', cls: 'gm-cat--hw' },
+    event: { label: '🟢 행사', cls: 'gm-cat--event' },
+  };
+
   const annHtml = anns.length ? anns.map(a => {
     const dateLabel = a.date
       ? `<span class="gm-ann__date">📅 ${escHtml(a.date)}${a.date_end && a.date_end !== a.date ? ` ~ ${escHtml(a.date_end)}` : ''}</span>`
       : (a.deadline ? `<span class="gm-ann__date">⏰ ${escHtml(formatDeadlineText(a.deadline))}</span>` : `<span class="gm-ann__date gm-ann__date--none">날짜 없음</span>`);
     const isAdded = added.has(a.id);
-    const canDelete = isOwner || a.author_id === currentUser.id;
+    const canEdit = isAdmin || a.author_id === currentUser.id;
+    const cat = GM_CAT[a.category];
+    const catChip = cat ? `<span class="gm-cat ${cat.cls}">${cat.label}</span>` : '';
+    const pinChip = a.pinned ? `<span class="gm-pin-chip">📌</span>` : '';
+    const cList = commentsByAnn[a.id] || [];
+    const commentRows = cList.map(c => `
+      <div class="gm-comment" data-comment="${c.id}">
+        <span class="gm-comment__author">${escHtml(c.author_name || '익명')}</span>
+        <span class="gm-comment__text">${escHtml(c.text)}</span>
+        ${(c.author_id === currentUser.id || isAdmin) ? `<button class="gm-comment__del" data-delcomment="${c.id}" title="삭제">×</button>` : ''}
+      </div>`).join('') || '<div class="gm-comment gm-comment--empty">첫 댓글/질문을 남겨보세요.</div>';
     return `
-      <div class="gm-ann" data-ann="${a.id}">
+      <div class="gm-ann${a.pinned ? ' gm-ann--pinned' : ''}" data-ann="${a.id}">
         <div class="gm-ann__main">
-          <span class="gm-ann__text">${escHtml(a.text)}</span>
+          <div class="gm-ann__head">${pinChip}${catChip}<span class="gm-ann__text">${escHtml(a.text)}</span></div>
           <div class="gm-ann__meta">${dateLabel}<span class="gm-ann__author">${escHtml(a.author_name || '익명')}</span></div>
         </div>
         <div class="gm-ann__actions">
           <button class="gm-add-btn ${isAdded ? 'gm-add-btn--done' : ''}" data-add="${a.id}" ${isAdded ? 'disabled' : ''}>${isAdded ? '추가됨' : '+ 내 리스트'}</button>
-          ${canDelete ? `<button class="gm-ann__del" data-del="${a.id}" title="공지 삭제">🗑️</button>` : ''}
+          <button class="gm-ann__icon" data-comments="${a.id}" title="댓글">💬${cList.length ? ' ' + cList.length : ''}</button>
+          ${canAnnounce ? `<button class="gm-ann__icon" data-nudge="${a.id}" title="멤버에게 독촉">👉</button>` : ''}
+          ${isAdmin ? `<button class="gm-ann__icon${a.pinned ? ' gm-ann__icon--on' : ''}" data-pin="${a.id}" title="${a.pinned ? '고정 해제' : '상단 고정'}">📌</button>` : ''}
+          ${canEdit ? `<button class="gm-ann__icon" data-edit="${a.id}" title="수정">✏️</button>` : ''}
+          ${canEdit ? `<button class="gm-ann__del" data-del="${a.id}" title="공지 삭제">🗑️</button>` : ''}
+        </div>
+        <div class="gm-comments" id="gmComments-${a.id}" hidden>
+          ${commentRows}
+          <div class="gm-comment-form">
+            <input class="gm-input gm-comment-input" data-cinput="${a.id}" type="text" maxlength="300" placeholder="댓글 / 질문…" />
+            <button class="gm-btn gm-btn--primary gm-comment-send" data-csend="${a.id}">등록</button>
+          </div>
         </div>
       </div>`;
   }).join('') : `<div class="gm-empty">아직 공지된 일정이 없어요.</div>`;
@@ -260,32 +306,29 @@ async function gmOpenGroup(groupId) {
         <input id="gmPostDateEnd" class="gm-input gm-input--date" type="date" placeholder="종료일 (선택)" />
       </div>
       <div class="gm-post__row">
-        <button id="gmPostBtn" class="gm-btn gm-btn--primary" style="width:100%">공지</button>
+        <select id="gmPostCat" class="gm-input gm-cat-select">
+          <option value="none">분류 없음</option>
+          <option value="exam">🔴 시험</option>
+          <option value="hw">🟡 과제</option>
+          <option value="event">🟢 행사</option>
+        </select>
+        <button id="gmPostBtn" class="gm-btn gm-btn--primary">공지</button>
       </div>
     </div>` : '';
 
 
-  const ownerPanel = isOwner ? `
-    <div class="gm-members-wrap">
-      <p class="gm-section-title">👥 멤버 (${members.length}명)</p>
+  const pendingPanel = (isAdmin && pending.length) ? `
+    <div class="gm-pending-wrap">
+      <p class="gm-section-title">🙋 가입 승인 대기 (${pending.length}명)</p>
       <div class="gm-members">
-        ${members.map(m => {
-          const meTag = m.user_id === currentUser.id ? ' <span class="gm-me-tag">나</span>' : '';
-          const nm = escHtml(m.display_name || '멤버');
-          if (m.role === 'owner') return `
-            <div class="gm-member">
-              <span class="gm-member__name">${nm}${meTag}</span>
-              <span class="gm-member__role">👑 그룹장</span>
-            </div>`;
-          const grant = m.role === 'announcer'
-            ? `<button class="gm-role-btn" data-revoke="${m.user_id}">공지 해제</button>`
-            : `<button class="gm-role-btn gm-role-btn--grant" data-grant="${m.user_id}">공지 권한</button>`;
-          return `
-            <div class="gm-member">
-              <span class="gm-member__name">${nm}${meTag}</span>
-              ${grant}
-            </div>`;
-        }).join('')}
+        ${pending.map(m => `
+          <div class="gm-member">
+            <span class="gm-member__name">${escHtml(m.display_name || '멤버')}</span>
+            <div class="gm-member__btns">
+              <button class="gm-role-btn gm-role-btn--grant" data-approve="${m.user_id}">승인</button>
+              <button class="gm-role-btn gm-role-btn--danger" data-reject="${m.user_id}">거절</button>
+            </div>
+          </div>`).join('')}
       </div>
     </div>` : '';
 
@@ -295,14 +338,14 @@ async function gmOpenGroup(groupId) {
         <button class="gm-back-btn" id="gmBackBtn">← 목록</button>
         <div class="gm-hero__toprow-right">
           <button class="gm-settings-btn" id="gmLinksBtn" title="그룹 링크">🔗</button>
-          ${isOwner ? `<button class="gm-settings-btn" id="gmSettingsBtn" title="그룹 설정">⚙️</button>` : ''}
+          ${isAdmin ? `<button class="gm-settings-btn" id="gmSettingsBtn" title="그룹 설정">⚙️</button>` : ''}
         </div>
       </div>
       <div class="gm-hero__content">
         <h2 class="gm-hero__name">${escHtml(gmCurrent.name)}</h2>
-        <div class="gm-hero__badge">${isOwner ? '👑 그룹장' : canAnnounce ? '📢 공지자' : '멤버'}</div>
+        <div class="gm-hero__badge">${isOwner ? '👑 그룹장' : gmCurrent.role === 'coowner' ? '🤝 공동그룹장' : canAnnounce ? '📢 공지자' : '멤버'}</div>
       </div>
-      ${isOwner ? `
+      ${isAdmin ? `
       <div class="gm-hero__code-row">
         <div class="gm-hero__code-wrap">
           <span class="gm-hero__code-label">초대 링크</span>
@@ -318,6 +361,8 @@ async function gmOpenGroup(groupId) {
         </button>
       </div>
     </div>
+
+    ${pendingPanel}
 
     ${postForm}
 
@@ -356,10 +401,33 @@ async function gmOpenGroup(groupId) {
     b.addEventListener('click', () => gmAddToMyList(anns.find(a => a.id === b.dataset.add), b)));
   body.querySelectorAll('[data-del]').forEach(b =>
     b.addEventListener('click', () => gmDeleteAnnouncement(b.dataset.del, groupId)));
-  body.querySelectorAll('[data-grant]').forEach(b =>
-    b.addEventListener('click', () => gmSetRole(groupId, b.dataset.grant, 'announcer')));
-  body.querySelectorAll('[data-revoke]').forEach(b =>
-    b.addEventListener('click', () => gmSetRole(groupId, b.dataset.revoke, 'member')));
+
+  // 댓글 토글 / 작성 / 삭제
+  body.querySelectorAll('[data-comments]').forEach(b =>
+    b.addEventListener('click', () => {
+      const el = document.getElementById('gmComments-' + b.dataset.comments);
+      if (el) el.hidden = !el.hidden;
+    }));
+  body.querySelectorAll('[data-csend]').forEach(b =>
+    b.addEventListener('click', () => gmAddComment(groupId, b.dataset.csend)));
+  body.querySelectorAll('[data-cinput]').forEach(inp =>
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') gmAddComment(groupId, inp.dataset.cinput); }));
+  body.querySelectorAll('[data-delcomment]').forEach(b =>
+    b.addEventListener('click', () => gmDeleteComment(groupId, b.dataset.delcomment)));
+
+  // 공지 수정 / 고정 / 독촉
+  body.querySelectorAll('[data-edit]').forEach(b =>
+    b.addEventListener('click', () => gmEditAnnouncement(groupId, anns.find(a => a.id === b.dataset.edit))));
+  body.querySelectorAll('[data-pin]').forEach(b =>
+    b.addEventListener('click', () => gmTogglePin(groupId, anns.find(a => a.id === b.dataset.pin))));
+  body.querySelectorAll('[data-nudge]').forEach(b =>
+    b.addEventListener('click', () => gmNudge(groupId, anns.find(a => a.id === b.dataset.nudge), members)));
+
+  // 가입 승인 / 거절
+  body.querySelectorAll('[data-approve]').forEach(b =>
+    b.addEventListener('click', () => gmApproveMember(groupId, b.dataset.approve)));
+  body.querySelectorAll('[data-reject]').forEach(b =>
+    b.addEventListener('click', () => gmRejectMember(groupId, b.dataset.reject)));
 }
 
 // ──────────────────────────────────────────────
@@ -429,7 +497,7 @@ async function gmShowLinks(groupId) {
     }));
 }
 
-// 그룹 설정 화면 (그룹장 전용)
+// 그룹 설정 화면 (그룹장 / 공동그룹장)
 // ──────────────────────────────────────────────
 async function gmShowSettings(groupId) {
   const body = document.getElementById('groupModalBody');
@@ -438,31 +506,73 @@ async function gmShowSettings(groupId) {
 
   const group = gmGroups.find(g => g.id === groupId) || gmCurrent;
   if (!group) { gmShowList(); return; }
+  const myRole = (gmCurrent?.id === groupId ? gmCurrent.role : group.role);
+  const isOwner = myRole === 'owner';
 
-  const { data: members, error } = await supabaseClient
+  const { data: allM, error } = await supabaseClient
     .from('group_members')
-    .select('user_id, role, display_name')
+    .select('user_id, role, display_name, status')
     .eq('group_id', groupId);
-
   if (error) { body.innerHTML = `<div class="gm-empty">불러오지 못했어요.</div>`; return; }
 
-  const memberRows = (members || []).map(m => {
+  const members = (allM || []).filter(m => m.status !== 'pending');
+  const pending = (allM || []).filter(m => m.status === 'pending');
+
+  const memberRows = members.map(m => {
     const meTag = m.user_id === currentUser.id ? ' <span class="gm-me-tag">나</span>' : '';
     const nm = escHtml(m.display_name || '멤버');
     if (m.role === 'owner') return `
       <div class="gm-member">
-        <span class="gm-member__name">${nm}${meTag}</span>
-        <span class="gm-member__role">👑 그룹장</span>
+        <span class="gm-member__name">${nm}${meTag} <span class="gm-member__role">👑 그룹장</span></span>
       </div>`;
-    const grant = m.role === 'announcer'
-      ? `<button class="gm-role-btn" data-revoke="${m.user_id}">공지 해제</button>`
-      : `<button class="gm-role-btn gm-role-btn--grant" data-grant="${m.user_id}">공지 권한</button>`;
+    const roleTag = m.role === 'coowner' ? '<span class="gm-member__role">🤝 공동</span>'
+      : m.role === 'announcer' ? '<span class="gm-member__role">📢 공지</span>' : '';
+    let btns = '';
+    if (isOwner) {
+      if (m.role !== 'coowner') {
+        btns += m.role === 'announcer'
+          ? `<button class="gm-role-btn" data-revoke="${m.user_id}">공지 해제</button>`
+          : `<button class="gm-role-btn gm-role-btn--grant" data-grant="${m.user_id}">공지 권한</button>`;
+      }
+      btns += m.role === 'coowner'
+        ? `<button class="gm-role-btn" data-uncoown="${m.user_id}">공동 해제</button>`
+        : `<button class="gm-role-btn gm-role-btn--grant" data-coown="${m.user_id}">공동그룹장</button>`;
+    }
+    if (m.user_id !== currentUser.id && (isOwner || m.role !== 'coowner')) {
+      btns += `<button class="gm-role-btn gm-role-btn--danger" data-kick="${m.user_id}">강퇴</button>`;
+    }
     return `
       <div class="gm-member">
-        <span class="gm-member__name">${nm}${meTag}</span>
-        ${grant}
+        <span class="gm-member__name">${nm}${meTag} ${roleTag}</span>
+        <div class="gm-member__btns">${btns}</div>
       </div>`;
   }).join('');
+
+  const pendingSection = pending.length ? `
+    <div class="gm-settings-section">
+      <p class="gm-section-title">🙋 가입 승인 대기 (${pending.length})</p>
+      <div class="gm-members">
+        ${pending.map(m => `
+          <div class="gm-member">
+            <span class="gm-member__name">${escHtml(m.display_name || '멤버')}</span>
+            <div class="gm-member__btns">
+              <button class="gm-role-btn gm-role-btn--grant" data-approve="${m.user_id}">승인</button>
+              <button class="gm-role-btn gm-role-btn--danger" data-reject="${m.user_id}">거절</button>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>` : '';
+
+  const privateSection = isOwner ? `
+    <div class="gm-settings-section">
+      <div class="gm-hero__notif-row" style="padding:0">
+        <span class="gm-hero__notif-label">🔒 가입 승인제</span>
+        <button class="gm-notif-toggle ${group.is_private ? 'gm-notif-toggle--on' : 'gm-notif-toggle--off'}" id="gmPrivateToggle">
+          ${group.is_private ? 'ON' : 'OFF'}
+        </button>
+      </div>
+      <p class="gm-hint">ON이면 초대 링크로 들어와도 그룹장·공동그룹장 승인 후 참여돼요.</p>
+    </div>` : '';
 
   body.innerHTML = `
     <div class="gm-settings-header">
@@ -479,48 +589,61 @@ async function gmShowSettings(groupId) {
       </div>
     </div>
 
+    ${privateSection}
+    ${pendingSection}
+
     <div class="gm-settings-section">
       <div class="gm-members-header">
-        <p class="gm-section-title">멤버 권한 관리</p>
-        <button class="gm-members-toggle" id="gmMembersToggle">
-          ${(members||[]).length}명 더보기 ›
-        </button>
+        <p class="gm-section-title">멤버 관리 (${members.length}명)</p>
+        <button class="gm-members-toggle" id="gmMembersToggle">${members.length}명 더보기 ›</button>
       </div>
       <div class="gm-members gm-members--collapsed" id="gmMembersList">${memberRows}</div>
     </div>
 
+    ${isOwner ? `
     <div class="gm-settings-section gm-settings-section--danger">
       <p class="gm-section-title">위험 구역</p>
       <button class="gm-danger-btn" id="gmDeleteBtn">🗑️ 그룹 삭제</button>
-    </div>`;
+    </div>` : `
+    <div class="gm-settings-section">
+      <button class="gm-leave-btn" id="gmLeaveBtn2">그룹 나가기</button>
+    </div>`}`;
 
   document.getElementById('gmSettingsBackBtn')?.addEventListener('click', () => gmOpenGroup(groupId));
-
-  // 멤버 더보기 토글
   document.getElementById('gmMembersToggle')?.addEventListener('click', function() {
     const list = document.getElementById('gmMembersList');
     const isOpen = !list.classList.contains('gm-members--collapsed');
-    if (isOpen) {
-      list.classList.add('gm-members--collapsed');
-      this.textContent = `${(members||[]).length}명 더보기 ›`;
-    } else {
+    if (isOpen) { list.classList.add('gm-members--collapsed'); this.textContent = `${members.length}명 더보기 ›`; }
+    else {
       list.classList.remove('gm-members--collapsed');
-      // 각 멤버 행 순서대로 애니메이션
-      list.querySelectorAll('.gm-member').forEach((el, i) => {
-        el.style.animationDelay = `${i * 0.05}s`;
-        el.classList.add('gm-member--appear');
-      });
+      list.querySelectorAll('.gm-member').forEach((el, i) => { el.style.animationDelay = `${i * 0.05}s`; el.classList.add('gm-member--appear'); });
       this.textContent = '접기 ‹';
     }
   });
-
   document.getElementById('gmRenameBtn')?.addEventListener('click', () => gmRenameGroup(groupId));
   document.getElementById('gmRenameInput')?.addEventListener('keydown', e => { if (e.key === 'Enter') gmRenameGroup(groupId); });
   document.getElementById('gmDeleteBtn')?.addEventListener('click', () => gmLeaveOrDelete(groupId, true));
-  body.querySelectorAll('[data-grant]').forEach(b =>
-    b.addEventListener('click', () => gmSetRole(groupId, b.dataset.grant, 'announcer')));
-  body.querySelectorAll('[data-revoke]').forEach(b =>
-    b.addEventListener('click', () => gmSetRole(groupId, b.dataset.revoke, 'member')));
+  document.getElementById('gmLeaveBtn2')?.addEventListener('click', () => gmLeaveOrDelete(groupId, false));
+  document.getElementById('gmPrivateToggle')?.addEventListener('click', async () => {
+    await gmSetPrivate(groupId, !group.is_private);
+    gmShowSettings(groupId);
+  });
+  body.querySelectorAll('[data-grant]').forEach(b => b.addEventListener('click', () => gmSetRole(groupId, b.dataset.grant, 'announcer')));
+  body.querySelectorAll('[data-revoke]').forEach(b => b.addEventListener('click', () => gmSetRole(groupId, b.dataset.revoke, 'member')));
+  body.querySelectorAll('[data-coown]').forEach(b => b.addEventListener('click', () => gmSetRole(groupId, b.dataset.coown, 'coowner')));
+  body.querySelectorAll('[data-uncoown]').forEach(b => b.addEventListener('click', () => gmSetRole(groupId, b.dataset.uncoown, 'member')));
+  body.querySelectorAll('[data-kick]').forEach(b => b.addEventListener('click', () => gmKickMember(groupId, b.dataset.kick)));
+  body.querySelectorAll('[data-approve]').forEach(b => b.addEventListener('click', async () => {
+    const { error } = await supabaseClient.rpc('approve_member', { gid: groupId, uid: b.dataset.approve });
+    if (error) { alert('승인 실패: ' + error.message); return; }
+    gmShowSettings(groupId);
+  }));
+  body.querySelectorAll('[data-reject]').forEach(b => b.addEventListener('click', async () => {
+    if (!confirm('이 가입 신청을 거절할까요?')) return;
+    const { error } = await supabaseClient.from('group_members').delete().eq('group_id', groupId).eq('user_id', b.dataset.reject);
+    if (error) { alert('거절 실패: ' + error.message); return; }
+    gmShowSettings(groupId);
+  }));
 }
 
 async function gmToggleNotifications(groupId) {
@@ -583,6 +706,7 @@ async function gmPostAnnouncement(groupId) {
   const text     = (document.getElementById('gmPostText')?.value    || '').trim().slice(0, 200);
   const date     = document.getElementById('gmPostDate')?.value    || null;
   const dateEnd  = document.getElementById('gmPostDateEnd')?.value || null;
+  const category = document.getElementById('gmPostCat')?.value || 'none';
   if (!text) { alert('일정 내용을 입력하세요.'); return; }
   if (!date) { alert('날짜를 선택해주세요.'); document.getElementById('gmPostDate')?.focus(); return; }
   if (dateEnd && date && dateEnd < date) { alert('종료일이 시작일보다 앞에 있어요.'); return; }
@@ -598,7 +722,7 @@ async function gmPostAnnouncement(groupId) {
   }
   const { error } = await supabaseClient.from('group_announcements').insert({
     group_id: groupId, author_id: currentUser.id, author_name: _gmDisplayName(),
-    text, date: date || null, date_end: dateEnd || null
+    text, date: date || null, date_end: dateEnd || null, category
   });
   gmBusy = false;
   if (error) { alert('공지 등록 실패: ' + error.message); return; }
@@ -626,6 +750,132 @@ async function gmDeleteAnnouncement(id, groupId) {
   gmOpenGroup(groupId);
 }
 
+// ── 공지 수정 / 고정 ──────────────────────────────────────────
+async function gmEditAnnouncement(groupId, a) {
+  if (!a) return;
+  const newText = prompt('공지 내용 수정', a.text);
+  if (newText === null) return;
+  const t = newText.trim().slice(0, 200);
+  if (!t) { alert('내용을 입력하세요.'); return; }
+  const newDate = prompt('날짜 수정 (YYYY-MM-DD, 비우면 날짜 없음)', a.date || '');
+  if (newDate === null) return;
+  const d = newDate.trim() || null;
+  if (d && !/^\d{4}-\d{2}-\d{2}$/.test(d)) { alert('날짜 형식이 올바르지 않아요 (예: 2026-06-20).'); return; }
+  const { error } = await supabaseClient.from('group_announcements')
+    .update({ text: t, date: d, date_end: d ? a.date_end : null }).eq('id', a.id);
+  if (error) { alert('수정 실패: ' + error.message); return; }
+  gmOpenGroup(groupId);
+}
+
+async function gmTogglePin(groupId, a) {
+  if (!a) return;
+  const { error } = await supabaseClient.from('group_announcements')
+    .update({ pinned: !a.pinned }).eq('id', a.id);
+  if (error) { alert('고정 변경 실패: ' + error.message); return; }
+  gmOpenGroup(groupId);
+}
+
+// ── 공지 댓글 ─────────────────────────────────────────────────
+async function gmRefreshComments(groupId, annId) {
+  const el = document.getElementById('gmComments-' + annId);
+  if (!el) return;
+  const { data } = await supabaseClient.from('group_comments')
+    .select('*').eq('announcement_id', annId).order('created_at', { ascending: true });
+  const isAdmin = gmCurrent && (gmCurrent.role === 'owner' || gmCurrent.role === 'coowner');
+  const list = data || [];
+  const rows = list.map(c => `
+    <div class="gm-comment" data-comment="${c.id}">
+      <span class="gm-comment__author">${escHtml(c.author_name || '익명')}</span>
+      <span class="gm-comment__text">${escHtml(c.text)}</span>
+      ${(c.author_id === currentUser.id || isAdmin) ? `<button class="gm-comment__del" data-delcomment="${c.id}" title="삭제">×</button>` : ''}
+    </div>`).join('') || '<div class="gm-comment gm-comment--empty">첫 댓글/질문을 남겨보세요.</div>';
+  el.innerHTML = rows + `
+    <div class="gm-comment-form">
+      <input class="gm-input gm-comment-input" data-cinput="${annId}" type="text" maxlength="300" placeholder="댓글 / 질문…" />
+      <button class="gm-btn gm-btn--primary gm-comment-send" data-csend="${annId}">등록</button>
+    </div>`;
+  el.hidden = false;
+  el.querySelector('[data-csend]')?.addEventListener('click', () => gmAddComment(groupId, annId));
+  el.querySelector('[data-cinput]')?.addEventListener('keydown', e => { if (e.key === 'Enter') gmAddComment(groupId, annId); });
+  el.querySelectorAll('[data-delcomment]').forEach(b =>
+    b.addEventListener('click', () => gmDeleteComment(groupId, b.dataset.delcomment, annId)));
+  const badge = document.querySelector(`[data-comments="${annId}"]`);
+  if (badge) badge.innerHTML = `💬${list.length ? ' ' + list.length : ''}`;
+}
+
+async function gmAddComment(groupId, annId) {
+  const inp = document.querySelector(`[data-cinput="${annId}"]`);
+  const text = (inp?.value || '').trim().slice(0, 300);
+  if (!text) return;
+  const { error } = await supabaseClient.from('group_comments').insert({
+    announcement_id: annId, group_id: groupId, author_id: currentUser.id,
+    author_name: _gmDisplayName(), text
+  });
+  if (error) { alert('댓글 등록 실패: ' + error.message); return; }
+  if (inp) inp.value = '';
+  gmRefreshComments(groupId, annId);
+}
+
+async function gmDeleteComment(groupId, commentId, annId) {
+  const { error } = await supabaseClient.from('group_comments').delete().eq('id', commentId);
+  if (error) { alert('댓글 삭제 실패: ' + error.message); return; }
+  gmRefreshComments(groupId, annId);
+}
+
+// ── 일정 독촉 (즉시 푸시) ─────────────────────────────────────
+async function gmNudge(groupId, ann, members) {
+  if (!ann) return;
+  const others = (members || []).filter(m => m.user_id !== currentUser.id);
+  if (!others.length) { alert('독촉할 다른 멤버가 없어요.'); return; }
+  const listStr = others.map((m, i) => `${i + 1}. ${m.display_name || '멤버'}`).join('\n');
+  const pick = prompt(`'${ann.text}' 독촉을 누구에게 보낼까요?\n번호 입력 (0 = 전체)\n\n0. 전체\n${listStr}`, '0');
+  if (pick === null) return;
+  const n = parseInt(pick.trim(), 10);
+  let targets;
+  if (n === 0) targets = others;
+  else if (n >= 1 && n <= others.length) targets = [others[n - 1]];
+  else { alert('올바른 번호를 입력하세요.'); return; }
+
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session?.access_token) return;
+  const res = await fetch('/api/group-nudge', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+    body: JSON.stringify({ group_id: groupId, target_ids: targets.map(t => t.user_id), text: ann.text }),
+  }).catch(() => null);
+  _gmToast(res && res.ok ? `👉 ${targets.length}명에게 독촉을 보냈어요!` : '독촉 전송에 실패했어요.');
+}
+
+// ── 가입 승인 / 거절 / 강퇴 / 비공개 ──────────────────────────
+async function gmApproveMember(groupId, userId) {
+  const { error } = await supabaseClient.rpc('approve_member', { gid: groupId, uid: userId });
+  if (error) { alert('승인 실패: ' + error.message); return; }
+  gmOpenGroup(groupId);
+}
+
+async function gmRejectMember(groupId, userId) {
+  if (!confirm('이 가입 신청을 거절할까요?')) return;
+  const { error } = await supabaseClient.from('group_members').delete()
+    .eq('group_id', groupId).eq('user_id', userId);
+  if (error) { alert('거절 실패: ' + error.message); return; }
+  gmOpenGroup(groupId);
+}
+
+async function gmKickMember(groupId, userId) {
+  if (!confirm('이 멤버를 그룹에서 내보낼까요?')) return;
+  const { error } = await supabaseClient.from('group_members').delete()
+    .eq('group_id', groupId).eq('user_id', userId);
+  if (error) { alert('강퇴 실패: ' + error.message); return; }
+  gmShowSettings(groupId);
+}
+
+async function gmSetPrivate(groupId, isPrivate) {
+  const { error } = await supabaseClient.from('groups').update({ is_private: isPrivate }).eq('id', groupId);
+  if (error) { alert('변경 실패: ' + error.message); return; }
+  const g = gmGroups.find(g => g.id === groupId); if (g) g.is_private = isPrivate;
+  if (gmCurrent?.id === groupId) gmCurrent.is_private = isPrivate;
+}
+
 // ──────────────────────────────────────────────
 // 권한 부여/해제 (owner)
 // ──────────────────────────────────────────────
@@ -633,7 +883,7 @@ async function gmSetRole(groupId, userId, role) {
   const { error } = await supabaseClient.from('group_members')
     .update({ role }).eq('group_id', groupId).eq('user_id', userId);
   if (error) { alert('권한 변경 실패: ' + error.message); return; }
-  gmOpenGroup(groupId);
+  gmShowSettings(groupId);
 }
 
 // ──────────────────────────────────────────────
@@ -941,9 +1191,11 @@ async function gmAutoJoinFromUrl() {
     return;
   }
   await gmShowList();
-  if (data?.id) {
-    const modal = document.getElementById('groupModal');
-    if (modal) modal.hidden = false;
-    gmOpenGroup(data.id);
+  const modal = document.getElementById('groupModal');
+  if (modal) modal.hidden = false;
+  if (data?.status === 'pending') {
+    alert(`'${data.name || '비공개'}' 그룹은 가입 승인이 필요해요.\n그룹장이 승인하면 참여됩니다. ⏳`);
+    return;
   }
+  if (data?.id) gmOpenGroup(data.id);
 }

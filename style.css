@@ -4878,6 +4878,46 @@ a.settings-tab {
 .gm-role-btn:hover { border-color:var(--text-sub); color:var(--text); }
 .gm-role-btn--grant { border-color:var(--accent); color:var(--accent); }
 .gm-role-btn--grant:hover { background:var(--accent); color:#fff; border-color:var(--accent); }
+.gm-role-btn--danger { border-color:#e5567a; color:#e5567a; }
+.gm-role-btn--danger:hover { background:#e5567a; color:#fff; border-color:#e5567a; }
+.gm-member__btns { display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end; }
+
+/* ── 공지 v2: 카테고리 / 고정 / 아이콘 버튼 ── */
+.gm-ann__head { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.gm-ann--pinned { border-color:rgba(108,99,255,0.35); background:rgba(108,99,255,0.05); }
+.gm-pin-chip { font-size:0.85rem; }
+.gm-cat { font-size:0.68rem; font-weight:700; padding:2px 8px; border-radius:999px; white-space:nowrap; }
+.gm-cat--exam  { background:rgba(229,86,122,0.15); color:#e5567a; }
+.gm-cat--hw    { background:rgba(240,180,0,0.18);  color:#c79100; }
+.gm-cat--event { background:rgba(52,168,83,0.15);  color:#2e9e54; }
+.gm-cat-select { max-width:120px; flex-shrink:0; }
+.gm-ann__icon {
+  background:none; border:none; cursor:pointer; font-size:0.92rem;
+  opacity:0.55; padding:5px 6px; border-radius:6px; transition:opacity .15s, background .15s;
+}
+.gm-ann__icon:hover { opacity:1; background:var(--surface-hover); }
+.gm-ann__icon--on { opacity:1; }
+
+/* ── 공지 댓글 ── */
+.gm-comments {
+  margin-top:8px; padding-top:8px; border-top:1px solid var(--border);
+  display:flex; flex-direction:column; gap:6px;
+}
+.gm-comment { display:flex; align-items:center; gap:6px; font-size:0.82rem; }
+.gm-comment__author { font-weight:700; color:var(--accent); flex-shrink:0; }
+.gm-comment__text { color:var(--text); word-break:break-word; flex:1; }
+.gm-comment--empty { color:var(--text-sub); font-size:0.78rem; }
+.gm-comment__del { background:none; border:none; cursor:pointer; color:var(--text-sub); font-size:1rem; line-height:1; padding:0 4px; flex-shrink:0; }
+.gm-comment__del:hover { color:#e5567a; }
+.gm-comment-form { display:flex; gap:6px; margin-top:2px; }
+.gm-comment-input { flex:1; font-size:0.82rem; padding:7px 10px; }
+.gm-comment-send { flex-shrink:0; padding:7px 14px; }
+
+/* ── 승인 대기 / 비공개 / 힌트 ── */
+.gm-pending-wrap { margin:0 0 14px; }
+.gm-hint { font-size:0.74rem; color:var(--text-sub); margin:6px 2px 0; line-height:1.4; }
+.gm-group-row--pending { opacity:0.7; cursor:default; }
+.gm-group-row--pending .gm-group-row__role { color:var(--text-sub); }
 
 /* 나가기/삭제 */
 .gm-leave-btn {
