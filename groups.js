@@ -219,12 +219,11 @@ async function gmOpenGroup(groupId) {
   const isAdmin    = gmCurrent.role === 'owner' || gmCurrent.role === 'coowner';
   const canAnnounce = isAdmin || gmCurrent.role === 'announcer';
 
-  const [annRes, memRes, linkRes, comRes] = await Promise.all([
+  const [annRes, memRes, linkRes] = await Promise.all([
     supabaseClient.from('group_announcements').select('*').eq('group_id', groupId)
       .order('pinned', { ascending: false }).order('created_at', { ascending: false }),
     supabaseClient.from('group_members').select('user_id, role, display_name, status').eq('group_id', groupId),
     supabaseClient.from('group_links').select('*').eq('group_id', groupId).order('created_at', { ascending: false }),
-    supabaseClient.from('group_comments').select('*').eq('group_id', groupId).order('created_at', { ascending: true }),
   ]);
 
   const allAnns    = annRes.data  || [];
@@ -232,8 +231,6 @@ async function gmOpenGroup(groupId) {
   const members    = allMembers.filter(m => m.status !== 'pending');
   const pending    = allMembers.filter(m => m.status === 'pending');
   const links      = linkRes.data || [];
-  const commentsByAnn = {};
-  (comRes.data || []).forEach(c => { (commentsByAnn[c.announcement_id] ||= []).push(c); });
   const added   = _gmAddedSet();
 
   // 날짜 지난 공지 자동 삭제 (종료일/날짜 기준, 오늘 이전이면 만료)
@@ -266,13 +263,6 @@ async function gmOpenGroup(groupId) {
     const cat = GM_CAT[a.category];
     const catChip = cat ? `<span class="gm-cat ${cat.cls}">${cat.label}</span>` : '';
     const pinChip = a.pinned ? `<span class="gm-pin-chip">📌</span>` : '';
-    const cList = commentsByAnn[a.id] || [];
-    const commentRows = cList.map(c => `
-      <div class="gm-comment" data-comment="${c.id}">
-        <span class="gm-comment__author">${escHtml(c.author_name || '익명')}</span>
-        <span class="gm-comment__text">${escHtml(c.text)}</span>
-        ${(c.author_id === currentUser.id || isAdmin) ? `<button class="gm-comment__del" data-delcomment="${c.id}" title="삭제">×</button>` : ''}
-      </div>`).join('') || '<div class="gm-comment gm-comment--empty">첫 댓글/질문을 남겨보세요.</div>';
     return `
       <div class="gm-ann${a.pinned ? ' gm-ann--pinned' : ''}" data-ann="${a.id}">
         <div class="gm-ann__main">
@@ -281,18 +271,10 @@ async function gmOpenGroup(groupId) {
         </div>
         <div class="gm-ann__actions">
           <button class="gm-add-btn ${isAdded ? 'gm-add-btn--done' : ''}" data-add="${a.id}" ${isAdded ? 'disabled' : ''}>${isAdded ? '추가됨' : '+ 내 리스트'}</button>
-          <button class="gm-ann__icon" data-comments="${a.id}" title="댓글">💬${cList.length ? ' ' + cList.length : ''}</button>
           ${canAnnounce ? `<button class="gm-ann__icon" data-nudge="${a.id}" title="멤버에게 독촉">👉</button>` : ''}
           ${isAdmin ? `<button class="gm-ann__icon${a.pinned ? ' gm-ann__icon--on' : ''}" data-pin="${a.id}" title="${a.pinned ? '고정 해제' : '상단 고정'}">📌</button>` : ''}
           ${canEdit ? `<button class="gm-ann__icon" data-edit="${a.id}" title="수정">✏️</button>` : ''}
           ${canEdit ? `<button class="gm-ann__del" data-del="${a.id}" title="공지 삭제">🗑️</button>` : ''}
-        </div>
-        <div class="gm-comments" id="gmComments-${a.id}" hidden>
-          ${commentRows}
-          <div class="gm-comment-form">
-            <input class="gm-input gm-comment-input" data-cinput="${a.id}" type="text" maxlength="300" placeholder="댓글 / 질문…" />
-            <button class="gm-btn gm-btn--primary gm-comment-send" data-csend="${a.id}">등록</button>
-          </div>
         </div>
       </div>`;
   }).join('') : `<div class="gm-empty">아직 공지된 일정이 없어요.</div>`;
@@ -405,18 +387,6 @@ async function gmOpenGroup(groupId) {
   body.querySelectorAll('[data-del]').forEach(b =>
     b.addEventListener('click', () => gmDeleteAnnouncement(b.dataset.del, groupId)));
 
-  // 댓글 토글 / 작성 / 삭제
-  body.querySelectorAll('[data-comments]').forEach(b =>
-    b.addEventListener('click', () => {
-      const el = document.getElementById('gmComments-' + b.dataset.comments);
-      if (el) el.hidden = !el.hidden;
-    }));
-  body.querySelectorAll('[data-csend]').forEach(b =>
-    b.addEventListener('click', () => gmAddComment(groupId, b.dataset.csend)));
-  body.querySelectorAll('[data-cinput]').forEach(inp =>
-    inp.addEventListener('keydown', e => { if (e.key === 'Enter') gmAddComment(groupId, inp.dataset.cinput); }));
-  body.querySelectorAll('[data-delcomment]').forEach(b =>
-    b.addEventListener('click', () => gmDeleteComment(groupId, b.dataset.delcomment)));
 
   // 공지 수정 / 고정 / 독촉
   body.querySelectorAll('[data-edit]').forEach(b =>
