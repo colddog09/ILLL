@@ -211,10 +211,25 @@ async function gmOpenGroup(groupId) {
     supabaseClient.from('group_links').select('*').eq('group_id', groupId).order('created_at', { ascending: false }),
   ]);
 
-  const anns    = annRes.data  || [];
+  const allAnns = annRes.data  || [];
   const members = memRes.data  || [];
   const links   = linkRes.data || [];
   const added   = _gmAddedSet();
+
+  // 날짜 지난 공지 자동 삭제 (종료일/날짜 기준, 오늘 이전이면 만료)
+  const _todayStr = (() => {
+    const d = new Date(), p = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  })();
+  const expiredIds = allAnns
+    .filter(a => { const end = a.date_end || a.date; return end && end < _todayStr; })
+    .map(a => a.id);
+  // 만료된 공지는 화면에서 제외 + DB에서 삭제(권한 있는 경우 실제 삭제됨)
+  const anns = allAnns.filter(a => !expiredIds.includes(a.id));
+  if (expiredIds.length) {
+    supabaseClient.from('group_announcements').delete().in('id', expiredIds)
+      .then(() => {}, () => {});
+  }
 
   const annHtml = anns.length ? anns.map(a => {
     const dateLabel = a.date
