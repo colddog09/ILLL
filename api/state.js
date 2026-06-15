@@ -39,12 +39,18 @@ export default async function handler(req, res) {
     if (data.data_enc) {
       try {
         const obj = await decryptJson(key, data.data_enc);
+        const _days = Object.keys(obj.schedule || {});
+        const _items = _days.reduce((n, k) => n + (obj.schedule[k]?.length || 0), 0);
+        console.log(`[state/GET][diag] uid=${user.id.slice(0,8)} src=ENC pool=${(obj.pool||[]).length} days=${_days.length} items=${_items} updated=${data.updated_at}`);
         return res.status(200).json({ ...obj, updated_at: data.updated_at });
       } catch {
         console.error('[state/GET] decrypt failed — falling back to plaintext');
       }
     }
     // Migration fallback: plaintext columns
+    const _pdays = Object.keys(data.schedule || {});
+    const _pitems = _pdays.reduce((n, k) => n + (data.schedule[k]?.length || 0), 0);
+    console.log(`[state/GET][diag] uid=${user.id.slice(0,8)} src=PLAIN pool=${(data.pool||[]).length} days=${_pdays.length} items=${_pitems} updated=${data.updated_at}`);
     return res.status(200).json({
       pool:       data.pool     || [],
       schedule:   data.schedule || {},
