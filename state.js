@@ -294,7 +294,7 @@ async function _pullRemote(showToast = false) {
   try {
     const token = await _getToken();
     if (!token) { _pulling = false; return; }
-    const res = await fetch('/api/state', { headers: { 'Authorization': `Bearer ${token}` } });
+    const res = await fetch('/api/state', { cache: 'no-store', headers: { 'Authorization': `Bearer ${token}` } });
     _pulling = false;
     if (!res.ok) return;
     const remote = await res.json();
@@ -477,7 +477,7 @@ function loadState() {
   _getToken().then(token => {
     if (!token) throw new Error('NO_TOKEN');
     return _supabaseWithTimeout(
-      fetch('/api/state', { headers: { 'Authorization': `Bearer ${token}` } })
+      fetch('/api/state', { cache: 'no-store', headers: { 'Authorization': `Bearer ${token}` } })
         .then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))
     );
   })

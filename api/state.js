@@ -15,6 +15,11 @@ async function authedUser(req) {
 export default async function handler(req, res) {
   if (req.method !== 'GET' && req.method !== 'POST') return res.status(405).end();
 
+  // 개인 일정 데이터는 절대 캐시 금지 (브라우저 HTTP 캐시가 옛 데이터 재사용 방지)
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+
   const user = await authedUser(req);
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
