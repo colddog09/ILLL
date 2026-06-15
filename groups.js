@@ -972,6 +972,7 @@ function _gmAddToSchedule(ann, groupId) {
 // 그룹 채팅
 // ──────────────────────────────────────────────
 let _chatPollTimer = null;
+let _chatSending   = false;
 function _gmStopChatPoll() {
   if (_chatPollTimer) { clearInterval(_chatPollTimer); _chatPollTimer = null; }
 }
@@ -1074,29 +1075,34 @@ async function _gmLoadChat(groupId, silent = false) {
 }
 
 async function _gmSendChatMsg(groupId) {
+  if (_chatSending) return;
   const inp = document.getElementById('gmChatInput');
   const text = (inp?.value || '').trim().slice(0, 500);
   if (!text) return;
 
+  _chatSending = true;
   const sendBtn = document.getElementById('gmChatSend');
   if (sendBtn) sendBtn.disabled = true;
   if (inp) inp.value = '';
 
-  const { error } = await supabaseClient.from('group_comments').insert({
-    group_id: groupId,
-    announcement_id: null,
-    author_id: currentUser.id,
-    author_name: _gmDisplayName(),
-    text,
-  });
-
-  if (sendBtn) sendBtn.disabled = false;
-  if (error) {
-    alert('전송 실패: ' + error.message);
-    if (inp) inp.value = text;
-    return;
+  try {
+    const { error } = await supabaseClient.from('group_comments').insert({
+      group_id: groupId,
+      announcement_id: null,
+      author_id: currentUser.id,
+      author_name: _gmDisplayName(),
+      text,
+    });
+    if (error) {
+      alert('전송 실패: ' + error.message);
+      if (inp) inp.value = text;
+    } else {
+      await _gmLoadChat(groupId, false);
+    }
+  } finally {
+    _chatSending = false;
+    if (sendBtn) sendBtn.disabled = false;
   }
-  await _gmLoadChat(groupId, false);
 }
 
 async function _gmDeleteChatMsg(groupId, msgId) {
