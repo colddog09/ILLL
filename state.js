@@ -104,10 +104,28 @@ function resetScheduleState() {
   state.links    = [];
 }
 
+// 손상/유실된 항목 제거 — 텍스트 없는 항목, 잘못된 날짜 키, 빈 배열 정리
+function _sanitizeState() {
+  const validText = t => t && typeof t.text === 'string' && t.text.trim() && t.text !== 'undefined';
+  state.pool = (Array.isArray(state.pool) ? state.pool : []).filter(validText);
+
+  const sch = (state.schedule && typeof state.schedule === 'object') ? state.schedule : {};
+  const cleaned = {};
+  for (const [key, arr] of Object.entries(sch)) {
+    // 날짜 키 형식(YYYY-MM-DD)이 아니면 버림 → "갈 곳 잃은" 일정 방지
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) continue;
+    const items = (Array.isArray(arr) ? arr : []).filter(validText);
+    if (items.length) cleaned[key] = items;
+  }
+  state.schedule = cleaned;
+  state.links = (Array.isArray(state.links) ? state.links : []);
+}
+
 function applyPersistedState(data = {}) {
   state.pool     = data.pool     || [];
   state.schedule = data.schedule || {};
   state.links    = data.links    || [];
+  _sanitizeState();
 }
 
 function stateSnapshot() {

@@ -1162,15 +1162,69 @@ body {
   font-size: 0.88rem;
   color: var(--text-sub);
 }
-.deadline-select {
-  padding: 5px 8px;
+/* 커스텀 드롭다운 (월/일 선택) — 네이티브 select 대체 */
+.dl-select {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+}
+.dl-select__trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 7px 10px;
   border: 1.5px solid var(--border);
   border-radius: 8px;
-  font-family: var(--font);
-  font-size: 0.88rem;
   background: var(--surface);
   color: var(--text);
+  font-family: var(--font);
+  font-size: 0.9rem;
+  font-weight: 600;
   cursor: pointer;
+  transition: border-color 0.15s;
+}
+.dl-select__trigger:hover { border-color: var(--accent); }
+.dl-select--open .dl-select__trigger { border-color: var(--accent); }
+.dl-select__chev {
+  font-size: 0.7rem;
+  color: var(--text-sub);
+  transition: transform 0.15s;
+  flex-shrink: 0;
+}
+.dl-select--open .dl-select__chev { transform: rotate(180deg); }
+.dl-select__list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 5px;
+  list-style: none;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-lg);
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 300;
+  -webkit-overflow-scrolling: touch;
+}
+.dl-select__opt {
+  padding: 8px 12px;
+  border-radius: 7px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.1s;
+}
+.dl-select__opt:hover { background: rgba(108,99,255,0.10); }
+.dl-select__opt.selected {
+  background: var(--accent);
+  color: #fff;
 }
 .deadline-time {
   padding: 5px 8px;

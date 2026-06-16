@@ -457,4 +457,40 @@ function startGcalSideTouchDrag(el, gcalId, text, dk, startTouch) {
   document.addEventListener('touchcancel', onEnd);
 }
 
+// ──────────────────────────────────────────────
+// 드래그 상태 복구 가드
+//   일정이 "갈 곳을 잃고" 드롭이 중간에 실패하면 dragInfo / 고스트 /
+//   터치 클론이 화면에 남아 앱이 멈춘 것처럼 보이는 문제 방지.
+//   예외가 나도 UI 잔여물을 정리해 항상 정상 상태로 되돌린다.
+// ──────────────────────────────────────────────
+function recoverDragState() {
+  try {
+    dragInfo = null;
+    if (typeof touchReorder !== 'undefined' && touchReorder) {
+      try { touchReorder.clone?.remove(); touchReorder.el && (touchReorder.el.style.opacity = ''); } catch (_) {}
+      touchReorder = null;
+    }
+    // 화면에 남은 드래그 클론/고스트/하이라이트 제거
+    document.querySelectorAll('.touch-drag-clone').forEach(el => el.remove());
+    document.querySelectorAll('.dragging, .reorder-over, .drag-over, .drag-over-pool')
+      .forEach(el => el.classList.remove('dragging', 'reorder-over', 'drag-over', 'drag-over-pool'));
+    if (typeof ghost !== 'undefined' && ghost) {
+      ghost.classList.remove('visible');
+      ghost.style.top = '-999px'; ghost.style.left = '-999px';
+    }
+    if (typeof trashZone !== 'undefined' && trashZone) {
+      trashZone.hidden = true;
+      trashZone.classList.remove('danger', 'gcal-warn');
+    }
+  } catch (_) { /* 복구 자체는 절대 throw 하지 않음 */ }
+}
+
+// 드래그가 어디서든 끝나면(드롭 성공/실패 무관) 잔여물 정리
+document.addEventListener('dragend', () => { setTimeout(recoverDragState, 0); }, true);
+document.addEventListener('drop',    () => { setTimeout(recoverDragState, 0); }, true);
+
+// 예외/거부가 발생해도 드래그 상태를 정상으로 되돌림 (오류는 콘솔에 그대로 남김)
+window.addEventListener('error', recoverDragState);
+window.addEventListener('unhandledrejection', recoverDragState);
+
 // 초기화는 events.js 하단에서 실행 (모든 스크립트 로드 완료 후)
