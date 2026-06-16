@@ -1,11 +1,11 @@
-const CACHE_NAME = 'illl-v132';
+const CACHE_NAME = 'illl-v133';
 const CORE_FILES = [
   '/',
   '/index.html',
   '/supabase.js?v=1',
-  '/style.css?v=71',
+  '/style.css?v=72',
   '/utils.js?v=3',
-  '/state.js?v=13',
+  '/state.js?v=14',
   '/auth.js?v=7',
   '/render.js?v=20',
   '/drag.js?v=8',

@@ -365,16 +365,16 @@ async function _uploadNow() {
       _scheduleSaveRetry();
       return false;
     }
-    // 성공 → 재시도 카운터 리셋
+    // 성공 → 재시도 카운터 리셋 + 오류 메시지 즉시 제거
     _resetRetry();
     lastSavedSnapshot = snapAtUpload;
     _lastRemoteTs = Date.parse(ts) || Date.now();
+    setSyncSaved(); // 항상 먼저 오류 배너 제거
     if (stateSnapshot() === snapAtUpload) {
-      // 업로드 중 새 변경 없음 → 완료
       _pendingSave = false;
-      setSyncSaved();
     } else {
-      // 업로드 중 새 변경 발생 → 즉시 후속 업로드 예약
+      // 업로드 중 새 변경 발생 → 후속 업로드 예약
+      _pendingSave = true;
       setSyncStatus('📝 동기화 중...');
       clearTimeout(_saveTimer);
       _saveTimer = setTimeout(_uploadNow, SAVE_DEBOUNCE_MS);
