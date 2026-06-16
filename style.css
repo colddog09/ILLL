@@ -1259,6 +1259,47 @@ body {
 /* ============================
    TASK POOL
    ============================ */
+.pool-sort-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+  padding: 0 2px;
+}
+.pool-sort-count {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-sub);
+  letter-spacing: 0.01em;
+}
+.pool-sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: var(--bg-card, rgba(255,255,255,0.08));
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  line-height: 1.5;
+}
+.pool-sort-btn:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.pool-sort-ico {
+  font-size: 0.9rem;
+  line-height: 1;
+  opacity: 0.85;
+}
+
 .task-pool {
   display: flex;
   flex-wrap: wrap;          /* 태블릿/PC: 줄바꿈으로 전체 표시 */

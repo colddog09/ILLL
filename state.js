@@ -386,7 +386,6 @@ async function _uploadNow() {
         // 이 저장이 기반한 서버 버전 — 서버가 더 최신이면 409로 충돌 알림
         base_updated_at: _lastRemoteTs ? new Date(_lastRemoteTs).toISOString() : null,
       }),
-      keepalive: true,
       signal: ctrl.signal,
     });
     _uploading = false;

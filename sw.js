@@ -1,13 +1,13 @@
-const CACHE_NAME = 'illl-v139';
+const CACHE_NAME = 'illl-v143';
 const CORE_FILES = [
   '/',
   '/index.html',
   '/supabase.js?v=1',
-  '/style.css?v=73',
+  '/style.css?v=75',
   '/utils.js?v=3',
-  '/state.js?v=17',
+  '/state.js?v=18',
   '/auth.js?v=10',
-  '/render.js?v=20',
+  '/render.js?v=22',
   '/drag.js?v=8',
   '/deadline.js?v=2',
   '/push.js?v=3',
@@ -26,11 +26,13 @@ const CORE_FILES = [
   '/image/snowman.png'
 ];
 
-/* ── 설치: 핵심 파일 캐시 ── */
+/* ── 설치: 핵심 파일 캐시 (HTTP 캐시 우회 → 항상 최신 파일 저장) ── */
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(CORE_FILES))
+      .then(cache => cache.addAll(
+        CORE_FILES.map(url => new Request(url, { cache: 'reload' }))
+      ))
       .then(() => self.skipWaiting())
   );
 });

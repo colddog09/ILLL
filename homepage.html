@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>오일추 — 드래그앤드롭 일정 관리 앱 | 무료 플래너</title>
-  <meta name="description" content="할일을 날짜에 드래그해서 배치하는 스마트 플래너. 구글 캘린더 연동, 기한 알림, D-Day 카운터, 멀티기기 동기화까지 — 무료로 시작하세요." />
+  <meta name="description" content="할일을 날짜에 드래그해서 배치하는 스마트 플래너. 그룹 일정 공유, 구글 캘린더 연동, D-Day 카운터, 기기 간 동기화까지 — 학생을 위한 무료 일정 관리 앱." />
   <meta name="google-site-verification" content="t3L9hcNzasdjnVxV-kNvPxpu1naEcTJf8QLl-ACxlQY" />
   <link rel="canonical" href="https://o1chu.my/homepage" />
   <meta property="og:type"        content="website" />
@@ -895,19 +895,19 @@
     <div class="anim-item">
       <div class="hero-badge">
         <span class="badge-dot"></span>
-        무료 · 로그인만 하면 시작
+        100% 무료 · 구글 로그인으로 3초 시작
         <span class="badge-pill">PWA 지원</span>
       </div>
     </div>
 
     <h1 class="anim-item">
-      공부 계획을<br>
+      해야 할 일을<br>
       <span class="gradient-text">드래그 한 번</span>으로
     </h1>
 
     <p class="hero-desc anim-item">
-      할일 목록을 만들고 원하는 날짜에 드래그해서 배치하세요.<br>
-      구글 캘린더 연동, 그룹 일정 공유, D-Day 카운터, 멀티 기기 동기화까지.
+      할일을 입력하고 원하는 날짜로 끌어다 놓기만 하면 끝.<br>
+      구글 캘린더 연동 · 그룹 일정 공유 · 기기 간 자동 동기화까지 한 앱에서.
     </p>
 
     <div class="hero-btns anim-item">
@@ -1020,12 +1020,12 @@
       <div class="feature-card">
         <div class="feature-icon">👥</div>
         <h3>그룹 일정 공유</h3>
-        <p>초대 코드로 그룹을 만들고 친구들과 일정을 공유하세요. 공지된 일정을 한 번에 내 리스트로!</p>
+        <p>초대 코드로 그룹을 만들고 일정을 공유하세요. 그룹 채팅·공지·독촉 알림으로 함께 챙겨요.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">☁️</div>
-        <h3>실시간 클라우드 동기화</h3>
-        <p>어느 기기에서 접속해도 데이터가 자동으로 동기화돼요. 변경하면 2초 후 자동으로 백업.</p>
+        <h3>충돌 없는 동기화</h3>
+        <p>여러 기기에서 접속해도 자동으로 동기화돼요. 동시에 수정해도 일정이 사라지지 않게 안전하게 병합해요.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">📅</div>
@@ -1130,7 +1130,7 @@
           <button class="faq-q" onclick="toggleFaq(this)">
             <span>무료인가요?</span><span class="faq-icon">+</span>
           </button>
-          <div class="faq-a">완전 무료예요. 광고도 없고, 숨겨진 요금도 없어요. 로그인 없이도 바로 사용할 수 있어요.</div>
+          <div class="faq-a">완전 무료예요. 광고도, 숨은 결제도 없어요. 구글 계정으로 로그인하면 바로 시작할 수 있어요.</div>
         </div>
         <div class="faq-item">
           <button class="faq-q" onclick="toggleFaq(this)">
@@ -1140,9 +1140,9 @@
         </div>
         <div class="faq-item">
           <button class="faq-q" onclick="toggleFaq(this)">
-            <span>로그인 없이도 쓸 수 있나요?</span><span class="faq-icon">+</span>
+            <span>회원가입을 해야 하나요?</span><span class="faq-icon">+</span>
           </button>
-          <div class="faq-a">네! 로그인 없이 바로 사용할 수 있어요. 다만 데이터가 해당 기기에만 저장돼요. Google 로그인을 하면 여러 기기에서 동기화되고, 구글 캘린더 연동도 가능해요.</div>
+          <div class="faq-a">따로 회원가입은 없어요. 구글 계정으로 로그인 한 번이면 끝이에요. 로그인하면 데이터가 클라우드에 안전하게 저장돼서, 폰·태블릿·PC 어디서 접속해도 같은 일정이 그대로 보여요.</div>
         </div>
         <div class="faq-item">
           <button class="faq-q" onclick="toggleFaq(this)">
@@ -1166,13 +1166,19 @@
           <button class="faq-q" onclick="toggleFaq(this)">
             <span>그룹 기능은 어떻게 사용하나요?</span><span class="faq-icon">+</span>
           </button>
-          <div class="faq-a">하단 탭바 👥 버튼 또는 헤더 그룹 버튼을 누르면 진입할 수 있어요. + 버튼으로 새 그룹을 만들거나 초대 코드 6자리로 기존 그룹에 참여할 수 있어요. 공지된 일정은 '+ 내 리스트' 버튼으로 바로 내 할일 목록에 추가할 수 있어요. 그룹장은 ⚙️ 버튼에서 이름 변경, 멤버 권한 관리, 그룹 삭제를 할 수 있어요.</div>
+          <div class="faq-a">하단 탭바 👥 버튼 또는 헤더 그룹 버튼으로 진입할 수 있어요. + 버튼으로 새 그룹을 만들거나 초대 코드 6자리로 기존 그룹에 참여하세요. 공지된 일정은 '+ 내 리스트' 버튼으로 바로 내 할일에 담을 수 있고, 그룹 채팅으로 대화하거나 멤버에게 독촉 알림을 보낼 수도 있어요. 그룹장은 ⚙️ 버튼에서 이름 변경, 멤버 관리, 그룹 삭제를 할 수 있어요.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            <span>내 일정 데이터는 안전한가요?</span><span class="faq-icon">+</span>
+          </button>
+          <div class="faq-a">할일·일정 데이터는 암호화되어 클라우드(Supabase)에 저장돼요. 여러 기기에서 동시에 수정해도 충돌 없이 자동으로 병합돼서 일정이 사라지지 않아요. 혹시 문제가 생기면 앱 상단의 ❗ 버튼으로 이 기기에 저장된 백업으로 복구할 수도 있어요.</div>
         </div>
         <div class="faq-item">
           <button class="faq-q" onclick="toggleFaq(this)">
             <span>업데이트는 어떻게 하나요?</span><span class="faq-icon">+</span>
           </button>
-          <div class="faq-a">오일추는 웹 기반이라 별도로 업데이트할 필요가 없어요. 앱을 열 때마다 항상 최신 버전이 자동으로 적용돼요.</div>
+          <div class="faq-a">오일추는 웹 기반이라 따로 업데이트할 필요가 없어요. 앱을 열 때마다 항상 최신 버전이 자동으로 적용돼요.</div>
         </div>
       </div>
 

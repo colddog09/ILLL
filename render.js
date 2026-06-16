@@ -162,10 +162,13 @@ function returnSchedItemToPool(key, itemId, taskId, text) {
 const POOL_THRESHOLD = 5;
 let poolExpanded = false;
 
+// 정렬 설정 (localStorage에 영구 저장)
+let _poolSort = localStorage.getItem('o1chu_pool_sort') || 'added'; // 'added' | 'alpha'
+
 function renderPool() {
   poolEl.innerHTML = '';
 
-  const tasks = (state.pool || []).filter(t => !t.fromGcal && t.text && t.text !== 'undefined');
+  let tasks = (state.pool || []).filter(t => !t.fromGcal && t.text && t.text !== 'undefined');
 
   if (tasks.length === 0) {
     poolExpanded = false;
@@ -173,11 +176,38 @@ function renderPool() {
     return;
   }
 
+  if (_poolSort === 'alpha') {
+    tasks = [...tasks].sort((a, b) => a.text.localeCompare(b.text, 'ko'));
+  }
+
   const showAll     = poolExpanded || tasks.length <= POOL_THRESHOLD;
   const visible     = showAll ? tasks : tasks.slice(0, POOL_THRESHOLD);
   const hiddenCount = tasks.length - POOL_THRESHOLD;
 
   const fragment = document.createDocumentFragment();
+
+  // 풀 헤더: "할일 N개" + 정렬 토글 (풀 맨 위 전체 너비)
+  const sortRow = document.createElement('div');
+  sortRow.className = 'pool-sort-row';
+
+  const countLabel = document.createElement('span');
+  countLabel.className = 'pool-sort-count';
+  countLabel.textContent = `할일 ${tasks.length}개`;
+
+  const sortBtn = document.createElement('button');
+  sortBtn.className = 'pool-sort-btn';
+  sortBtn.innerHTML = (_poolSort === 'alpha' ? 'ㄱㄴㄷ순' : '추가순') + ' <span class="pool-sort-ico">⇅</span>';
+  sortBtn.title = '정렬 방식 변경';
+  sortBtn.addEventListener('click', () => {
+    _poolSort = _poolSort === 'added' ? 'alpha' : 'added';
+    localStorage.setItem('o1chu_pool_sort', _poolSort);
+    renderPool();
+  });
+
+  sortRow.appendChild(countLabel);
+  sortRow.appendChild(sortBtn);
+  fragment.appendChild(sortRow);
+
   visible.forEach(task => fragment.appendChild(createPoolCard(task)));
 
   if (!showAll && hiddenCount > 0) {
