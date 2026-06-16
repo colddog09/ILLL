@@ -437,7 +437,13 @@ infoHistoryBtn?.addEventListener('click', () => {
     if (current === 0) setTimeout(startTyping, 400);
   }
 
-  function openDemo()  { demoModal.hidden = false; current = -1; goTo(0); }
+  function openDemo()  {
+    demoModal.hidden = false;
+    // 재열기 시 이전 활성 슬라이드가 남아 겹치는 것 방지 — 전체 초기화
+    slides.forEach(s => s.classList.remove('active', 'exit-left'));
+    current = -1;
+    goTo(0);
+  }
   function closeDemo() { demoModal.hidden = true; stopTyping(); }
 
   demoBtn.addEventListener('click', openDemo);
