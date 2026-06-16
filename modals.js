@@ -145,6 +145,13 @@ const infoHistoryBtn = document.getElementById('infoHistoryBtn');
 
 bindModal(infoBtn, infoModal, infoCloseBtn, () => { renderDeadlineList(); renderInfoLinks(); });
 
+// 사용법 가이드 모달 (설정 → 사용법 가이드 열기)
+bindModal(
+  document.getElementById('openHelpBtn'),
+  document.getElementById('helpModal'),
+  document.getElementById('helpCloseBtn')
+);
+
 // ──────────────────────────────────────────────
 // 수행평가 오버레이
 // ──────────────────────────────────────────────

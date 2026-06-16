@@ -23,7 +23,7 @@
   <link rel="apple-touch-icon" href="/image/apple-touch-icon.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/image/apple-touch-icon.png">
   <meta name="theme-color" content="#6c63ff">
-  <link rel="stylesheet" href="style.css?v=68" />
+  <link rel="stylesheet" href="style.css?v=73" />
 </head>
 <body>
 
@@ -280,6 +280,13 @@
           </div>
         </section>
 
+        <section class="settings-card">
+          <div class="settings-card__eyebrow">도움말</div>
+          <h3 class="settings-card__title">사용법 가이드</h3>
+          <p class="settings-card__desc">모든 기능의 자세한 사용법을 확인하세요.</p>
+          <button id="openHelpBtn" class="auth-btn settings-save-btn" style="margin-top:10px;">📖 사용법 가이드 열기</button>
+        </section>
+
         <div class="settings-logout-row">
           <button id="logoutBtn" class="settings-logout-btn" aria-label="로그아웃">로그아웃</button>
         </div>
@@ -344,30 +351,132 @@
         <button id="helpCloseBtn" class="modal-close">&times;</button>
       </div>
       <div class="modal-body help-content">
-        <section>
-          <h3>✏️ 할일 추가</h3>
-          <p>상단 입력창에 입력 후 <b>엔터</b>. <b>기한</b> 버튼으로 마감일 설정 가능.</p>
-        </section>
-        <section>
-          <h3>📅 날짜에 배치</h3>
-          <p>할일을 날짜 칸으로 <b>드래그</b>하거나 <b>더블탭</b>하면 오늘에 바로 추가돼요.</p>
-        </section>
-        <section>
-          <h3>✅ 완료 / 삭제</h3>
-          <p><b>O</b> 버튼으로 완료 체크. 배치된 일정을 <b>더블탭</b>하면 목록으로 복귀, <b>세 번 탭</b>하면 삭제.</p>
-        </section>
-        <section>
-          <h3>⏳ 미루기</h3>
-          <p>날짜 칸의 <b>미루기</b> 버튼으로 미완료 일정을 내일로 넘겨요. 매일 새벽 5시에 전날 미완료 일정은 자동으로 목록에 돌아와요.</p>
-        </section>
-        <section>
-          <h3>📋 수행평가</h3>
-          <p>상단 <b>📋</b> 버튼으로 수행평가 일정 확인. 구글 캘린더 "일정" 캘린더와 연동돼요.</p>
-        </section>
-        <section>
-          <h3>📌 빠른 링크</h3>
-          <p>상단 <b>📌</b> 버튼에서 자주 쓰는 링크를 추가하고 바로 열 수 있어요.</p>
-        </section>
+        <p class="help-intro">오일추의 모든 기능을 한눈에! 궁금한 항목을 펼쳐서 확인하세요.</p>
+
+        <p class="help-cat">📝 기본 — 할일 관리</p>
+        <details class="help-acc" open>
+          <summary>할일 추가하기</summary>
+          <div class="help-acc__body">
+            <p>상단 입력창에 할일을 적고 <b>엔터</b> 또는 <b>+</b> 버튼을 누르면 목록(할일 풀)에 추가돼요.</p>
+            <p>입력창 옆 <b>기한</b> 버튼으로 마감일·시간을 지정하면 일정에 ⏰ 배지가 붙어요.</p>
+          </div>
+        </details>
+        <details class="help-acc">
+          <summary>날짜에 배치하기</summary>
+          <div class="help-acc__body">
+            <p>할일을 원하는 <b>날짜 칸으로 드래그</b>하면 그 날짜에 배치돼요.</p>
+            <p>모바일에서는 할일을 <b>두 번 탭</b>하면 오늘 날짜에 바로 들어가요.</p>
+            <p>같은 날 안에서 일정 왼쪽의 <b>⠿ 손잡이</b>를 잡고 드래그하면 순서를 바꿀 수 있어요.</p>
+          </div>
+        </details>
+        <details class="help-acc">
+          <summary>완료 · 복귀 · 삭제</summary>
+          <div class="help-acc__body">
+            <p><b>O 버튼</b>을 누르면 완료 체크가 돼요.</p>
+            <p>배치된 일정을 <b>두 번 탭</b>하면 다시 할일 목록으로 돌아가고, <b>세 번 탭</b>하면 삭제돼요.</p>
+            <p>할일을 휴지통(🗑️) 영역으로 드래그해도 삭제돼요.</p>
+          </div>
+        </details>
+        <details class="help-acc">
+          <summary>미루기 · 자동 복귀</summary>
+          <div class="help-acc__body">
+            <p>날짜 칸의 <b>미루기</b> 버튼으로 그날 미완료 일정을 다음 날로 넘길 수 있어요.</p>
+            <p>매일 새벽 5시에 <b>지난 날의 미완료 일정</b>은 자동으로 할일 목록으로 돌아와요. (완료한 일정은 그대로 기록에 남아요.)</p>
+          </div>
+        </details>
+
+        <p class="help-cat">⏰ 기한 · 빠른 링크</p>
+        <details class="help-acc">
+          <summary>마감 임박 알림</summary>
+          <div class="help-acc__body">
+            <p>기한이 설정된 일정은 마감이 가까워지면 ⏰ 배지가 <b>주황색→빨간색</b>으로 바뀌어요.</p>
+            <p>상단 <b>📌</b> 버튼을 누르면 마감 임박 일정만 모아볼 수 있어요.</p>
+            <p>알림을 켜두면 기한 임박 시 <b>푸시 알림</b>도 받아요. (아래 '푸시 알림' 참고)</p>
+          </div>
+        </details>
+        <details class="help-acc">
+          <summary>빠른 링크</summary>
+          <div class="help-acc__body">
+            <p>상단 <b>📌</b> 버튼에서 자주 쓰는 사이트(클래스룸, 학교 홈페이지 등)를 등록해 바로 열 수 있어요.</p>
+          </div>
+        </details>
+
+        <p class="help-cat">📅 구글 캘린더</p>
+        <details class="help-acc">
+          <summary>캘린더 연동하기</summary>
+          <div class="help-acc__body">
+            <p><b>⚙️ 설정 → 캘린더 연동</b> 버튼으로 구글 계정을 연결하면, 구글 캘린더 일정이 앱에 함께 표시돼요.</p>
+            <p>설정에서 <b>표시할 캘린더</b>를 선택할 수 있고, 완료 체크는 앱과 캘린더가 동기화돼요.</p>
+          </div>
+        </details>
+
+        <p class="help-cat">👥 그룹 (반·모임)</p>
+        <details class="help-acc">
+          <summary>그룹 만들기 · 참여하기</summary>
+          <div class="help-acc__body">
+            <p>하단 <b>모임</b> 탭 → <b>+</b> 버튼으로 새 그룹을 만들거나 초대 코드로 참여해요.</p>
+            <p>그룹 화면의 <b>링크 복사</b>로 친구를 초대할 수 있어요. (링크를 누르면 자동 참여)</p>
+            <p>비공개 그룹은 그룹장이 <b>가입을 승인</b>해야 들어갈 수 있어요.</p>
+          </div>
+        </details>
+        <details class="help-acc">
+          <summary>일정 공지 · 내 리스트에 담기</summary>
+          <div class="help-acc__body">
+            <p>공지 권한이 있으면 <b>일정 공지하기</b>로 시험·수행평가·행사를 올릴 수 있어요. (🔴시험 🟡과제 🟢행사 분류, 기간 설정 가능)</p>
+            <p>공지된 일정의 <b>+ 내 리스트</b> 버튼을 누르면 내 할일/캘린더에 바로 담겨요.</p>
+            <p>그룹장은 공지를 <b>📌 상단 고정</b>하거나 ✏️ 수정할 수 있어요.</p>
+          </div>
+        </details>
+        <details class="help-acc">
+          <summary>그룹 채팅</summary>
+          <div class="help-acc__body">
+            <p>그룹 화면 오른쪽 위 <b>💬</b> 버튼으로 그룹 전체 채팅방에 들어가요.</p>
+            <p>시험·과제에 대해 자유롭게 이야기하고, 내 메시지는 길게(마우스 올려) 삭제할 수 있어요.</p>
+          </div>
+        </details>
+        <details class="help-acc">
+          <summary>독촉 보내기 👉</summary>
+          <div class="help-acc__body">
+            <p>공지 옆 <b>👉</b> 버튼으로 멤버에게 "이 일정 챙겨!" 푸시 알림을 보낼 수 있어요.</p>
+            <p>보낼 멤버를 골라서(전체 또는 일부) 한 번에 보내요.</p>
+          </div>
+        </details>
+        <details class="help-acc">
+          <summary>그룹장 기능 (권한 · 관리)</summary>
+          <div class="help-acc__body">
+            <p>⚙️ 그룹 설정에서 멤버에게 <b>공동그룹장 / 공지 권한</b>을 줄 수 있어요.</p>
+            <p>가입 승인·거절, 멤버 <b>강퇴</b>, 그룹 <b>비공개</b> 전환도 여기서 해요.</p>
+            <p>🔗 버튼으로 그룹 공용 링크(자료 모음)를 관리할 수 있어요.</p>
+          </div>
+        </details>
+
+        <p class="help-cat">🔔 알림 · 꾸미기</p>
+        <details class="help-acc">
+          <summary>푸시 알림 켜기</summary>
+          <div class="help-acc__body">
+            <p><b>⚙️ 설정 → 푸시 알림 → 🔔 알림 허용</b>을 누르면 기한 임박·그룹 공지·독촉 알림을 받아요.</p>
+            <p>'테스트 전송'으로 알림이 잘 오는지 확인할 수 있어요. (아이폰은 홈 화면에 앱을 추가해야 알림이 와요.)</p>
+          </div>
+        </details>
+        <details class="help-acc">
+          <summary>테마 · D-Day</summary>
+          <div class="help-acc__body">
+            <p>설정에서 <b>앱 테마</b>를 바꾸고, 🛍️ 테마샵에서 더 많은 테마를 받을 수 있어요.</p>
+            <p><b>D-Day 설정</b>으로 시험·수능까지 남은 날짜를 상단에 표시해요.</p>
+          </div>
+        </details>
+
+        <p class="help-cat">☁️ 저장 · 동기화</p>
+        <details class="help-acc">
+          <summary>자동 저장과 기기 연동</summary>
+          <div class="help-acc__body">
+            <p>모든 변경은 <b>자동으로 클라우드에 저장</b>돼요. 상단의 "☁️ 저장됨" 표시로 확인할 수 있어요.</p>
+            <p>같은 계정으로 로그인하면 <b>휴대폰·태블릿·PC</b> 어디서나 같은 일정이 보이고, 여러 기기에서 바꿔도 자동으로 합쳐져요.</p>
+            <p>인터넷이 끊기면 "오프라인" 표시가 뜨고, <b>연결되면 자동으로 다시 저장</b>돼요.</p>
+          </div>
+        </details>
+
+        <p class="help-tip">💡 더 보고 싶으면 상단 <b>🔍</b> 버튼에서 움직이는 사용법 데모도 볼 수 있어요!</p>
       </div>
     </div>
   </div>
@@ -589,15 +698,15 @@
   <script src="supabase.js?v=1"></script>
 
   <script src="utils.js?v=3"></script>
-  <script src="state.js?v=12"></script>
-  <script src="auth.js?v=7"></script>
+  <script src="state.js?v=17"></script>
+  <script src="auth.js?v=10"></script>
   <script src="render.js?v=20"></script>
   <script src="drag.js?v=8"></script>
   <script src="deadline.js?v=2"></script>
   <script src="gcal/gcal.js?v=14"></script>
-  <script src="groups.js?v=13"></script>
+  <script src="groups.js?v=20"></script>
   <script src="push.js?v=3"></script>
-  <script src="modals.js?v=16"></script>
+  <script src="modals.js?v=17"></script>
   <script src="events.js?v=19"></script>
   <script>
     if ('serviceWorker' in navigator) {

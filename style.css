@@ -2816,6 +2816,41 @@ body {
   line-height: 1.5;
   color: var(--text-sub);
 }
+.help-intro {
+  font-size: 0.9rem; color: var(--text-sub); margin-bottom: 16px; line-height: 1.5;
+}
+.help-cat {
+  font-size: 0.78rem; font-weight: 800; letter-spacing: 0.03em;
+  color: var(--text); opacity: 0.55; text-transform: none;
+  margin: 22px 0 8px; padding-bottom: 6px; border-bottom: 1.5px solid var(--border);
+}
+.help-cat:first-of-type { margin-top: 6px; }
+.help-acc {
+  border: 1.5px solid var(--border); border-radius: 12px;
+  margin-bottom: 8px; overflow: hidden; background: var(--surface);
+}
+.help-acc summary {
+  list-style: none; cursor: pointer; padding: 12px 14px;
+  font-size: 0.9rem; font-weight: 700; color: var(--text);
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  user-select: none;
+}
+.help-acc summary::-webkit-details-marker { display: none; }
+.help-acc summary::after {
+  content: '▾'; color: var(--text-sub); font-size: 0.85rem;
+  transition: transform 0.2s ease; flex-shrink: 0;
+}
+.help-acc[open] summary { color: var(--accent); }
+.help-acc[open] summary::after { transform: rotate(180deg); }
+.help-acc__body { padding: 0 14px 12px; }
+.help-acc__body p { margin: 6px 0 0; }
+.help-acc__body p:first-child { margin-top: 0; }
+.help-acc__body b { color: var(--text); font-weight: 700; }
+.help-tip {
+  margin-top: 18px; padding: 12px 14px; border-radius: 12px;
+  background: rgba(108,99,255,0.08); color: var(--text-sub);
+  font-size: 0.85rem; line-height: 1.5;
+}
 
 /* ============================
    HISTORY LIST
