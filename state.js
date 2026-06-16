@@ -21,7 +21,7 @@
       'box-shadow:0 2px 12px rgba(0,0,0,0.3)',
       'animation:offlineSlideIn 0.25s ease'
     ].join(';');
-    el.innerHTML = '📶 인터넷 연결이 없어요. Wi-Fi나 데이터를 연결해 주세요.';
+    el.innerHTML = '📶 오프라인 모드 — 저장된 일정은 계속 쓸 수 있고, 변경사항은 연결되면 자동 저장돼요.';
 
     // 슬라이드인 키프레임 주입 (1회)
     if (!document.getElementById('offlineStyle')) {
@@ -426,6 +426,7 @@ function _applyRemote(remote, remoteTsMs) {
   autoReturnExpiredTasks();
   lastSavedSnapshot = baseline;
   renderApp();
+  _writeLocalBackup();      // 오프라인 대비 로컬 백업 갱신
   if (stateSnapshot() !== baseline) {
     _pendingSave = true;
     _uploadNow();           // 만료 복귀 변경을 즉시 저장
@@ -448,7 +449,11 @@ async function _pullRemote(showToast = false) {
     _pulling = false;
     if (!res.ok) return;
     const remote = await res.json();
-    if (!_remoteHasData(remote)) return;
+    if (!_remoteHasData(remote)) {
+      // 서버 비어있는데 로컬에 데이터 → 오프라인 최초 생성분 업로드(유실 방지)
+      if (hasAnyTaskData()) { _pendingSave = true; _uploadNow(); }
+      return;
+    }
     // 내용이 같으면 무시 (내 저장 에코 등)
     if (_remoteSnapshot(remote) === prunedSnapshot()) return;
 
@@ -628,6 +633,37 @@ function _setLoadingOverlay(on) {
   }
 }
 
+// 오프라인/서버 불통 시 로컬 백업으로 부팅 (편집 가능, 재연결 시 동기화)
+//   reason: 'offline' | 'error'
+function _bootFromLocalBackup(reason) {
+  if (dataLoaded) return false; // 이미 로드됨 → 백업으로 덮어쓰지 않음
+  const b = readLocalBackup();
+  const hasBackup = b && ((b.pool?.length || 0) > 0 ||
+    Object.values(b.schedule || {}).some(a => Array.isArray(a) && a.length));
+  _setLoadingOverlay(false);
+  if (hasBackup) {
+    applyPersistedState({ pool: b.pool, schedule: b.schedule, links: b.links });
+    const baseline = stateSnapshot();
+    autoReturnExpiredTasks();
+    lastSavedSnapshot = baseline;
+    _lastRemoteTs = 0;     // 서버 최신 시각 모름 → 재연결 시 비교/동기화
+    // 만료 복귀로 바뀌었으면 재연결 시 업로드되도록 pending 표시
+    _pendingSave  = stateSnapshot() !== baseline;
+    dataLoaded    = true;
+    renderApp();
+    showLastSavedTime();
+    setSyncStatus(reason === 'offline'
+      ? '📶 오프라인 — 저장된 일정 표시 중'
+      : '⚠️ 오프라인 데이터 표시 — 연결 후 동기화');
+  } else {
+    applyPersistedState({});
+    dataLoaded = true;
+    renderApp();
+    setSyncStatus('📶 오프라인 — 연결되면 일정을 불러와요');
+  }
+  return true;
+}
+
 function loadState() {
   if (!currentUser || !supabaseClient) {
     _teardownSync();
@@ -641,7 +677,9 @@ function loadState() {
   }
   if (loadInProgress) return;
   if (!navigator.onLine) {
-    setSyncStatus('📶 오프라인 — 연결 후 자동 로드');
+    // 오프라인: 로컬 백업으로 부팅해 계속 사용 가능하게
+    if (!dataLoaded) _bootFromLocalBackup('offline');
+    else setSyncStatus('📶 오프라인 — 연결 후 자동 동기화');
     return;
   }
   loadInProgress = true;
@@ -704,6 +742,7 @@ function loadState() {
     renderApp();
     showLastSavedTime();
     checkFirstVisit();
+    _writeLocalBackup();      // 오프라인 대비 로컬 백업 갱신
 
     if (stateSnapshot() !== baseline || (!_remoteHasData(remote) && hasAnyTaskData())) {
       _pendingSave = true;
@@ -721,6 +760,11 @@ function loadState() {
     clearTimeout(_loadGuard);
     _setLoadingOverlay(false);
     console.error('state 로드 실패:', err.message);
+    // 서버 불통(네트워크/타임아웃) → 로컬 백업으로 부팅해 계속 사용 가능하게
+    if (!dataLoaded && _bootFromLocalBackup('error')) {
+      _showRetryButton();
+      return;
+    }
     dataLoaded = true;
     renderApp();
     _showRetryButton();
