@@ -5170,3 +5170,79 @@ a.settings-tab {
   color: rgba(255,255,255,0.45);
 }
 
+
+/* ── 독촉 보내기 모달 ── */
+.gm-nudge-overlay {
+  position: fixed; inset: 0; z-index: 10001;
+  display: flex; align-items: flex-end; justify-content: center;
+  background: rgba(0,0,0,0.45); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+  opacity: 0; transition: opacity 0.2s ease;
+}
+.gm-nudge-overlay.is-open { opacity: 1; }
+.gm-nudge-sheet {
+  width: 100%; max-width: 460px;
+  background: var(--surface, #fff); color: var(--text);
+  border-radius: 22px 22px 0 0;
+  padding: 20px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -8px 40px rgba(0,0,0,0.3);
+  transform: translateY(100%); transition: transform 0.25s cubic-bezier(0.34,1.3,0.64,1);
+  max-height: 80vh; display: flex; flex-direction: column;
+}
+.gm-nudge-overlay.is-open .gm-nudge-sheet { transform: translateY(0); }
+@media (min-width: 540px) {
+  .gm-nudge-overlay { align-items: center; }
+  .gm-nudge-sheet { border-radius: 22px; }
+}
+.gm-nudge-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.gm-nudge-emoji {
+  font-size: 1.4rem; width: 44px; height: 44px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(108,99,255,0.12); border-radius: 14px;
+}
+.gm-nudge-titles { min-width: 0; }
+.gm-nudge-title { font-size: 1.05rem; font-weight: 800; margin: 0; }
+.gm-nudge-sub {
+  font-size: 0.82rem; color: var(--text-sub); margin: 2px 0 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.gm-nudge-all {
+  align-self: flex-end; background: none; border: none; cursor: pointer;
+  color: var(--accent); font-size: 0.82rem; font-weight: 700;
+  padding: 4px 6px; margin-bottom: 6px; font-family: inherit;
+}
+.gm-nudge-list {
+  display: flex; flex-direction: column; gap: 6px;
+  overflow-y: auto; margin: 0 -4px; padding: 2px 4px;
+}
+.gm-nudge-item {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 10px 12px; border-radius: 14px; cursor: pointer;
+  background: var(--surface-hover, #f3f3f7);
+  border: 1.5px solid transparent; transition: all 0.15s ease;
+  font-family: inherit; text-align: left;
+}
+.gm-nudge-item.is-on { border-color: var(--accent); background: rgba(108,99,255,0.08); }
+.gm-nudge-avatar {
+  width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--accent); color: #fff; font-weight: 700; font-size: 0.9rem;
+}
+.gm-nudge-name { flex: 1; font-size: 0.92rem; font-weight: 600; color: var(--text); min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gm-nudge-check {
+  width: 22px; height: 22px; flex-shrink: 0; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 800; color: #fff;
+  background: var(--accent); opacity: 0; transform: scale(0.6); transition: all 0.15s ease;
+}
+.gm-nudge-item.is-on .gm-nudge-check { opacity: 1; transform: scale(1); }
+.gm-nudge-actions { display: flex; gap: 10px; margin-top: 16px; }
+.gm-nudge-cancel {
+  flex: 0 0 auto; padding: 12px 20px; border-radius: 14px;
+  background: var(--surface-hover, #eee); color: var(--text-sub); border: none;
+  font-weight: 700; cursor: pointer; font-family: inherit;
+}
+.gm-nudge-send { flex: 1; padding: 12px; border-radius: 14px; font-weight: 800; }
+.gm-nudge-send:disabled { opacity: 0.5; cursor: default; }
+[data-theme="dark"] .gm-nudge-sheet,
+[data-theme="starrail"] .gm-nudge-sheet { background: #1c1a2e; }

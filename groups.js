@@ -796,27 +796,94 @@ async function gmDeleteComment(groupId, commentId, annId) {
 }
 
 // ── 일정 독촉 (즉시 푸시) ─────────────────────────────────────
-async function gmNudge(groupId, ann, members) {
-  if (!ann) return;
-  const others = (members || []).filter(m => m.user_id !== currentUser.id);
-  if (!others.length) { alert('독촉할 다른 멤버가 없어요.'); return; }
-  const listStr = others.map((m, i) => `${i + 1}. ${m.display_name || '멤버'}`).join('\n');
-  const pick = prompt(`'${ann.text}' 독촉을 누구에게 보낼까요?\n번호 입력 (0 = 전체)\n\n0. 전체\n${listStr}`, '0');
-  if (pick === null) return;
-  const n = parseInt(pick.trim(), 10);
-  let targets;
-  if (n === 0) targets = others;
-  else if (n >= 1 && n <= others.length) targets = [others[n - 1]];
-  else { alert('올바른 번호를 입력하세요.'); return; }
-
+async function _gmSendNudge(groupId, ann, targets) {
   const { data: { session } } = await supabaseClient.auth.getSession();
-  if (!session?.access_token) return;
+  if (!session?.access_token) return false;
   const res = await fetch('/api/group-nudge', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
     body: JSON.stringify({ group_id: groupId, target_ids: targets.map(t => t.user_id), text: ann.text }),
   }).catch(() => null);
-  _gmToast(res && res.ok ? `👉 ${targets.length}명에게 독촉을 보냈어요!` : '독촉 전송에 실패했어요.');
+  return !!(res && res.ok);
+}
+
+function gmNudge(groupId, ann, members) {
+  if (!ann) return;
+  const others = (members || []).filter(m => m.user_id !== currentUser.id);
+  if (!others.length) { _gmToast('독촉할 다른 멤버가 없어요.'); return; }
+
+  const selected = new Set(others.map(m => m.user_id)); // 기본 전체 선택
+
+  const overlay = document.createElement('div');
+  overlay.className = 'gm-nudge-overlay';
+  overlay.innerHTML = `
+    <div class="gm-nudge-sheet" role="dialog" aria-modal="true">
+      <div class="gm-nudge-head">
+        <span class="gm-nudge-emoji">👉</span>
+        <div class="gm-nudge-titles">
+          <p class="gm-nudge-title">독촉 보내기</p>
+          <p class="gm-nudge-sub">${escHtml(ann.text)}</p>
+        </div>
+      </div>
+      <button class="gm-nudge-all" id="gmNudgeAll">전체 선택 해제</button>
+      <div class="gm-nudge-list">
+        ${others.map(m => `
+          <button class="gm-nudge-item is-on" data-uid="${m.user_id}">
+            <span class="gm-nudge-avatar">${escHtml((m.display_name || '멤').slice(0,1))}</span>
+            <span class="gm-nudge-name">${escHtml(m.display_name || '멤버')}</span>
+            <span class="gm-nudge-check">✓</span>
+          </button>`).join('')}
+      </div>
+      <div class="gm-nudge-actions">
+        <button class="gm-btn gm-nudge-cancel" id="gmNudgeCancel">취소</button>
+        <button class="gm-btn gm-btn--primary gm-nudge-send" id="gmNudgeSend">👉 보내기 (${selected.size})</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => overlay.classList.add('is-open'));
+
+  const sendBtn = overlay.querySelector('#gmNudgeSend');
+  const allBtn  = overlay.querySelector('#gmNudgeAll');
+  const close = () => {
+    overlay.classList.remove('is-open');
+    setTimeout(() => overlay.remove(), 200);
+  };
+  const refresh = () => {
+    sendBtn.textContent = `👉 보내기 (${selected.size})`;
+    sendBtn.disabled = selected.size === 0;
+    const allOn = selected.size === others.length;
+    allBtn.textContent = allOn ? '전체 선택 해제' : '전체 선택';
+  };
+
+  overlay.querySelectorAll('.gm-nudge-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const uid = btn.dataset.uid;
+      if (selected.has(uid)) { selected.delete(uid); btn.classList.remove('is-on'); }
+      else { selected.add(uid); btn.classList.add('is-on'); }
+      refresh();
+    });
+  });
+  allBtn.addEventListener('click', () => {
+    const allOn = selected.size === others.length;
+    selected.clear();
+    overlay.querySelectorAll('.gm-nudge-item').forEach(btn => {
+      if (!allOn) { selected.add(btn.dataset.uid); btn.classList.add('is-on'); }
+      else btn.classList.remove('is-on');
+    });
+    refresh();
+  });
+  overlay.querySelector('#gmNudgeCancel').addEventListener('click', close);
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+
+  sendBtn.addEventListener('click', async () => {
+    if (!selected.size) return;
+    const targets = others.filter(m => selected.has(m.user_id));
+    sendBtn.disabled = true;
+    sendBtn.textContent = '보내는 중…';
+    const ok = await _gmSendNudge(groupId, ann, targets);
+    close();
+    _gmToast(ok ? `👉 ${targets.length}명에게 독촉을 보냈어요!` : '독촉 전송에 실패했어요.');
+  });
 }
 
 // ── 가입 승인 / 거절 / 강퇴 / 비공개 ──────────────────────────
