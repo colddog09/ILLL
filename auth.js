@@ -279,6 +279,8 @@ function checkFirstVisit() {
   }
 }
 
+let _authedUserId = null; // 마지막으로 loadState한 사용자 id (중복 재로드 방지)
+
 function updateAuthUi(user) {
   currentUser = user || null;
 
@@ -310,7 +312,17 @@ function updateAuthUi(user) {
       setTimeout(gmAutoJoinFromUrl, 500); // 그룹 모듈 초기화 대기
     }
   }
-  loadState();
+
+  // 같은 사용자에 대한 중복 인증 이벤트(포커스 등)로 매번 재로드하지 않음
+  //  - 사용자 변경(로그인/로그아웃/계정 전환) 시에만 전체 로드
+  //  - 동일 사용자 재이벤트는 가벼운 최신 확인(pull)만 — 롤백 방지
+  const _uid = user?.id || null;
+  if (_uid !== _authedUserId) {
+    _authedUserId = _uid;
+    loadState();
+  } else if (_uid && typeof _pullRemote === 'function') {
+    _pullRemote();
+  }
 
   // 캘린더 토큰 복원
   if (user && typeof gcalLoadStoredToken === 'function') {

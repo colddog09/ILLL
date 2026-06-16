@@ -420,19 +420,26 @@ function flushToSupabase() {
 // ──────────────────────────────────────────────
 function _applyRemote(remote, remoteTsMs) {
   applyPersistedState(remote);
-  lastSavedSnapshot = stateSnapshot();
   _lastRemoteTs = remoteTsMs;
-  _pendingSave = false;
+  // 원격 기준 스냅샷 확보 후 만료 작업 적용 → 변경되면 재업로드로 보존
+  const baseline = stateSnapshot();
   autoReturnExpiredTasks();
+  lastSavedSnapshot = baseline;
   renderApp();
-  setSyncSaved();
+  if (stateSnapshot() !== baseline) {
+    _pendingSave = true;
+    _uploadNow();           // 만료 복귀 변경을 즉시 저장
+  } else {
+    _pendingSave = false;
+    setSyncSaved();
+  }
 }
 
 // 클라우드에서 최신 데이터 가져오기 (타임스탬프 비교 후 더 최신일 때만 반영)
 async function _pullRemote(showToast = false) {
   if (!currentUser || !supabaseClient || !dataLoaded) return;
   if (!navigator.onLine || _pulling) return;
-  if (_pendingSave) { flushToSupabase(); return; }
+  if (_pendingSave || _uploading) { flushToSupabase(); return; }
   _pulling = true;
   try {
     const token = await _getToken();
@@ -442,14 +449,23 @@ async function _pullRemote(showToast = false) {
     if (!res.ok) return;
     const remote = await res.json();
     if (!_remoteHasData(remote)) return;
-    // 실제 내용이 다를 때만 적용 + 알림 (내 저장은 로컬=원격이라 동일 → 무시)
-    if (_remoteSnapshot(remote) !== prunedSnapshot()) {
-      console.log('[sync] 다른 기기 변경 감지 → 적용');
-      _applyRemote(remote, Date.parse(remote.updated_at) || Date.now());
+    // 내용이 같으면 무시 (내 저장 에코 등)
+    if (_remoteSnapshot(remote) === prunedSnapshot()) return;
+
+    const remoteTs = remote?.updated_at ? Date.parse(remote.updated_at) : 0;
+    // 내용이 다름 → 타임스탬프로 방향 결정 (오래된 원격이 로컬을 덮어쓰는 롤백 방지)
+    if (remoteTs > _lastRemoteTs) {
+      console.log('[sync] 더 최신 원격 감지 → 적용');
+      _applyRemote(remote, remoteTs);
       if (showToast) {
         setSyncStatus('🔄 다른 기기에서 업데이트됨');
         _showRemoteUpdateToast();
       }
+    } else if (hasAnyTaskData()) {
+      // 로컬이 더 최신(또는 동일 시각인데 내용 다름) → 원격 덮어쓰기 방지 + 로컬 재업로드로 자가 치유
+      console.warn('[sync] 로컬이 더 최신 → 롤백 방지, 로컬 재업로드');
+      _pendingSave = true;
+      _uploadNow();
     }
   } catch { _pulling = false; }
 }
@@ -648,32 +664,54 @@ function loadState() {
 
     const remoteTs = remote?.updated_at ? Date.parse(remote.updated_at) : 0;
 
-    if (dataLoaded && _pendingSave) {
-      console.warn('[sync] 로드 중 미저장 변경 감지 → 로컬 보호, 업로드');
-      flushToSupabase();
+    // ── 이미 로드된 상태에서의 재호출 (포커스/인증 이벤트 등) — 로컬 보호 ──
+    if (dataLoaded) {
+      if (_pendingSave || _uploading) {
+        console.warn('[sync] 재로드 중 미저장 변경 → 로컬 보호, 업로드');
+        flushToSupabase();
+      } else if (_remoteHasData(remote) && _remoteSnapshot(remote) !== prunedSnapshot()) {
+        if (remoteTs > _lastRemoteTs) {
+          // 원격이 더 최신 → 적용 (만료 보존 포함)
+          console.log('[sync] 재로드: 더 최신 원격 → 적용');
+          _applyRemote(remote, remoteTs);
+        } else if (hasAnyTaskData()) {
+          // 로컬이 더 최신 → 원격 덮어쓰기 방지, 재업로드
+          console.warn('[sync] 재로드: 로컬이 더 최신 → 롤백 방지, 재업로드');
+          _pendingSave = true;
+          _uploadNow();
+        }
+      }
       _subscribeRealtime();
       _startPolling();
       return;
     }
 
+    // ── 최초 로드 ──
     if (_remoteHasData(remote)) {
       applyPersistedState(remote);
       _lastRemoteTs = remoteTs;
     } else if (hasAnyTaskData()) {
-      _pendingSave = true;
-      _uploadNow();
+      // 원격 비어있고 로컬에 데이터 → 업로드 (아래에서 처리)
     } else {
       applyPersistedState({});
     }
 
-    lastSavedSnapshot = stateSnapshot();
-    _pendingSave = false;
-    dataLoaded = true;
+    // 만료 복귀를 스냅샷 이전에 적용 → 변경분이 저장되도록 보장
+    const baseline = stateSnapshot();
     autoReturnExpiredTasks();
+    lastSavedSnapshot = baseline;
+    dataLoaded = true;
     renderApp();
     showLastSavedTime();
     checkFirstVisit();
-    setSyncSaved();
+
+    if (stateSnapshot() !== baseline || (!_remoteHasData(remote) && hasAnyTaskData())) {
+      _pendingSave = true;
+      _uploadNow();
+    } else {
+      _pendingSave = false;
+      setSyncSaved();
+    }
 
     _subscribeRealtime();
     _startPolling();
