@@ -165,6 +165,28 @@ let poolExpanded = false;
 // 정렬 설정 (localStorage에 영구 저장)
 let _poolSort = localStorage.getItem('o1chu_pool_sort') || 'added'; // 'added' | 'alpha'
 
+// 풀 헤더(개수 + 정렬 버튼) 갱신 — #taskPool 밖의 별도 줄이라 카드 줄바꿈에 영향 없음
+function _renderPoolHeader(count) {
+  const header = document.getElementById('poolHeader');
+  const countEl = document.getElementById('poolCount');
+  const sortBtn = document.getElementById('poolSortBtn');
+  if (!header || !countEl || !sortBtn) return;
+
+  if (!count) { header.hidden = true; return; }
+  header.hidden = false;
+  countEl.textContent = `할일 ${count}개`;
+  sortBtn.innerHTML = (_poolSort === 'alpha' ? 'ㄱㄴㄷ순' : '추가순') + ' <span class="pool-sort-ico">⇅</span>';
+
+  if (!sortBtn.dataset.bound) {
+    sortBtn.dataset.bound = '1';
+    sortBtn.addEventListener('click', () => {
+      _poolSort = _poolSort === 'added' ? 'alpha' : 'added';
+      localStorage.setItem('o1chu_pool_sort', _poolSort);
+      renderPool();
+    });
+  }
+}
+
 function renderPool() {
   poolEl.innerHTML = '';
 
@@ -172,6 +194,7 @@ function renderPool() {
 
   if (tasks.length === 0) {
     poolExpanded = false;
+    _renderPoolHeader(0);
     renderEmptyPool();
     return;
   }
@@ -180,33 +203,13 @@ function renderPool() {
     tasks = [...tasks].sort((a, b) => a.text.localeCompare(b.text, 'ko'));
   }
 
+  _renderPoolHeader(tasks.length);
+
   const showAll     = poolExpanded || tasks.length <= POOL_THRESHOLD;
   const visible     = showAll ? tasks : tasks.slice(0, POOL_THRESHOLD);
   const hiddenCount = tasks.length - POOL_THRESHOLD;
 
   const fragment = document.createDocumentFragment();
-
-  // 풀 헤더: "할일 N개" + 정렬 토글 (풀 맨 위 전체 너비)
-  const sortRow = document.createElement('div');
-  sortRow.className = 'pool-sort-row';
-
-  const countLabel = document.createElement('span');
-  countLabel.className = 'pool-sort-count';
-  countLabel.textContent = `할일 ${tasks.length}개`;
-
-  const sortBtn = document.createElement('button');
-  sortBtn.className = 'pool-sort-btn';
-  sortBtn.innerHTML = (_poolSort === 'alpha' ? 'ㄱㄴㄷ순' : '추가순') + ' <span class="pool-sort-ico">⇅</span>';
-  sortBtn.title = '정렬 방식 변경';
-  sortBtn.addEventListener('click', () => {
-    _poolSort = _poolSort === 'added' ? 'alpha' : 'added';
-    localStorage.setItem('o1chu_pool_sort', _poolSort);
-    renderPool();
-  });
-
-  sortRow.appendChild(countLabel);
-  sortRow.appendChild(sortBtn);
-  fragment.appendChild(sortRow);
 
   visible.forEach(task => fragment.appendChild(createPoolCard(task)));
 

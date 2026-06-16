@@ -1259,15 +1259,16 @@ body {
 /* ============================
    TASK POOL
    ============================ */
-.pool-sort-row {
-  width: 100%;
+.pool-header {
   display: flex;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin-bottom: 6px;
+  margin: 2px 0 6px;
   padding: 0 2px;
 }
+.pool-header[hidden] { display: none; }
 .pool-sort-count {
   font-size: 0.78rem;
   font-weight: 700;
