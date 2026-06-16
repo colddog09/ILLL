@@ -53,9 +53,33 @@ export default async function handler(req, res) {
     });
   }
 
-  // POST — encrypt and save
-  const { pool, schedule, links, updated_at } = req.body || {};
-  const ts       = updated_at || new Date().toISOString();
+  // POST — optimistic concurrency + encrypt and save
+  const { pool, schedule, links, updated_at, base_updated_at } = req.body || {};
+  const ts      = updated_at || new Date().toISOString();
+  const hasBase = Object.prototype.hasOwnProperty.call(req.body || {}, 'base_updated_at');
+
+  // 신버전 클라이언트(base 전송)만 충돌 검사 — 구버전은 기존 동작(마지막 저장 우선) 유지
+  if (hasBase) {
+    const { data: cur, error: curErr } = await admin
+      .from('user_states')
+      .select('data_enc, pool, schedule, links, updated_at')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    if (curErr) return res.status(500).json({ error: curErr.message });
+
+    const storedMs = cur?.updated_at ? Date.parse(cur.updated_at) : 0;
+    const baseMs   = base_updated_at ? Date.parse(base_updated_at) : 0;
+
+    // 서버가 클라이언트 기준(base)보다 더 최신 → 충돌. 현재 서버 상태를 돌려줘 병합 유도
+    if (storedMs > 0 && storedMs > baseMs) {
+      let current = { pool: cur.pool || [], schedule: cur.schedule || {}, links: cur.links || [] };
+      if (cur.data_enc) {
+        try { current = await decryptJson(key, cur.data_enc); } catch {}
+      }
+      return res.status(409).json({ conflict: true, ...current, updated_at: cur.updated_at });
+    }
+  }
+
   const data_enc = await encryptJson(key, {
     pool:     pool     || [],
     schedule: schedule || {},

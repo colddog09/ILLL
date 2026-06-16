@@ -146,14 +146,6 @@ function _loadCachedConfig() {
   } catch (_) { return null; }
 }
 
-// TTL 무시 — 오프라인 폴백용(만료됐어도 캐시 config 사용)
-function _loadCachedConfigRaw() {
-  try {
-    const { cfg } = JSON.parse(localStorage.getItem(_CFG_CACHE_KEY) || '{}');
-    return cfg?.supabaseUrl ? cfg : null;
-  } catch (_) { return null; }
-}
-
 function _saveCachedConfig(cfg) {
   try { localStorage.setItem(_CFG_CACHE_KEY, JSON.stringify({ cfg, ts: Date.now() })); } catch (_) {}
 }
@@ -174,17 +166,10 @@ async function bootstrapSupabase() {
         if (fresh.googleClientId) window.__GCAL_CLIENT_ID__ = fresh.googleClientId;
       }).catch(() => {});
     } else {
-      try {
-        const response = await fetch('/api/config');
-        if (!response.ok) throw new Error('config fetch failed: ' + response.status);
-        cfg = await response.json();
-        _saveCachedConfig(cfg);
-      } catch (e) {
-        // 오프라인 등으로 config를 못 받으면 만료된 캐시라도 사용 (오프라인 부팅)
-        const raw = _loadCachedConfigRaw();
-        if (raw?.supabaseUrl) cfg = raw;
-        else throw e;
-      }
+      const response = await fetch('/api/config');
+      if (!response.ok) throw new Error('config fetch failed: ' + response.status);
+      cfg = await response.json();
+      _saveCachedConfig(cfg);
     }
 
     if (cfg.googleClientId) window.__GCAL_CLIENT_ID__ = cfg.googleClientId;

@@ -21,7 +21,7 @@
       'box-shadow:0 2px 12px rgba(0,0,0,0.3)',
       'animation:offlineSlideIn 0.25s ease'
     ].join(';');
-    el.innerHTML = '📶 오프라인 모드 — 저장된 일정은 계속 쓸 수 있고, 변경사항은 연결되면 자동 저장돼요.';
+    el.innerHTML = '📶 인터넷 연결이 없어요. Wi-Fi나 데이터를 연결해 주세요.';
 
     // 슬라이드인 키프레임 주입 (1회)
     if (!document.getElementById('offlineStyle')) {
@@ -222,6 +222,7 @@ let _lastRemoteTs = 0;
 let _lastWrittenTs = '';
 let _uploading    = false;
 let _pulling      = false;
+let _mergeRetries = 0;     // 409 충돌 병합 재시도 횟수 (무한루프 방지)
 
 const SAVE_DEBOUNCE_MS = 1500;
 
@@ -240,6 +241,34 @@ function _remoteSnapshot(remote) {
     schedule: remote.schedule || {},
     links: remote.links || []
   });
+}
+
+// ──────────────────────────────────────────────
+// 충돌 병합 (서버가 더 최신일 때 로컬+서버 합치기 — 데이터 유실 방지)
+//   id 기준 합집합. 같은 id는 로컬(방금 편집한 기기)을 우선.
+//   → 추가된 일정은 절대 사라지지 않음.
+// ──────────────────────────────────────────────
+function _mergeById(localArr, remoteArr) {
+  const map = new Map();
+  (remoteArr || []).forEach(it => { if (it && it.id != null) map.set(it.id, it); });
+  (localArr  || []).forEach(it => { if (it && it.id != null) map.set(it.id, it); }); // 로컬 우선
+  return [...map.values()];
+}
+function _mergeSchedule(localSch, remoteSch) {
+  const out = {};
+  const dates = new Set([...Object.keys(localSch || {}), ...Object.keys(remoteSch || {})]);
+  for (const d of dates) {
+    const merged = _mergeById(localSch?.[d], remoteSch?.[d]);
+    if (merged.length) out[d] = merged;
+  }
+  return out;
+}
+function _mergeStates(local, remote) {
+  return {
+    pool:     _mergeById(local.pool, remote.pool),
+    schedule: _mergeSchedule(local.schedule, remote.schedule),
+    links:    _mergeById(local.links, remote.links),
+  };
 }
 
 // updated_at 을 명시적으로 받아 페이로드 생성
@@ -354,18 +383,44 @@ async function _uploadNow() {
         schedule:   pruneScheduleForSave(state.schedule),
         links:      state.links || [],
         updated_at: ts,
+        // 이 저장이 기반한 서버 버전 — 서버가 더 최신이면 409로 충돌 알림
+        base_updated_at: _lastRemoteTs ? new Date(_lastRemoteTs).toISOString() : null,
       }),
       keepalive: true,
       signal: ctrl.signal,
     });
     _uploading = false;
     clearTimeout(killer);
+
+    // ── 충돌: 서버에 내가 모르는 더 최신 변경 있음 → 병합 후 재업로드 ──
+    if (res.status === 409) {
+      const server = await res.json().catch(() => null);
+      if (server && _mergeRetries < 3) {
+        _mergeRetries++;
+        const merged = _mergeStates(
+          { pool: state.pool, schedule: state.schedule, links: state.links },
+          { pool: server.pool, schedule: server.schedule, links: server.links }
+        );
+        applyPersistedState(merged);
+        _lastRemoteTs = Date.parse(server.updated_at) || _lastRemoteTs;
+        lastSavedSnapshot = null;        // 강제로 다름 처리 → 병합본 업로드 보장
+        renderApp();
+        setSyncStatus('🔄 다른 기기 변경 병합 중...');
+        _pendingSave = true;
+        return _uploadNow();             // base = 서버 최신 → 보통 이번엔 성공
+      }
+      console.warn('[sync] 충돌 병합 한도 초과 → 재시도 예약');
+      _scheduleSaveRetry();
+      return false;
+    }
+
     if (!res.ok) {
       console.warn('[sync] 저장 실패:', res.status);
       _scheduleSaveRetry();
       return false;
     }
     // 성공 → 재시도 카운터 리셋 + 오류 메시지 즉시 제거
+    _mergeRetries = 0;
     _resetRetry();
     lastSavedSnapshot = snapAtUpload;
     _lastRemoteTs = Date.parse(ts) || Date.now();
@@ -426,7 +481,6 @@ function _applyRemote(remote, remoteTsMs) {
   autoReturnExpiredTasks();
   lastSavedSnapshot = baseline;
   renderApp();
-  _writeLocalBackup();      // 오프라인 대비 로컬 백업 갱신
   if (stateSnapshot() !== baseline) {
     _pendingSave = true;
     _uploadNow();           // 만료 복귀 변경을 즉시 저장
@@ -449,11 +503,7 @@ async function _pullRemote(showToast = false) {
     _pulling = false;
     if (!res.ok) return;
     const remote = await res.json();
-    if (!_remoteHasData(remote)) {
-      // 서버 비어있는데 로컬에 데이터 → 오프라인 최초 생성분 업로드(유실 방지)
-      if (hasAnyTaskData()) { _pendingSave = true; _uploadNow(); }
-      return;
-    }
+    if (!_remoteHasData(remote)) return;
     // 내용이 같으면 무시 (내 저장 에코 등)
     if (_remoteSnapshot(remote) === prunedSnapshot()) return;
 
@@ -633,37 +683,6 @@ function _setLoadingOverlay(on) {
   }
 }
 
-// 오프라인/서버 불통 시 로컬 백업으로 부팅 (편집 가능, 재연결 시 동기화)
-//   reason: 'offline' | 'error'
-function _bootFromLocalBackup(reason) {
-  if (dataLoaded) return false; // 이미 로드됨 → 백업으로 덮어쓰지 않음
-  const b = readLocalBackup();
-  const hasBackup = b && ((b.pool?.length || 0) > 0 ||
-    Object.values(b.schedule || {}).some(a => Array.isArray(a) && a.length));
-  _setLoadingOverlay(false);
-  if (hasBackup) {
-    applyPersistedState({ pool: b.pool, schedule: b.schedule, links: b.links });
-    const baseline = stateSnapshot();
-    autoReturnExpiredTasks();
-    lastSavedSnapshot = baseline;
-    _lastRemoteTs = 0;     // 서버 최신 시각 모름 → 재연결 시 비교/동기화
-    // 만료 복귀로 바뀌었으면 재연결 시 업로드되도록 pending 표시
-    _pendingSave  = stateSnapshot() !== baseline;
-    dataLoaded    = true;
-    renderApp();
-    showLastSavedTime();
-    setSyncStatus(reason === 'offline'
-      ? '📶 오프라인 — 저장된 일정 표시 중'
-      : '⚠️ 오프라인 데이터 표시 — 연결 후 동기화');
-  } else {
-    applyPersistedState({});
-    dataLoaded = true;
-    renderApp();
-    setSyncStatus('📶 오프라인 — 연결되면 일정을 불러와요');
-  }
-  return true;
-}
-
 function loadState() {
   if (!currentUser || !supabaseClient) {
     _teardownSync();
@@ -677,9 +696,7 @@ function loadState() {
   }
   if (loadInProgress) return;
   if (!navigator.onLine) {
-    // 오프라인: 로컬 백업으로 부팅해 계속 사용 가능하게
-    if (!dataLoaded) _bootFromLocalBackup('offline');
-    else setSyncStatus('📶 오프라인 — 연결 후 자동 동기화');
+    setSyncStatus('📶 오프라인 — 연결 후 자동 로드');
     return;
   }
   loadInProgress = true;
@@ -742,7 +759,6 @@ function loadState() {
     renderApp();
     showLastSavedTime();
     checkFirstVisit();
-    _writeLocalBackup();      // 오프라인 대비 로컬 백업 갱신
 
     if (stateSnapshot() !== baseline || (!_remoteHasData(remote) && hasAnyTaskData())) {
       _pendingSave = true;
@@ -760,11 +776,6 @@ function loadState() {
     clearTimeout(_loadGuard);
     _setLoadingOverlay(false);
     console.error('state 로드 실패:', err.message);
-    // 서버 불통(네트워크/타임아웃) → 로컬 백업으로 부팅해 계속 사용 가능하게
-    if (!dataLoaded && _bootFromLocalBackup('error')) {
-      _showRetryButton();
-      return;
-    }
     dataLoaded = true;
     renderApp();
     _showRetryButton();
