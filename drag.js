@@ -283,7 +283,7 @@ function initDrag() {
     const { taskId, itemId, dateKey: key, text } = dragInfo;
     const item = (state.schedule[key] || []).find(it => it.id === itemId);
     removeScheduleItem(key, itemId);
-    restoreTaskToPool(taskId, text, item?.deadline, item?.gcalEventId, item?.fromGcal);
+    restoreTaskToPool(taskId, text, item?.deadline, item?.gcalEventId, item?.fromGcal, item?.link);
     saveState();
     endDrag();
     refreshPoolAndDay(key);
@@ -492,5 +492,114 @@ document.addEventListener('drop',    () => { setTimeout(recoverDragState, 0); },
 // 예외/거부가 발생해도 드래그 상태를 정상으로 되돌림 (오류는 콘솔에 그대로 남김)
 window.addEventListener('error', recoverDragState);
 window.addEventListener('unhandledrejection', recoverDragState);
+
+// ──────────────────────────────────────────────
+// 풀 마키(영역) 다중 선택 — 데스크톱
+//   할일 풀 빈 곳에서 마우스로 드래그하면 그 사각형에 닿는 카드들이
+//   한꺼번에 선택되고, 선택된 항목을 한 번에 "날짜에 추가 / 삭제" 가능.
+// ──────────────────────────────────────────────
+function initPoolMarquee() {
+  if (!poolEl) return;
+  // 마우스(정밀 포인터) 환경에서만 — 모바일 터치는 기존 두 번 탭/드래그 사용
+  const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  if (!fine) return;
+
+  let marquee = null, startX = 0, startY = 0, active = false;
+
+  function selectedCards() {
+    return [...poolEl.querySelectorAll('.pool-card.marquee-selected')];
+  }
+  function clearSelection() {
+    poolEl.querySelectorAll('.pool-card.marquee-selected').forEach(c => c.classList.remove('marquee-selected'));
+    document.getElementById('poolSelectBar')?.remove();
+  }
+  window.clearPoolSelection = clearSelection;
+
+  function intersects(a, b) {
+    return !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
+  }
+
+  function showBar() {
+    const cards = selectedCards();
+    document.getElementById('poolSelectBar')?.remove();
+    if (!cards.length) return;
+    const bar = document.createElement('div');
+    bar.id = 'poolSelectBar';
+    bar.className = 'pool-select-bar';
+    const dayLabel = (typeof currentDay === 'function') ? formatBarDate(currentDay()) : '선택 날짜';
+    bar.innerHTML = `
+      <span class="pool-select-bar__count">${cards.length}개 선택</span>
+      <button class="pool-select-bar__btn pool-select-bar__btn--primary" data-act="add">📅 ${dayLabel}에 추가</button>
+      <button class="pool-select-bar__btn pool-select-bar__btn--danger" data-act="del">🗑️ 삭제</button>
+      <button class="pool-select-bar__btn" data-act="clear">✕</button>`;
+    document.body.appendChild(bar);
+    bar.querySelector('[data-act="add"]').addEventListener('click', () => { addSelectedToDay(); });
+    bar.querySelector('[data-act="del"]').addEventListener('click', () => { deleteSelected(); });
+    bar.querySelector('[data-act="clear"]').addEventListener('click', () => { clearSelection(); });
+  }
+
+  function formatBarDate(d) {
+    return `${d.getMonth() + 1}/${d.getDate()}`;
+  }
+
+  function addSelectedToDay() {
+    const cards = selectedCards();
+    if (!cards.length) return;
+    const key = dateKey(currentDay());
+    let added = 0;
+    cards.forEach(card => {
+      if (schedulePoolTask(key, card.dataset.taskId, getPoolCardText(card))) added++;
+    });
+    if (added) { saveState(); refreshPoolAndDay(key); }
+    clearSelection();
+  }
+
+  function deleteSelected() {
+    const cards = selectedCards();
+    if (!cards.length) return;
+    if (!confirm(`선택한 ${cards.length}개 할일을 삭제할까요?`)) return;
+    cards.forEach(card => removeTaskFromPool(card.dataset.taskId));
+    saveState();
+    renderPool();
+    clearSelection();
+  }
+
+  poolEl.addEventListener('mousedown', e => {
+    if (e.button !== 0 || !currentUser) return;
+    // 카드/버튼/링크 위에서 시작하면 마키 아님(기존 드래그·클릭 유지)
+    if (e.target.closest('.pool-card, .pool-expand-btn, a, button')) return;
+    active = true;
+    startX = e.clientX; startY = e.clientY;
+    clearSelection();
+    marquee = document.createElement('div');
+    marquee.className = 'pool-marquee';
+    document.body.appendChild(marquee);
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!active || !marquee) return;
+    const x = Math.min(startX, e.clientX), y = Math.min(startY, e.clientY);
+    const w = Math.abs(e.clientX - startX), h = Math.abs(e.clientY - startY);
+    Object.assign(marquee.style, { left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px' });
+    const box = { left: x, top: y, right: x + w, bottom: y + h };
+    poolEl.querySelectorAll('.pool-card').forEach(card => {
+      card.classList.toggle('marquee-selected', intersects(card.getBoundingClientRect(), box));
+    });
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!active) return;
+    active = false;
+    marquee?.remove(); marquee = null;
+    showBar();
+  });
+
+  // 바깥(풀·선택바 밖) 클릭 시 선택 해제
+  document.addEventListener('mousedown', e => {
+    if (e.target.closest('#poolSelectBar') || e.target.closest('#taskPool')) return;
+    clearSelection();
+  });
+}
 
 // 초기화는 events.js 하단에서 실행 (모든 스크립트 로드 완료 후)

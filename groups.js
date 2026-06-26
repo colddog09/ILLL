@@ -263,11 +263,12 @@ async function gmOpenGroup(groupId) {
     const cat = GM_CAT[a.category];
     const catChip = cat ? `<span class="gm-cat ${cat.cls}">${cat.label}</span>` : '';
     const pinChip = a.pinned ? `<span class="gm-pin-chip">📌</span>` : '';
+    const linkChip = a.link ? `<a class="gm-ann__link" href="${escHtml(a.link)}" target="_blank" rel="noopener noreferrer" title="링크 열기">🔗 링크</a>` : '';
     return `
       <div class="gm-ann${a.pinned ? ' gm-ann--pinned' : ''}" data-ann="${a.id}">
         <div class="gm-ann__main">
           <div class="gm-ann__head">${pinChip}${catChip}<span class="gm-ann__text">${escHtml(a.text)}</span></div>
-          <div class="gm-ann__meta">${dateLabel}<span class="gm-ann__author">${escHtml(a.author_name || '익명')}</span></div>
+          <div class="gm-ann__meta">${dateLabel}<span class="gm-ann__author">${escHtml(a.author_name || '익명')}</span>${linkChip}</div>
         </div>
         <div class="gm-ann__actions">
           <button class="gm-add-btn ${isAdded ? 'gm-add-btn--done' : ''}" data-add="${a.id}" ${isAdded ? 'disabled' : ''}>${isAdded ? '추가됨' : '+ 내 리스트'}</button>
@@ -281,21 +282,37 @@ async function gmOpenGroup(groupId) {
 
   const postForm = canAnnounce ? `
     <div class="gm-post">
-      <p class="gm-section-title">📢 일정 공지하기</p>
-      <input id="gmPostText" class="gm-input" type="text" maxlength="200" placeholder="일정 내용 (예: 수학 수행평가)" />
-      <div class="gm-post__date-row">
-        <input id="gmPostDate" class="gm-input gm-input--date" type="date" />
-        <span class="gm-post__tilde">~</span>
-        <input id="gmPostDateEnd" class="gm-input gm-input--date" type="date" placeholder="종료일 (선택)" />
+      <div class="gm-post__tabs">
+        <button class="gm-post__tab gm-post__tab--on" data-postmode="single">📢 하나씩</button>
+        <button class="gm-post__tab" data-postmode="bulk">📋 여러 개 한 번에</button>
       </div>
-      <div class="gm-post__row">
-        <select id="gmPostCat" class="gm-input gm-cat-select">
-          <option value="none">분류 없음</option>
-          <option value="exam">🔴 시험</option>
-          <option value="hw">🟡 과제</option>
-          <option value="event">🟢 행사</option>
-        </select>
-        <button id="gmPostBtn" class="gm-btn gm-btn--primary">공지</button>
+
+      <div id="gmPostSingle" class="gm-post__panel">
+        <input id="gmPostText" class="gm-input" type="text" maxlength="200" placeholder="일정 내용 (예: 수학 수행평가)" />
+        <div class="gm-post__date-row">
+          <input id="gmPostDate" class="gm-input gm-input--date" type="date" />
+          <span class="gm-post__tilde">~</span>
+          <input id="gmPostDateEnd" class="gm-input gm-input--date" type="date" placeholder="종료일 (선택)" />
+        </div>
+        <input id="gmPostLink" class="gm-input" type="url" maxlength="500" placeholder="🔗 클래스룸/링크 (선택)" />
+        <div class="gm-post__row">
+          <select id="gmPostCat" class="gm-input gm-cat-select">
+            <option value="none">분류 없음</option>
+            <option value="exam">🔴 시험</option>
+            <option value="hw">🟡 과제</option>
+            <option value="event">🟢 행사</option>
+          </select>
+          <button id="gmPostBtn" class="gm-btn gm-btn--primary">공지</button>
+        </div>
+      </div>
+
+      <div id="gmPostBulk" class="gm-post__panel" hidden>
+        <p class="gm-bulk__hint">정리한 내용을 줄마다 한 개씩 붙여넣으세요. 날짜(6/20, 6월 20일 등)와 분류(시험·과제·행사)는 자동으로 인식돼요.</p>
+        <textarea id="gmBulkText" class="gm-input gm-bulk__text" rows="5" placeholder="6/20 수학 수행평가&#10;6/22 영어 과제 제출&#10;7/1 체육대회"></textarea>
+        <div class="gm-post__row">
+          <button id="gmBulkPreviewBtn" class="gm-btn gm-btn--ghost">미리보기</button>
+        </div>
+        <div id="gmBulkPreview" class="gm-bulk__preview" hidden></div>
       </div>
     </div>` : '';
 
@@ -381,6 +398,17 @@ async function gmOpenGroup(groupId) {
     });
   });
   document.getElementById('gmPostBtn')?.addEventListener('click', () => gmPostAnnouncement(groupId));
+  // 공지 입력 모드 전환 (하나씩 / 여러 개)
+  body.querySelectorAll('[data-postmode]').forEach(tab =>
+    tab.addEventListener('click', () => {
+      const mode = tab.dataset.postmode;
+      body.querySelectorAll('[data-postmode]').forEach(t => t.classList.toggle('gm-post__tab--on', t === tab));
+      const single = document.getElementById('gmPostSingle');
+      const bulk   = document.getElementById('gmPostBulk');
+      if (single) single.hidden = mode !== 'single';
+      if (bulk)   bulk.hidden   = mode !== 'bulk';
+    }));
+  document.getElementById('gmBulkPreviewBtn')?.addEventListener('click', gmBulkPreview);
   document.getElementById('gmLeaveBtn')?.addEventListener('click', () => gmLeaveOrDelete(groupId, false));
   body.querySelectorAll('[data-add]').forEach(b =>
     b.addEventListener('click', () => gmAddToMyList(anns.find(a => a.id === b.dataset.add), b, groupId)));
@@ -680,6 +708,7 @@ async function gmPostAnnouncement(groupId) {
   const date     = document.getElementById('gmPostDate')?.value    || null;
   const dateEnd  = document.getElementById('gmPostDateEnd')?.value || null;
   const category = document.getElementById('gmPostCat')?.value || 'none';
+  const link     = _gmNormalizeLink(document.getElementById('gmPostLink')?.value || '');
   if (!text) { alert('일정 내용을 입력하세요.'); return; }
   if (!date) { alert('날짜를 선택해주세요.'); document.getElementById('gmPostDate')?.focus(); return; }
   if (dateEnd && date && dateEnd < date) { alert('종료일이 시작일보다 앞에 있어요.'); return; }
@@ -695,7 +724,7 @@ async function gmPostAnnouncement(groupId) {
   }
   const { error } = await supabaseClient.from('group_announcements').insert({
     group_id: groupId, author_id: currentUser.id, author_name: _gmDisplayName(),
-    text, date: date || null, date_end: dateEnd || null, category
+    text, date: date || null, date_end: dateEnd || null, category, link: link || null
   });
   gmBusy = false;
   if (error) { alert('공지 등록 실패: ' + error.message); return; }
@@ -713,6 +742,128 @@ async function gmPostAnnouncement(groupId) {
     }).catch(() => {});
   });
 
+  gmOpenGroup(groupId);
+}
+
+// URL 정규화: 비어있으면 '', http(s) 없으면 https:// 보정
+function _gmNormalizeLink(raw) {
+  const v = (raw || '').trim();
+  if (!v) return '';
+  if (/^https?:\/\//i.test(v)) return v.slice(0, 500);
+  return ('https://' + v).slice(0, 500);
+}
+
+// ──────────────────────────────────────────────
+// 텍스트 일괄 파싱 → 여러 공지
+//   줄마다 한 개. 날짜(6/20, 6.20, 6월 20일, 2026-06-20)와
+//   분류(시험·수행·평가 / 과제·숙제·제출 / 행사·대회·축제…) 자동 인식.
+// ──────────────────────────────────────────────
+function _gmCategoryOf(text) {
+  if (/시험|수행|평가|중간고사|기말/.test(text)) return 'exam';
+  if (/과제|숙제|제출|레포트|보고서|리포트/.test(text)) return 'hw';
+  if (/행사|대회|축제|체험|소풍|발표회|MT|봉사/.test(text)) return 'event';
+  return 'none';
+}
+
+function _gmInferYear(month, day) {
+  const now = new Date();
+  let year = now.getFullYear();
+  const cand = new Date(year, month - 1, day);
+  // 오늘보다 한참 과거(어제 이전)면 내년으로
+  const todayMid = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  if (cand < todayMid) year += 1;
+  return year;
+}
+
+function _gmParseBulkLine(line) {
+  let s = line.trim();
+  if (!s) return null;
+  let date = null;
+
+  // 2026-06-20 / 2026.6.20 / 2026/6/20
+  let m = s.match(/(20\d{2})[.\-/]\s*(\d{1,2})[.\-/]\s*(\d{1,2})/);
+  if (m) {
+    const [mo, d] = [parseInt(m[2]), parseInt(m[3])];
+    date = `${m[1]}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    s = s.replace(m[0], ' ');
+  }
+  // 6월 20일 / 6월20일
+  if (!date && (m = s.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일?/))) {
+    const mo = parseInt(m[1]), d = parseInt(m[2]);
+    if (mo >= 1 && mo <= 12 && d >= 1 && d <= 31) {
+      date = `${_gmInferYear(mo, d)}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      s = s.replace(m[0], ' ');
+    }
+  }
+  // 6/20 · 6.20 · 6-20 (월/일)
+  if (!date && (m = s.match(/(?:^|\s)(\d{1,2})[./\-](\d{1,2})(?=\s|$)/))) {
+    const mo = parseInt(m[1]), d = parseInt(m[2]);
+    if (mo >= 1 && mo <= 12 && d >= 1 && d <= 31) {
+      date = `${_gmInferYear(mo, d)}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      s = s.replace(m[0], ' ');
+    }
+  }
+
+  // 앞쪽의 불릿/번호 기호 제거
+  let text = s.replace(/^[\s\-–•▪◦*·.\d)\].]+/, '').replace(/\s+/g, ' ').trim();
+  if (!text) text = line.trim();
+  text = text.slice(0, 200);
+  return { text, date, category: _gmCategoryOf(line) };
+}
+
+function _gmParseBulk(raw) {
+  return (raw || '').split(/\r?\n/).map(_gmParseBulkLine).filter(Boolean);
+}
+
+let _gmBulkParsed = [];
+
+function gmBulkPreview() {
+  const raw = document.getElementById('gmBulkText')?.value || '';
+  const box = document.getElementById('gmBulkPreview');
+  if (!box) return;
+  _gmBulkParsed = _gmParseBulk(raw);
+  if (!_gmBulkParsed.length) {
+    box.hidden = false;
+    box.innerHTML = '<div class="gm-empty">인식된 일정이 없어요. 줄마다 한 개씩 입력해주세요.</div>';
+    return;
+  }
+  const CATL = { exam: '🔴 시험', hw: '🟡 과제', event: '🟢 행사', none: '분류 없음' };
+  const rows = _gmBulkParsed.map((p, i) => `
+    <div class="gm-bulk__item">
+      <span class="gm-bulk__num">${i + 1}</span>
+      <span class="gm-bulk__itext">${escHtml(p.text)}</span>
+      <span class="gm-bulk__idate">${p.date ? '📅 ' + escHtml(p.date) : '날짜 없음'}</span>
+      <span class="gm-bulk__icat">${CATL[p.category]}</span>
+    </div>`).join('');
+  box.hidden = false;
+  box.innerHTML = `
+    <p class="gm-bulk__count">${_gmBulkParsed.length}개 일정 인식됨</p>
+    ${rows}
+    <button id="gmBulkPostBtn" class="gm-btn gm-btn--primary gm-bulk__post">전체 공지하기</button>`;
+  box.querySelector('#gmBulkPostBtn')?.addEventListener('click', () => gmBulkPost(gmCurrent?.id));
+}
+
+async function gmBulkPost(groupId) {
+  if (gmBusy || !groupId) return;
+  if (!_gmBulkParsed.length) { alert('먼저 미리보기로 확인해주세요.'); return; }
+  const items = _gmBulkParsed.filter(p => p.text);
+  if (!items.length) return;
+  gmBusy = true;
+  const { count: announceCount } = await supabaseClient
+    .from('group_announcements').select('*', { count: 'exact', head: true }).eq('group_id', groupId);
+  if ((announceCount || 0) + items.length > ANNOUNCE_MAX) {
+    gmBusy = false;
+    alert(`공지는 최대 ${ANNOUNCE_MAX}개까지예요. 현재 ${announceCount}개 + ${items.length}개는 초과돼요. 일부만 입력하거나 오래된 공지를 삭제해주세요.`);
+    return;
+  }
+  const rows = items.map(p => ({
+    group_id: groupId, author_id: currentUser.id, author_name: _gmDisplayName(),
+    text: p.text, date: p.date || null, date_end: null, category: p.category, link: null
+  }));
+  const { error } = await supabaseClient.from('group_announcements').insert(rows);
+  gmBusy = false;
+  if (error) { alert('일괄 등록 실패: ' + error.message); return; }
+  _gmBulkParsed = [];
   gmOpenGroup(groupId);
 }
 
@@ -977,6 +1128,7 @@ async function gmAddToMyList(ann, btn, groupId) {
     if (!ann.date) {
       const task = { id: uid(), text: ann.text };
       if (ann.deadline) task.deadline = ann.deadline;
+      if (ann.link) task.link = ann.link;
       if (groupId) { task.groupId = groupId; task.annId = ann.id; }
       state.pool.push(task);
       saveState();
@@ -1029,6 +1181,7 @@ function _gmAddToSchedule(ann, groupId) {
   if (!state.schedule[ann.date]) state.schedule[ann.date] = [];
   const item = { id: uid(), taskId: uid(), text: ann.text, status: null };
   if (ann.deadline) item.deadline = ann.deadline;
+  if (ann.link) item.link = ann.link;
   if (groupId) { item.groupId = groupId; item.annId = ann.id; }
   state.schedule[ann.date].push(item);
   saveState();

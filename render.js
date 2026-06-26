@@ -48,17 +48,19 @@ function schedulePoolTask(key, taskId, text) {
   if (!state.schedule[key]) state.schedule[key] = [];
   const item = { id: uid(), taskId, text, status: null };
   if (poolTask?.deadline)    item.deadline    = poolTask.deadline;
+  if (poolTask?.link)        item.link        = poolTask.link;
   if (poolTask?.gcalEventId) item.gcalEventId = poolTask.gcalEventId;
   if (poolTask?.fromGcal)    item.fromGcal    = true;
   state.schedule[key].push(item);
   return true;
 }
 
-function restoreTaskToPool(taskId, text, deadline, gcalEventId, fromGcal) {
+function restoreTaskToPool(taskId, text, deadline, gcalEventId, fromGcal, link) {
   if (fromGcal) return; // gcal 항목은 사이드 패널(gcalEvents)에 이미 있음
   if (!state.pool.find(t => t.id === taskId)) {
     const task = { id: taskId, text };
     if (deadline) task.deadline = deadline;
+    if (link) task.link = link;
     state.pool.push(task);
   }
 }
@@ -97,6 +99,19 @@ function createPoolCard(task) {
   const textSpan = document.createElement('span');
   textSpan.textContent = task.text;
   card.appendChild(textSpan);
+
+  if (task.link) {
+    const linkBtn = document.createElement('a');
+    linkBtn.className = 'pool-card__link';
+    linkBtn.href = task.link;
+    linkBtn.target = '_blank';
+    linkBtn.rel = 'noopener noreferrer';
+    linkBtn.textContent = '🔗';
+    linkBtn.title = '링크 열기';
+    linkBtn.draggable = false;
+    linkBtn.addEventListener('click', e => e.stopPropagation());
+    card.appendChild(linkBtn);
+  }
 
   if (task.deadline) {
     const urgent = isDeadlineUrgent(task.deadline);
@@ -153,7 +168,7 @@ function returnSchedItemToPool(key, itemId, taskId, text) {
     return;
   }
 
-  restoreTaskToPool(taskId, text, item?.deadline, item?.gcalEventId, item?.fromGcal);
+  restoreTaskToPool(taskId, text, item?.deadline, item?.gcalEventId, item?.fromGcal, item?.link);
   saveState();
   refreshPoolAndDay(key);
 }
@@ -592,10 +607,12 @@ function renderDayTasks(key) {
       ? `<span class="sched-item__deadline${isDeadlinePast(item.deadline) ? ' sched-item__deadline--past' : (isDeadlineUrgent(item.deadline) ? ' sched-item__deadline--urgent' : '')}" title="${escHtml(formatDeadlineText(item.deadline))}">⏰ ${escHtml(formatDeadlineText(item.deadline))}</span>`
       : '';
     const gcalBadge = item.fromGcal ? '<span class="sched-item__gcal-badge" title="구글 캘린더 일정">📅</span>' : '';
+    const linkBadge = item.link ? `<a class="sched-item__link" href="${escHtml(item.link)}" target="_blank" rel="noopener noreferrer" title="링크 열기" draggable="false">🔗</a>` : '';
     el.innerHTML = `
       <span class="sched-item__handle" title="드래그로 순서 변경">⠿</span>
       ${gcalBadge}
       <span class="sched-item__text" title="${escHtml(item.text)}">${escHtml(item.text)}</span>
+      ${linkBadge}
       ${deadlineBadge}
       <div class="sched-item__ox">
         <button class="btn-o${item.status==='O'?' active':''}" data-date="${key}" data-id="${item.id}" title="완료(O)"><img class="btn-o__img" src="${item.status==='O'?'/image/pompomyes.webp':'/image/pompomno.webp'}" alt=""><span class="btn-o__text">O</span></button>

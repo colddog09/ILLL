@@ -308,7 +308,7 @@ dayGrid.addEventListener('click', e => {
 
 dayGrid.addEventListener('dblclick', e => {
   const item = e.target.closest('.sched-item');
-  if (!item || e.target.closest('.sched-item__ox')) return;
+  if (!item || e.target.closest('.sched-item__ox') || e.target.closest('.sched-item__link')) return;
   returnSchedItemToPool(item.dataset.dateKey, item.dataset.itemId, item.dataset.taskId, item.dataset.text);
 });
 
@@ -580,6 +580,7 @@ document.addEventListener('touchend', e => {
 resetScheduleState();
 renderApp();
 initDrag();
+if (typeof initPoolMarquee === 'function') initPoolMarquee();
 updateDday();
 
 // ──────────────────────────────────────────────

@@ -20,6 +20,10 @@ alter table public.group_announcements
 alter table public.group_announcements
   add column if not exists category text not null default 'none';
 
+-- 공지 첨부 링크 (클래스룸 등, 선택)
+alter table public.group_announcements
+  add column if not exists link text;
+
 -- 역할에 coowner(공동 그룹장) 추가
 alter table public.group_members drop constraint if exists group_members_role_check;
 alter table public.group_members

@@ -4826,6 +4826,84 @@ a.settings-tab {
 .gm-btn:hover { border-color:var(--accent); }
 .gm-btn--primary { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; border:none; }
 .gm-btn--primary:hover { opacity:0.9; }
+.gm-btn--ghost { background:transparent; color:var(--accent); border:1.5px solid var(--accent); }
+
+/* ── 공지 입력 모드 탭 ── */
+.gm-post__tabs { display:flex; gap:6px; margin-bottom:10px; }
+.gm-post__tab {
+  flex:1; padding:8px 10px; border-radius:var(--radius-sm);
+  border:1.5px solid var(--border); background:var(--surface); color:var(--text-sub);
+  font-family:var(--font); font-size:0.82rem; font-weight:700; cursor:pointer;
+  transition:background .15s, color .15s, border-color .15s;
+}
+.gm-post__tab--on { background:var(--accent); color:#fff; border-color:var(--accent); }
+.gm-post__panel { display:flex; flex-direction:column; gap:8px; }
+
+/* ── 일괄 추가 ── */
+.gm-bulk__hint { font-size:0.78rem; color:var(--text-sub); line-height:1.5; margin:0; }
+.gm-bulk__text { resize:vertical; min-height:96px; line-height:1.6; }
+.gm-bulk__preview {
+  margin-top:6px; display:flex; flex-direction:column; gap:6px;
+  background:var(--bg); border:1.5px solid var(--border); border-radius:var(--radius-sm); padding:10px;
+}
+.gm-bulk__count { font-size:0.8rem; font-weight:700; color:var(--text); margin:0 0 2px; }
+.gm-bulk__item {
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  padding:7px 9px; background:var(--surface); border:1px solid var(--border); border-radius:8px;
+}
+.gm-bulk__num {
+  flex-shrink:0; width:20px; height:20px; border-radius:50%;
+  background:var(--accent); color:#fff; font-size:0.7rem; font-weight:700;
+  display:flex; align-items:center; justify-content:center;
+}
+.gm-bulk__itext { flex:1; min-width:80px; font-size:0.84rem; font-weight:600; color:var(--text); }
+.gm-bulk__idate { font-size:0.74rem; color:var(--text-sub); }
+.gm-bulk__icat  { font-size:0.74rem; color:var(--text-sub); }
+.gm-bulk__post  { margin-top:4px; width:100%; }
+
+/* ── 공지 링크 칩 ── */
+.gm-ann__link {
+  font-size:0.72rem; font-weight:700; color:var(--accent); text-decoration:none;
+  padding:2px 7px; border:1px solid var(--accent); border-radius:10px; white-space:nowrap;
+}
+.gm-ann__link:hover { background:var(--accent); color:#fff; }
+
+/* ── 할일/일정 링크 버튼 ── */
+.pool-card__link, .sched-item__link {
+  text-decoration:none; font-size:0.85rem; line-height:1; cursor:pointer;
+  flex-shrink:0; opacity:0.85; transition:opacity .15s, transform .15s;
+}
+.pool-card__link:hover, .sched-item__link:hover { opacity:1; transform:scale(1.15); }
+.pool-card__link { margin-left:2px; }
+.sched-item__link { margin:0 2px; }
+
+/* ── 풀 마키(영역) 선택 ── */
+.pool-marquee {
+  position:fixed; z-index:9998; pointer-events:none;
+  background:rgba(108,99,255,0.12); border:1.5px solid var(--accent); border-radius:4px;
+}
+.pool-card.marquee-selected {
+  outline:2px solid var(--accent); outline-offset:1px;
+  background:rgba(108,99,255,0.12);
+}
+.pool-select-bar {
+  position:fixed; bottom:calc(20px + env(safe-area-inset-bottom,0px)); left:50%;
+  transform:translateX(-50%); z-index:9999;
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:center;
+  background:var(--surface); border:1.5px solid var(--border); border-radius:16px;
+  padding:10px 14px; box-shadow:0 8px 28px rgba(0,0,0,0.22); max-width:92vw;
+  animation:poolBarIn .18s ease;
+}
+@keyframes poolBarIn { from{opacity:0;transform:translateX(-50%) translateY(8px);} to{opacity:1;transform:translateX(-50%) translateY(0);} }
+.pool-select-bar__count { font-size:0.84rem; font-weight:800; color:var(--text); }
+.pool-select-bar__btn {
+  padding:7px 12px; border-radius:10px; border:1.5px solid var(--border);
+  background:var(--surface); color:var(--text); font-family:var(--font);
+  font-size:0.82rem; font-weight:700; cursor:pointer; transition:opacity .15s, border-color .15s;
+}
+.pool-select-bar__btn:hover { border-color:var(--accent); }
+.pool-select-bar__btn--primary { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; border:none; }
+.pool-select-bar__btn--danger  { color:#dc2626; border-color:rgba(220,38,38,0.4); }
 
 /* ── 그룹 상세 히어로 ── */
 .gm-hero__toprow {
