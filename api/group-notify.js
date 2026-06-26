@@ -44,7 +44,8 @@ export default async function handler(req, res) {
     if (!membership || !['owner', 'announcer', 'coowner'].includes(membership.role)) {
       return res.status(403).json({ error: 'Forbidden' });
     }
-    const authorName = membership.display_name || '그룹 멤버';
+    const authorName  = membership.display_name || '그룹 멤버';
+    const authorEmail = user.email || null;   // 답장은 작성자에게 가도록 Reply-To에 사용
 
     // ── 그룹 이름 + 수신 멤버 + 구독 병렬 조회 ──
     const [{ data: group }, { data: members }] = await Promise.all([
@@ -82,7 +83,7 @@ export default async function handler(req, res) {
     });
 
     // ── 2) 이메일 발송 (오일추 계정에서, 작성자 이름 포함) ──
-    const emailPromise = sendGroupEmail(admin, memberIds, { groupName, authorName, text, date })
+    const emailPromise = sendGroupEmail(admin, memberIds, { groupName, authorName, authorEmail, text, date })
       .catch(err => { console.warn('email send failed:', err?.message); return 0; });
 
     const [, emailSent] = await Promise.all([Promise.all(pushTasks), emailPromise]);
@@ -96,7 +97,7 @@ export default async function handler(req, res) {
 }
 
 // ── 그룹 멤버에게 이메일 발송 (Gmail SMTP, BCC로 프라이버시 보호) ──
-async function sendGroupEmail(admin, memberIds, { groupName, authorName, text, date }) {
+async function sendGroupEmail(admin, memberIds, { groupName, authorName, authorEmail, text, date }) {
   const gmailUser = process.env.GMAIL_USER;
   const gmailPass = process.env.GMAIL_APP_PASSWORD;
   // 자격증명 미설정 시 조용히 건너뜀 (푸시는 정상 동작)
@@ -132,15 +133,19 @@ async function sendGroupEmail(admin, memberIds, { groupName, authorName, text, d
         <div>✍️ 작성자: ${safe(authorName)}</div>
       </div>
       <a href="${appUrl}" style="display:inline-block;margin-top:18px;background:#6c63ff;color:#fff;text-decoration:none;padding:11px 20px;border-radius:10px;font-weight:700;font-size:14px">오일추에서 보기 →</a>
-      <p style="font-size:12px;color:#9ca3af;margin-top:20px">이 메일은 '${safe(groupName)}' 그룹의 새 일정 공지입니다. 알림을 끄려면 오일추 그룹 화면에서 🔔를 꺼주세요.</p>
+      <p style="font-size:12px;color:#9ca3af;margin-top:20px">이 메일은 '${safe(groupName)}' 그룹의 새 일정 공지입니다.${authorEmail ? ' 답장하면 작성자에게 직접 전달돼요.' : ''} 알림을 끄려면 오일추 그룹 화면에서 🔔를 꺼주세요.</p>
     </div>`;
 
-  await transporter.sendMail({
-    from: `"오일추 일정 알림" <${gmailUser}>`,
+  // 발신 표시명에 작성자 이름, 답장은 작성자 이메일로
+  const fromName = authorName ? `${authorName} (오일추 ${groupName})` : '오일추 일정 알림';
+  const mail = {
+    from: `"${fromName.replace(/"/g, '')}" <${gmailUser}>`,
     to: gmailUser,            // 대표 수신자(자기 자신), 실제 수신자는 BCC
     bcc: emails,              // 멤버 이메일 노출 방지
     subject: `[오일추] ${groupName} 새 일정: ${text}`.slice(0, 120),
     html,
-  });
+  };
+  if (authorEmail) mail.replyTo = authorEmail;
+  await transporter.sendMail(mail);
   return emails.length;
 }
