@@ -863,6 +863,20 @@ async function gmBulkPost(groupId) {
   const { error } = await supabaseClient.from('group_announcements').insert(rows);
   gmBusy = false;
   if (error) { alert('일괄 등록 실패: ' + error.message); return; }
+
+  // 일괄은 요약 1건으로 알림/이메일 (스팸 방지)
+  const summary = items.length === 1
+    ? items[0].text
+    : `새 일정 ${items.length}개: ${items[0].text} 외 ${items.length - 1}개`;
+  supabaseClient.auth.getSession().then(({ data: { session } }) => {
+    if (!session?.access_token) return;
+    fetch('/api/group-notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+      body: JSON.stringify({ group_id: groupId, text: summary, date: null }),
+    }).catch(() => {});
+  });
+
   _gmBulkParsed = [];
   gmOpenGroup(groupId);
 }
