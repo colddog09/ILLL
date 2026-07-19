@@ -20,6 +20,7 @@
 | ✅ 완료 처리 | O 버튼으로 완료 표시 및 진행률 시각화 |
 | ⏳ 자동 반환 | 미완료 항목을 다음 날로 자동 이동 |
 | 📝 날짜 메모 | 날짜별 자유 메모 |
+| ▦ 모바일 시간표 | 요일·시간·장소별 수업 시간표 작성 및 기기 간 동기화 |
 | 👥 그룹 일정 공유 | 초대 코드로 그룹 생성·참여, 공지 일정을 내 리스트로 가져오기 |
 | 🗓️ Google Calendar 연동 | 로그인 시 캘린더 영구 연동 (refresh token 기반) |
 | ⏰ D-Day 카운터 | 상단 고정 D-Day 표시, 설정에서 날짜 변경 가능 |
@@ -77,6 +78,7 @@
 ├── drag.js             # 드래그 앤 드롭
 ├── modals.js           # 모달 UI (설정·테마·D-Day 등)
 ├── groups.js           # 그룹 일정 공유
+├── timetable.js        # 모바일 시간표 탭
 ├── gcal/
 │   └── gcal.js         # Google Calendar 연동
 ├── deadline.js         # 기한 설정 UI
@@ -86,7 +88,7 @@
 ├── manifest.json       # PWA 설정
 ├── groups-schema.sql   # 그룹 기능 DB 스키마
 ├── api/
-│   ├── config.js       # 환경변수 제공 엔드포인트
+│   ├── config.js       # 런타임 설정 엔드포인트
 │   ├── gcal-callback.js
 │   ├── gcal-token.js   # Google Calendar 토큰 갱신
 │   ├── push-subscribe.js
@@ -95,19 +97,6 @@
 ├── privacy.html        # 개인정보처리방침
 └── README.md
 ```
-
----
-
-## 환경변수 (Vercel)
-
-| 키 | 설명 |
-|----|------|
-| `SUPABASE_URL` | Supabase 프로젝트 URL |
-| `SUPABASE_ANON_KEY` | Supabase anon key |
-| `GOOGLE_OAUTH_CLIENT_ID` | Google OAuth 클라이언트 ID |
-| `GOOGLE_OAUTH_CLIENT_SECRET` | Google OAuth 클라이언트 시크릿 |
-| `VAPID_PUBLIC_KEY` | Web Push VAPID 공개키 |
-| `VAPID_PRIVATE_KEY` | Web Push VAPID 비공개키 |
 
 ---
 

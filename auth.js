@@ -114,7 +114,8 @@ async function _storeGcalRefreshToken(refreshToken) {
     await supabaseClient
       .from('user_states')
       .upsert({ user_id: currentUser.id, gcal_refresh_token: refreshToken }, { onConflict: 'user_id' });
-    localStorage.setItem('gcal_connected', '1');
+    if (typeof _gcalRememberConnected === 'function') _gcalRememberConnected();
+    else localStorage.setItem('gcal_connected', '1');
   } catch (e) {
     console.warn('refresh token 저장 실패:', e);
   }
@@ -331,12 +332,15 @@ function updateAuthUi(user) {
     if (restored) {
       gcalImportCurrentDate?.();
       gcalStartPolling?.();
-    } else if (typeof isGcalConnected === 'function' && isGcalConnected()) {
+    } else if (!(typeof isGcalAutoConnectDisabled === 'function' && isGcalAutoConnectDisabled())) {
+      // 연결 여부는 서버의 refresh token을 기준으로 확인한다.
+      // 이 기기의 localStorage가 비어 있어도 새 기기/새 세션에서 자동 복구된다.
       gcalSilentConnect().then(ok => {
         if (typeof updateGcalUI === 'function') updateGcalUI();
         if (ok) { gcalImportCurrentDate?.(); gcalStartPolling?.(); }
       });
+    } else if (typeof updateGcalUI === 'function') {
+      updateGcalUI();
     }
   }
 }
-

@@ -27,12 +27,12 @@ export default async function handler(req, res) {
   if (_isAllowedOrigin(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin || '*');
   }
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
   res.setHeader('Cache-Control', 'no-store');
 
   if (req.method === 'OPTIONS') return res.status(204).end();
-  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== 'GET' && req.method !== 'DELETE') return res.status(405).json({ error: 'Method not allowed' });
 
   const token = (req.headers.authorization || '').replace('Bearer ', '').trim();
   if (!token) return res.status(401).json({ error: 'No token' });
@@ -48,6 +48,15 @@ export default async function handler(req, res) {
     // JWT 검증
     const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
     if (authErr || !user) return res.status(401).json({ error: 'Invalid token' });
+
+    if (req.method === 'DELETE') {
+      const { error: clearErr } = await supabase
+        .from('user_states')
+        .update({ gcal_refresh_token: null })
+        .eq('user_id', user.id);
+      if (clearErr) return res.status(500).json({ error: 'DB error', details: clearErr.message });
+      return res.status(204).end();
+    }
 
     // DB에서 refresh token 조회
     const { data, error: dbErr } = await supabase

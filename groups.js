@@ -1355,18 +1355,19 @@ async function _gmDeleteChatMsg(groupId, msgId) {
   const settingsModal = document.getElementById('settingsModal');
   const groupModal    = document.getElementById('groupModal');
 
-  const tabEls  = ['Home','Group','Settings'].map(id => document.getElementById('tab'+id));
-  const N = 3;
+  const tabEls  = ['Home','Timetable','Group','Settings'].map(id => document.getElementById('tab'+id));
+  const N = 4;
 
   // ── 슬라이더 이동 ──────────────────────────────
   function moveSlider(index, animate = true) {
     if (!slider || !tabBar) return;
-    const w = tabBar.offsetWidth / N;
+    const item = tabEls[index];
+    if (!item) return;
     slider.style.transition = animate
       ? 'left 0.42s cubic-bezier(0.34,1.56,0.64,1), width 0.28s ease'
       : 'none';
-    slider.style.left  = (w * index + 4) + 'px';
-    slider.style.width = (w - 8) + 'px';
+    slider.style.left  = Math.max(0, item.offsetLeft - 6) + 'px';
+    slider.style.width = item.offsetWidth + 'px';
   }
 
   // ── 탭 활성화 ──────────────────────────────────
@@ -1389,7 +1390,7 @@ async function _gmDeleteChatMsg(groupId, msgId) {
     _activeIdx = index;
   }
 
-  const nameToIdx = { home: 0, group: 1, settings: 2 };
+  const nameToIdx = { home: 0, timetable: 1, group: 2, settings: 3 };
   function setActiveTab(name) { activateTab(nameToIdx[name] ?? 0); }
 
   // 초기 슬라이더 위치
@@ -1399,22 +1400,34 @@ async function _gmDeleteChatMsg(groupId, msgId) {
   // ── 모달 열기/닫기 ────────────────────────────
   function openGroupTab() {
     if (!currentUser) { alert('그룹 기능은 로그인 후 이용 가능합니다.'); return; }
+    if (typeof closeTimetableTab === 'function') closeTimetableTab();
     if (settingsModal) settingsModal.hidden = true;
     gmOpenModal();
     setActiveTab('group');
   }
 
+  function openTimetable() {
+    if (!currentUser) { alert('시간표는 로그인 후 이용 가능합니다.'); return; }
+    gmCloseModal();
+    if (settingsModal) settingsModal.hidden = true;
+    if (typeof openTimetableTab === 'function') openTimetableTab();
+    setActiveTab('timetable');
+  }
+
   function closeAll() {
     gmCloseModal();
     if (settingsModal) settingsModal.hidden = true;
+    if (typeof closeTimetableTab === 'function') closeTimetableTab();
     setActiveTab('home');
   }
 
   // ── 탭 클릭 ──────────────────────────────────
   tabEls[0]?.addEventListener('click', closeAll);
-  tabEls[1]?.addEventListener('click', openGroupTab);
-  tabEls[2]?.addEventListener('click', () => {
+  tabEls[1]?.addEventListener('click', openTimetable);
+  tabEls[2]?.addEventListener('click', openGroupTab);
+  tabEls[3]?.addEventListener('click', () => {
     if (!currentUser) { alert('로그인 후 이용 가능합니다.'); return; }
+    if (typeof closeTimetableTab === 'function') closeTimetableTab();
     gmCloseModal();
     document.getElementById('settingsBtn')?.click();
     setActiveTab('settings');
@@ -1437,6 +1450,14 @@ async function _gmDeleteChatMsg(groupId, msgId) {
 
   // ── 슬라이더 드래그 ──────────────────────────
   let dragActive = false, hasDragged = false, dragStartX = 0;
+  let suppressClick = false;
+
+  tabBar?.addEventListener('click', e => {
+    if (!suppressClick) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    suppressClick = false;
+  }, true);
 
   tabBar?.addEventListener('pointerdown', e => {
     dragActive = true; hasDragged = false; dragStartX = e.clientX;
@@ -1456,14 +1477,15 @@ async function _gmDeleteChatMsg(groupId, msgId) {
     if (!dragActive) return;
     dragActive = false;
     if (!hasDragged) return;
+    suppressClick = true;
     const rect = tabBar.getBoundingClientRect();
     const relX = Math.max(0, Math.min(e.clientX - rect.left, rect.width - 1));
     const index = Math.floor(relX / (rect.width / N));
-    // 드래그 완료 → 해당 탭 활성화
-    activateTab(index);
+    // 드래그 완료 → 해당 탭 열기 (각 함수가 성공 후 활성 상태를 설정)
     if (index === 0) closeAll();
-    else if (index === 1) openGroupTab();
-    else if (index === 2) tabEls[2]?.click();
+    else if (index === 1) openTimetable();
+    else if (index === 2) openGroupTab();
+    else if (index === 3) tabEls[3]?.click();
   });
 
   // ── 스와이프 다운 → 모달 닫기 ───────────────

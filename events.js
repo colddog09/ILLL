@@ -331,14 +331,15 @@ function toggleStatus(date, id) {
   saveState();
   renderDayTasks(date);
 
-  if (item.gcalEventId && typeof gcalTokenValid === 'function' && gcalTokenValid()) {
+  if (item.gcalEventId && typeof gcalMarkEventDone === 'function'
+      && (gcalTokenValid?.() || isGcalConnected?.())) {
     const fn = item.status === 'O' ? gcalMarkEventDone : gcalMarkEventUndone;
     fn(item.gcalEventId, item.text).catch(err => console.warn('캘린더 동기화 실패:', err.message));
   }
 }
 
 function toggleGcalStatus(gcalId, dateKey) {
-  if (!gcalId || !gcalTokenValid()) return;
+  if (!gcalId) return;
   const ev = (gcalEvents[dateKey] || []).find(e => e.id === gcalId);
   if (!ev) return;
 
@@ -467,13 +468,19 @@ gcalReconnectBtn?.addEventListener('click', async () => {
   }
 });
 
-gcalDisconnectBtn?.addEventListener('click', () => {
-  gcalClearToken();
+gcalDisconnectBtn?.addEventListener('click', async () => {
+  gcalDisconnectBtn.disabled = true;
   gcalStopPolling();
+  const serverCleared = await (typeof gcalDisconnect === 'function'
+    ? gcalDisconnect()
+    : Promise.resolve(gcalClearToken()).then(() => true));
   gcalEvents = {};
   updateGcalUI();
   renderWeek();
-  showGcalResult('캘린더 연결이 해제되었습니다.');
+  gcalDisconnectBtn.disabled = false;
+  showGcalResult(serverCleared
+    ? '캘린더 연결이 해제되었습니다.'
+    : '이 기기에서 연결을 해제했습니다. 서버 연결은 온라인에서 다시 시도해주세요.', !serverCleared);
 });
 
 // 달력 뷰 모달 (데스크톱)
@@ -524,7 +531,7 @@ gcalSheetOverlay?.addEventListener('click', closeGcalSheet);
 
 gcalCalGrid?.addEventListener('click', e => {
   const chip = e.target.closest('.gcal-cal-event');
-  if (!chip || !gcalTokenValid()) return;
+  if (!chip) return;
   const gcalId = chip.dataset.gcalId;
   const dk     = chip.dataset.dateKey;
   const ev     = (gcalEvents[dk] || []).find(ev => ev.id === gcalId);
@@ -600,7 +607,7 @@ updateDday();
   window.history.replaceState({}, '', clean.toString());
 
   if (gcalParam === 'connected') {
-    localStorage.setItem('gcal_connected', '1');
+    if (typeof _gcalRememberConnected === 'function') _gcalRememberConnected();
     // auth + gcal.js 로드 완료 후 토큰 발급 시도
     const tryInit = (attempts = 0) => {
       if (!currentUser || typeof gcalRefreshFromServer !== 'function') {
@@ -615,7 +622,7 @@ updateDday();
           setTimeout(() => showGcalResult?.('✅ 구글 캘린더가 연결되었습니다.'), 500);
         })
         .catch(() => {
-          // 토큰 발급 실패해도 gcal_connected 플래그는 유지 (재시도 가능)
+          // 토큰 발급이 일시적으로 실패해도 연결 표시는 유지하고 다음 주기에 재시도
           setTimeout(() => showGcalResult?.('⚠️ 캘린더 권한 저장됨. 잠시 후 자동 연결됩니다.'), 500);
         });
     };

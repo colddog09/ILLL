@@ -64,7 +64,8 @@ const DEFAULT_STATE = {
   pool:      [],
   schedule:  {},
   dayOffset: 0,
-  links:     []
+  links:     [],
+  timetable: null
 };
 
 let state      = { ...DEFAULT_STATE };
@@ -102,6 +103,7 @@ function resetScheduleState() {
   state.pool     = [];
   state.schedule = {};
   state.links    = [];
+  state.timetable = null;
 }
 
 // 손상/유실된 항목 제거 — 텍스트 없는 항목, 잘못된 날짜 키, 빈 배열 정리
@@ -125,11 +127,19 @@ function applyPersistedState(data = {}) {
   state.pool     = data.pool     || [];
   state.schedule = data.schedule || {};
   state.links    = data.links    || [];
+  state.timetable = data.timetable && typeof data.timetable === 'object'
+    ? data.timetable
+    : null;
   _sanitizeState();
 }
 
 function stateSnapshot() {
-  return JSON.stringify({ pool: state.pool, schedule: state.schedule, links: state.links });
+  return JSON.stringify({
+    pool: state.pool,
+    schedule: state.schedule,
+    links: state.links,
+    timetable: state.timetable
+  });
 }
 
 // ──────────────────────────────────────────────
@@ -145,7 +155,11 @@ function _writeLocalBackup() {
   if (!k || !hasAnyTaskData()) return; // 빈 상태로 덮어쓰지 않음
   try {
     localStorage.setItem(k, JSON.stringify({
-      pool: state.pool, schedule: state.schedule, links: state.links || [], ts: Date.now()
+      pool: state.pool,
+      schedule: state.schedule,
+      links: state.links || [],
+      timetable: state.timetable,
+      ts: Date.now()
     }));
   } catch (_) { /* 용량 초과 등 무시 */ }
 }
@@ -162,18 +176,19 @@ function restoreFromLocalBackup() {
   const b = readLocalBackup();
   const poolN = (b?.pool || []).length;
   const itemN = Object.values(b?.schedule || {}).reduce((n, a) => n + (a?.length || 0), 0);
-  if (!b || (poolN === 0 && itemN === 0)) {
+  const hasTimetable = !!b?.timetable;
+  if (!b || (poolN === 0 && itemN === 0 && !hasTimetable)) {
     alert('😢 이 기기에 저장된 백업이 없어요.\n\n백업은 이 기기에서 일정을 추가·수정할 때 자동으로 만들어져요. 다른 기기에서 쓰던 일정은 이 기기 백업으로는 복구할 수 없어요.');
     return;
   }
   const when = b.ts ? new Date(b.ts).toLocaleString('ko-KR') : '알 수 없음';
   const ok = confirm(
     `이 기기에 저장된 백업으로 되돌릴까요?\n\n` +
-    `🗓️ 백업 시각: ${when}\n📋 할일 ${poolN}개 · 일정 ${itemN}개\n\n` +
+    `🗓️ 백업 시각: ${when}\n📋 할일 ${poolN}개 · 일정 ${itemN}개${hasTimetable ? ' · 시간표 포함' : ''}\n\n` +
     `⚠️ 지금 화면의 일정은 이 백업으로 덮어써지고, 클라우드에도 저장됩니다.`
   );
   if (!ok) return;
-  applyPersistedState({ pool: b.pool, schedule: b.schedule, links: b.links });
+  applyPersistedState({ pool: b.pool, schedule: b.schedule, links: b.links, timetable: b.timetable });
   lastSavedSnapshot = null;   // 강제로 다름 처리 → 업로드 보장
   _pendingSave = true;
   renderApp();
@@ -207,6 +222,7 @@ function pruneScheduleForSave(schedule) {
 // 데이터 유효성
 // ──────────────────────────────────────────────
 function hasAnyTaskData() {
+  if (state.timetable) return true;
   if (state.pool?.length > 0) return true;
   if (state.schedule) {
     for (const k of Object.keys(state.schedule)) {
@@ -218,6 +234,7 @@ function hasAnyTaskData() {
 
 function _remoteHasData(remote) {
   if (!remote) return false;
+  if (remote.timetable) return true;
   if (remote.pool?.length > 0) return true;
   if (remote.schedule) {
     for (const k of Object.keys(remote.schedule)) {
@@ -249,7 +266,8 @@ function prunedSnapshot() {
   return JSON.stringify({
     pool: state.pool,
     schedule: pruneScheduleForSave(state.schedule),
-    links: state.links || []
+    links: state.links || [],
+    timetable: state.timetable
   });
 }
 // remote 행을 동일 형태 스냅샷으로 정규화
@@ -257,7 +275,8 @@ function _remoteSnapshot(remote) {
   return JSON.stringify({
     pool: remote.pool || [],
     schedule: remote.schedule || {},
-    links: remote.links || []
+    links: remote.links || [],
+    timetable: remote.timetable || null
   });
 }
 
@@ -286,6 +305,10 @@ function _mergeStates(local, remote) {
     pool:     _mergeById(local.pool, remote.pool),
     schedule: _mergeSchedule(local.schedule, remote.schedule),
     links:    _mergeById(local.links, remote.links),
+    // 시간표 편집은 한 덩어리로 저장한다. 충돌 시 방금 편집한 로컬 값을 우선한다.
+    timetable: Object.prototype.hasOwnProperty.call(local, 'timetable')
+      ? local.timetable
+      : (remote.timetable || null),
   };
 }
 
@@ -296,6 +319,7 @@ function _supabaseSavePayloadAt(ts) {
     pool:       state.pool,
     schedule:   pruneScheduleForSave(state.schedule),
     links:      state.links || [],
+    timetable:  state.timetable,
     updated_at: ts
   };
 }
@@ -400,6 +424,7 @@ async function _uploadNow() {
         pool:       state.pool,
         schedule:   pruneScheduleForSave(state.schedule),
         links:      state.links || [],
+        timetable:  state.timetable,
         updated_at: ts,
         // 이 저장이 기반한 서버 버전 — 서버가 더 최신이면 409로 충돌 알림
         base_updated_at: _lastRemoteTs ? new Date(_lastRemoteTs).toISOString() : null,
@@ -415,8 +440,8 @@ async function _uploadNow() {
       if (server && _mergeRetries < 3) {
         _mergeRetries++;
         const merged = _mergeStates(
-          { pool: state.pool, schedule: state.schedule, links: state.links },
-          { pool: server.pool, schedule: server.schedule, links: server.links }
+          { pool: state.pool, schedule: state.schedule, links: state.links, timetable: state.timetable },
+          { pool: server.pool, schedule: server.schedule, links: server.links, timetable: server.timetable }
         );
         applyPersistedState(merged);
         _lastRemoteTs = Date.parse(server.updated_at) || _lastRemoteTs;
@@ -692,7 +717,15 @@ function _setLoadingOverlay(on) {
     ov = document.createElement('div');
     ov.id = 'appLoadingOverlay';
     ov.className = 'app-loading-overlay';
-    ov.innerHTML = '<div class="app-loading-spinner"></div><div class="app-loading-text">일정 불러오는 중…</div>';
+    ov.innerHTML = `
+      <div class="app-loading-card" role="status" aria-live="polite">
+        <div class="app-loading-mark"><span></span><span></span><span></span></div>
+        <div class="app-loading-copy">
+          <strong>오늘을 준비하고 있어요</strong>
+          <span class="app-loading-text">일정 불러오는 중…</span>
+        </div>
+        <div class="app-loading-progress" aria-hidden="true"><i></i></div>
+      </div>`;
     document.body.appendChild(ov);
   } else if (ov) {
     ov.classList.add('app-loading-overlay--out');

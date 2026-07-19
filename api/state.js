@@ -34,7 +34,7 @@ export default async function handler(req, res) {
       .maybeSingle();
 
     if (error) return res.status(500).json({ error: error.message });
-    if (!data)  return res.status(200).json({ pool: [], schedule: {}, links: [], updated_at: null });
+    if (!data)  return res.status(200).json({ pool: [], schedule: {}, links: [], timetable: null, updated_at: null });
 
     if (data.data_enc) {
       try {
@@ -49,12 +49,13 @@ export default async function handler(req, res) {
       pool:       data.pool     || [],
       schedule:   data.schedule || {},
       links:      data.links    || [],
+      timetable:  null,
       updated_at: data.updated_at,
     });
   }
 
   // POST — optimistic concurrency + encrypt and save
-  const { pool, schedule, links, updated_at, base_updated_at } = req.body || {};
+  const { pool, schedule, links, timetable, updated_at, base_updated_at } = req.body || {};
   const ts      = updated_at || new Date().toISOString();
   const hasBase = Object.prototype.hasOwnProperty.call(req.body || {}, 'base_updated_at');
 
@@ -72,7 +73,7 @@ export default async function handler(req, res) {
 
     // 서버가 클라이언트 기준(base)보다 더 최신 → 충돌. 현재 서버 상태를 돌려줘 병합 유도
     if (storedMs > 0 && storedMs > baseMs) {
-      let current = { pool: cur.pool || [], schedule: cur.schedule || {}, links: cur.links || [] };
+      let current = { pool: cur.pool || [], schedule: cur.schedule || {}, links: cur.links || [], timetable: null };
       if (cur.data_enc) {
         try { current = await decryptJson(key, cur.data_enc); } catch {}
       }
@@ -84,6 +85,7 @@ export default async function handler(req, res) {
     pool:     pool     || [],
     schedule: schedule || {},
     links:    links    || [],
+    timetable: timetable || null,
   });
 
   const { error } = await admin.from('user_states').upsert(

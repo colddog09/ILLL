@@ -302,7 +302,8 @@ function renderGcalSidePanel() {
   panel.appendChild(header);
 
   // 캘린더 미연결 상태
-  if (typeof gcalTokenValid === 'function' && !gcalTokenValid()) {
+  if (typeof gcalTokenValid === 'function' && !gcalTokenValid()
+      && !(typeof isGcalConnected === 'function' && isGcalConnected())) {
     const notConn = document.createElement('div');
     notConn.className = 'gcal-side-empty gcal-side-empty--disconnected';
     notConn.textContent = '연결 안됨';
@@ -465,7 +466,8 @@ function renderGcalSheet() {
 
   body.innerHTML = '';
 
-  if (typeof gcalTokenValid === 'function' && !gcalTokenValid()) {
+  if (typeof gcalTokenValid === 'function' && !gcalTokenValid()
+      && !(typeof isGcalConnected === 'function' && isGcalConnected())) {
     body.innerHTML = '<div class="gcal-sheet__empty">캘린더가 연결되지 않았습니다.<br>설정에서 연결해주세요.</div>';
     return;
   }
@@ -883,4 +885,5 @@ function renderApp() {
   renderPool();
   if (typeof renderGcalSidePanel === 'function') renderGcalSidePanel();
   if (typeof renderLinks === 'function') renderLinks();
+  if (typeof renderTimetable === 'function' && document.body.classList.contains('app-timetable-open')) renderTimetable();
 }

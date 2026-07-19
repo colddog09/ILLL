@@ -70,9 +70,16 @@ export default async function handler(req, res) {
 
   if (!tokens.refresh_token) {
     console.warn('gcal-callback: refresh_token 없음 (이미 연결된 계정?)', tokens.error);
-    // access_token만 있어도 일단 연결된 것으로 처리
-    // (이전에 consent를 줬고 refresh_token이 이미 DB에 있는 경우)
-    return res.redirect('/?gcal=connected&fresh=0');
+    // 이미 DB에 저장된 refresh token이 있을 때만 연결 성공으로 처리한다.
+    // 없는데 성공으로 표시하면 다음 접속부터 계속 연결이 끊긴 것처럼 보인다.
+    const { data: existing } = await supabase
+      .from('user_states')
+      .select('gcal_refresh_token')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    return existing?.gcal_refresh_token
+      ? res.redirect('/?gcal=connected&fresh=0')
+      : res.redirect('/?gcal=error&reason=no_refresh_token');
   }
 
   // DB에 refresh_token 저장
