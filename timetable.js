@@ -6,6 +6,7 @@
 'use strict';
 
 const TT_WEEKDAYS = { 1: '월', 2: '화', 3: '수', 4: '목', 5: '금', 6: '토', 7: '일' };
+const TT_ALL_DAYS = [1, 2, 3, 4, 5, 6, 7];
 const TT_COLORS = ['#8b93ff', '#56c8a5', '#ff9c73', '#f2c94c', '#e889b5', '#58a6e7', '#a982e7', '#76b66b'];
 const TT_HOUR_HEIGHT = 58;
 
@@ -31,8 +32,6 @@ function ttTimeToMinutes(value) {
 
 function ttNormalizeModel(model) {
   if (!model || typeof model !== 'object') return null;
-  const weekdays = [...new Set((model.weekdays || model.selectedWeekdays || [1, 2, 3, 4, 5])
-    .map(Number).filter(day => day >= 1 && day <= 7))].sort((a, b) => a - b);
   const hourStart = Math.max(0, Math.min(22, Number(model.hourStart) || 8));
   const hourEnd = Math.max(hourStart + 1, Math.min(24, Number(model.hourEnd) || 18));
   const courses = (Array.isArray(model.courses) ? model.courses : []).map(course => ({
@@ -51,7 +50,8 @@ function ttNormalizeModel(model) {
   return {
     id: model.id || ttId(),
     name: String(model.name || '내 시간표'),
-    weekdays: weekdays.length ? weekdays : [1, 2, 3, 4, 5],
+    // 모바일에서는 월~일을 항상 한 화면에 보여준다.
+    weekdays: [...TT_ALL_DAYS],
     hourStart,
     hourEnd,
     courses
@@ -75,6 +75,17 @@ function ttSave(model) {
 function ttTodayWeekday() {
   const day = new Date().getDay();
   return day === 0 ? 7 : day;
+}
+
+function ttDatesThisWeek() {
+  const now = new Date();
+  const mondayOffset = ttTodayWeekday() - 1;
+  const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - mondayOffset, 12);
+  return TT_ALL_DAYS.map((_, index) => {
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + index);
+    return date;
+  });
 }
 
 function ttLayoutSessions(sessions) {
@@ -112,7 +123,8 @@ function renderTimetable() {
   }
 
   if (title) title.textContent = model.name;
-  const days = model.weekdays;
+  const days = TT_ALL_DAYS;
+  const weekDates = ttDatesThisWeek();
   const bodyHeight = (model.hourEnd - model.hourStart) * TT_HOUR_HEIGHT;
   const today = ttTodayWeekday();
   const now = new Date();
@@ -156,17 +168,11 @@ function renderTimetable() {
 
   const nowTop = ((nowMinutes - model.hourStart * 60) / 60) * TT_HOUR_HEIGHT;
   content.innerHTML = `
-    <div class="tt-summary-card">
-      <div><span>오늘</span><strong>${TT_WEEKDAYS[today]}요일</strong></div>
-      <p>${model.courses.filter(c => c.sessions.some(s => s.weekday === today)).length
-        ? `수업 ${model.courses.filter(c => c.sessions.some(s => s.weekday === today)).length}개가 있어요`
-        : '등록된 수업이 없어요'}</p>
-    </div>
     <div class="tt-scroll" aria-label="${ttEsc(model.name)} 시간표">
       <div class="tt-grid" style="--tt-days:${days.length};--tt-grid-height:${bodyHeight}px">
         <div class="tt-days-head">
           <span class="tt-corner"></span>
-          ${days.map(day => `<span class="tt-day-label${day === today ? ' is-today' : ''}">${TT_WEEKDAYS[day]}</span>`).join('')}
+          ${days.map((day, index) => `<span class="tt-day-label${day === today ? ' is-today' : ''}"><b>${TT_WEEKDAYS[day]}</b><em>${weekDates[index].getDate()}</em></span>`).join('')}
         </div>
         <div class="tt-grid-body" style="height:${bodyHeight}px">
           ${hoursHtml}
@@ -186,7 +192,7 @@ function renderTimetable() {
 function ttOpenSetup(editing) {
   const current = ttModel();
   const model = current || {
-    id: ttId(), name: '내 시간표', weekdays: [1, 2, 3, 4, 5], hourStart: 8, hourEnd: 18, courses: []
+    id: ttId(), name: '내 시간표', weekdays: [...TT_ALL_DAYS], hourStart: 8, hourEnd: 18, courses: []
   };
   const modal = ttSheet(`
     <form id="ttSetupForm" class="tt-form">
@@ -197,9 +203,6 @@ function ttOpenSetup(editing) {
       </div>
       <div class="tt-sheet__body">
         <label class="tt-field"><span>이름</span><input name="name" maxlength="30" value="${ttEsc(model.name)}" required></label>
-        <fieldset class="tt-field"><legend>표시 요일</legend><div class="tt-week-picker">
-          ${Object.entries(TT_WEEKDAYS).map(([day, label]) => `<label><input type="checkbox" name="weekday" value="${day}" ${model.weekdays.includes(Number(day)) ? 'checked' : ''}><span>${label}</span></label>`).join('')}
-        </div></fieldset>
         <div class="tt-field"><span>표시 시간</span><div class="tt-range-row">
           <select name="hourStart">${Array.from({ length: 23 }, (_, i) => `<option value="${i}" ${i === model.hourStart ? 'selected' : ''}>${String(i).padStart(2, '0')}:00</option>`).join('')}</select>
           <b>부터</b>
@@ -212,12 +215,10 @@ function ttOpenSetup(editing) {
   modal.querySelector('#ttSetupForm')?.addEventListener('submit', event => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    const weekdays = form.getAll('weekday').map(Number).sort((a, b) => a - b);
     const hourStart = Number(form.get('hourStart'));
     const hourEnd = Number(form.get('hourEnd'));
-    if (!weekdays.length) return ttFormError(event.currentTarget, '표시할 요일을 하나 이상 선택해주세요.');
     if (hourEnd <= hourStart) return ttFormError(event.currentTarget, '종료 시간은 시작 시간보다 늦어야 해요.');
-    ttSave({ ...model, name: String(form.get('name')).trim(), weekdays, hourStart, hourEnd });
+    ttSave({ ...model, name: String(form.get('name')).trim(), weekdays: [...TT_ALL_DAYS], hourStart, hourEnd });
     ttCloseSheet(modal);
   });
 
@@ -231,7 +232,7 @@ function ttOpenSetup(editing) {
 }
 
 function ttSessionRow(model, session = {}) {
-  const weekdays = model.weekdays;
+  const weekdays = TT_ALL_DAYS;
   const start = session.startMinutes ?? Math.max(9, model.hourStart) * 60;
   const end = session.endMinutes ?? Math.min(24, Math.max(10, model.hourStart + 1)) * 60;
   const row = document.createElement('div');

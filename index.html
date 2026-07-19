@@ -23,7 +23,7 @@
   <link rel="apple-touch-icon" href="/image/apple-touch-icon.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/image/apple-touch-icon.png">
   <meta name="theme-color" content="#6c63ff">
-  <link rel="stylesheet" href="style.css?v=80" />
+  <link rel="stylesheet" href="style.css?v=81" />
 </head>
 <body>
 
@@ -232,11 +232,11 @@
   </div>
 
   <!-- ─── 사용자 설정 모달 ─── -->
-  <div id="settingsModal" class="modal-overlay" hidden>
+  <div id="settingsModal" class="modal-overlay tab-page-overlay" hidden>
     <div class="modal-box">
       <div class="modal-header">
         <h2 id="settingsModalTitle">사용자 설정</h2>
-        <button id="settingsCloseBtn" class="modal-close">&times;</button>
+        <button id="settingsCloseBtn" class="modal-close tab-page-back" aria-label="홈으로 돌아가기">←</button>
       </div>
 
 
@@ -355,11 +355,11 @@
   </div>
 
   <!-- ─── 그룹 모달 ─── -->
-  <div id="groupModal" class="modal-overlay" hidden>
+  <div id="groupModal" class="modal-overlay tab-page-overlay" hidden>
     <div class="modal-box">
       <div class="modal-header">
         <h2>👥 그룹 일정</h2>
-        <button id="groupCloseBtn" class="modal-close">&times;</button>
+        <button id="groupCloseBtn" class="modal-close tab-page-back" aria-label="홈으로 돌아가기">←</button>
       </div>
       <div id="groupModalBody" class="modal-body modal-body--col"></div>
     </div>
@@ -730,8 +730,8 @@
   <script src="drag.js?v=10"></script>
   <script src="deadline.js?v=3"></script>
   <script src="gcal/gcal.js?v=15"></script>
-  <script src="timetable.js?v=1"></script>
-  <script src="groups.js?v=24"></script>
+  <script src="timetable.js?v=2"></script>
+  <script src="groups.js?v=25"></script>
   <script src="push.js?v=3"></script>
   <script src="modals.js?v=18"></script>
   <script src="events.js?v=21"></script>

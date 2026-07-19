@@ -1395,99 +1395,84 @@ async function _gmDeleteChatMsg(groupId, msgId) {
   // 초기 슬라이더 위치
   requestAnimationFrame(() => moveSlider(0, false));
 
-  // ── 모달 열기/닫기 ────────────────────────────
-  function openGroupTab() {
+  function setTabHash(name, replace = false) {
+    const next = `#${name}`;
+    if (window.location.hash === next) return;
+    window.history[replace ? 'replaceState' : 'pushState'](null, '', next);
+  }
+
+  // ── 탭 페이지 열기/닫기 ──────────────────────
+  function openGroupTab(updateHash = true) {
     if (!currentUser) { alert('그룹 기능은 로그인 후 이용 가능합니다.'); return; }
     if (typeof closeTimetableTab === 'function') closeTimetableTab();
     if (settingsModal) settingsModal.hidden = true;
     gmOpenModal();
     setActiveTab('group');
+    if (updateHash) setTabHash('group');
   }
 
-  function openTimetable() {
+  function openTimetable(updateHash = true) {
     if (!currentUser) { alert('시간표는 로그인 후 이용 가능합니다.'); return; }
     gmCloseModal();
     if (settingsModal) settingsModal.hidden = true;
     if (typeof openTimetableTab === 'function') openTimetableTab();
     setActiveTab('timetable');
+    if (updateHash) setTabHash('timetable');
   }
 
-  function closeAll() {
-    gmCloseModal();
-    if (settingsModal) settingsModal.hidden = true;
-    if (typeof closeTimetableTab === 'function') closeTimetableTab();
-    setActiveTab('home');
-  }
-
-  // ── 탭 클릭 ──────────────────────────────────
-  tabEls[0]?.addEventListener('click', closeAll);
-  tabEls[1]?.addEventListener('click', openTimetable);
-  tabEls[2]?.addEventListener('click', openGroupTab);
-  tabEls[3]?.addEventListener('click', () => {
+  function openSettingsTab(updateHash = true) {
     if (!currentUser) { alert('로그인 후 이용 가능합니다.'); return; }
     if (typeof closeTimetableTab === 'function') closeTimetableTab();
     gmCloseModal();
     document.getElementById('settingsBtn')?.click();
     setActiveTab('settings');
-  });
-
-  // 헤더 버튼
-  document.getElementById('groupBtn')?.addEventListener('click', e => { e.preventDefault(); openGroupTab(); });
-  document.getElementById('settingsBtn')?.addEventListener('click', () => setActiveTab('settings'));
-
-  // 닫기 버튼 → 홈
-  document.getElementById('groupCloseBtn')?.addEventListener('click', closeAll);
-  document.getElementById('settingsCloseBtn')?.addEventListener('click', closeAll);
-  groupModal?.addEventListener('click', e => { if (e.target === groupModal) closeAll(); });
-  settingsModal?.addEventListener('click', e => { if (e.target === settingsModal) closeAll(); });
-
-  // 뒤로가기(#home) 지원
-  window.addEventListener('hashchange', () => {
-    if (!window.location.hash || window.location.hash === '#home') closeAll();
-  });
-
-  // ── 스와이프 다운 → 모달 닫기 ───────────────
-  function addSwipeToDismiss(modal, onDismiss) {
-    const box = modal?.querySelector('.modal-box');
-    if (!box) return;
-    let startY = 0, dy = 0, active = false;
-
-    box.addEventListener('touchstart', e => {
-      const body = box.querySelector('.modal-body');
-      if (body && body.scrollTop > 5) return;
-      startY = e.touches[0].clientY; dy = 0; active = true;
-    }, { passive: true });
-
-    box.addEventListener('touchmove', e => {
-      if (!active) return;
-      dy = e.touches[0].clientY - startY;
-      if (dy > 0) {
-        box.style.transition = 'none';
-        box.style.transform  = `translateY(${Math.min(dy, 280)}px)`;
-      } else {
-        active = false; box.style.transform = '';
-      }
-    }, { passive: true });
-
-    box.addEventListener('touchend', () => {
-      if (!active) return;
-      active = false;
-      if (dy > 90) {
-        box.style.transition = 'transform 0.22s ease-in';
-        box.style.transform  = 'translateY(110%)';
-        setTimeout(() => { box.style.transform = ''; box.style.transition = ''; onDismiss(); }, 220);
-      } else {
-        box.style.transition = 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1)';
-        box.style.transform  = '';
-        setTimeout(() => { box.style.transition = ''; }, 350);
-      }
-    }, { passive: true });
+    if (updateHash) setTabHash('settings');
   }
 
-  addSwipeToDismiss(groupModal,    () => { gmCloseModal(); setActiveTab('home'); });
-  addSwipeToDismiss(settingsModal, () => { if (settingsModal) settingsModal.hidden = true; setActiveTab('home'); });
+  function closeAll(updateHash = true) {
+    gmCloseModal();
+    if (settingsModal) settingsModal.hidden = true;
+    if (typeof closeTimetableTab === 'function') closeTimetableTab();
+    setActiveTab('home');
+    if (updateHash) setTabHash('home');
+  }
 
-  setTimeout(() => setActiveTab('home'), 350);
+  // ── 탭 클릭 ──────────────────────────────────
+  tabEls[0]?.addEventListener('click', () => closeAll(true));
+  tabEls[1]?.addEventListener('click', () => openTimetable(true));
+  tabEls[2]?.addEventListener('click', () => openGroupTab(true));
+  tabEls[3]?.addEventListener('click', () => openSettingsTab(true));
+
+  // 헤더 버튼
+  document.getElementById('groupBtn')?.addEventListener('click', e => { e.preventDefault(); openGroupTab(true); });
+  document.getElementById('settingsBtn')?.addEventListener('click', () => {
+    setActiveTab('settings');
+    setTabHash('settings');
+  });
+
+  // 닫기 버튼 → 홈
+  document.getElementById('groupCloseBtn')?.addEventListener('click', () => closeAll(true));
+  document.getElementById('settingsCloseBtn')?.addEventListener('click', () => closeAll(true));
+  groupModal?.addEventListener('click', e => { if (e.target === groupModal) closeAll(true); });
+  settingsModal?.addEventListener('click', e => { if (e.target === settingsModal) closeAll(true); });
+
+  function applyTabRoute() {
+    const hash = window.location.hash || '#home';
+    if (hash === '#timetable') {
+      openTimetable(false);
+    } else if (hash.startsWith('#group')) {
+      if (groupModal?.hidden) openGroupTab(false);
+      else setActiveTab('group');
+    } else if (hash === '#settings') {
+      if (settingsModal?.hidden) openSettingsTab(false);
+      else setActiveTab('settings');
+    } else {
+      closeAll(false);
+    }
+  }
+
+  window.addEventListener('hashchange', applyTabRoute);
+  setTimeout(applyTabRoute, 350);
 })();
 
 // ── ?join=CODE URL 자동 참여 ──────────────────────────────────

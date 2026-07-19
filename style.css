@@ -5840,3 +5840,148 @@ a.settings-tab {
 .gm-nudge-send:disabled { opacity: 0.5; cursor: default; }
 [data-theme="dark"] .gm-nudge-sheet,
 [data-theme="starrail"] .gm-nudge-sheet { background: #1c1a2e; }
+
+/* ============================================================
+   모바일 레이아웃 안정화 + 해시 기반 탭 페이지
+   ============================================================ */
+@media (max-width:768px) {
+  /* 날짜 이동 바가 일정 카드 위에 떠서 가리는 문제 제거 */
+  .schedule-area {
+    overflow-x:hidden;
+    overflow-y:auto;
+    padding-top:10px;
+  }
+
+  .schedule-area__header {
+    position:relative;
+    top:auto;
+    z-index:auto;
+    margin:0 0 10px;
+    padding:5px;
+  }
+
+  .day-card--single { min-height:0; }
+
+  /* 모임/설정은 바텀시트가 아니라 독립된 탭 페이지로 표시 */
+  #groupModal.tab-page-overlay,
+  #settingsModal.tab-page-overlay {
+    z-index:149;
+    align-items:stretch;
+    justify-content:stretch;
+    padding:0 0 calc(88px + env(safe-area-inset-bottom,0px));
+    background:var(--bg);
+    backdrop-filter:none;
+    -webkit-backdrop-filter:none;
+    animation:tabPageFade .18s ease both;
+  }
+
+  #groupModal.tab-page-overlay>.modal-box,
+  #settingsModal.tab-page-overlay>.modal-box {
+    width:100%;
+    max-width:none;
+    max-height:none;
+    height:100%;
+    border:0;
+    border-radius:0;
+    background:var(--bg);
+    box-shadow:none;
+    animation:tabPageIn .24s cubic-bezier(.2,.8,.25,1) both;
+  }
+
+  #groupModal.tab-page-overlay>.modal-box::before,
+  #settingsModal.tab-page-overlay>.modal-box::before { display:none; }
+
+  #groupModal .modal-header,
+  #settingsModal .modal-header {
+    min-height:calc(58px + env(safe-area-inset-top,0px));
+    padding:calc(8px + env(safe-area-inset-top,0px)) 16px 8px;
+    border-bottom:1px solid var(--border);
+    background:color-mix(in srgb,var(--surface) 92%,transparent);
+    backdrop-filter:blur(22px) saturate(1.45);
+    -webkit-backdrop-filter:blur(22px) saturate(1.45);
+  }
+
+  #groupModal .modal-header h2,
+  #settingsModal .modal-header h2 {
+    font-size:1.02rem;
+    background:none;
+    color:var(--text);
+    -webkit-text-fill-color:currentColor;
+  }
+
+  #groupModal .modal-body,
+  #settingsModal .modal-body {
+    padding:16px 14px calc(24px + env(safe-area-inset-bottom,0px));
+  }
+
+  .tab-page-back {
+    order:-1;
+    display:grid;
+    place-items:center;
+    width:40px;
+    height:40px;
+    padding:0;
+    border:1px solid var(--border);
+    border-radius:13px;
+    background:var(--surface-hover);
+    color:var(--text);
+    font-size:1.2rem;
+    font-weight:800;
+  }
+
+  @keyframes tabPageIn {
+    from{opacity:.55;transform:translateX(14px)}
+    to{opacity:1;transform:translateX(0)}
+  }
+  @keyframes tabPageFade { from{opacity:0} to{opacity:1} }
+
+  /* 시간표: 월~일 7일을 가로 스크롤 없이 한 화면에 고정 */
+  .timetable-view {
+    height:100dvh;
+    min-height:0;
+    overflow-x:hidden;
+    overflow-y:auto;
+    overscroll-behavior-y:contain;
+    -webkit-overflow-scrolling:touch;
+  }
+  .tt-content { padding:10px 8px calc(106px + env(safe-area-inset-bottom,0px)); }
+  .tt-scroll { width:100%; overflow:hidden; border-radius:16px; }
+  .tt-grid { --tt-time-w:28px; width:100%; min-width:0; }
+  .tt-days-head {
+    height:52px;
+    grid-template-columns:var(--tt-time-w) repeat(7,minmax(0,1fr));
+  }
+  .tt-days-layer { grid-template-columns:repeat(7,minmax(0,1fr)); }
+  .tt-day-label { display:flex; flex-direction:column; gap:3px; align-items:center; justify-content:center; min-width:0; font-size:.62rem; }
+  .tt-day-label b { font-size:.62rem; line-height:1; }
+  .tt-day-label em {
+    display:grid;
+    place-items:center;
+    width:22px;
+    height:22px;
+    border-radius:50%;
+    color:var(--text-sub);
+    font-size:.66rem;
+    font-style:normal;
+    font-weight:800;
+  }
+  .tt-day-label:nth-child(7) b { color:#4f8ff2; }
+  .tt-day-label:nth-child(8) b { color:#ef5c68; }
+  .tt-day-label.is-today b { color:var(--accent); }
+  .tt-day-label.is-today em { background:var(--accent); color:#fff; box-shadow:0 4px 10px rgba(108,99,255,.25); }
+  .tt-day-label.is-today::after { display:none; }
+  .tt-hour-label { width:var(--tt-time-w); padding-right:4px; font-size:.5rem; }
+  .tt-course { padding:4px 2px; border-radius:6px; }
+  .tt-course strong {
+    display:-webkit-box;
+    overflow:hidden;
+    -webkit-box-orient:vertical;
+    -webkit-line-clamp:3;
+    white-space:normal;
+    word-break:break-all;
+    font-size:.56rem;
+    line-height:1.18;
+  }
+  .tt-course span,.tt-course small { display:none; }
+  .tt-fab { right:12px; bottom:calc(88px + env(safe-area-inset-bottom,0px)); }
+}
