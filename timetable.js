@@ -177,7 +177,8 @@ function renderTimetable() {
   let hoursHtml = '';
   for (let hour = model.hourStart; hour <= model.hourEnd; hour++) {
     const top = (hour - model.hourStart) * hourHeight;
-    if (hour < model.hourEnd) hoursHtml += `<span class="tt-hour-label" style="top:${top - 6}px">${hour}</span>`;
+    const labelTop = Math.max(1, Math.min(bodyHeight - 10, top - 5));
+    hoursHtml += `<span class="tt-hour-label" style="top:${labelTop}px">${hour}</span>`;
     hoursHtml += `<i class="tt-hour-line" style="top:${top}px"></i>`;
     if (hour < model.hourEnd) hoursHtml += `<i class="tt-half-line" style="top:${top + hourHeight / 2}px"></i>`;
   }

@@ -5435,7 +5435,7 @@ a.settings-tab {
 .tt-day-label.is-today { color:var(--accent); }
 .tt-day-label.is-today::after { content:''; width:4px; height:4px; margin-top:-6px; border-radius:50%; background:var(--accent); }
 .tt-grid-body { position:relative; min-height:400px; overflow:hidden; }
-.tt-hour-label { position:absolute; left:0; z-index:3; width:var(--tt-time-w); padding-right:7px; color:var(--text-sub); text-align:right; font-size:.62rem; font-variant-numeric:tabular-nums; }
+.tt-hour-label { position:absolute; left:0; z-index:3; width:var(--tt-time-w); padding-right:7px; overflow:visible; color:var(--text-sub); text-align:right; font-size:.62rem; line-height:1; font-variant-numeric:tabular-nums; }
 .tt-hour-line,.tt-half-line { position:absolute; left:var(--tt-time-w); right:0; height:1px; background:var(--border); pointer-events:none; }
 .tt-half-line { opacity:.42; }
 .tt-days-layer { position:absolute; inset:0 0 0 var(--tt-time-w); display:grid; grid-template-columns:repeat(var(--tt-days),minmax(68px,1fr)); }
@@ -6232,23 +6232,23 @@ body.app-timetable-open>.timetable-view {
   }
 }
 
-/* 설치형 웹앱의 바깥 페이지 스크롤·고무줄 움직임 차단 */
-html.standalone-app,
+/* 설치형 웹앱에서 드래그 중 글씨·이미지가 선택되는 현상 차단 */
 html.standalone-app body {
-  width:100%;
-  height:100dvh;
-  max-height:100dvh;
-  overflow:hidden !important;
-  overscroll-behavior:none;
+  -webkit-user-select:none;
+  user-select:none;
+  -webkit-touch-callout:none;
 }
 
-html.standalone-app body {
-  position:fixed;
-  inset:0;
+html.standalone-app img {
+  -webkit-user-drag:none;
+  user-drag:none;
 }
 
-html.standalone-app .schedule-area,
-html.standalone-app .timetable-view,
-html.standalone-app .modal-body {
-  overscroll-behavior:none;
+html.standalone-app input,
+html.standalone-app textarea,
+html.standalone-app select,
+html.standalone-app [contenteditable="true"] {
+  -webkit-user-select:text;
+  user-select:text;
+  -webkit-touch-callout:default;
 }
