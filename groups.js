@@ -1360,23 +1360,23 @@ async function _gmDeleteChatMsg(groupId, msgId) {
 
   // ── 슬라이더 이동 ──────────────────────────────
   function moveSlider(index, animate = true) {
-    if (!slider || !tabBar) return;
-    const item = tabEls[index];
-    if (!item) return;
+    if (!slider || index < 0 || index >= N) return;
     slider.style.transition = animate
-      ? 'left 0.42s cubic-bezier(0.34,1.56,0.64,1), width 0.28s ease'
+      ? 'transform 0.42s cubic-bezier(0.22,0.9,0.32,1)'
       : 'none';
-    slider.style.left  = Math.max(0, item.offsetLeft - 6) + 'px';
-    slider.style.width = item.offsetWidth + 'px';
+    slider.style.width = `${100 / N}%`;
+    slider.style.transform = `translate3d(${index * 100}%,0,0)`;
+    slider.dataset.index = String(index);
   }
 
   // ── 탭 활성화 ──────────────────────────────────
-  let _activeIdx = 0;
   function activateTab(index) {
     tabEls.forEach((el, i) => {
       if (!el) return;
       const wasActive = el.classList.contains('is-active');
       el.classList.toggle('is-active', i === index);
+      if (i === index) el.setAttribute('aria-current', 'page');
+      else el.removeAttribute('aria-current');
       if (i === index && !wasActive) {
         const icon = el.querySelector('.tabbar-item__icon');
         if (icon) {
@@ -1387,7 +1387,6 @@ async function _gmDeleteChatMsg(groupId, msgId) {
       }
     });
     moveSlider(index);
-    _activeIdx = index;
   }
 
   const nameToIdx = { home: 0, timetable: 1, group: 2, settings: 3 };
@@ -1395,7 +1394,6 @@ async function _gmDeleteChatMsg(groupId, msgId) {
 
   // 초기 슬라이더 위치
   requestAnimationFrame(() => moveSlider(0, false));
-  window.addEventListener('resize', () => moveSlider(_activeIdx, false));
 
   // ── 모달 열기/닫기 ────────────────────────────
   function openGroupTab() {
@@ -1446,46 +1444,6 @@ async function _gmDeleteChatMsg(groupId, msgId) {
   // 뒤로가기(#home) 지원
   window.addEventListener('hashchange', () => {
     if (!window.location.hash || window.location.hash === '#home') closeAll();
-  });
-
-  // ── 슬라이더 드래그 ──────────────────────────
-  let dragActive = false, hasDragged = false, dragStartX = 0;
-  let suppressClick = false;
-
-  tabBar?.addEventListener('click', e => {
-    if (!suppressClick) return;
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    suppressClick = false;
-  }, true);
-
-  tabBar?.addEventListener('pointerdown', e => {
-    dragActive = true; hasDragged = false; dragStartX = e.clientX;
-    tabBar.setPointerCapture(e.pointerId);
-  });
-
-  tabBar?.addEventListener('pointermove', e => {
-    if (!dragActive) return;
-    if (Math.abs(e.clientX - dragStartX) > 8) hasDragged = true;
-    if (!hasDragged) return;
-    const rect = tabBar.getBoundingClientRect();
-    const relX = Math.max(0, Math.min(e.clientX - rect.left, rect.width - 1));
-    moveSlider(Math.floor(relX / (rect.width / N)), false);
-  });
-
-  tabBar?.addEventListener('pointerup', e => {
-    if (!dragActive) return;
-    dragActive = false;
-    if (!hasDragged) return;
-    suppressClick = true;
-    const rect = tabBar.getBoundingClientRect();
-    const relX = Math.max(0, Math.min(e.clientX - rect.left, rect.width - 1));
-    const index = Math.floor(relX / (rect.width / N));
-    // 드래그 완료 → 해당 탭 열기 (각 함수가 성공 후 활성 상태를 설정)
-    if (index === 0) closeAll();
-    else if (index === 1) openTimetable();
-    else if (index === 2) openGroupTab();
-    else if (index === 3) tabEls[3]?.click();
   });
 
   // ── 스와이프 다운 → 모달 닫기 ───────────────

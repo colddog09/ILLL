@@ -5583,6 +5583,187 @@ a.settings-tab {
   .tt-fab { bottom:28px; }
 }
 
+/* ============================================================
+   하단 내비게이션 v2 — 안정적인 탭 조작 + 리퀴드 글래스 렌즈
+   ============================================================ */
+@media (max-width:768px) {
+  .mobile-tabbar {
+    isolation:isolate;
+    overflow:visible;
+    height:68px;
+    padding:6px;
+    gap:0;
+    border:1px solid rgba(255,255,255,.66);
+    border-radius:24px;
+    background:
+      linear-gradient(145deg,rgba(255,255,255,.78),rgba(255,255,255,.42) 48%,rgba(242,240,255,.58)),
+      rgba(255,255,255,.46);
+    box-shadow:
+      0 16px 40px rgba(28,25,66,.18),
+      0 3px 10px rgba(28,25,66,.08),
+      inset 0 1px 0 rgba(255,255,255,.9),
+      inset 0 -1px 0 rgba(108,99,255,.08);
+    backdrop-filter:blur(30px) saturate(190%) contrast(104%);
+    -webkit-backdrop-filter:blur(30px) saturate(190%) contrast(104%);
+    touch-action:manipulation;
+  }
+
+  .mobile-tabbar::before {
+    content:'';
+    position:absolute;
+    z-index:-1;
+    inset:1px 10px auto;
+    height:42%;
+    border-radius:20px 20px 50% 50%;
+    background:linear-gradient(180deg,rgba(255,255,255,.58),transparent);
+    pointer-events:none;
+  }
+
+  .mobile-tabbar::after {
+    content:'';
+    position:absolute;
+    z-index:-2;
+    inset:10px 9%;
+    border-radius:50%;
+    background:rgba(108,99,255,.16);
+    filter:blur(24px);
+    opacity:.5;
+    pointer-events:none;
+  }
+
+  .tabbar-track {
+    inset:6px;
+    overflow:visible;
+    border-radius:18px;
+  }
+
+  .tabbar-slider {
+    left:0;
+    top:0;
+    bottom:0;
+    border:1px solid rgba(255,255,255,.78);
+    border-radius:18px;
+    background:
+      radial-gradient(circle at 28% 12%,rgba(255,255,255,.95),transparent 32%),
+      linear-gradient(145deg,rgba(255,255,255,.72),rgba(226,222,255,.34) 58%,rgba(255,255,255,.5));
+    box-shadow:
+      0 8px 20px rgba(73,63,170,.15),
+      0 2px 5px rgba(32,28,82,.08),
+      inset 0 1px 1px rgba(255,255,255,.96),
+      inset 0 -1px 1px rgba(108,99,255,.13);
+    backdrop-filter:blur(16px) saturate(185%);
+    -webkit-backdrop-filter:blur(16px) saturate(185%);
+    will-change:transform;
+  }
+
+  .tabbar-slider::before {
+    content:'';
+    position:absolute;
+    inset:3px 10px auto;
+    height:38%;
+    border-radius:999px;
+    background:linear-gradient(180deg,rgba(255,255,255,.86),rgba(255,255,255,0));
+    opacity:.84;
+  }
+
+  .tabbar-slider::after {
+    content:'';
+    position:absolute;
+    right:8px;
+    bottom:5px;
+    width:16px;
+    height:6px;
+    border-radius:50%;
+    background:rgba(255,255,255,.8);
+    filter:blur(2px);
+    transform:rotate(-18deg);
+  }
+
+  .tabbar-item {
+    flex:1;
+    min-width:0;
+    height:56px;
+    padding:7px 2px 6px;
+    border-radius:18px;
+    background:transparent;
+    touch-action:manipulation;
+    user-select:none;
+    -webkit-user-select:none;
+  }
+
+  .tabbar-item:active { transform:scale(.94); }
+
+  .tabbar-item__icon {
+    opacity:.46;
+    filter:saturate(.72);
+    transform:translateY(1px) scale(.96);
+    transition:opacity .18s ease,transform .22s ease,filter .18s ease;
+  }
+
+  .tabbar-item__label {
+    color:rgba(60,58,76,.55);
+    font-size:.64rem;
+    font-weight:650;
+    letter-spacing:-.02em;
+    transition:color .18s ease,font-weight .18s ease;
+  }
+
+  .tabbar-item.is-active .tabbar-item__icon {
+    opacity:1;
+    filter:saturate(1.05) drop-shadow(0 2px 5px rgba(108,99,255,.18));
+    transform:translateY(-1px) scale(1.04);
+  }
+
+  .tabbar-item.is-active .tabbar-item__label {
+    color:var(--accent);
+    font-weight:850;
+  }
+
+  @keyframes tabIconBounce {
+    0%{transform:translateY(0) scale(.96)}
+    55%{transform:translateY(-2px) scale(1.09)}
+    100%{transform:translateY(-1px) scale(1.04)}
+  }
+
+  .tabbar-item__icon.tabbar-bounce {
+    animation:tabIconBounce .28s cubic-bezier(.2,.8,.25,1) both;
+  }
+
+  [data-theme="dark"] .mobile-tabbar,
+  [data-theme="starrail"] .mobile-tabbar {
+    border-color:rgba(189,183,255,.24);
+    background:
+      linear-gradient(145deg,rgba(42,38,78,.78),rgba(21,18,50,.62) 56%,rgba(52,43,91,.7)),
+      rgba(19,16,45,.62);
+    box-shadow:
+      0 16px 44px rgba(0,0,0,.42),
+      inset 0 1px 0 rgba(255,255,255,.16),
+      inset 0 -1px 0 rgba(108,99,255,.16);
+  }
+
+  [data-theme="dark"] .tabbar-slider,
+  [data-theme="starrail"] .tabbar-slider {
+    border-color:rgba(211,207,255,.28);
+    background:
+      radial-gradient(circle at 28% 10%,rgba(255,255,255,.22),transparent 34%),
+      linear-gradient(145deg,rgba(132,120,235,.34),rgba(83,70,171,.19) 60%,rgba(255,255,255,.08));
+    box-shadow:
+      0 8px 24px rgba(6,4,22,.36),
+      inset 0 1px 1px rgba(255,255,255,.2),
+      inset 0 -1px 1px rgba(118,102,255,.22);
+  }
+
+  [data-theme="dark"] .tabbar-item__label,
+  [data-theme="starrail"] .tabbar-item__label { color:rgba(255,255,255,.47); }
+
+  [data-theme="dark"] .tabbar-item.is-active .tabbar-item__label,
+  [data-theme="starrail"] .tabbar-item.is-active .tabbar-item__label { color:#bcb5ff; }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  .tabbar-slider,.tabbar-item,.tabbar-item__icon { transition:none !important; animation:none !important; }
+}
+
 
 /* ── 독촉 보내기 모달 ── */
 .gm-nudge-overlay {
