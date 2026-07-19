@@ -88,6 +88,21 @@ function ttDatesThisWeek() {
   });
 }
 
+function ttFittedHourHeight(model) {
+  if (window.innerWidth > 768) return TT_HOUR_HEIGHT;
+  const viewportHeight = window.visualViewport?.height || window.innerHeight || 800;
+  const topbarHeight = document.querySelector('.tt-topbar')?.getBoundingClientRect().height || 64;
+  const tabbarRect = document.getElementById('mobileTabBar')?.getBoundingClientRect();
+  const bottomReserved = tabbarRect?.top > 0
+    ? Math.max(76, viewportHeight - tabbarRect.top + 8)
+    : 88;
+  const dayHeaderHeight = 44;
+  const contentInsets = 16;
+  const hourCount = Math.max(1, model.hourEnd - model.hourStart);
+  const available = Math.max(1, viewportHeight - topbarHeight - bottomReserved - dayHeaderHeight - contentInsets);
+  return Math.max(8, Math.min(TT_HOUR_HEIGHT, available / hourCount));
+}
+
 function ttLayoutSessions(sessions) {
   const sorted = [...sessions].sort((a, b) => a.startMinutes - b.startMinutes || a.endMinutes - b.endMinutes);
   const columns = [];
@@ -125,7 +140,8 @@ function renderTimetable() {
   if (title) title.textContent = model.name;
   const days = TT_ALL_DAYS;
   const weekDates = ttDatesThisWeek();
-  const bodyHeight = (model.hourEnd - model.hourStart) * TT_HOUR_HEIGHT;
+  const hourHeight = ttFittedHourHeight(model);
+  const bodyHeight = (model.hourEnd - model.hourStart) * hourHeight;
   const today = ttTodayWeekday();
   const now = new Date();
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
@@ -143,13 +159,13 @@ function renderTimetable() {
     const blocks = ttLayoutSessions(sessions).map(({ session, columnIndex, columnCount }) => {
       const visibleStart = Math.max(session.startMinutes, rangeStart);
       const visibleEnd = Math.min(session.endMinutes, rangeEnd);
-      const top = ((visibleStart - rangeStart) / 60) * TT_HOUR_HEIGHT;
-      const height = Math.max(28, ((visibleEnd - visibleStart) / 60) * TT_HOUR_HEIGHT);
+      const top = ((visibleStart - rangeStart) / 60) * hourHeight;
+      const height = Math.max(8, ((visibleEnd - visibleStart) / 60) * hourHeight);
       const left = columnIndex * (100 / columnCount);
       const width = 100 / columnCount;
       return `
         <button class="tt-course" type="button" data-course-id="${ttEsc(session.course.id)}"
-          style="--course:${ttEsc(session.course.color)};top:${top + 2}px;height:${height - 4}px;left:calc(${left}% + 2px);width:calc(${width}% - 4px)">
+          style="--course:${ttEsc(session.course.color)};top:${top + 1}px;height:${Math.max(6, height - 2)}px;left:calc(${left}% + 1px);width:calc(${width}% - 2px)">
           <strong>${ttEsc(session.course.name)}</strong>
           ${session.location ? `<span>${ttEsc(session.location)}</span>` : ''}
           <small>${ttEsc(ttMinutesToTime(session.startMinutes))}</small>
@@ -160,16 +176,16 @@ function renderTimetable() {
 
   let hoursHtml = '';
   for (let hour = model.hourStart; hour <= model.hourEnd; hour++) {
-    const top = (hour - model.hourStart) * TT_HOUR_HEIGHT;
+    const top = (hour - model.hourStart) * hourHeight;
     if (hour < model.hourEnd) hoursHtml += `<span class="tt-hour-label" style="top:${top - 6}px">${hour}</span>`;
     hoursHtml += `<i class="tt-hour-line" style="top:${top}px"></i>`;
-    if (hour < model.hourEnd) hoursHtml += `<i class="tt-half-line" style="top:${top + TT_HOUR_HEIGHT / 2}px"></i>`;
+    if (hour < model.hourEnd) hoursHtml += `<i class="tt-half-line" style="top:${top + hourHeight / 2}px"></i>`;
   }
 
-  const nowTop = ((nowMinutes - model.hourStart * 60) / 60) * TT_HOUR_HEIGHT;
+  const nowTop = ((nowMinutes - model.hourStart * 60) / 60) * hourHeight;
   content.innerHTML = `
     <div class="tt-scroll" aria-label="${ttEsc(model.name)} 시간표">
-      <div class="tt-grid" style="--tt-days:${days.length};--tt-grid-height:${bodyHeight}px">
+      <div class="tt-grid${hourHeight < 34 ? ' is-condensed' : ''}" style="--tt-days:${days.length};--tt-grid-height:${bodyHeight}px;--tt-hour-height:${hourHeight}px">
         <div class="tt-days-head">
           <span class="tt-corner"></span>
           ${days.map((day, index) => `<span class="tt-day-label${day === today ? ' is-today' : ''}"><b>${TT_WEEKDAYS[day]}</b><em>${weekDates[index].getDate()}</em></span>`).join('')}
@@ -362,3 +378,13 @@ function closeTimetableTab() {
 document.getElementById('ttBackBtn')?.addEventListener('click', () => document.getElementById('tabHome')?.click());
 document.getElementById('ttSettingsBtn')?.addEventListener('click', () => ttOpenSetup(!!ttModel()));
 document.getElementById('ttAddBtn')?.addEventListener('click', () => ttOpenCourse());
+
+let ttResizeTimer = null;
+function ttRenderAfterViewportChange() {
+  const view = document.getElementById('timetableView');
+  if (!view || view.hidden) return;
+  clearTimeout(ttResizeTimer);
+  ttResizeTimer = setTimeout(renderTimetable, 80);
+}
+window.addEventListener('orientationchange', ttRenderAfterViewportChange);
+window.visualViewport?.addEventListener('resize', ttRenderAfterViewportChange);

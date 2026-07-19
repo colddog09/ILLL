@@ -533,11 +533,7 @@ function renderWeek() {
   const isToday = key === today;
 
   const dow = d.getDay();
-  let wdColor = '';
-  if (dow === 0) wdColor = 'style="color:#dc2626"';
-  if (dow === 6) wdColor = 'style="color:#2563eb"';
-
-  weekLabel.textContent = formatFullDateLabel(d);
+  weekLabel.textContent = `${d.getMonth() + 1}월 ${d.getDate()}일 · ${DAYS_KO[dow]}요일`;
 
   const done = items.filter(it => it.status === 'O').length;
   const pct  = items.length ? Math.round((done / items.length) * 100) : 0;
@@ -553,9 +549,10 @@ function renderWeek() {
   card.dataset.date = key;
   card.innerHTML = `
     <div class="day-card__header">
-      <span class="day-card__date">${d.getDate()}</span>
-      <span class="day-card__weekday" ${wdColor}>${DAYS_KO[dow]}</span>
-      ${isToday ? '<span class="today-badge">오늘</span>' : ''}
+      <div class="day-card__summary">
+        <strong>${isToday ? '오늘의 일정' : '이날의 일정'}</strong>
+        <span class="day-card__count" data-complete-summary>${done}/${items.length} 완료</span>
+      </div>
       ${deferBtnHtml}
     </div>
     <div class="day-card__tasks" id="tasks_${key}"></div>
@@ -748,6 +745,8 @@ function updateProgress(key) {
   const pct   = items.length ? Math.round((done / items.length) * 100) : 0;
   const bar = dayGrid.querySelector(`.day-card[data-date="${key}"] .day-card__progress-bar`);
   if (bar) bar.style.width = pct + '%';
+  const summary = dayGrid.querySelector(`.day-card[data-date="${key}"] [data-complete-summary]`);
+  if (summary) summary.textContent = `${done}/${items.length} 완료`;
 }
 
 // ──────────────────────────────────────────────
