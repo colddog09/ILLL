@@ -5420,7 +5420,7 @@ a.settings-tab {
 .tt-empty__eyebrow { margin:0 0 6px !important; color:var(--accent) !important; font-size:.67rem !important; font-weight:900; letter-spacing:.16em; }
 .tt-empty h3 { margin:0 0 10px; font-size:1.35rem; letter-spacing:-.04em; }
 .tt-empty p { margin:0 0 24px; color:var(--text-sub); font-size:.88rem; line-height:1.65; }
-.tt-primary-btn,.tt-fab { border:0; background:var(--accent); color:#fff; font-weight:800; font-family:var(--font); cursor:pointer; box-shadow:0 10px 26px rgba(108,99,255,.25); }
+.tt-primary-btn { border:0; background:var(--accent); color:#fff; font-weight:800; font-family:var(--font); cursor:pointer; box-shadow:0 10px 26px rgba(108,99,255,.25); }
 .tt-primary-btn { min-height:48px; padding:0 22px; border-radius:16px; }
 .tt-summary-card { display:flex; align-items:center; justify-content:space-between; margin:0 2px 12px; padding:14px 16px; border:1px solid rgba(108,99,255,.12); border-radius:18px; background:linear-gradient(135deg,rgba(108,99,255,.12),rgba(86,200,165,.08)); }
 .tt-summary-card div { display:flex; flex-direction:column; gap:2px; }
@@ -5449,8 +5449,6 @@ a.settings-tab {
 .tt-course:active { transform:scale(.97); }
 .tt-now-line { position:absolute; z-index:12; left:calc(var(--tt-time-w) - 4px); right:0; height:2px; background:#f04455; pointer-events:none; box-shadow:0 1px 4px rgba(240,68,85,.3); }
 .tt-now-line span { position:absolute; left:0; top:-4px; width:10px; height:10px; border-radius:50%; background:#f04455; }
-.tt-fab { position:fixed; right:16px; bottom:calc(86px + env(safe-area-inset-bottom,0px)); z-index:42; display:flex; align-items:center; gap:6px; min-height:46px; padding:0 17px; border-radius:16px; }
-.tt-fab span { font-size:1.2rem; }
 
 /* 시간표 편집 시트 */
 .tt-sheet-overlay { position:fixed; inset:0; z-index:10020; display:flex; align-items:flex-end; justify-content:center; padding:0; background:rgba(15,13,35,.42); opacity:0; transition:opacity .22s ease; backdrop-filter:blur(3px); }
@@ -5580,7 +5578,6 @@ a.settings-tab {
 @media (min-width:769px) {
   .timetable-view { padding-left:0; }
   .tt-content { padding-bottom:40px; }
-  .tt-fab { bottom:28px; }
 }
 
 /* ============================================================
@@ -5991,7 +5988,6 @@ a.settings-tab {
     font-size:.48rem;
     line-height:1.05;
   }
-  .tt-fab { right:12px; bottom:calc(88px + env(safe-area-inset-bottom,0px)); }
 }
 
 /* ============================================================
@@ -6016,6 +6012,10 @@ a.settings-tab {
 }
 
 @media (max-width:768px) {
+  #poolHeader { display:none !important; }
+  .task-pool { margin-top:10px; }
+  .timetable-desktop-btn { display:none !important; }
+
   .schedule-area {
     padding:10px 12px calc(108px + env(safe-area-inset-bottom,0px)) !important;
   }
@@ -6212,4 +6212,43 @@ a.settings-tab {
     border-radius:0;
     background:transparent;
   }
+}
+
+/* 데스크톱·태블릿에서도 시간표를 독립 화면으로 전환 */
+body.app-timetable-open>.top-bar,
+body.app-timetable-open>.schedule-area { display:none !important; }
+
+body.app-timetable-open>.timetable-view {
+  flex:1 1 auto;
+  width:100%;
+  min-height:0;
+}
+
+@media (min-width:769px) {
+  body.app-timetable-open>.timetable-view {
+    height:100dvh;
+    overflow-x:hidden;
+    overflow-y:auto;
+  }
+}
+
+/* 설치형 웹앱의 바깥 페이지 스크롤·고무줄 움직임 차단 */
+html.standalone-app,
+html.standalone-app body {
+  width:100%;
+  height:100dvh;
+  max-height:100dvh;
+  overflow:hidden !important;
+  overscroll-behavior:none;
+}
+
+html.standalone-app body {
+  position:fixed;
+  inset:0;
+}
+
+html.standalone-app .schedule-area,
+html.standalone-app .timetable-view,
+html.standalone-app .modal-body {
+  overscroll-behavior:none;
 }

@@ -23,7 +23,12 @@
   <link rel="apple-touch-icon" href="/image/apple-touch-icon.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/image/apple-touch-icon.png">
   <meta name="theme-color" content="#6c63ff">
-  <link rel="stylesheet" href="style.css?v=84" />
+  <script>
+    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+      document.documentElement.classList.add('standalone-app');
+    }
+  </script>
+  <link rel="stylesheet" href="style.css?v=85" />
 </head>
 <body>
 
@@ -160,6 +165,7 @@
         <button id="prevWeekBtn" class="week-nav-btn" aria-label="이전 날">‹</button>
         <span id="weekLabel" class="week-label"></span>
         <button id="nextWeekBtn" class="week-nav-btn" aria-label="다음 날">›</button>
+        <button id="timetableDesktopBtn" class="icon-btn timetable-desktop-btn" aria-label="시간표 열기" title="시간표">▦</button>
         <button id="infoBtn" class="icon-btn" aria-label="정보" title="정보/링크">📌</button>
         <button id="groupBtn" class="icon-btn" aria-label="그룹" title="그룹 일정">👥</button>
         <button id="suhaengBtn" class="icon-btn" aria-label="수행평가 일정" title="수행평가 일정">📋</button>
@@ -730,8 +736,8 @@
   <script src="drag.js?v=10"></script>
   <script src="deadline.js?v=3"></script>
   <script src="gcal/gcal.js?v=15"></script>
-  <script src="timetable.js?v=3"></script>
-  <script src="groups.js?v=25"></script>
+  <script src="timetable.js?v=4"></script>
+  <script src="groups.js?v=26"></script>
   <script src="push.js?v=3"></script>
   <script src="modals.js?v=18"></script>
   <script src="events.js?v=21"></script>

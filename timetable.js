@@ -196,13 +196,11 @@ function renderTimetable() {
           ${showNow ? `<div class="tt-now-line" style="top:${nowTop}px"><span></span></div>` : ''}
         </div>
       </div>
-    </div>
-    <button id="ttMobileAddBtn" class="tt-fab" type="button"><span>＋</span> 수업 추가</button>`;
+    </div>`;
 
   content.querySelectorAll('.tt-course').forEach(button => {
     button.addEventListener('click', () => ttOpenCourse(button.dataset.courseId));
   });
-  document.getElementById('ttMobileAddBtn')?.addEventListener('click', () => ttOpenCourse());
 }
 
 function ttOpenSetup(editing) {

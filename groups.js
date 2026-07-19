@@ -1444,6 +1444,7 @@ async function _gmDeleteChatMsg(groupId, msgId) {
   tabEls[3]?.addEventListener('click', () => openSettingsTab(true));
 
   // 헤더 버튼
+  document.getElementById('timetableDesktopBtn')?.addEventListener('click', e => { e.preventDefault(); openTimetable(true); });
   document.getElementById('groupBtn')?.addEventListener('click', e => { e.preventDefault(); openGroupTab(true); });
   document.getElementById('settingsBtn')?.addEventListener('click', () => {
     setActiveTab('settings');
