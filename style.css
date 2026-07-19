@@ -6024,8 +6024,8 @@ a.settings-tab {
     position:relative;
     top:auto;
     z-index:auto;
-    margin:0 0 12px;
-    padding:0 2px 10px;
+    margin:0 0 8px;
+    padding:0 6px 4px;
     border:0;
     border-bottom:1px solid color-mix(in srgb,var(--border) 72%,transparent);
     border-radius:0;
@@ -6045,7 +6045,7 @@ a.settings-tab {
     align-items:center;
     justify-content:center;
     min-width:0;
-    min-height:40px;
+    min-height:36px;
     color:var(--text);
     font-size:.96rem;
     font-weight:850;
@@ -6054,10 +6054,10 @@ a.settings-tab {
 
   .week-nav-btn,
   .schedule-area__header .icon-btn {
-    width:40px;
-    height:40px;
-    min-width:40px;
-    min-height:40px;
+    width:36px;
+    height:36px;
+    min-width:36px;
+    min-height:36px;
     padding:0;
     border:0;
     border-radius:50%;
@@ -6089,7 +6089,7 @@ a.settings-tab {
   }
 
   .day-card__header {
-    min-height:40px;
+    min-height:36px;
     padding:0 3px;
     align-items:center;
     gap:10px;
