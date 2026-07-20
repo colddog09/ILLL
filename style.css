@@ -5477,9 +5477,9 @@ a.settings-tab {
 .tt-color-picker input:checked+span { box-shadow:0 0 0 3px var(--text); }
 .tt-sessions { display:flex; flex-direction:column; gap:10px; }
 .tt-session-editor { padding:12px; border:1px solid var(--border); border-radius:16px; background:color-mix(in srgb,var(--surface-hover) 72%,transparent); }
-.tt-session-editor__top { display:grid; grid-template-columns:1fr 38px; gap:8px; }
-.tt-session-remove { border:0; border-radius:11px; background:rgba(220,38,38,.08); color:var(--danger); font-size:1.2rem; cursor:pointer; }
-.tt-session-times { display:grid; grid-template-columns:1fr auto 1fr; align-items:end; gap:7px; margin-top:9px; }
+.tt-session-editor__top { display:grid; grid-template-columns:1.5fr 38px; gap:8px; }
+.tt-session-remove { border:0; border-radius:11px; background:rgba(220,38,38,.08); color:var(--danger); font-size:1.2rem; cursor:pointer; flex-shrink:0; }
+.tt-session-times { display:grid; grid-template-columns:minmax(60px, 1fr) auto minmax(60px, 1fr); align-items:end; gap:7px; margin-top:9px; }
 .tt-session-times label,.tt-location { display:block; }
 .tt-session-times span,.tt-location span { display:block; margin:0 0 5px; color:var(--text-sub); font-size:.65rem; font-weight:700; }
 .tt-session-times i { padding-bottom:14px; color:var(--text-sub); font-style:normal; }
