@@ -17,1040 +17,603 @@
   {"@context":"https://schema.org","@type":"WebApplication","name":"오일추","url":"https://o1chu.my","description":"할일을 드래그해서 날짜에 배치하는 스마트 일정 관리 앱.","applicationCategory":"ProductivityApplication","operatingSystem":"Web, iOS, Android","offers":{"@type":"Offer","price":"0","priceCurrency":"KRW"}}
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Pretendard:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
   <style>
-    @keyframes pageEnter {
-      from { opacity: 0; transform: translateY(18px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    body { animation: pageEnter 0.9s cubic-bezier(0.22,1,0.36,1) both; }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+    /* ────────────────────────────────
+       TOKENS
+       Brand: 앱 실제 아이덴티티 색(인디고 퍼플).
+       Done-green 은 장식이 아니라 'O = 완료' 를 뜻하는 의미색.
+    ──────────────────────────────── */
     :root {
-      --accent:   #3b82f6;
-      --accent2:  #60a5fa;
-      --bg:       #f9fafb;
+      --ink:      #1b1830;
+      --ink-soft: #5b5675;
+      --brand:    #6c5ce7;
+      --brand-2:  #9a8cf5;
+      --brand-ink:#5646c4;
+      --done:     #16b364;
+      --paper:    #f5f3fc;
+      --paper-2:  #edeaf8;
       --surface:  #ffffff;
-      --border:   #e5e7eb;
-      --text:     #333333;
-      --sub:      #6b7280;
-      --font: 'Pretendard', 'Inter', -apple-system, sans-serif;
-
-      /* extended tokens */
-      --primary:              #3b82f6;
-      --primary-foreground:   #ffffff;
-      --secondary:            #f3f4f6;
-      --secondary-foreground: #4b5563;
-      --muted:                #f9fafb;
-      --muted-foreground:     #6b7280;
-      --destructive:          #ef4444;
-      --radius:               0.375rem;
+      --line:     #e7e2f4;
+      --shadow:   14px 30px 60px -30px rgba(76, 60, 160, 0.45);
+      --font:     'Pretendard', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --display:  'Black Han Sans', 'Pretendard', var(--font);
+      --radius:   16px;
     }
 
     @media (prefers-color-scheme: dark) {
       :root {
-        --accent:   #3b82f6;
-        --accent2:  #60a5fa;
-        --bg:       #171717;
-        --surface:  #262626;
-        --border:   #404040;
-        --text:     #e5e5e5;
-        --sub:      #a3a3a3;
-
-        --primary:              #3b82f6;
-        --primary-foreground:   #ffffff;
-        --secondary:            #262626;
-        --secondary-foreground: #e5e5e5;
-        --muted:                #262626;
-        --muted-foreground:     #a3a3a3;
+        --ink:      #ece9f6;
+        --ink-soft: #a9a3c6;
+        --brand:    #8b7ff2;
+        --brand-2:  #a99bf8;
+        --brand-ink:#b9adfb;
+        --done:     #3ad07f;
+        --paper:    #131022;
+        --paper-2:  #1a1630;
+        --surface:  #1f1b33;
+        --line:     #322c4d;
+        --shadow:   14px 30px 60px -30px rgba(0, 0, 0, 0.7);
       }
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    @keyframes pageEnter { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes floatBob {
+      0%, 100% { transform: rotate(-4deg) translateY(0); }
+      50%      { transform: rotate(-4deg) translateY(-7px); }
+    }
+    @keyframes popIn {
+      0%   { transform: scale(0.4); opacity: 0; }
+      60%  { transform: scale(1.15); }
+      100% { transform: scale(1); opacity: 1; }
     }
 
     html { scroll-behavior: smooth; overscroll-behavior: none; }
     body {
       font-family: var(--font);
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
+      background: var(--paper);
+      color: var(--ink);
+      line-height: 1.65;
       overflow-x: hidden;
       overscroll-behavior: none;
+      animation: pageEnter 0.6s ease both;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* ────────────────────────────────
-       BACKGROUND GLOW
-    ──────────────────────────────── */
-    .bg-glow {
+    ::selection { background: rgba(108,92,231,0.22); }
+
+    /* Ambient grid — the planner's own material: a faint week-column texture */
+    .bg-grid {
       pointer-events: none;
       position: fixed;
       inset: 0;
       z-index: 0;
-      overflow: hidden;
-    }
-    .bg-glow::before {
-      content: '';
-      position: absolute;
-      top: -10%;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 1000px;
-      height: 600px;
-      border-radius: 50%;
-      background: radial-gradient(ellipse, rgba(59,130,246,0.1) 0%, transparent 65%);
-    }
-    .bg-glow::after {
-      content: '';
-      position: absolute;
-      top: 35%;
-      right: -5%;
-      width: 500px;
-      height: 500px;
-      border-radius: 50%;
-      background: radial-gradient(ellipse, rgba(96,165,250,0.07) 0%, transparent 65%);
+      background:
+        radial-gradient(1100px 520px at 78% -8%, rgba(108,92,231,0.12), transparent 60%),
+        radial-gradient(760px 500px at 5% 12%, rgba(154,140,245,0.10), transparent 60%);
     }
 
-    /* ────────────────────────────────
-       NAV
-    ──────────────────────────────── */
-    nav {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      padding: 10px 20px;
-      background: rgba(245,244,255,0.98);
-      border-bottom: 1px solid var(--border);
+    /* ── O-mark: the recurring brand device (O = 완료) ── */
+    .omark {
+      display: inline-grid;
+      place-items: center;
+      border-radius: 50%;
+      border: 2px solid currentColor;
+      flex-shrink: 0;
     }
+    .omark--done {
+      background: var(--done);
+      border-color: var(--done);
+      color: #fff;
+    }
+
+    /* ────────────────────────────────  NAV  ──────────────────────────────── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      padding: 12px 20px;
+      background: color-mix(in srgb, var(--paper) 82%, transparent);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    nav.scrolled { border-bottom-color: var(--line); background: color-mix(in srgb, var(--paper) 92%, transparent); }
     .nav-inner {
-      max-width: 1100px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 6px 0;
+      max-width: 1120px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
     }
     .nav-logo {
-      font-size: 18px;
-      font-weight: 900;
-      color: var(--text);
-      text-decoration: none;
-      letter-spacing: -0.3px;
+      display: inline-flex; align-items: center; gap: 9px;
+      font-size: 19px; font-weight: 800; color: var(--ink);
+      text-decoration: none; letter-spacing: -0.4px;
     }
-    .nav-logo span {
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
+    .nav-logo .omark { width: 26px; height: 26px; color: var(--brand); font-family: var(--display); font-size: 13px; }
+    .nav-links { display: flex; align-items: center; gap: 4px; }
     .nav-links a {
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--sub);
-      padding: 7px 14px;
-      border-radius: 8px;
+      text-decoration: none; font-size: 14px; font-weight: 600;
+      color: var(--ink-soft); padding: 8px 14px; border-radius: 10px;
       transition: color 0.15s, background 0.15s;
     }
-    .nav-links a:hover { color: var(--text); background: var(--surface); }
+    .nav-links a:hover { color: var(--ink); background: var(--paper-2); }
     .nav-cta {
-      background: var(--accent) !important;
-      color: #fff !important;
-      font-weight: 600 !important;
-      padding: 8px 18px !important;
-      border-radius: 10px !important;
+      background: var(--brand) !important; color: #fff !important;
+      padding: 9px 18px !important; box-shadow: 0 8px 18px -8px var(--brand);
     }
-    .nav-cta:hover { background: #6a5df5 !important; color: #fff !important; }
-    .nav-app-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 34px;
-      height: 34px;
-      background: var(--accent);
-      color: #fff;
-      border-radius: 10px;
-      text-decoration: none;
-      transition: background 0.15s, transform 0.15s;
-    }
-    .nav-app-btn:hover { background: var(--accent2); transform: translateY(-1px); }
-    .nav-mobile-toggle {
-      display: none;
-      background: none;
-      border: none;
-      color: var(--text);
-      cursor: pointer;
-      padding: 6px;
-    }
+    .nav-cta:hover { background: var(--brand-ink) !important; color: #fff !important; }
     @media (max-width: 640px) {
       .nav-links .nav-secondary { display: none; }
-      .nav-mobile-toggle { display: block; }
     }
 
-    /* ────────────────────────────────
-       HERO
-    ──────────────────────────────── */
+    /* ────────────────────────────────  HERO  ──────────────────────────────── */
     .hero {
-      position: relative;
-      z-index: 1;
-      padding: 160px 24px 100px;
-      text-align: center;
-      max-width: 1100px;
-      margin: 0 auto;
+      position: relative; z-index: 1;
+      max-width: 1120px; margin: 0 auto;
+      padding: 84px 24px 40px;
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 56px;
+      align-items: center;
     }
-
-    /* Stagger animation helpers */
-    .anim-item {
-      opacity: 0;
-      animation: blurUp 0.9s cubic-bezier(.22,1,.36,1) forwards;
-    }
-    .anim-item:nth-child(1) { animation-delay: 0.1s; }
-    .anim-item:nth-child(2) { animation-delay: 0.25s; }
-    .anim-item:nth-child(3) { animation-delay: 0.4s; }
-    .anim-item:nth-child(4) { animation-delay: 0.55s; }
-    .anim-item:nth-child(5) { animation-delay: 0.7s; }
-
-    @keyframes blurUp {
-      from { opacity: 0; filter: blur(12px); transform: translateY(16px); }
-      to   { opacity: 1; filter: blur(0);    transform: translateY(0); }
-    }
+    .hero-copy > * { opacity: 0; animation: rise 0.8s cubic-bezier(.22,1,.36,1) forwards; }
+    .hero-copy > :nth-child(1) { animation-delay: 0.05s; }
+    .hero-copy > :nth-child(2) { animation-delay: 0.16s; }
+    .hero-copy > :nth-child(3) { animation-delay: 0.27s; }
+    .hero-copy > :nth-child(4) { animation-delay: 0.38s; }
+    .hero-copy > :nth-child(5) { animation-delay: 0.49s; }
 
     .hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      background: rgba(108,99,255,0.08);
-      border: 1px solid rgba(108,99,255,0.2);
-      color: #5b52cc;
-      font-size: 13px;
-      font-weight: 600;
-      padding: 7px 16px 7px 14px;
-      border-radius: 999px;
-      margin-bottom: 32px;
-      cursor: default;
+      display: inline-flex; align-items: center; gap: 9px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      color: var(--brand-ink);
+      font-size: 13px; font-weight: 700;
+      padding: 7px 15px; border-radius: 999px;
+      box-shadow: 0 4px 14px -8px rgba(76,60,160,0.4);
     }
     .hero-badge .badge-dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--accent);
-      box-shadow: 0 0 6px var(--accent);
-      animation: pulse-dot 2s ease-in-out infinite;
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--done); box-shadow: 0 0 0 4px rgba(22,179,100,0.15);
     }
-    @keyframes pulse-dot {
-      0%,100% { opacity: 1; }
-      50%      { opacity: 0.4; }
-    }
-    .hero-badge .badge-pill {
-      background: rgba(108,99,255,0.12);
-      padding: 2px 9px;
-      border-radius: 99px;
-      font-size: 11px;
-      color: var(--accent);
-    }
-
     .hero h1 {
-      font-size: clamp(38px, 6vw, 72px);
-      font-weight: 900;
-      line-height: 1.1;
-      letter-spacing: -1.5px;
-      margin-bottom: 24px;
-      color: var(--text);
-    }
-    .hero h1 .gradient-text {
-      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .hero-desc {
-      font-size: clamp(15px, 1.8vw, 18px);
-      color: var(--sub);
-      max-width: 500px;
-      margin: 0 auto 44px;
-      line-height: 1.75;
-    }
-
-    .hero-btns {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-    .btn-primary-wrap {
-      background: linear-gradient(135deg, rgba(108,99,255,0.3), rgba(164,120,255,0.3));
-      padding: 2px;
-      border-radius: 14px;
-    }
-    .btn-primary {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      color: #fff;
-      text-decoration: none;
-      padding: 14px 28px;
-      border-radius: 12px;
-      font-size: 15px;
-      font-weight: 700;
-      transition: opacity 0.15s, transform 0.15s;
-    }
-    .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
-    .btn-ghost {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: transparent;
-      color: var(--sub);
-      text-decoration: none;
-      padding: 14px 28px;
-      border-radius: 12px;
-      font-size: 15px;
-      font-weight: 600;
-      border: 1px solid var(--border);
-      transition: color 0.15s, border-color 0.15s, transform 0.15s;
-    }
-    .btn-ghost:hover { color: var(--text); border-color: rgba(108,99,255,0.35); transform: translateY(-1px); }
-
-    /* ────────────────────────────────
-       APP MOCKUP
-    ──────────────────────────────── */
-    .mockup-wrap {
-      position: relative;
-      z-index: 1;
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 0 16px 0;
-    }
-    .mockup-fade {
-      position: relative;
-    }
-    .mockup-fade::after {
-      content: '';
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      height: 55%;
-      background: linear-gradient(to bottom, transparent 0%, #f9fafb 100%);
-      z-index: 2;
-      pointer-events: none;
-    }
-    .mockup-frame {
-      background: #fff;
-      border: 1px solid rgba(108,99,255,0.15);
-      border-radius: 20px;
-      padding: 16px;
-      box-shadow:
-        0 2px 0 rgba(108,99,255,0.06),
-        0 20px 60px rgba(108,99,255,0.12),
-        0 4px 16px rgba(0,0,0,0.06);
-      overflow: hidden;
-    }
-
-    /* App UI inside mockup */
-    .app-ui {
-      background: #f8f7ff;
-      border-radius: 12px;
-      overflow: hidden;
-      aspect-ratio: 16/8;
-      display: flex;
-      flex-direction: column;
-      border: 1px solid rgba(108,99,255,0.1);
-    }
-    .app-topbar {
-      background: #ffffff;
-      border-bottom: 1px solid rgba(108,99,255,0.1);
-      padding: 10px 16px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .app-topbar-logo {
-      font-size: 14px;
-      font-weight: 800;
-      color: var(--accent);
-    }
-    .app-input-mock {
-      flex: 1;
-      height: 28px;
-      background: #f4f5fb;
-      border: 1px solid rgba(108,99,255,0.15);
-      border-radius: 8px;
-    }
-    .app-body {
-      flex: 1;
-      display: flex;
-      gap: 12px;
-      padding: 12px;
-      overflow: hidden;
-    }
-    .app-pool {
-      width: 140px;
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .app-pool-title {
-      font-size: 9px;
-      font-weight: 700;
-      color: rgba(108,99,255,0.5);
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      margin-bottom: 2px;
-    }
-    .app-task {
-      background: #fff;
-      border: 1px solid rgba(108,99,255,0.18);
-      border-radius: 6px;
-      padding: 5px 8px;
-      font-size: 9px;
-      color: #4b4680;
-    }
-    .app-days {
-      flex: 1;
-      display: grid;
-      grid-template-columns: repeat(5,1fr);
-      gap: 8px;
-    }
-    .app-day {
-      background: #ffffff;
-      border: 1px solid rgba(108,99,255,0.1);
-      border-radius: 8px;
-      padding: 6px;
-    }
-    .app-day-label {
-      font-size: 8px;
-      color: rgba(108,99,255,0.5);
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-    .app-day.today { border-color: rgba(108,99,255,0.35); background: rgba(108,99,255,0.04); }
-    .app-day.today .app-day-label { color: var(--accent); }
-    .app-sched-item {
-      background: rgba(108,99,255,0.07);
-      border-radius: 4px;
-      padding: 3px 5px;
-      font-size: 7.5px;
-      color: #5b52cc;
-      margin-bottom: 3px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .app-sched-item.done {
-      opacity: 0.4;
-      text-decoration: line-through;
-    }
-    .app-o-btn {
-      width: 10px; height: 10px;
-      border-radius: 50%;
-      background: rgba(108,99,255,0.15);
-      border: 1px solid rgba(108,99,255,0.35);
-      flex-shrink: 0;
-    }
-    .app-o-btn.done { background: var(--accent); border-color: var(--accent); }
-    .app-progress {
-      height: 2px;
-      background: rgba(108,99,255,0.1);
-      border-radius: 2px;
-      margin-top: 4px;
-      overflow: hidden;
-    }
-    .app-progress-bar {
-      height: 100%;
-      border-radius: 2px;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-    }
-
-    /* ────────────────────────────────
-       STATS / BADGES ROW
-    ──────────────────────────────── */
-    .stats-row {
-      position: relative;
-      z-index: 1;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 60px 24px 0;
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 32px;
-    }
-    .stat-item {
-      text-align: center;
-      opacity: 0;
-    }
-    .stat-item.visible {
-      animation: blurUp 0.7s cubic-bezier(.22,1,.36,1) forwards;
-    }
-    .stat-num {
-      font-size: 32px;
-      font-weight: 900;
+      font-family: var(--display);
+      font-size: clamp(40px, 6.4vw, 76px);
+      font-weight: 400;
+      line-height: 1.04;
       letter-spacing: -1px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      margin: 22px 0 20px;
+      color: var(--ink);
+      word-break: keep-all;
     }
-    .stat-label {
-      font-size: 13px;
-      color: var(--sub);
-      margin-top: 2px;
+    .hero h1 .hl {
+      position: relative; color: var(--brand);
+      white-space: nowrap;
+    }
+    .hero h1 .hl::after {
+      content: ''; position: absolute; left: -2%; right: -2%; bottom: 6%;
+      height: 30%; background: rgba(108,92,231,0.16);
+      border-radius: 4px; z-index: -1;
+    }
+    .hero-desc {
+      font-size: clamp(15px, 1.7vw, 17.5px);
+      color: var(--ink-soft);
+      max-width: 480px;
+      margin-bottom: 30px;
+      word-break: keep-all;
+    }
+    .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 9px;
+      background: var(--brand); color: #fff; text-decoration: none;
+      padding: 15px 28px; border-radius: 13px;
+      font-size: 15.5px; font-weight: 700;
+      box-shadow: 0 16px 30px -14px var(--brand);
+      transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+    }
+    .btn-primary:hover { transform: translateY(-2px); background: var(--brand-ink); box-shadow: 0 20px 36px -14px var(--brand); }
+    .btn-primary .omark { width: 20px; height: 20px; border-color: rgba(255,255,255,0.85); color: #fff; font-size: 11px; font-family: var(--display); }
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--surface); color: var(--ink); text-decoration: none;
+      padding: 15px 26px; border-radius: 13px;
+      font-size: 15.5px; font-weight: 700;
+      border: 1px solid var(--line);
+      transition: transform 0.15s, border-color 0.15s;
+    }
+    .btn-ghost:hover { transform: translateY(-2px); border-color: var(--brand-2); }
+    .hero-trust {
+      margin-top: 22px; font-size: 13px; color: var(--ink-soft);
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .hero-trust b { color: var(--ink); font-weight: 700; }
+    .hero-trust .sep { width: 3px; height: 3px; border-radius: 50%; background: var(--brand-2); }
+
+    /* ── Hero demo: a drag-in-progress planner (the signature) ── */
+    .demo {
+      position: relative; z-index: 1;
+      opacity: 0; animation: rise 0.9s cubic-bezier(.22,1,.36,1) 0.35s forwards;
+    }
+    .demo-frame {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+    .demo-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 4px 6px 14px;
+    }
+    .demo-bar .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--line); }
+    .demo-bar .demo-title { margin-left: 6px; font-weight: 800; font-size: 13px; color: var(--brand); letter-spacing: -0.3px; }
+    .demo-bar .demo-dday {
+      margin-left: auto; font-size: 11px; font-weight: 700;
+      background: var(--paper-2); color: var(--brand-ink);
+      padding: 4px 10px; border-radius: 999px;
+    }
+    .demo-grid { display: grid; grid-template-columns: 96px 1fr; gap: 12px; }
+    .demo-pool { display: flex; flex-direction: column; gap: 8px; }
+    .demo-label { font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 2px; }
+    .chip {
+      background: var(--paper); border: 1px solid var(--line);
+      border-radius: 10px; padding: 8px 9px;
+      font-size: 11px; font-weight: 600; color: var(--ink);
+    }
+    .demo-week { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .cell {
+      background: var(--paper); border: 1px solid var(--line);
+      border-radius: 12px; padding: 8px; min-height: 92px;
+    }
+    .cell .day { font-size: 10px; font-weight: 700; color: var(--ink-soft); margin-bottom: 7px; }
+    .cell.today { border-color: var(--brand-2); background: color-mix(in srgb, var(--brand) 7%, var(--surface)); box-shadow: inset 0 0 0 1px var(--brand-2); }
+    .cell.today .day { color: var(--brand); }
+    .cell.today .day::after { content: ' · 오늘'; }
+    .item {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--line);
+      border-radius: 8px; padding: 5px 7px; margin-bottom: 5px;
+      font-size: 10px; font-weight: 600; color: var(--ink);
+    }
+    .item .omark { width: 14px; height: 14px; color: var(--brand-2); }
+    .item.done { color: var(--ink-soft); text-decoration: line-through; }
+    .item.done .omark--done { color: #fff; }
+    .item .omark--done::after { content: '✓'; font-size: 9px; line-height: 1; }
+    /* dashed drop target + the chip being dragged onto it */
+    .drop {
+      border: 1.5px dashed var(--brand-2);
+      border-radius: 8px; height: 26px;
+      background: rgba(108,92,231,0.05);
+    }
+    .drag-chip {
+      position: absolute; left: 62%; top: 44%;
+      background: var(--surface);
+      border: 1px solid var(--brand-2);
+      border-radius: 9px; padding: 7px 10px;
+      font-size: 11px; font-weight: 700; color: var(--brand-ink);
+      box-shadow: 0 18px 30px -12px rgba(76,60,160,0.55);
+      transform: rotate(-4deg);
+      animation: floatBob 2.4s ease-in-out infinite;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .drag-chip::before { content: '✥'; color: var(--brand-2); font-size: 12px; }
+    .demo-cursor {
+      position: absolute; left: calc(62% + 54px); top: calc(44% + 20px);
+      font-size: 20px; filter: drop-shadow(0 3px 4px rgba(0,0,0,0.25));
     }
 
-    /* ────────────────────────────────
-       FEATURES
-    ──────────────────────────────── */
+    /* ────────────────────────────────  TRUST STRIP  ──────────────────────────────── */
+    .stats-row {
+      position: relative; z-index: 1;
+      max-width: 900px; margin: 32px auto 0;
+      padding: 22px 24px;
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    .stat-item { text-align: center; opacity: 0; padding: 6px; }
+    .stat-item.visible { animation: rise 0.6s cubic-bezier(.22,1,.36,1) forwards; }
+    .stat-num {
+      font-family: var(--display); font-size: 30px; color: var(--brand);
+      letter-spacing: -0.5px; line-height: 1;
+    }
+    .stat-label { font-size: 12.5px; color: var(--ink-soft); margin-top: 7px; font-weight: 500; }
+
+    /* ────────────────────────────────  SECTIONS  ──────────────────────────────── */
     .section {
-      position: relative;
-      z-index: 1;
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 100px 24px;
+      position: relative; z-index: 1;
+      max-width: 1120px; margin: 0 auto;
+      padding: 92px 24px;
     }
     .section-eyebrow {
-      text-align: center;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--accent2);
-      margin-bottom: 12px;
+      text-align: center; font-size: 12px; font-weight: 800;
+      letter-spacing: 2.5px; text-transform: uppercase;
+      color: var(--brand-2); margin-bottom: 12px;
     }
     .section-title {
       text-align: center;
-      font-size: clamp(26px, 3.5vw, 40px);
-      font-weight: 900;
-      letter-spacing: -0.8px;
-      color: var(--text);
-      margin-bottom: 60px;
+      font-family: var(--display); font-weight: 400;
+      font-size: clamp(27px, 3.6vw, 42px);
+      letter-spacing: -0.6px; color: var(--ink);
+      margin-bottom: 56px; word-break: keep-all;
     }
-    .section-title span {
-      color: var(--sub);
-      font-weight: 400;
-    }
+    .section-title span { color: var(--brand); }
 
     .feature-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 16px;
-    }
-    .feature-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 28px;
-      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
-      opacity: 0;
-      box-shadow: 0 2px 8px rgba(108,99,255,0.05);
-    }
-    .feature-card.visible {
-      animation: blurUp 0.7s cubic-bezier(.22,1,.36,1) forwards;
-    }
-    .feature-card:hover {
-      border-color: rgba(108,99,255,0.3);
-      transform: translateY(-3px);
-      box-shadow: 0 12px 40px rgba(108,99,255,0.1);
-    }
-    .feature-icon {
-      width: 44px; height: 44px;
-      background: rgba(108,99,255,0.08);
-      border: 1px solid rgba(108,99,255,0.15);
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      margin-bottom: 16px;
-    }
-    .feature-card h3 {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 8px;
-    }
-    .feature-card p {
-      font-size: 14px;
-      color: var(--sub);
-      line-height: 1.65;
-    }
-
-    /* ────────────────────────────────
-       HOW IT WORKS
-    ──────────────────────────────── */
-    .how-section {
-      position: relative;
-      z-index: 1;
-      padding: 0 24px 100px;
-    }
-    .how-inner {
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-    .steps {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 0;
-      position: relative;
-    }
-    .steps::before {
-      content: '';
-      position: absolute;
-      top: 32px; left: 10%; right: 10%;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(108,99,255,0.2) 20%, rgba(108,99,255,0.2) 80%, transparent);
-    }
-    .step {
-      text-align: center;
-      padding: 0 20px;
-      opacity: 0;
-    }
-    .step.visible {
-      animation: blurUp 0.7s cubic-bezier(.22,1,.36,1) forwards;
-    }
-    .step-num {
-      width: 64px; height: 64px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, rgba(108,99,255,0.1), rgba(167,139,250,0.1));
-      border: 1.5px solid rgba(108,99,255,0.2);
-      color: var(--accent);
-      font-size: 22px;
-      font-weight: 900;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 20px;
-      position: relative;
-      z-index: 1;
-      background-color: #fff;
-    }
-    .step h3 {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 8px;
-    }
-    .step p {
-      font-size: 14px;
-      color: var(--sub);
-    }
-
-    /* ────────────────────────────────
-       CTA
-    ──────────────────────────────── */
-    .cta-section {
-      position: relative;
-      z-index: 1;
-      padding: 0 24px 120px;
-    }
-    .cta-box {
-      max-width: 800px;
-      margin: 0 auto;
-      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
-      border-radius: 28px;
-      padding: 72px 48px;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 20px 60px rgba(108,99,255,0.25);
-    }
-    .cta-box::before {
-      content: '';
-      position: absolute;
-      top: -40%;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 600px; height: 400px;
-      border-radius: 50%;
-      background: radial-gradient(ellipse, rgba(255,255,255,0.12) 0%, transparent 65%);
-      pointer-events: none;
-    }
-    .cta-box h2 {
-      font-size: clamp(26px, 3.5vw, 42px);
-      font-weight: 900;
-      letter-spacing: -1px;
-      color: #fff;
-      margin-bottom: 14px;
-    }
-    .cta-box p {
-      font-size: 16px;
-      color: rgba(255,255,255,0.8);
-      margin-bottom: 36px;
-    }
-    .cta-btns {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    /* ────────────────────────────────
-       FOOTER
-    ──────────────────────────────── */
-    footer {
-      position: relative;
-      z-index: 1;
-      border-top: 1px solid var(--border);
-      padding: 36px 24px;
-    }
-    .footer-inner {
-      max-width: 1100px;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(272px, 1fr));
       gap: 14px;
     }
-    .footer-logo {
-      font-size: 16px;
-      font-weight: 900;
-      color: rgba(108,99,255,0.5);
-    }
-    .footer-links {
-      display: flex;
-      gap: 24px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    .footer-links a {
-      font-size: 13px;
-      color: var(--sub);
-      text-decoration: none;
-      transition: color 0.15s;
-    }
-    .footer-links a:hover { color: var(--accent); }
-    .footer-copy { font-size: 12px; color: #b0b8d0; }
-
-    /* ────────────────────────────────
-       SCROLL FADE-IN UTILITY
-    ──────────────────────────────── */
-    .scroll-reveal {
+    /* first card spans wide — the core interaction gets the emphasis */
+    .feature-card.feature-lead { grid-column: span 2; }
+    @media (max-width: 720px) { .feature-card.feature-lead { grid-column: span 1; } }
+    .feature-card {
+      background: var(--surface); border: 1px solid var(--line);
+      border-radius: 20px; padding: 26px;
       opacity: 0;
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
     }
-    .scroll-reveal.visible {
-      animation: blurUp 0.7s cubic-bezier(.22,1,.36,1) forwards;
+    .feature-card.visible { animation: rise 0.6s cubic-bezier(.22,1,.36,1) forwards; }
+    .feature-card:hover {
+      transform: translateY(-4px); border-color: var(--brand-2);
+      box-shadow: var(--shadow);
     }
+    .feature-icon {
+      width: 46px; height: 46px; border-radius: 13px;
+      background: var(--paper-2); color: var(--brand);
+      display: grid; place-items: center; font-size: 21px;
+      margin-bottom: 15px;
+    }
+    .feature-card h3 { font-size: 16.5px; font-weight: 800; color: var(--ink); margin-bottom: 7px; letter-spacing: -0.3px; }
+    .feature-card p { font-size: 14px; color: var(--ink-soft); line-height: 1.7; word-break: keep-all; }
 
-    @media (max-width: 640px) {
-      .hero { padding: 130px 20px 80px; }
-      .steps::before { display: none; }
-      .cta-box { padding: 44px 24px; }
-      .app-days { grid-template-columns: repeat(3, 1fr); }
-      .app-days .app-day:nth-child(n+4) { display: none; }
+    /* ── HOW: a real 3-step sequence, so numbering carries meaning ── */
+    .how-section { position: relative; z-index: 1; padding: 0 24px 92px; }
+    .how-inner { max-width: 1120px; margin: 0 auto; }
+    .steps {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 8px; position: relative;
     }
+    .steps::before {
+      content: ''; position: absolute; top: 33px; left: 12%; right: 12%;
+      height: 2px; background: repeating-linear-gradient(90deg, var(--brand-2) 0 8px, transparent 8px 16px);
+      opacity: 0.5;
+    }
+    .step { text-align: center; padding: 0 18px; opacity: 0; }
+    .step.visible { animation: rise 0.6s cubic-bezier(.22,1,.36,1) forwards; }
+    .step-num {
+      width: 66px; height: 66px; margin: 0 auto 18px;
+      border-radius: 50%; background: var(--surface);
+      border: 2px solid var(--brand);
+      color: var(--brand); font-family: var(--display); font-size: 24px;
+      display: grid; place-items: center;
+      position: relative; z-index: 1;
+      box-shadow: 0 10px 24px -12px var(--brand);
+    }
+    .step h3 { font-size: 16.5px; font-weight: 800; color: var(--ink); margin-bottom: 7px; }
+    .step p { font-size: 14px; color: var(--ink-soft); word-break: keep-all; }
 
-    /* ────────────────────────────────
-       TESTIMONIAL SLIDER
-    ──────────────────────────────── */
-    .testimonials-section {
-      position: relative; z-index: 1;
-      padding: 0 24px 100px;
-    }
-    .testimonials-inner { max-width: 1100px; margin: 0 auto; }
-    .slider-header {
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      margin-bottom: 32px;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
-    .slider-controls { display: flex; gap: 8px; }
-    .slider-btn {
-      width: 38px; height: 38px;
-      border-radius: 50%;
-      border: 1.5px solid var(--border);
-      background: white;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer;
-      box-shadow: 0 2px 8px rgba(108,99,255,0.07);
-      transition: all 0.15s;
-      color: var(--accent);
-      font-size: 18px;
-    }
-    .slider-btn:hover:not(:disabled) { border-color: var(--accent); transform: scale(1.08); }
-    .slider-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
-    .slider-overflow { overflow: hidden; border-radius: 4px; }
-    .slider-track {
-      display: flex;
-      transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
-      will-change: transform;
-    }
-    .slider-card-wrap {
-      flex-shrink: 0;
-      padding: 8px;
-    }
-    .testimonial-card {
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 28px;
-      box-shadow: 0 2px 12px rgba(108,99,255,0.07);
-      transition: transform 0.2s, box-shadow 0.2s;
-      height: 100%;
-      display: flex; flex-direction: column;
-      position: relative; overflow: hidden;
-    }
-    .testimonial-card:hover { transform: translateY(-3px); box-shadow: 0 10px 32px rgba(108,99,255,0.12); }
-    .testimonial-quote-bg {
-      position: absolute; top: -8px; left: 12px;
-      font-size: 80px; font-weight: 900; line-height: 1;
-      color: rgba(108,99,255,0.06);
-      font-family: Georgia, serif;
-      pointer-events: none; user-select: none;
-    }
-    .testimonial-text {
-      font-size: 15px; color: var(--text); line-height: 1.75;
-      margin-bottom: 20px; flex: 1;
-      position: relative; z-index: 1;
-    }
-    .testimonial-author {
-      display: flex; align-items: center; gap: 12px;
-      border-top: 1px solid var(--border);
-      padding-top: 16px;
-    }
-    .testimonial-avatar {
-      width: 44px; height: 44px;
-      border-radius: 50%; object-fit: cover;
-      border: 2px solid rgba(108,99,255,0.15);
-      flex-shrink: 0;
-    }
-    .testimonial-name { font-weight: 700; font-size: 14px; color: var(--text); }
-    .testimonial-role { font-size: 12px; color: var(--sub); margin-top: 1px; }
-    .slider-dots {
-      display: flex; justify-content: center; gap: 8px; margin-top: 28px;
-    }
-    .slider-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: rgba(108,99,255,0.2);
-      border: none; cursor: pointer;
-      transition: background 0.2s, transform 0.2s;
-      padding: 0;
-    }
-    .slider-dot.active { background: var(--accent); transform: scale(1.3); }
-
-    /* ── SHOP CTA BANNER ── */
-    .shop-banner {
-      position: relative; z-index: 1;
-      max-width: 1100px; margin: 0 auto;
-      padding: 0 24px 80px;
-    }
+    /* ────────────────────────────────  SHOP BANNER  ──────────────────────────────── */
+    .shop-banner { position: relative; z-index: 1; max-width: 1120px; margin: 0 auto; padding: 0 24px 88px; }
     .shop-banner-inner {
-      background: linear-gradient(135deg, rgba(108,99,255,0.06), rgba(167,139,250,0.08));
-      border: 1.5px solid rgba(108,99,255,0.18);
-      border-radius: 20px;
-      padding: 36px 40px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 24px;
-      flex-wrap: wrap;
+      background: linear-gradient(120deg, var(--brand) 0%, var(--brand-ink) 100%);
+      border-radius: 24px; padding: 40px 44px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 24px; flex-wrap: wrap; overflow: hidden; position: relative;
+      box-shadow: 0 26px 50px -26px var(--brand);
     }
-    .shop-banner-left h3 {
-      font-size: 20px; font-weight: 800;
-      color: var(--text); margin-bottom: 6px;
+    .shop-banner-inner::after {
+      content: ''; position: absolute; right: -60px; top: -80px;
+      width: 320px; height: 320px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,0.16), transparent 62%);
     }
-    .shop-banner-left p { font-size: 14px; color: var(--sub); }
+    .shop-banner-left h3 { font-size: 21px; font-weight: 800; color: #fff; margin-bottom: 6px; letter-spacing: -0.3px; }
+    .shop-banner-left p { font-size: 14px; color: rgba(255,255,255,0.82); word-break: keep-all; }
     .shop-banner-right a {
       display: inline-flex; align-items: center; gap: 8px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      color: white; text-decoration: none;
-      padding: 12px 24px; border-radius: 12px;
-      font-size: 15px; font-weight: 700;
-      white-space: nowrap;
-      transition: opacity 0.15s, transform 0.15s;
-      box-shadow: 0 4px 16px rgba(108,99,255,0.25);
+      background: #fff; color: var(--brand-ink); text-decoration: none;
+      padding: 13px 26px; border-radius: 13px; font-size: 15px; font-weight: 800;
+      white-space: nowrap; position: relative; z-index: 1;
+      transition: transform 0.15s;
     }
-    .shop-banner-right a:hover { opacity: 0.88; transform: translateY(-1px); }
-    @media (max-width: 640px) {
-      .shop-banner-inner { padding: 24px 20px; flex-direction: column; text-align: center; }
+    .shop-banner-right a:hover { transform: translateY(-2px); }
+    @media (max-width: 640px) { .shop-banner-inner { padding: 28px 22px; flex-direction: column; text-align: center; } }
+
+    /* ────────────────────────────────  FAQ  ──────────────────────────────── */
+    .faq-section { position: relative; z-index: 1; padding: 0 24px 96px; }
+    .faq-inner { max-width: 720px; margin: 0 auto; }
+    .faq-list { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+    .faq-item { border-bottom: 1px solid var(--line); }
+    .faq-q {
+      width: 100%; display: flex; justify-content: space-between; align-items: center;
+      padding: 20px 4px; background: none; border: none; cursor: pointer;
+      font-size: 16px; font-weight: 700; color: var(--ink); font-family: var(--font);
+      text-align: left; gap: 16px;
+    }
+    .faq-q:hover { color: var(--brand); }
+    .faq-icon { font-size: 22px; color: var(--brand-2); flex-shrink: 0; transition: transform 0.2s; line-height: 1; }
+    .faq-q.open .faq-icon { transform: rotate(45deg); color: var(--brand); }
+    .faq-a { display: none; padding: 0 4px 20px; font-size: 14px; color: var(--ink-soft); line-height: 1.85; word-break: keep-all; }
+    .faq-a.open { display: block; }
+    .faq-foot {
+      margin-top: 40px; background: var(--surface); border: 1px solid var(--line);
+      border-radius: 18px; padding: 22px 26px;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;
+    }
+    .faq-foot span { font-size: 15px; color: var(--ink-soft); }
+    .faq-foot .row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .faq-foot .b {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 18px; border-radius: 11px; font-size: 14px; font-weight: 700;
+      text-decoration: none; cursor: pointer; font-family: var(--font); border: 1px solid var(--line);
+    }
+    .faq-foot .b--ai { background: var(--brand); color: #fff; border-color: var(--brand); }
+    .faq-foot .b--mail { background: var(--surface); color: var(--ink); }
+
+    /* ────────────────────────────────  FOOTER  ──────────────────────────────── */
+    footer { position: relative; z-index: 1; border-top: 1px solid var(--line); padding: 40px 24px; }
+    .footer-inner { max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 15px; }
+    .footer-logo { display: inline-flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 800; color: var(--ink); }
+    .footer-logo .omark { width: 22px; height: 22px; color: var(--brand-2); font-family: var(--display); font-size: 11px; }
+    .footer-links { display: flex; gap: 22px; flex-wrap: wrap; justify-content: center; }
+    .footer-links a { font-size: 13px; color: var(--ink-soft); text-decoration: none; transition: color 0.15s; }
+    .footer-links a:hover { color: var(--brand); }
+    .footer-copy { font-size: 12px; color: var(--ink-soft); opacity: 0.7; }
+
+    /* ── scroll reveal utility ── */
+    .scroll-reveal { opacity: 0; }
+    .scroll-reveal.visible { animation: rise 0.6s cubic-bezier(.22,1,.36,1) forwards; }
+
+    /* ────────────────────────────────  RESPONSIVE  ──────────────────────────────── */
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; gap: 40px; padding-top: 64px; text-align: center; }
+      .hero-desc { margin-left: auto; margin-right: auto; }
+      .hero-btns, .hero-trust { justify-content: center; }
+      .demo { max-width: 460px; margin: 0 auto; }
+    }
+    @media (max-width: 560px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); gap: 18px 12px; }
+      .demo-week { grid-template-columns: repeat(3, 1fr); }
+      .section { padding: 68px 22px; }
+      .demo-cursor { display: none; }
     }
 
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+      .hero-copy > *, .demo, .stat-item, .feature-card, .step, .scroll-reveal { opacity: 1 !important; }
+    }
   </style>
 </head>
 <body>
 
-  <!-- BACKGROUND GLOW -->
-  <div class="bg-glow" aria-hidden="true"></div>
+  <div class="bg-grid" aria-hidden="true"></div>
 
   <!-- ─── NAV ─── -->
   <nav id="mainNav">
     <div class="nav-inner">
-      <a class="nav-logo" href="/homepage"><span>오</span>일추</a>
+      <a class="nav-logo" href="/homepage"><span class="omark">오</span>일추</a>
       <div class="nav-links">
-        <a href="/shop" class="nav-secondary">🎨 테마샵</a>
-        <a href="/shop#gallery" class="nav-secondary">✨ 창작마당</a>
-        <a href="/" class="nav-cta">앱 바로가기</a>
+        <a href="/shop" class="nav-secondary">테마샵</a>
+        <a href="/shop#gallery" class="nav-secondary">창작마당</a>
+        <a href="/" class="nav-cta">앱 열기</a>
       </div>
     </div>
   </nav>
 
   <!-- ─── HERO ─── -->
   <section class="hero">
-    <div class="anim-item">
-      <div class="hero-badge">
+    <div class="hero-copy">
+      <span class="hero-badge">
         <span class="badge-dot"></span>
-        100% 무료 · 구글 로그인으로 3초 시작
-        <span class="badge-pill">PWA 지원</span>
+        학생이 만든 학생용 플래너 · 100% 무료
+      </span>
+      <h1>
+        끌어다 놓으면<br>
+        <span class="hl">오늘 할 일</span> 끝
+      </h1>
+      <p class="hero-desc">
+        할일을 입력하고 원하는 날짜로 드래그. 끝나면 O 하나로 완료.
+        구글 캘린더 연동, 그룹 공유, 기기 간 동기화까지 한 곳에서 챙겨요.
+      </p>
+      <div class="hero-btns">
+        <a class="btn-primary" href="/"><span class="omark">오</span>앱 바로 시작</a>
+        <a class="btn-ghost" href="#features">기능 살펴보기</a>
+      </div>
+      <div class="hero-trust">
+        <b>회원가입 없이</b> 구글 로그인 3초
+        <span class="sep"></span> PWA 설치 지원
+        <span class="sep"></span> 광고·결제 없음
       </div>
     </div>
 
-    <h1 class="anim-item">
-      해야 할 일을<br>
-      <span class="gradient-text">드래그 한 번</span>으로
-    </h1>
-
-    <p class="hero-desc anim-item">
-      할일을 입력하고 원하는 날짜로 끌어다 놓기만 하면 끝.<br>
-      구글 캘린더 연동 · 그룹 일정 공유 · 기기 간 자동 동기화까지 한 앱에서.
-    </p>
-
-    <div class="hero-btns anim-item">
-      <div class="btn-primary-wrap">
-        <a class="btn-primary" href="/">
-          🚀 앱 바로가기
-        </a>
-      </div>
-      <a class="btn-ghost" href="#features">기능 살펴보기 ↓</a>
-    </div>
-  </section>
-
-  <!-- ─── APP MOCKUP ─── -->
-  <div class="mockup-wrap anim-item">
-    <div class="mockup-fade">
-      <div class="mockup-frame">
-        <div class="app-ui" aria-hidden="true">
-          <!-- Top bar -->
-          <div class="app-topbar">
-            <span class="app-topbar-logo">오일추</span>
-            <div class="app-input-mock"></div>
+    <!-- signature: a task mid-drag, dropping onto 오늘 -->
+    <div class="demo" aria-hidden="true">
+      <div class="demo-frame">
+        <div class="demo-bar">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <span class="demo-title">오일추</span>
+          <span class="demo-dday">수능 D-181</span>
+        </div>
+        <div class="demo-grid">
+          <div class="demo-pool">
+            <div class="demo-label">할일</div>
+            <div class="chip">📐 수학 p.32</div>
+            <div class="chip">📖 영어 단어</div>
+            <div class="chip">🧪 물리 예습</div>
           </div>
-          <!-- Body -->
-          <div class="app-body">
-            <!-- Pool -->
-            <div class="app-pool">
-              <div class="app-pool-title">할일 목록</div>
-              <div class="app-task">📝 수학 숙제</div>
-              <div class="app-task">📝 영어 단어</div>
-              <div class="app-task">📝 물리 예습</div>
-              <div class="app-task">📝 독서 기록</div>
+          <div class="demo-week">
+            <div class="cell">
+              <div class="day">월</div>
+              <div class="item done"><span class="omark omark--done"></span>국어 복습</div>
             </div>
-            <!-- Day grid -->
-            <div class="app-days">
-              <div class="app-day">
-                <div class="app-day-label">월</div>
-                <div class="app-sched-item done">
-                  국어 복습<div class="app-o-btn done"></div>
-                </div>
-                <div class="app-progress"><div class="app-progress-bar" style="width:100%"></div></div>
-              </div>
-              <div class="app-day">
-                <div class="app-day-label">화</div>
-                <div class="app-sched-item done">
-                  수학 p.32<div class="app-o-btn done"></div>
-                </div>
-                <div class="app-sched-item">
-                  영어 단어<div class="app-o-btn"></div>
-                </div>
-                <div class="app-progress"><div class="app-progress-bar" style="width:50%"></div></div>
-              </div>
-              <div class="app-day today">
-                <div class="app-day-label">수 · 오늘</div>
-                <div class="app-sched-item">
-                  물리 예습<div class="app-o-btn"></div>
-                </div>
-                <div class="app-sched-item">
-                  수학 숙제<div class="app-o-btn"></div>
-                </div>
-                <div class="app-progress"><div class="app-progress-bar" style="width:0%"></div></div>
-              </div>
-              <div class="app-day">
-                <div class="app-day-label">목</div>
-                <div class="app-sched-item">
-                  독서 기록<div class="app-o-btn"></div>
-                </div>
-                <div class="app-progress"><div class="app-progress-bar" style="width:0%"></div></div>
-              </div>
-              <div class="app-day">
-                <div class="app-day-label">금</div>
-                <div class="app-progress"><div class="app-progress-bar" style="width:0%"></div></div>
-              </div>
+            <div class="cell today">
+              <div class="day">수</div>
+              <div class="item"><span class="omark"></span>수학 숙제</div>
+              <div class="drop"></div>
+            </div>
+            <div class="cell">
+              <div class="day">금</div>
+              <div class="item"><span class="omark"></span>독서 기록</div>
             </div>
           </div>
         </div>
       </div>
+      <div class="drag-chip">🧪 물리 예습</div>
+      <div class="demo-cursor">👆</div>
     </div>
-  </div>
+  </section>
 
-  <!-- ─── STATS ROW ─── -->
+  <!-- ─── TRUST STRIP ─── -->
   <div class="stats-row">
-    <div class="stat-item">
-      <div class="stat-num">100%</div>
-      <div class="stat-label">무료</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-num">즉시</div>
-      <div class="stat-label">Google 로그인</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-num">멀티</div>
-      <div class="stat-label">기기 동기화</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-num">PWA</div>
-      <div class="stat-label">앱처럼 설치</div>
-    </div>
+    <div class="stat-item"><div class="stat-num">0원</div><div class="stat-label">완전 무료</div></div>
+    <div class="stat-item"><div class="stat-num">3초</div><div class="stat-label">구글 로그인</div></div>
+    <div class="stat-item"><div class="stat-num">멀티</div><div class="stat-label">기기 동기화</div></div>
+    <div class="stat-item"><div class="stat-num">PWA</div><div class="stat-label">앱처럼 설치</div></div>
   </div>
 
   <!-- ─── FEATURES ─── -->
   <section class="section" id="features">
     <div class="section-eyebrow scroll-reveal">Features</div>
-    <h2 class="section-title scroll-reveal">필요한 건 <span>다 있어요</span></h2>
+    <h2 class="section-title scroll-reveal">일정 관리에 필요한 건 <span>다 있어요</span></h2>
     <div class="feature-grid">
-      <div class="feature-card">
+      <div class="feature-card feature-lead">
         <div class="feature-icon">🖱️</div>
-        <h3>드래그앤드롭</h3>
-        <p>할일을 원하는 날짜로 드래그해서 배치하세요. 모바일에서는 더블탭하면 오늘에 바로 추가돼요.</p>
+        <h3>드래그앤드롭 배치</h3>
+        <p>할일을 잡아서 원하는 날짜 칸에 끌어다 놓으면 끝. 날짜를 바꿀 때도 다시 드래그하면 바로 이동해요. 모바일에서는 더블탭으로 오늘에 바로 추가돼요.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">👥</div>
         <h3>그룹 일정 공유</h3>
-        <p>초대 코드로 그룹을 만들고 일정을 공유하세요. 그룹 채팅·공지·독촉 알림으로 함께 챙겨요.</p>
+        <p>초대 코드로 그룹을 만들고 일정을 공유하세요. 채팅·공지·독촉 알림으로 반 전체가 함께 챙겨요.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">☁️</div>
         <h3>충돌 없는 동기화</h3>
-        <p>여러 기기에서 접속해도 자동으로 동기화돼요. 동시에 수정해도 일정이 사라지지 않게 안전하게 병합해요.</p>
+        <p>여러 기기에서 동시에 수정해도 일정이 사라지지 않도록 안전하게 병합해요.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">📅</div>
         <h3>Google Calendar 연동</h3>
-        <p>Google 캘린더 일정을 앱에서 바로 확인하고 할일 목록에 추가하세요.</p>
+        <p>구글 캘린더 일정을 앱에서 바로 확인하고 할일 목록에 담아요.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">⏰</div>
         <h3>D-Day 카운터</h3>
-        <p>시험, 수행평가까지 남은 날을 상단에 항상 표시해요. 설정에서 원하는 날짜로 변경 가능.</p>
+        <p>시험, 수행평가까지 남은 날을 상단에 항상 표시해요. 원하는 날짜로 바꿀 수 있어요.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">🔔</div>
         <h3>푸시 알림</h3>
-        <p>PWA 설치 후 매일 아침 알림으로 하루를 시작하세요. 기한 임박 일정도 놓치지 않아요.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">📱</div>
-        <h3>PWA 설치</h3>
-        <p>홈 화면에 추가하면 앱처럼 사용할 수 있어요. iOS, Android, 데스크탑 모두 지원.</p>
+        <p>매일 아침 알림으로 하루를 시작하고, 기한 임박 일정도 놓치지 않아요.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">🎨</div>
         <h3>테마 변경</h3>
-        <p>보라, 블루, 그린, 다크, 리퀴드 글라스, 젤리, 스타레일 테마까지 취향대로 바꿔요.</p>
+        <p>퍼플·블루·그린·다크·리퀴드 글라스·젤리까지, 취향대로 앱을 꾸며요.</p>
       </div>
     </div>
   </section>
@@ -1059,44 +622,24 @@
   <section class="how-section" id="how">
     <div class="how-inner">
       <div class="section-eyebrow scroll-reveal">How it works</div>
-      <h2 class="section-title scroll-reveal">3단계로 <span>끝</span></h2>
+      <h2 class="section-title scroll-reveal">시작은 <span>3단계면 끝</span></h2>
       <div class="steps">
         <div class="step">
           <div class="step-num">1</div>
           <h3>구글로 로그인</h3>
-          <p>Google 계정으로 1초 만에 시작하세요. 별도 회원가입 없어요.</p>
+          <p>구글 계정으로 3초면 시작. 별도 회원가입은 없어요.</p>
         </div>
         <div class="step">
           <div class="step-num">2</div>
           <h3>할일 추가</h3>
-          <p>상단 입력창에 할일을 입력하면 목록에 쌓여요. 기한 설정도 가능.</p>
+          <p>상단 입력창에 할일을 적으면 목록에 쌓여요. 기한도 함께 설정할 수 있어요.</p>
         </div>
         <div class="step">
           <div class="step-num">3</div>
           <h3>날짜에 배치</h3>
-          <p>할일을 드래그해서 원하는 요일 칸에 놓으면 끝!</p>
+          <p>할일을 드래그해서 원하는 날짜 칸에 놓으면 끝!</p>
         </div>
       </div>
-    </div>
-  </section>
-
-  <!-- ─── TESTIMONIALS ─── -->
-  <section class="testimonials-section" id="testimonials">
-    <div class="testimonials-inner">
-      <div class="slider-header">
-        <div>
-          <div class="section-eyebrow scroll-reveal" style="text-align:left;">Testimonials</div>
-          <h2 class="section-title scroll-reveal" style="text-align:left;margin-bottom:0;">사용자들의 <span>솔직한 후기</span></h2>
-        </div>
-        <div class="slider-controls">
-          <button class="slider-btn" id="sliderPrev" aria-label="이전">&#8592;</button>
-          <button class="slider-btn" id="sliderNext" aria-label="다음">&#8594;</button>
-        </div>
-      </div>
-      <div class="slider-overflow" id="sliderOverflow">
-        <div class="slider-track" id="sliderTrack"></div>
-      </div>
-      <div class="slider-dots" id="sliderDots"></div>
     </div>
   </section>
 
@@ -1105,210 +648,76 @@
     <div class="shop-banner-inner">
       <div class="shop-banner-left">
         <h3>🎨 테마샵에서 나만의 테마를</h3>
-        <p>보라, 블루, 그린, 다크, 리퀴드 글라스, 젤리, 스타레일까지 — 취향껏 앱을 꾸며보세요.</p>
+        <p>퍼플, 블루, 그린, 다크, 리퀴드 글라스, 젤리까지 — 취향껏 앱을 꾸며보세요.</p>
       </div>
       <div class="shop-banner-right">
-        <a href="/shop">🛍️ 테마샵 열기 →</a>
+        <a href="/shop">테마샵 열기 →</a>
       </div>
     </div>
   </div>
 
-  <!-- ─── DOWNLOAD ─── -->
   <!-- ─── FAQ ─── -->
-  <section style="padding: 80px 24px 100px; background: var(--bg);">
-    <div style="max-width: 680px; margin: 0 auto;">
-      <h2 style="font-size: 2rem; font-weight: 800; color: var(--text); margin-bottom: 48px;">자주 묻는 질문</h2>
+  <section class="faq-section">
+    <div class="faq-inner">
+      <div class="section-eyebrow scroll-reveal">FAQ</div>
+      <h2 class="section-title scroll-reveal">자주 묻는 질문</h2>
 
       <div class="faq-list">
         <div class="faq-item">
-          <button class="faq-q" onclick="toggleFaq(this)">
-            <span>오일추가 뭐예요?</span><span class="faq-icon">+</span>
-          </button>
+          <button class="faq-q" onclick="toggleFaq(this)"><span>오일추가 뭐예요?</span><span class="faq-icon">+</span></button>
           <div class="faq-a">오일추는 할 일을 드래그해서 날짜 칸에 배치하는 일정 관리 앱이에요. 해야 할 일을 O(완료) / X(포기) 로 처리하고, D-Day 카운터와 구글 캘린더 연동까지 지원해요. 학생이 만든, 학생을 위한 도구예요.</div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" onclick="toggleFaq(this)">
-            <span>무료인가요?</span><span class="faq-icon">+</span>
-          </button>
+          <button class="faq-q" onclick="toggleFaq(this)"><span>무료인가요?</span><span class="faq-icon">+</span></button>
           <div class="faq-a">완전 무료예요. 광고도, 숨은 결제도 없어요. 구글 계정으로 로그인하면 바로 시작할 수 있어요.</div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" onclick="toggleFaq(this)">
-            <span>드래그앤드롭이 정확히 어떻게 되는 건가요?</span><span class="faq-icon">+</span>
-          </button>
+          <button class="faq-q" onclick="toggleFaq(this)"><span>드래그앤드롭이 정확히 어떻게 되는 건가요?</span><span class="faq-icon">+</span></button>
           <div class="faq-a">할 일 목록에서 항목을 잡고 캘린더의 원하는 날짜 칸으로 끌어다 놓으면 돼요. 날짜를 바꾸고 싶을 때도 다시 드래그하면 바로 이동해요. 모바일에서도 터치로 드래그가 가능해요.</div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" onclick="toggleFaq(this)">
-            <span>회원가입을 해야 하나요?</span><span class="faq-icon">+</span>
-          </button>
+          <button class="faq-q" onclick="toggleFaq(this)"><span>회원가입을 해야 하나요?</span><span class="faq-icon">+</span></button>
           <div class="faq-a">따로 회원가입은 없어요. 구글 계정으로 로그인 한 번이면 끝이에요. 로그인하면 데이터가 클라우드에 안전하게 저장돼서, 폰·태블릿·PC 어디서 접속해도 같은 일정이 그대로 보여요.</div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" onclick="toggleFaq(this)">
-            <span>구글 캘린더 연동은 어떻게 하나요?</span><span class="faq-icon">+</span>
-          </button>
-          <div class="faq-a">Google 계정으로 로그인하면 자동으로 캘린더 연동 권한을 요청해요. 승인하면 기존 일정이 오일추 캘린더에 표시돼요. 연결이 끊겼을 때는 앱 상단의 🗓️ 재연결 버튼을 눌러주세요.</div>
+          <button class="faq-q" onclick="toggleFaq(this)"><span>구글 캘린더 연동은 어떻게 하나요?</span><span class="faq-icon">+</span></button>
+          <div class="faq-a">구글 계정으로 로그인하면 자동으로 캘린더 연동 권한을 요청해요. 승인하면 기존 일정이 오일추 캘린더에 표시돼요. 연결이 끊겼을 때는 앱 상단의 🗓️ 재연결 버튼을 눌러주세요.</div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" onclick="toggleFaq(this)">
-            <span>테마는 어떻게 바꾸나요?</span><span class="faq-icon">+</span>
-          </button>
+          <button class="faq-q" onclick="toggleFaq(this)"><span>테마는 어떻게 바꾸나요?</span><span class="faq-icon">+</span></button>
           <div class="faq-a">앱 상단 ⚙️ 설정 버튼 → 테마 변경에서 바꿀 수 있어요. 테마샵에서 다른 유저가 만든 테마를 적용하거나, 창작마당에서 나만의 테마를 직접 만들 수도 있어요.</div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" onclick="toggleFaq(this)">
-            <span>아이폰 · 안드로이드에서도 쓸 수 있나요?</span><span class="faq-icon">+</span>
-          </button>
+          <button class="faq-q" onclick="toggleFaq(this)"><span>아이폰 · 안드로이드에서도 쓸 수 있나요?</span><span class="faq-icon">+</span></button>
           <div class="faq-a">앱 설치 없이 모바일 브라우저로 바로 사용 가능해요. 홈 화면에 추가하면 앱처럼 쓸 수 있어요. iPhone은 Safari → 공유 → 홈 화면에 추가, Android는 Chrome → 메뉴 → 앱 설치를 눌러주세요.</div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" onclick="toggleFaq(this)">
-            <span>그룹 기능은 어떻게 사용하나요?</span><span class="faq-icon">+</span>
-          </button>
+          <button class="faq-q" onclick="toggleFaq(this)"><span>그룹 기능은 어떻게 사용하나요?</span><span class="faq-icon">+</span></button>
           <div class="faq-a">하단 탭바 👥 버튼 또는 헤더 그룹 버튼으로 진입할 수 있어요. + 버튼으로 새 그룹을 만들거나 초대 코드 6자리로 기존 그룹에 참여하세요. 공지된 일정은 '+ 내 리스트' 버튼으로 바로 내 할일에 담을 수 있고, 그룹 채팅으로 대화하거나 멤버에게 독촉 알림을 보낼 수도 있어요. 그룹장은 ⚙️ 버튼에서 이름 변경, 멤버 관리, 그룹 삭제를 할 수 있어요.</div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" onclick="toggleFaq(this)">
-            <span>내 일정 데이터는 안전한가요?</span><span class="faq-icon">+</span>
-          </button>
+          <button class="faq-q" onclick="toggleFaq(this)"><span>내 일정 데이터는 안전한가요?</span><span class="faq-icon">+</span></button>
           <div class="faq-a">할일·일정 데이터는 암호화되어 클라우드(Supabase)에 저장돼요. 여러 기기에서 동시에 수정해도 충돌 없이 자동으로 병합돼서 일정이 사라지지 않아요. 혹시 문제가 생기면 앱 상단의 ❗ 버튼으로 이 기기에 저장된 백업으로 복구할 수도 있어요.</div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" onclick="toggleFaq(this)">
-            <span>업데이트는 어떻게 하나요?</span><span class="faq-icon">+</span>
-          </button>
+          <button class="faq-q" onclick="toggleFaq(this)"><span>업데이트는 어떻게 하나요?</span><span class="faq-icon">+</span></button>
           <div class="faq-a">오일추는 웹 기반이라 따로 업데이트할 필요가 없어요. 앱을 열 때마다 항상 최신 버전이 자동으로 적용돼요.</div>
         </div>
       </div>
 
-      <!-- 하단 CTA -->
-      <div style="margin-top: 48px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
-        <span style="font-size: 15px; color: var(--sub);">더 궁금한 것이 있으신가요?</span>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-          <button onclick="openAiChat()" class="open-ai-chat" style="display:inline-flex;align-items:center;gap:6px;padding:10px 18px;background:#dbeafe;color:var(--accent);border-radius:10px;font-size:14px;font-weight:600;border:none;cursor:pointer;font-family:var(--font);">💬 AI에게 물어보기</button>
-          <a href="https://mail.google.com/mail/?view=cm&to=colddog09@gmail.com" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:10px 18px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:10px;font-size:14px;font-weight:600;text-decoration:none;">📋 건의사항 보내기</a>
+      <div class="faq-foot">
+        <span>더 궁금한 것이 있으신가요?</span>
+        <div class="row">
+          <a href="https://mail.google.com/mail/?view=cm&to=colddog09@gmail.com" target="_blank" rel="noopener" class="b b--mail">📋 건의사항 보내기</a>
         </div>
       </div>
     </div>
   </section>
 
-  <style>
-    .faq-list { display: flex; flex-direction: column; }
-    .faq-item { border-bottom: 1px solid var(--border); }
-    .faq-q {
-      width: 100%; display: flex; justify-content: space-between; align-items: center;
-      padding: 20px 4px; background: none; border: none; cursor: pointer;
-      font-size: 16px; font-weight: 500; color: var(--text); font-family: var(--font);
-      text-align: left; gap: 16px;
-    }
-    .faq-q:hover { color: var(--accent); }
-    .faq-icon { font-size: 20px; color: var(--sub); flex-shrink: 0; transition: transform 0.2s; }
-    .faq-q.open .faq-icon { transform: rotate(45deg); color: var(--accent); }
-    .faq-a {
-      display: none; padding: 0 4px 20px;
-      font-size: 14px; color: var(--sub); line-height: 1.8;
-    }
-    .faq-a.open { display: block; }
-  </style>
-
-  <!-- ─── AI 채팅 모달 ─── -->
-  <!-- ─── AI 플로팅 챗 위젯 ─── -->
-  <div id="aiWidget">
-    <!-- 챗창 -->
-    <div id="aiChatBox">
-      <div class="ai-header">
-        <div class="ai-header__info">
-          <div class="ai-header__icon">💬</div>
-          <div>
-            <div class="ai-header__name">오일추 AI</div>
-            <div class="ai-header__sub">궁금한 점을 물어보세요</div>
-          </div>
-        </div>
-        <button class="ai-close" onclick="closeAiChat()">×</button>
-      </div>
-      <div id="aiMessages">
-        <div class="ai-msg ai-msg--bot">안녕하세요! 오일추 사용법이나 기능에 대해 궁금한 점을 물어보세요 😊</div>
-      </div>
-      <div class="ai-input-row">
-        <input id="aiInput" type="text" placeholder="메시지 입력..." autocomplete="off"
-          onkeydown="if(event.key==='Enter')sendAiMsg()" />
-        <button id="aiSendBtn" onclick="sendAiMsg()">↑</button>
-      </div>
-    </div>
-    <!-- 토글 버튼 -->
-    <button id="aiFab" onclick="toggleAiChat()" title="AI에게 물어보기">💬</button>
-  </div>
-
-  <style>
-    /* AI 위젯 */
-    #aiWidget { position: fixed; bottom: 24px; right: 24px; z-index: 1000; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
-    #aiFab {
-      width: 52px; height: 52px; border-radius: 50%;
-      background: var(--accent); color: #fff; border: none; cursor: pointer;
-      font-size: 22px; box-shadow: 0 4px 20px rgba(59,130,246,0.35);
-      transition: transform 0.2s, box-shadow 0.2s;
-      display: flex; align-items: center; justify-content: center;
-    }
-    #aiFab:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(59,130,246,0.45); }
-    #aiChatBox {
-      width: 320px; background: var(--surface);
-      border-radius: 16px; border: 1px solid var(--border);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-      display: flex; flex-direction: column; overflow: hidden;
-      transform-origin: bottom right;
-      animation: chatOpen 0.22s cubic-bezier(0.34,1.56,0.64,1);
-    }
-    #aiChatBox[hidden] { display: none; }
-    @keyframes chatOpen {
-      from { opacity: 0; transform: scale(0.85) translateY(10px); }
-      to   { opacity: 1; transform: scale(1) translateY(0); }
-    }
-    .ai-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 16px; border-bottom: 1px solid var(--border);
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-    }
-    .ai-header__info { display: flex; align-items: center; gap: 10px; }
-    .ai-header__icon { font-size: 20px; }
-    .ai-header__name { font-size: 14px; font-weight: 700; color: #fff; }
-    .ai-header__sub  { font-size: 11px; color: rgba(255,255,255,0.75); }
-    .ai-close { background: none; border: none; color: rgba(255,255,255,0.8); font-size: 20px; cursor: pointer; line-height: 1; padding: 0; }
-    .ai-close:hover { color: #fff; }
-    #aiMessages {
-      flex: 1; overflow-y: auto; padding: 14px; display: flex;
-      flex-direction: column; gap: 8px; max-height: 320px; min-height: 120px;
-    }
-    .ai-msg {
-      max-width: 85%; padding: 9px 13px; border-radius: 14px;
-      font-size: 13px; line-height: 1.65; word-break: keep-all;
-    }
-    .ai-msg--bot  { background: #eff6ff; color: var(--text); align-self: flex-start; border-bottom-left-radius: 4px; }
-    .ai-msg--user { background: var(--accent); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
-    .ai-msg--loading { color: var(--sub); font-style: italic; font-size: 12px; }
-    .ai-input-row {
-      display: flex; gap: 8px; padding: 10px 12px;
-      border-top: 1px solid var(--border); background: var(--bg);
-    }
-    .ai-input-row input {
-      flex: 1; padding: 8px 12px; border: 1px solid var(--border);
-      border-radius: 20px; font-size: 13px; font-family: var(--font);
-      outline: none; background: var(--surface); color: var(--text);
-    }
-    .ai-input-row input:focus { border-color: var(--accent); }
-    .ai-input-row button {
-      width: 34px; height: 34px; border-radius: 50%;
-      background: var(--accent); color: #fff; border: none; cursor: pointer;
-      font-size: 16px; display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-    }
-    .ai-input-row button:disabled { opacity: 0.5; cursor: not-allowed; }
-  </style>
-
   <!-- ─── FOOTER ─── -->
   <footer>
     <div class="footer-inner">
-      <div class="footer-logo">오일추</div>
+      <div class="footer-logo"><span class="omark">오</span>일추</div>
       <div class="footer-links">
         <a href="/privacy.html">개인정보처리방침</a>
         <a href="/terms.html">이용약관</a>
@@ -1328,12 +737,11 @@
 
     // ── Intersection Observer: scroll-reveal ──
     const observer = new IntersectionObserver(entries => {
-      entries.forEach((entry, i) => {
+      entries.forEach(entry => {
         if (entry.isIntersecting) {
-          // stagger for grouped elements
           const siblings = entry.target.parentElement.querySelectorAll('.feature-card, .step, .stat-item');
           const idx = [...siblings].indexOf(entry.target);
-          entry.target.style.animationDelay = (idx * 0.1) + 's';
+          entry.target.style.animationDelay = (Math.max(0, idx) * 0.08) + 's';
           entry.target.classList.add('visible');
           observer.unobserve(entry.target);
         }
@@ -1342,222 +750,10 @@
 
     document.querySelectorAll('.scroll-reveal, .feature-card, .step, .stat-item').forEach(el => observer.observe(el));
 
-    // ── Testimonial Slider ──
-    (function() {
-      const testimonials = [
-        {
-          quote: "수행평가 기한을 절대 놓치지 않게 됐어요. 드래그로 일정 짜는 게 이렇게 편할 줄 몰랐어요. 매일 쓰고 있어요!",
-          name: "김민준", role: "고등학교 2학년",
-          avatar: "https://i.pravatar.cc/80?img=12"
-        },
-        {
-          quote: "스타레일 테마 너무 귀여워요! 폼폼 누르면서 공부하니까 뭔가 즐거워지고 자꾸 완료 누르고 싶어져요 ㅋㅋ",
-          name: "이서연", role: "고등학교 1학년",
-          avatar: "https://i.pravatar.cc/80?img=47"
-        },
-        {
-          quote: "구글 캘린더 연동해서 학원 일정까지 한 번에 관리해요. 여러 앱 쓸 필요 없어서 진짜 편해요.",
-          name: "박지호", role: "고등학교 2학년",
-          avatar: "https://i.pravatar.cc/80?img=33"
-        },
-        {
-          quote: "집 PC랑 핸드폰이랑 동기화가 돼서 어디서든 일정 확인할 수 있어요. 클라우드 저장 기능이 정말 좋아요!",
-          name: "최하은", role: "고등학교 3학년",
-          avatar: "https://i.pravatar.cc/80?img=45"
-        },
-        {
-          quote: "D-Day 기능으로 수능까지 카운트다운 중이에요. 매일 숫자 보면서 긴장도 되고 동기부여가 확실히 돼요.",
-          name: "정승현", role: "고등학교 3학년",
-          avatar: "https://i.pravatar.cc/80?img=68"
-        },
-      ];
-
-      let currentIndex = 0;
-      let direction = 1;
-      let autoPlayTimer = null;
-      let touchStartX = 0;
-      let isDragging = false;
-      let dragStartX = 0;
-
-      const track    = document.getElementById('sliderTrack');
-      const dots     = document.getElementById('sliderDots');
-      const prevBtn  = document.getElementById('sliderPrev');
-      const nextBtn  = document.getElementById('sliderNext');
-      const overflow = document.getElementById('sliderOverflow');
-
-      function getVisibleCount() {
-        if (window.innerWidth >= 1024) return 3;
-        if (window.innerWidth >= 640)  return 2;
-        return 1;
-      }
-
-      function getMaxIndex() {
-        return Math.max(0, testimonials.length - getVisibleCount());
-      }
-
-      function updateUI() {
-        const vc = getVisibleCount();
-        const pct = 100 / vc;
-        track.style.transform = `translateX(-${currentIndex * pct}%)`;
-        track.querySelectorAll('.slider-card-wrap').forEach(w => { w.style.width = pct + '%'; });
-        dots.querySelectorAll('.slider-dot').forEach((d, i) => d.classList.toggle('active', i === currentIndex));
-        prevBtn.disabled = currentIndex <= 0;
-        nextBtn.disabled = currentIndex >= getMaxIndex();
-      }
-
-      function buildSlider() {
-        const vc  = getVisibleCount();
-        const pct = 100 / vc;
-        track.innerHTML = testimonials.map(t => `
-          <div class="slider-card-wrap" style="width:${pct}%">
-            <div class="testimonial-card">
-              <div class="testimonial-quote-bg">&ldquo;</div>
-              <p class="testimonial-text">&ldquo;${t.quote}&rdquo;</p>
-              <div class="testimonial-author">
-                <div>
-                  <div class="testimonial-name">${t.name}</div>
-                  <div class="testimonial-role">${t.role}</div>
-                </div>
-              </div>
-            </div>
-          </div>`).join('');
-
-        const maxIdx = getMaxIndex();
-        dots.innerHTML = Array.from({length: maxIdx + 1}, (_, i) =>
-          `<button class="slider-dot${i === currentIndex ? ' active' : ''}" data-idx="${i}" aria-label="슬라이드 ${i+1}"></button>`
-        ).join('');
-        dots.querySelectorAll('.slider-dot').forEach(d => {
-          d.addEventListener('click', () => { currentIndex = +d.dataset.idx; updateUI(); resetAutoPlay(); });
-        });
-        updateUI();
-      }
-
-      function goNext() { if (currentIndex < getMaxIndex()) { currentIndex++; updateUI(); } }
-      function goPrev() { if (currentIndex > 0) { currentIndex--; updateUI(); } }
-
-      function startAutoPlay() {
-        clearInterval(autoPlayTimer);
-        autoPlayTimer = setInterval(() => {
-          const max = getMaxIndex();
-          if (direction === 1) {
-            if (currentIndex >= max) { direction = -1; currentIndex = Math.max(0, currentIndex - 1); }
-            else { currentIndex++; }
-          } else {
-            if (currentIndex <= 0) { direction = 1; currentIndex = Math.min(max, currentIndex + 1); }
-            else { currentIndex--; }
-          }
-          updateUI();
-        }, 4000);
-      }
-
-      function resetAutoPlay() {
-        clearInterval(autoPlayTimer);
-        setTimeout(startAutoPlay, 8000);
-      }
-
-      prevBtn.addEventListener('click', () => { goPrev(); resetAutoPlay(); });
-      nextBtn.addEventListener('click', () => { goNext(); resetAutoPlay(); });
-
-      // Touch swipe
-      overflow.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
-      overflow.addEventListener('touchend', e => {
-        const dx = e.changedTouches[0].clientX - touchStartX;
-        if (dx < -30) { goNext(); resetAutoPlay(); }
-        else if (dx > 30) { goPrev(); resetAutoPlay(); }
-      }, { passive: true });
-
-      // Mouse drag
-      overflow.addEventListener('mousedown', e => { isDragging = true; dragStartX = e.clientX; overflow.style.cursor = 'grabbing'; });
-      document.addEventListener('mouseup', e => {
-        if (!isDragging) return;
-        isDragging = false;
-        overflow.style.cursor = '';
-        const dx = e.clientX - dragStartX;
-        if (dx < -30) { goNext(); resetAutoPlay(); }
-        else if (dx > 30) { goPrev(); resetAutoPlay(); }
-      });
-
-      window.addEventListener('resize', () => {
-        const max = getMaxIndex();
-        if (currentIndex > max) currentIndex = max;
-        buildSlider();
-      });
-
-      buildSlider();
-      startAutoPlay();
-    })();
-  </script>
-  <script>
-    // AI 채팅 위젯
-    let aiHistory = [];
-    let aiOpen = false;
-    function toggleAiChat() {
-      aiOpen ? closeAiChat() : openAiChat();
-    }
-    function openAiChat() {
-      aiOpen = true;
-      document.getElementById('aiChatBox').hidden = false;
-      document.getElementById('aiFab').textContent = '×';
-      setTimeout(() => document.getElementById('aiInput').focus(), 50);
-    }
-    function closeAiChat() {
-      aiOpen = false;
-      document.getElementById('aiChatBox').hidden = true;
-      document.getElementById('aiFab').textContent = '💬';
-    }
-    // FAQ 버튼도 위젯 열기
-    document.querySelectorAll('.open-ai-chat').forEach(el => el.addEventListener('click', openAiChat));
-    // 초기 숨김
-    document.getElementById('aiChatBox').hidden = true;
-    async function sendAiMsg() {
-      const input = document.getElementById('aiInput');
-      const msg = input.value.trim();
-      if (!msg) return;
-      input.value = '';
-      const msgs = document.getElementById('aiMessages');
-
-      // 사용자 메시지
-      const userEl = document.createElement('div');
-      userEl.className = 'ai-msg ai-msg--user';
-      userEl.textContent = msg;
-      msgs.appendChild(userEl);
-
-      // 로딩
-      const loadEl = document.createElement('div');
-      loadEl.className = 'ai-msg ai-msg--bot ai-msg--loading';
-      loadEl.textContent = '답변을 생성 중...';
-      msgs.appendChild(loadEl);
-      msgs.scrollTop = msgs.scrollHeight;
-
-      document.getElementById('aiSendBtn').disabled = true;
-
-      try {
-        const res = await fetch('/api/gemini', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: msg, history: aiHistory })
-        });
-        const data = await res.json();
-        const text = data.text || '죄송해요, 오류가 발생했어요.';
-        loadEl.className = 'ai-msg ai-msg--bot';
-        loadEl.textContent = text;
-        aiHistory.push({ role: 'user', text: msg });
-        aiHistory.push({ role: 'model', text });
-        if (aiHistory.length > 20) aiHistory = aiHistory.slice(-20);
-      } catch {
-        loadEl.textContent = '네트워크 오류가 발생했어요. 다시 시도해주세요.';
-      }
-
-      document.getElementById('aiSendBtn').disabled = false;
-      msgs.scrollTop = msgs.scrollHeight;
-      input.focus();
-    }
-
-    // FAQ 토글
+    // ── FAQ 토글 ──
     function toggleFaq(btn) {
       const answer = btn.nextElementSibling;
       const isOpen = answer.classList.contains('open');
-      // 모두 닫기
       document.querySelectorAll('.faq-a').forEach(a => a.classList.remove('open'));
       document.querySelectorAll('.faq-q').forEach(b => b.classList.remove('open'));
       if (!isOpen) {
@@ -1565,8 +761,6 @@
         btn.classList.add('open');
       }
     }
-
-    // 앱 바로가기
   </script>
 </body>
 </html>
