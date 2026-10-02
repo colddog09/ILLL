@@ -7,7 +7,8 @@
       "Bash(npm install:*)",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "mcp__claude-code-remote__add_repo"
     ]
   }
 }
